@@ -13,6 +13,11 @@ class LexerTest < Minitest::Test
 
   def test_supports_surface_synonyms
     tokens = Semauri::Lexer.new("Make a website named Hello.").tokens
-    assert_equal %i[CREATE ARTICLE WEB CALLED WORD DOT EOF], tokens.map(&:type)
+    assert_equal %i[MAKE ARTICLE WEB CALLED WORD DOT EOF], tokens.map(&:type)
+  end
+
+  def test_tokenizes_contextual_reference_sentence
+    tokens = Semauri::Lexer.new("Add a button called Buy. Make it blue.").tokens
+    assert_equal %i[ADD ARTICLE BUTTON CALLED WORD DOT MAKE PRONOUN COLOR DOT EOF], tokens.map(&:type)
   end
 end

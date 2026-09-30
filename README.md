@@ -6,7 +6,7 @@ Semauri is an experimental, deterministic programming language that explores how
 
 Semauri is open source from its first commit. It was created by **Eduardo J. Barrios** and is licensed under the **Apache License 2.0**.
 
-> Status: **0.1 / experimental**. The language is intentionally tiny while its semantics and architecture are being established.
+> Status: **0.2 / experimental**. The language is intentionally small while its semantics and architecture are being established.
 
 ## Why Semauri?
 
@@ -15,15 +15,18 @@ Most natural-language programming experiments either become unrestricted prose o
 - **Controlled natural language** — source code should read naturally, but accepted syntax has a specification.
 - **Deterministic semantics** — the same valid program has the same meaning every time.
 - **Explainable inference** — implicit decisions are inspectable with `semauri explain`.
+- **Explicit ambiguity errors** — the compiler refuses to guess when a reference has multiple meanings.
 - **No LLM required** — the reference compiler does not need network access or a model.
 - **Extensible by design** — surface vocabularies, semantic analysis and output backends are separate layers.
 
-## First program
+## Example
 
 Create `shop.sema`:
 
 ```text
 Create a web for a pet store.
+Add a button called Buy.
+Make it blue.
 ```
 
 Build it:
@@ -32,22 +35,9 @@ Build it:
 ruby bin/semauri build shop.sema -o shop.html
 ```
 
-Semauri resolves `web` to the default web target (HTML), interprets `pet store` as the subject, and because no title was explicitly given, derives the title from that subject.
+Semauri creates a web document, adds a semantic button entity and resolves `it` to that button because it is the only addressable element in scope.
 
-```html
-<!doctype html>
-<html lang="en">
-<head>
-  ...
-  <title>Pet Store</title>
-</head>
-<body>
-  <h1>Pet Store</h1>
-</body>
-</html>
-```
-
-You can inspect the decision instead of trusting hidden magic:
+You can inspect those decisions:
 
 ```bash
 ruby bin/semauri explain shop.sema
@@ -57,21 +47,37 @@ ruby bin/semauri explain shop.sema
 1. 'web' resolved to an HTML web document (default web backend).
 2. Subject resolved to 'Pet Store'.
 3. No title was provided, so the web title defaults to its subject: 'Pet Store'.
+4. Added button 'Buy' as button-1.
+5. 'it' resolved to button 'Buy' (button-1).
+6. Set button-1.color to 'blue'.
 ```
+
+If the program contains more than one possible referent, Semauri rejects the program instead of guessing:
+
+```text
+Create a web called Shop.
+Add a button called Buy.
+Add an image called Logo.
+Make it blue.
+```
+
+produces semantic error `S305` because `it` is ambiguous.
 
 ## Current language surface
 
-Semauri 0.1 intentionally supports only a few constructs:
+Semauri 0.2 currently supports:
 
 ```text
 Create a web for a pet store.
 Create a web called Hello World.
-
-Create a web for a pet store.
+Make a web called Hello World.
 Add a title called Happy Paws.
+Add a button called Buy.
+Add an image called Logo.
+Make it blue.
 ```
 
-Synonyms such as `Make`, `website` and `named` are normalized by the English vocabulary layer.
+The supported color vocabulary is intentionally constrained and deterministic.
 
 ## CLI
 
@@ -84,7 +90,7 @@ semauri build FILE [-o PATH]
 semauri version
 ```
 
-During development, invoke the CLI with `ruby bin/semauri ...`. Packaging as a Ruby gem is planned once the core language surface stabilizes.
+During development, invoke the CLI with `ruby bin/semauri ...`.
 
 ## Architecture
 
@@ -99,7 +105,7 @@ parser
     ↓
 AST
     ↓
-semantic resolver
+semantic resolver + entity table
     ↓
 IR
     ↓
@@ -108,7 +114,7 @@ backend registry
 HTML (today), other targets later
 ```
 
-The important rule is that **backends do not parse natural language**. They consume Semauri's internal representation. Likewise, the parser does not generate HTML. This separation keeps future PRs local and reviewable.
+The important rule is that **backends do not parse natural language**. References are resolved before code generation, so a backend receives explicit semantic entities rather than prose.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/LANGUAGE.md](docs/LANGUAGE.md).
 
@@ -125,12 +131,6 @@ Run the test suite:
 ruby -Ilib -e 'Dir["test/test_*.rb"].sort.each { |file| require_relative file }'
 ```
 
-Run syntax checks:
-
-```bash
-find lib test bin -name '*.rb' -o -path 'bin/semauri' | xargs -n1 ruby -c
-```
-
 ## Design principles
 
 1. **Specification before convenience.** New syntax should have documented semantics.
@@ -138,25 +138,15 @@ find lib test bin -name '*.rb' -o -path 'bin/semauri' | xargs -n1 ruby -c
 3. **Small core, extension points at boundaries.** Backends and vocabularies are registered/injected.
 4. **No semantic work in code generators.** Inference belongs to semantic analysis.
 5. **Tests are executable language documentation.** Every language feature needs positive and negative tests.
-6. **Compatibility matters.** Breaking syntax/semantic changes will be documented as the language matures.
+6. **Compatibility matters.** Breaking syntax/semantic changes are documented while the language matures.
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. In particular, language changes should include a specification update and tests.
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Language changes should include a specification update and tests.
 
 ## Roadmap
 
-The near-term roadmap is deliberately language-oriented rather than feature-oriented:
-
-- richer diagnostics and source spans
-- references and pronouns with explicit ambiguity handling
-- variables and scope
-- conditions and iteration
-- a type/constraint system
-- semantic domains beyond web
-- additional output backends
-- formatter and language server
-- additional controlled-natural-language surface vocabularies
+Next priorities include source spans, richer diagnostics, explicit named references, variables/scope, conditions, semantic domains and additional backends.
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for milestones.
 

@@ -2,7 +2,7 @@
 
 Semauri is an experiment in deterministic natural-language-like programming. The roadmap prioritizes language foundations over rapidly adding targets.
 
-## 0.1 — compiler skeleton
+## 0.1 — compiler skeleton ✅
 
 - English vocabulary abstraction
 - lexer with source locations
@@ -14,19 +14,29 @@ Semauri is an experiment in deterministic natural-language-like programming. The
 - CLI introspection commands
 - zero-dependency core tests
 
-## 0.2 — diagnostics and references
+## 0.2 — semantic context and references — in progress
+
+Completed:
+
+- explicit AST reference model
+- constrained pronoun `it`
+- deterministic ambiguity errors
+- semantic entity table
+- immutable element properties in the IR
+- contextual `make` (`Make a web...` vs `Make it blue.`)
+
+Remaining before the 0.2 line is considered complete:
 
 - source spans rather than point locations
 - richer diagnostics with source excerpts
-- explicit reference model
-- constrained pronouns (`it`, `its`) with ambiguity errors
-- semantic provenance in the IR
+- explicit named references
+- semantic provenance for property mutations
 
 ## 0.3 — values and scope
 
 - literals
 - variables
-- references
+- named references
 - lexical scope
 - assignment semantics
 
