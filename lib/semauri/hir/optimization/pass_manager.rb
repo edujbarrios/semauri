@@ -4,13 +4,20 @@
 require_relative "result"
 require_relative "passes/constant_folding"
 require_relative "passes/dead_control_flow"
+require_relative "passes/dead_binding_elimination"
 
 module Semauri
   module HIR
     module Optimization
       class PassManager
         def self.default
-          new(passes: [Passes::ConstantFolding.new, Passes::DeadControlFlow.new])
+          new(
+            passes: [
+              Passes::ConstantFolding.new,
+              Passes::DeadControlFlow.new,
+              Passes::DeadBindingElimination.new
+            ]
+          )
         end
 
         def initialize(passes:)
