@@ -14,12 +14,14 @@ All notable changes to Semauri are documented here.
 - Composable HIR optimization `PassManager`.
 - Constant propagation and folding for immutable compile-time values.
 - Dead conditional branch elimination and empty-loop elimination infrastructure.
+- Backwards symbol liveness/use analysis and dead immutable-binding elimination.
 - `semauri optimize FILE` for inspecting optimized HIR and per-pass statistics.
 
 ### Changed
 - `Compiler#analyze` and `explain` lower unoptimized Typed HIR so diagnostics remain source-oriented.
 - `Compiler#compile` / `build` lower optimized Typed HIR before domain IR generation.
 - `CompilationResult` exposes both raw and optimized HIR.
+- Optimized HIR may omit compile-time-only `Let` statements while preserving the full semantic symbol table for tooling.
 - Entity reference resolution exposes a data-oriented API shared by legacy AST resolution and HIR lowering.
 - Name resolution and type checking are structural HIR phases; short-circuiting skips RHS value evaluation, not name/type validation.
 - The AST-based semantic resolver remains temporarily as a regression/reference implementation only.
