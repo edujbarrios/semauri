@@ -7,7 +7,7 @@ module Semauri
       attr_reader :type, :value, :definition_span
 
       def initialize(type:, value:, definition_span: nil)
-        @type = type.to_sym
+        @type = type.is_a?(String) ? type.to_sym : type
         @value = value
         @definition_span = definition_span
         freeze

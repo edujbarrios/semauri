@@ -11,11 +11,13 @@ require_relative "ast/pronoun_reference"
 require_relative "ast/named_reference"
 require_relative "ast/set_property"
 require_relative "ast/literal"
+require_relative "ast/list_literal"
 require_relative "ast/variable_reference"
 require_relative "ast/let_binding"
 require_relative "ast/block"
 require_relative "ast/binary_expression"
 require_relative "ast/if_statement"
+require_relative "ast/for_each"
 require_relative "ast/unary_expression"
 
 module Semauri
@@ -40,8 +42,9 @@ module Semauri
       return let_statement(previous) if match?(:LET)
       return set_statement(previous) if match?(:SET)
       return if_statement(previous) if match?(:IF)
+      return for_statement(previous) if match?(:FOR)
 
-      error!(peek, "Expected a statement beginning with 'Create', 'Make', 'Add', 'Let', 'Set' or 'If'", "S201")
+      error!(peek, "Expected a statement beginning with 'Create', 'Make', 'Add', 'Let', 'Set', 'If' or 'For'", "S201")
     end
 
     def create_statement(start)
@@ -65,7 +68,6 @@ module Semauri
     def make_statement(start)
       return pronoun_property_statement(start) if check?(:PRONOUN)
       return named_property_statement(start) if named_reference_ahead?
-
       create_statement(start)
     end
 
@@ -89,9 +91,7 @@ module Semauri
       error!(peek, "Expected a name and a color", "S208") if reference_tokens.length < 2
 
       color = reference_tokens.last
-      unless color.type == :COLOR
-        error!(color, "Expected a supported color after the referenced element", "S208")
-      end
+      error!(color, "Expected a supported color after the referenced element", "S208") unless color.type == :COLOR
 
       label_tokens = reference_tokens[0...-1]
       label = phrase_from_tokens(label_tokens)
@@ -137,6 +137,20 @@ module Semauri
       AST::IfStatement.new(condition: condition, consequence: consequence, alternative: alternative, span: span_from(start))
     end
 
+    def for_statement(start)
+      consume(:EVERY, "Expected 'every' after 'For'", "S228")
+      variable = consume(:WORD, "Expected an iteration variable after 'For every'", "S229")
+      consume(:IN, "Expected 'in' after the iteration variable", "S230")
+      iterable = expression
+      consume(:COLON, "Expected ':' after the iterable expression", "S231")
+      body = block_until(:END)
+      consume(:END, "Expected 'End' to close the For block", "S232")
+      consume_optional_dot
+
+      AST::ForEach.new(variable_name: variable.lexeme, iterable: iterable, body: body,
+                       binding_span: variable.span, span: span_from(start))
+    end
+
     def block_until(*terminators)
       statements = []
       statements << statement until terminators.include?(peek.type) || check?(:EOF)
@@ -144,9 +158,7 @@ module Semauri
       AST::Block.new(statements: statements, span: program_span(statements))
     end
 
-    def expression
-      logical_or
-    end
+    def expression = logical_or
 
     def logical_or
       expression = logical_and
@@ -174,7 +186,6 @@ module Semauri
         operand = logical_not
         return AST::UnaryExpression.new(operator: :not, operand: operand, span: span_between(operator, operand))
       end
-
       comparison
     end
 
@@ -245,6 +256,12 @@ module Semauri
       when :BOOLEAN
         advance
         AST::Literal.new(value_type: :boolean, value: token.lexeme.casecmp?("true"), span: token.span)
+      when :ARTICLE
+        start = advance
+        list_literal(start)
+      when :LIST
+        start = advance
+        list_literal(start, list_consumed: true)
       when :WORD
         advance
         AST::VariableReference.new(name: token.lexeme, span: token.span)
@@ -254,8 +271,18 @@ module Semauri
         closing = consume(:RPAREN, "Expected ')' after expression", "S227")
         re_span_expression(inner, span_between(opening, closing))
       else
-        error!(token, "Expected a color, string, number, boolean, variable or parenthesized expression", "S217")
+        error!(token, "Expected a color, string, number, boolean, list, variable or parenthesized expression", "S217")
       end
+    end
+
+    def list_literal(start, list_consumed: false)
+      consume(:LIST, "Expected 'list' after the article in a list literal", "S233") unless list_consumed
+      consume(:OF, "Expected 'of' after 'list'", "S234")
+
+      items = [expression]
+      items << expression while match?(:COMMA)
+
+      AST::ListLiteral.new(items: items, span: span_between(start, items.last))
     end
 
     def re_span_expression(expression, span)
@@ -264,6 +291,8 @@ module Semauri
         AST::BinaryExpression.new(left: expression.left, operator: expression.operator, right: expression.right, span: span)
       when AST::Literal
         AST::Literal.new(value_type: expression.value_type, value: expression.value, span: span)
+      when AST::ListLiteral
+        AST::ListLiteral.new(items: expression.items, span: span)
       when AST::VariableReference
         AST::VariableReference.new(name: expression.name, span: span)
       when AST::UnaryExpression

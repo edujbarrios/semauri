@@ -10,6 +10,7 @@ require_relative "result"
 require_relative "entity_table"
 require_relative "scope"
 require_relative "expression_evaluator"
+require_relative "type_system"
 
 module Semauri
   module Semantics
@@ -24,11 +25,7 @@ module Semauri
         ast.accept(self)
         raise SemanticError.new("Program does not create an artifact", code: "S301") unless @document
 
-        Result.new(
-          program: @document,
-          explanations: @explanations.freeze,
-          symbols: @scope.symbols
-        )
+        Result.new(program: @document, explanations: @explanations.freeze, symbols: @scope.symbols)
       ensure
         @document = @explanations = @entities = @scope = nil
       end
@@ -38,19 +35,41 @@ module Semauri
       end
 
       def visit_block(node)
-        with_child_scope { node.statements.each { |statement| statement.accept(self) } }
+        with_child_scope { execute_statements(node) }
       end
 
       def visit_if_statement(node)
         condition = evaluate(node.condition)
-        unless condition.type == :boolean
-          raise semantic_error("If condition must evaluate to boolean, received #{condition.type}",
-                               code: "S316", node: node.condition,
-                               hint: "Use a comparison such as 'price is greater than 20'.")
-        end
+        TypeSystem.ensure_boolean!(condition.type, node: node.condition,
+                                   message: "If condition must evaluate to boolean", code: "S316")
         branch = condition.value ? node.consequence : node.alternative
         @explanations << "If condition evaluated to #{condition.value}; selected #{condition.value ? 'consequence' : 'alternative'} branch."
         branch&.accept(self)
+      end
+
+      def visit_for_each(node)
+        iterable = evaluate(node.iterable)
+        list_type = TypeSystem.ensure_list!(iterable.type, node: node.iterable)
+        iterator_symbol = @scope.symbol_table.create(
+          name: node.variable_name,
+          kind: :iterator,
+          type: list_type.element_type,
+          definition_span: node.binding_span
+        )
+
+        @explanations << "For every '#{node.variable_name}' iterates over #{iterable.value.length} #{list_type.element_type} value(s) as symbol ##{iterator_symbol.id}."
+
+        iterable.value.each do |item|
+          parent = @scope
+          begin
+            @scope = parent.child
+            value = Value.new(type: list_type.element_type, value: item, definition_span: node.binding_span)
+            @scope.bind(iterator_symbol, value, node: node)
+            execute_statements(node.body)
+          ensure
+            @scope = parent
+          end
+        end
       end
 
       def visit_create_web(node)
@@ -89,7 +108,7 @@ module Semauri
         require_document!(node, "Cannot modify an element before creating a web document", "S307")
         target = resolve_reference(node.target)
         value = evaluate(node.value)
-        validate_property_type!(node.property, value, node.value)
+        TypeSystem.validate_property!(node.property, value.type, node: node.value)
         updated = target.with_property(node.property, value.value, source_span: node.span)
         @document = @document.replace_element(updated)
         @explanations << reference_explanation(node.target, target)
@@ -97,6 +116,10 @@ module Semauri
       end
 
       private
+
+      def execute_statements(block)
+        block.statements.each { |statement| statement.accept(self) }
+      end
 
       def evaluate(expression)
         ExpressionEvaluator.new(scope: @scope, on_variable_resolution: lambda { |reference, value, symbol|
@@ -110,14 +133,6 @@ module Semauri
         yield
       ensure
         @scope = parent
-      end
-
-      def validate_property_type!(property, value, expression)
-        expected = PROPERTY_TYPES[property]
-        return unless expected
-        return if value.type == expected
-        raise semantic_error("Property '#{property}' expects #{expected}, but received #{value.type}", code: "S313",
-                             node: expression, hint: "Use a #{expected} literal or a variable containing a #{expected}.")
       end
 
       def resolve_reference(reference)

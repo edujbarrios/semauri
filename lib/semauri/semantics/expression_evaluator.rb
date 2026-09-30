@@ -15,12 +15,16 @@ module Semauri
         @on_variable_resolution = on_variable_resolution
       end
 
-      def evaluate(expression)
-        expression.accept(self)
-      end
+      def evaluate(expression) = expression.accept(self)
 
       def visit_literal(node)
         Value.new(type: node.value_type, value: node.value, definition_span: node.span)
+      end
+
+      def visit_list_literal(node)
+        values = node.items.map { |item| evaluate(item) }
+        type = TypeSystem.list_type(values.map(&:type), node: node)
+        Value.new(type: type, value: values.map(&:value).freeze, definition_span: node.span)
       end
 
       def visit_variable_reference(node)
@@ -52,8 +56,7 @@ module Semauri
                  when :greater_than then left.value > right.value
                  when :less_than then left.value < right.value
                  when :equal then left.value == right.value
-                 else
-                   raise semantic_error(node, "Unsupported operator '#{node.operator}'", "S318")
+                 else raise semantic_error(node, "Unsupported operator '#{node.operator}'", "S318")
                  end
 
         Value.new(type: result_type, value: result, definition_span: node.span)
@@ -69,7 +72,6 @@ module Semauri
         if node.operator == :and && !left.value
           return Value.new(type: :boolean, value: false, definition_span: node.span)
         end
-
         if node.operator == :or && left.value
           return Value.new(type: :boolean, value: true, definition_span: node.span)
         end
