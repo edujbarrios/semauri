@@ -10,6 +10,9 @@ require_relative "ast/add_element"
 require_relative "ast/pronoun_reference"
 require_relative "ast/named_reference"
 require_relative "ast/set_property"
+require_relative "ast/literal"
+require_relative "ast/variable_reference"
+require_relative "ast/let_binding"
 
 module Semauri
   class Parser
@@ -30,8 +33,10 @@ module Semauri
       return create_statement(previous) if match?(:CREATE)
       return make_statement(previous) if match?(:MAKE)
       return add_statement if match?(:ADD)
+      return let_statement(previous) if match?(:LET)
+      return set_statement(previous) if match?(:SET)
 
-      error!(peek, "Expected a statement beginning with 'Create', 'Make' or 'Add'", "S201")
+      error!(peek, "Expected a statement beginning with 'Create', 'Make', 'Add', 'Let' or 'Set'", "S201")
     end
 
     def create_statement(start)
@@ -65,7 +70,8 @@ module Semauri
       consume_optional_dot
 
       target = AST::PronounReference.new(pronoun: pronoun.lexeme, span: pronoun.span)
-      AST::SetProperty.new(target: target, property: :color, value: color.lexeme.downcase, span: span_from(start))
+      value = AST::Literal.new(value_type: :color, value: color.lexeme.downcase, span: color.span)
+      AST::SetProperty.new(target: target, property: :color, value: value, span: span_from(start))
     end
 
     def named_property_statement(start)
@@ -91,7 +97,69 @@ module Semauri
         label: normalize_phrase(label),
         span: span_between(kind_token, label_tokens.last)
       )
-      AST::SetProperty.new(target: target, property: :color, value: color.lexeme.downcase, span: span_from(start))
+      value = AST::Literal.new(value_type: :color, value: color.lexeme.downcase, span: color.span)
+      AST::SetProperty.new(target: target, property: :color, value: value, span: span_from(start))
+    end
+
+    def let_statement(start)
+      name = consume(:WORD, "Expected a variable name after 'Let'", "S209")
+      consume(:BE, "Expected 'be' after the variable name", "S210")
+      value = value_expression
+      consume_optional_dot
+
+      AST::LetBinding.new(name: name.lexeme, value: value, span: span_from(start))
+    end
+
+    def set_statement(start)
+      match?(:ARTICLE)
+      consume(:COLOR_PROPERTY, "Semauri 0.3 currently supports setting the 'color' property", "S211")
+      consume(:OF, "Expected 'of' after the property name", "S212")
+      target = canonical_reference
+      consume(:TO, "Expected 'to' before the new value", "S213")
+      value = value_expression
+      consume_optional_dot
+
+      AST::SetProperty.new(target: target, property: :color, value: value, span: span_from(start))
+    end
+
+    def canonical_reference
+      if check?(:PRONOUN)
+        token = advance
+        return AST::PronounReference.new(pronoun: token.lexeme, span: token.span)
+      end
+
+      match?(:ARTICLE)
+      kind_token = consume_one_of(%i[BUTTON IMAGE], "Expected 'button', 'image' or 'it' after 'of'", "S214")
+      kind = kind_token.type == :BUTTON ? :button : :image
+      consume(:CALLED, "Canonical references must name the target with 'called' or 'named'", "S215")
+      label_tokens = tokens_until(:TO, :EOF)
+      error!(peek, "Expected the referenced element name", "S216") if label_tokens.empty?
+
+      AST::NamedReference.new(
+        kind: kind,
+        label: normalize_phrase(phrase_from_tokens(label_tokens)),
+        span: span_between(kind_token, label_tokens.last)
+      )
+    end
+
+    def value_expression
+      token = peek
+      case token.type
+      when :COLOR
+        advance
+        AST::Literal.new(value_type: :color, value: token.lexeme.downcase, span: token.span)
+      when :STRING
+        advance
+        AST::Literal.new(value_type: :string, value: token.literal, span: token.span)
+      when :NUMBER
+        advance
+        AST::Literal.new(value_type: :number, value: token.literal, span: token.span)
+      when :WORD
+        advance
+        AST::VariableReference.new(name: token.lexeme, span: token.span)
+      else
+        error!(token, "Expected a color, string, number or variable", "S217")
+      end
     end
 
     def named_reference_ahead?
@@ -178,6 +246,11 @@ module Semauri
 
     def consume(type, message, code)
       return advance if check?(type)
+      error!(peek, message, code)
+    end
+
+    def consume_one_of(types, message, code)
+      return advance if types.include?(peek.type)
       error!(peek, message, code)
     end
 

@@ -47,6 +47,7 @@ module Semauri
       end
 
       return string_token(start_line, start_column) if char == '"'
+      return number_token(start_line, start_column) if digit?(char)
       return word_token(start_line, start_column) if word_start?(char)
 
       raise LexError.new(
@@ -65,6 +66,20 @@ module Semauri
       type = @vocabulary.token_type(text)
       literal = LITERAL_TOKEN_TYPES.include?(type) ? text : nil
       Token.new(type: type, lexeme: text, literal: literal, line: line, column: column,
+                end_line: @line, end_column: @column)
+    end
+
+    def number_token(line, column)
+      text = +""
+      text << advance while !eof? && digit?(current)
+
+      if !eof? && current == "." && digit?(peek_char)
+        text << advance
+        text << advance while !eof? && digit?(current)
+      end
+
+      literal = text.include?(".") ? Float(text) : Integer(text)
+      Token.new(type: :NUMBER, lexeme: text, literal: literal, line: line, column: column,
                 end_line: @line, end_column: @column)
     end
 
@@ -94,6 +109,10 @@ module Semauri
       advance while !eof? && current.match?(/\s/)
     end
 
+    def digit?(char)
+      char && char.match?(/[0-9]/)
+    end
+
     def word_start?(char)
       char.match?(/[[:alpha:]]/)
     end
@@ -104,6 +123,10 @@ module Semauri
 
     def current
       @source[@index]
+    end
+
+    def peek_char
+      @source[@index + 1]
     end
 
     def eof?

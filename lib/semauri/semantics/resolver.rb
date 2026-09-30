@@ -4,18 +4,25 @@
 require_relative "../errors"
 require_relative "../ast/pronoun_reference"
 require_relative "../ast/named_reference"
+require_relative "../ast/literal"
+require_relative "../ast/variable_reference"
 require_relative "../ir/web_document"
 require_relative "../ir/element"
 require_relative "result"
 require_relative "entity_table"
+require_relative "scope"
+require_relative "value"
 
 module Semauri
   module Semantics
     class Resolver
+      PROPERTY_TYPES = { color: :color }.freeze
+
       def resolve(ast)
         @document = nil
         @explanations = []
         @entities = EntityTable.new
+        @scope = Scope.new
         ast.accept(self)
         raise SemanticError.new("Program does not create an artifact", code: "S301") unless @document
 
@@ -24,6 +31,7 @@ module Semauri
         @document = nil
         @explanations = nil
         @entities = nil
+        @scope = nil
       end
 
       def visit_program(node)
@@ -65,16 +73,48 @@ module Semauri
         @explanations << "Added #{node.kind} '#{label}' as #{element.id}."
       end
 
+      def visit_let_binding(node)
+        value = node.value.accept(self)
+        @scope.define(node.name, value, node: node)
+        @explanations << "Bound '#{node.name}' to #{value.describe}."
+      end
+
+      def visit_literal(node)
+        Value.new(type: node.value_type, value: node.value, definition_span: node.span)
+      end
+
+      def visit_variable_reference(node)
+        value = @scope.resolve(node)
+        @explanations << "Variable '#{node.name}' resolved to #{value.describe}."
+        value
+      end
+
       def visit_set_property(node)
         require_document!(node, "Cannot modify an element before creating a web document", "S307")
         target = resolve_reference(node.target)
-        updated = target.with_property(node.property, node.value, source_span: node.span)
+        value = node.value.accept(self)
+        validate_property_type!(node.property, value, node.value)
+
+        updated = target.with_property(node.property, value.value, source_span: node.span)
         @document = @document.replace_element(updated)
         @explanations << reference_explanation(node.target, target)
-        @explanations << "Set #{target.id}.#{node.property} to '#{node.value}'."
+        @explanations << "Set #{target.id}.#{node.property} to #{value.value.inspect}."
       end
 
       private
+
+      def validate_property_type!(property, value, expression)
+        expected = PROPERTY_TYPES[property]
+        return unless expected
+        return if value.type == expected
+
+        raise semantic_error(
+          "Property '#{property}' expects #{expected}, but received #{value.type}",
+          code: "S313",
+          node: expression,
+          hint: "Use a #{expected} literal or a variable containing a #{expected}."
+        )
+      end
 
       def resolve_reference(reference)
         case reference

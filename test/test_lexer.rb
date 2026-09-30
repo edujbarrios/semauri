@@ -16,8 +16,9 @@ class LexerTest < Minitest::Test
     assert_equal %i[MAKE ARTICLE WEB CALLED WORD DOT EOF], tokens.map(&:type)
   end
 
-  def test_tokenizes_contextual_reference_sentence
-    tokens = Semauri::Lexer.new("Add a button called Buy. Make it blue.").tokens
-    assert_equal %i[ADD ARTICLE BUTTON CALLED WORD DOT MAKE PRONOUN COLOR DOT EOF], tokens.map(&:type)
+  def test_tokenizes_variable_declaration_and_number
+    tokens = Semauri::Lexer.new("Let count be 2.5.").tokens
+    assert_equal %i[LET WORD BE NUMBER DOT EOF], tokens.map(&:type)
+    assert_equal 2.5, tokens[3].literal
   end
 end

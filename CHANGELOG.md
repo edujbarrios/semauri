@@ -15,7 +15,13 @@ All notable changes to Semauri will be documented in this file.
 - Full source spans on lexer tokens and AST nodes using exclusive end positions.
 - Source-aware compiler diagnostics with caret/range excerpts.
 - Per-property semantic provenance in the IR.
+- Typed literal expressions for colors, strings and numbers.
+- Immutable `Let` variable bindings and variable references.
+- Scope-based name resolution with duplicate/unknown-variable diagnostics.
+- Canonical property assignment syntax: `Set the color of ... to ...`.
+- Semantic type checking for property values.
 
 ### Changed
-- `make` is now parsed contextually: it can create an artifact (`Make a web...`) or mutate an existing entity (`Make it blue.`).
-- AST JSON output now includes source spans for tooling consumers.
+- `make` is parsed contextually: it can create an artifact or mutate an existing entity.
+- AST JSON output includes source spans for tooling consumers.
+- Property values are now represented as AST expressions before semantic resolution.

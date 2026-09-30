@@ -1,105 +1,127 @@
-# Semauri language specification — draft 0.2
+# Semauri language specification — draft 0.3
 
 This document describes the currently implemented language, not aspirational syntax.
 
 ## Philosophy
 
-Semauri uses **controlled natural language**. Natural-looking syntax does not mean unrestricted prose. Accepted programs have explicit grammar and deterministic semantics.
+Semauri uses **controlled natural language**. Natural-looking syntax does not mean unrestricted prose. Accepted programs have explicit grammar and deterministic semantics. Ambiguity is an error rather than an invitation to guess.
 
 ## Source files
 
 Recommended extension: `.sema`.
 
-Semauri is case-insensitive for recognized keywords. Names are normalized to title case by the current English surface implementation.
+Recognized English keywords are case-insensitive. Entity labels are normalized by the current English surface implementation; variable names are normalized to lowercase.
 
 ## Program
-
-A program is a sequence of statements.
 
 Approximate grammar:
 
 ```ebnf
-program       = statement* EOF ;
-statement     = create_web | add_title | add_element | set_color ;
+program          = statement* EOF ;
+statement        = create_web | add_title | add_element | make_property
+                 | let_binding | set_property ;
 
-create_web    = (CREATE | MAKE) [ARTICLE] WEB [web_qualifier] ["."] ;
-web_qualifier = CALLED phrase | FOR [ARTICLE] phrase ;
+create_web       = (CREATE | MAKE) [ARTICLE] WEB [web_qualifier] ["."] ;
+web_qualifier    = CALLED phrase | FOR [ARTICLE] phrase ;
+add_title        = ADD [ARTICLE] TITLE CALLED phrase ["."] ;
+add_element      = ADD [ARTICLE] (BUTTON | IMAGE) [CALLED phrase] ["."] ;
 
-add_title     = ADD [ARTICLE] TITLE CALLED phrase ["."] ;
-add_element   = ADD [ARTICLE] (BUTTON | IMAGE) [CALLED phrase] ["."] ;
-set_color     = MAKE (PRONOUN | named_reference) COLOR ["."] ;
-named_reference = [ARTICLE] (BUTTON | IMAGE) CALLED phrase ;
-phrase        = token+ ;
+make_property    = MAKE (PRONOUN | named_reference) COLOR ["."] ;
+
+let_binding      = LET identifier BE value ["."] ;
+set_property     = SET [ARTICLE] COLOR_PROPERTY OF reference TO value ["."] ;
+
+reference        = PRONOUN | named_reference ;
+named_reference  = [ARTICLE] (BUTTON | IMAGE) CALLED phrase ;
+
+value            = COLOR | STRING | NUMBER | variable_reference ;
+variable_reference = identifier ;
+identifier       = WORD ;
+phrase           = token+ ;
 ```
 
-The EBNF is descriptive; the handwritten parser is the executable implementation during the 0.x period.
+The EBNF is descriptive; the handwritten recursive-descent parser remains the executable grammar during 0.x.
 
-## Contextual `make`
+## Values
 
-`make` is contextual:
+0.3 introduces typed values. Current value types are:
+
+- `color`: controlled color words such as `blue` or `red`
+- `string`: quoted text such as `"Hello"`
+- `number`: integer or decimal numbers such as `3` or `2.5`
+
+A color literal and a string containing a color name are intentionally different:
 
 ```text
-Make a web called Hello.
+blue       # color
+"blue"     # string
 ```
 
-means creation, while:
+This distinction allows semantic type checking without relying on target-specific behavior such as CSS parsing.
+
+## Variables
+
+Declare a variable with `Let`:
+
+```text
+Let accent be blue.
+```
+
+The current 0.3 surface requires a single-word variable name. Variable names are case-insensitive and normalized to lowercase.
+
+Bindings are immutable within a scope. Redeclaring the same name in one scope is semantic error `S311`.
+
+Using an undeclared variable is semantic error `S312`.
+
+## Canonical property assignment
+
+The preferred extensible assignment syntax is:
+
+```text
+Set the color of the button called Buy to blue.
+```
+
+or with a variable:
+
+```text
+Let accent be blue.
+Set the color of the button called Buy to accent.
+```
+
+The existing shorthand remains valid:
 
 ```text
 Make it blue.
-```
-
-means property mutation.
-
-## Entity semantics
-
-Elements introduced by the program become semantic entities with deterministic IDs such as `button-1` and `image-1`.
-
-```text
-Add a button called Buy.
-```
-
-creates an entity equivalent to:
-
-```text
-Element(id="button-1", kind=button, label="Buy")
-```
-
-## Pronoun resolution
-
-`it` is currently the only supported pronoun. It resolves only when exactly one addressable element exists. With zero candidates Semauri emits `S304`; with multiple candidates it emits `S305` rather than guessing.
-
-## Explicit references
-
-When a pronoun would be ambiguous, source can identify an entity by kind and label:
-
-```text
-Create a web called Shop.
-Add a button called Buy.
-Add an image called Logo.
 Make the button called Buy blue.
 ```
 
-The explicit reference resolves to `button-1`, leaving `image-1` unchanged.
+Shorthand is parsed into the same expression-oriented AST and semantic pipeline.
 
-If no matching entity exists, Semauri emits `S309`. If more than one entity has the same kind and label, it emits `S310`.
+## Type checking
 
-## Web semantics
+Properties declare an expected semantic value type. `color` currently expects a `color` value.
 
-```text
-Create a web for a pet store.
-```
-
-produces a `WebDocument` whose title defaults to `Pet Store`.
+Therefore this is valid:
 
 ```text
-Add a title called Happy Paws.
+Let accent be blue.
+Set the color of the button called Buy to accent.
 ```
 
-sets the title explicitly.
+but this is not:
 
-## Supported colors
+```text
+Let accent be "blue".
+Set the color of the button called Buy to accent.
+```
 
-The current English vocabulary recognizes black, white, red, green, blue, yellow, orange, purple, pink, gray/grey and brown.
+The second program fails with `S313` because a `string` is not a `color`.
+
+## References
+
+`it` resolves only when exactly one addressable element exists. Explicit references such as `the button called Buy` are required when a pronoun would be ambiguous.
+
+Semauri never selects a referent probabilistically.
 
 ## Errors
 
@@ -108,13 +130,12 @@ The current English vocabulary recognizes black, white, red, green, blue, yellow
 - `S3xx`: semantic errors
 - `S4xx`: backend errors
 
-Reference diagnostics:
+New 0.3 semantic diagnostics:
 
-- `S304`: pronoun has no referent
-- `S305`: pronoun is ambiguous
-- `S309`: explicit reference does not exist
-- `S310`: explicit reference is ambiguous
+- `S311`: duplicate variable binding
+- `S312`: unknown variable
+- `S313`: property/value type mismatch
 
 ## Determinism rule
 
-Given the same Semauri version, source program, selected backend and backend version, valid source must resolve to the same semantic IR. A compiler component must never randomly choose between ambiguous meanings.
+Given the same Semauri version, source program, selected backend and backend version, valid source must resolve to the same semantic IR. No compiler component may randomly choose between ambiguous meanings.
