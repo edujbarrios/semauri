@@ -1,103 +1,106 @@
 # Semauri architecture
 
-Semauri follows a compiler pipeline with strict boundaries. The goal is to make language evolution reviewable and to let contributors work on one layer without understanding every backend.
+Semauri follows a compiler pipeline with strict boundaries so language evolution remains reviewable and contributors can work on one phase without understanding every backend.
 
 ## Pipeline
 
 ```text
 Source
-  │
-  ▼
-Vocabulary ──► Lexer ──► Tokens
-                         │
-                         ▼
-                       Parser
-                         │
-                         ▼
-                        AST
-                         │
-                         ▼
-                 Semantic Resolver
-                    │          │
-                    │          └──► Entity Table / references
-                    ▼
-                         IR
-                         │
-                         ▼
-                 Backend Registry
-                         │
-                         ▼
-                  Target Artifact
+  ↓
+Vocabulary + Lexer
+  ↓
+Tokens
+  ↓
+Recursive-descent Parser
+  ↓
+Syntax AST
+  ↓
+Typed HIR Builder
+  ├── lexical name resolution
+  ├── stable symbol IDs
+  └── type checking
+  ↓
+HIR Lowerer
+  ├── compile-time expression evaluation
+  ├── static branch/loop execution
+  └── deterministic entity/reference resolution
+  ↓
+Semantic / Domain IR
+  ↓
+Backend Registry
+  ↓
+Target Artifact
 ```
 
-## Components
+## Syntax AST
 
-### Vocabulary — Strategy
+The AST represents source syntax and source spans. It does not decide what a pronoun refers to and it does not contain HTML knowledge.
 
-`Vocabulary::English` maps surface forms into stable lexical categories. In 0.2 this includes artifact words, element words, pronouns and a deliberately constrained color vocabulary.
+## Typed HIR
 
-### Lexer
+HIR is the compiler's semantic structural representation. Names become stable symbol references, expressions carry types, and both branches of conditionals and loop structure are preserved.
 
-The lexer owns character-level concerns and source coordinates. It assigns lexical categories but never resolves references.
-
-### Parser — recursive descent
-
-The parser is handwritten on purpose. It outputs syntax-oriented AST nodes such as `CreateWeb`, `AddElement`, `PronounReference` and `SetProperty`.
-
-A key boundary is that parsing `Make it blue.` produces a reference node; it does **not** decide what `it` points to.
-
-### AST — Visitor
-
-AST nodes expose `accept(visitor)`. Semantic resolution and serialization use visitors so that operations over syntax remain separate from the syntax data structures.
-
-### Semantic resolver
-
-This layer owns deterministic inference. It resolves defaults, constructs entities and delegates contextual references to `Semantics::EntityTable`.
-
-The resolver must reject ambiguity rather than use heuristics that could silently change program meaning.
-
-### Entity table
-
-`EntityTable` is the initial symbol/reference infrastructure. It assigns stable per-kind IDs (`button-1`, `image-1`) and resolves constrained pronouns.
-
-The current `it` rule is intentionally conservative: exactly one addressable entity must exist. Later named references and lexical scopes can extend this component without adding HTML knowledge to the parser.
-
-### IR
-
-`IR::WebDocument` contains resolved document meaning and an immutable list of `IR::Element` values. Elements carry semantic properties, not backend markup.
-
-For example, `Make it blue.` ultimately becomes an element property:
+A source variable such as `price` is no longer identified by its spelling after this phase:
 
 ```text
-button-1.properties[:color] = "blue"
+price → symbol_ref(#3, number)
 ```
 
-represented immutably in the IR.
+This is the representation future tooling and optimization passes should consume.
 
-### Backends — Strategy + Registry
+## HIR lowering
 
-Backends consume the IR. The HTML backend renders semantic buttons/images and properties, but does not resolve pronouns or interpret source phrases.
+The executable compiler lowers HIR into domain IR. Because all current values are compile-time-known, the lowerer can currently evaluate conditions and iterate static lists.
+
+Importantly, those execution decisions happen **after HIR construction**. HIR itself preserves program structure, so introducing runtime values later does not require redesigning the parser or symbol model.
+
+The previous AST-based `Semantics::Resolver` remains temporarily as a regression/reference implementation during the 0.x migration, but the production `Compiler` pipeline consumes HIR.
+
+## Symbols and value environments
+
+Semantic symbol identity and current values are separate concerns:
+
+```text
+Symbol #4
+  name: accent
+  type: color
+  kind: iterator
+
+Value environment, iteration 1: #4 → red
+Value environment, iteration 2: #4 → green
+```
+
+This prevents static loop execution from inventing a new declaration on every iteration and prepares the compiler for runtime frames.
+
+## Entity table
+
+`Semantics::EntityTable` resolves generated domain entities such as buttons and images. AST and HIR both delegate to the same data-oriented resolution logic so ambiguity diagnostics stay consistent.
+
+## Semantic IR and backends
+
+`IR::WebDocument` and `IR::Element` contain resolved domain meaning, not source text or target markup. Backends consume that IR and never parse natural language or resolve references.
 
 ## Dependency direction
 
 ```text
-CLI → Compiler → Lexer / Parser / Semantics → IR ← Backends
+CLI → Compiler → Lexer/Parser → AST → HIR → Lowering → Domain IR ← Backends
 ```
 
-Avoid dependencies in the other direction. In particular:
+Key rules:
 
 - AST must not depend on HTML.
-- IR must not depend on parser tokens.
-- Backends must not parse source text.
-- Reference resolution must not live in a backend.
-- Core semantics must not depend on the CLI.
+- HIR must not depend on a target backend.
+- domain IR must not depend on parser tokens.
+- backends must not parse source text.
+- ambiguity resolution must not happen in a backend.
+- optional NLP/LLM support must sit before the deterministic compiler boundary.
 
 ## Why no LLM in the compiler core?
 
-The reference compiler is deterministic. An optional future free-form-language adapter could translate unrestricted prose into strict Semauri source, but that adapter would sit before the compiler boundary:
+An optional future free-form adapter may translate unrestricted prose into strict Semauri source:
 
 ```text
 free-form language → optional adapter → strict Semauri → compiler
 ```
 
-The resulting Semauri source would still be parsed, checked and compiled deterministically.
+The resulting program is still parsed, typed and compiled deterministically.

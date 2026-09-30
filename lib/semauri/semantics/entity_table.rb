@@ -21,14 +21,16 @@ module Semauri
       end
 
       def resolve_pronoun(reference)
+        resolve_pronoun_data(pronoun: reference.pronoun, node: reference)
+      end
+
+      def resolve_pronoun_data(pronoun:, node:)
         if @entities.empty?
           raise SemanticError.new(
-            "Pronoun '#{reference.pronoun}' has no object to refer to",
+            "Pronoun '#{pronoun}' has no object to refer to",
             code: "S304",
-            line: reference.line,
-            column: reference.column,
-            end_line: reference.end_line,
-            end_column: reference.end_column,
+            line: node.line, column: node.column,
+            end_line: node.end_line, end_column: node.end_column,
             hint: "Add an element before referring to it."
           )
         end
@@ -36,12 +38,10 @@ module Semauri
         if @entities.length > 1
           candidates = @entities.map { |entity| "#{entity.kind} '#{entity.label}'" }.join(", ")
           raise SemanticError.new(
-            "Pronoun '#{reference.pronoun}' is ambiguous",
+            "Pronoun '#{pronoun}' is ambiguous",
             code: "S305",
-            line: reference.line,
-            column: reference.column,
-            end_line: reference.end_line,
-            end_column: reference.end_column,
+            line: node.line, column: node.column,
+            end_line: node.end_line, end_column: node.end_column,
             hint: "Possible references: #{candidates}. Use an explicit reference such as 'the button called Buy'."
           )
         end
@@ -50,29 +50,30 @@ module Semauri
       end
 
       def resolve_named(reference)
+        resolve_named_data(kind: reference.kind, label: reference.label, node: reference)
+      end
+
+      def resolve_named_data(kind:, label:, node:)
+        kind = kind.to_sym
         candidates = @entities.select do |entity|
-          entity.kind == reference.kind && entity.label.casecmp?(reference.label)
+          entity.kind == kind && entity.label.casecmp?(label)
         end
 
         if candidates.empty?
           raise SemanticError.new(
-            "No #{reference.kind} called '#{reference.label}' exists",
+            "No #{kind} called '#{label}' exists",
             code: "S309",
-            line: reference.line,
-            column: reference.column,
-            end_line: reference.end_line,
-            end_column: reference.end_column
+            line: node.line, column: node.column,
+            end_line: node.end_line, end_column: node.end_column
           )
         end
 
         if candidates.length > 1
           raise SemanticError.new(
-            "Reference to #{reference.kind} '#{reference.label}' is ambiguous",
+            "Reference to #{kind} '#{label}' is ambiguous",
             code: "S310",
-            line: reference.line,
-            column: reference.column,
-            end_line: reference.end_line,
-            end_column: reference.end_column,
+            line: node.line, column: node.column,
+            end_line: node.end_line, end_column: node.end_column,
             hint: "Give elements unique names before referring to them explicitly."
           )
         end

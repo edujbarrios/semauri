@@ -4,17 +4,18 @@
 require_relative "lexer"
 require_relative "parser"
 require_relative "hir/builder"
-require_relative "semantics/resolver"
+require_relative "hir/lowerer"
 require_relative "backends/registry"
 
 module Semauri
-  CompilationResult = Struct.new(:output, :ast, :ir, :explanations, :symbols, keyword_init: true)
+  CompilationResult = Struct.new(:output, :ast, :hir, :ir, :explanations, :symbols, keyword_init: true)
 
   class Compiler
-    def initialize(vocabulary: Vocabulary::English.new, resolver: Semantics::Resolver.new,
-                   backends: Backends::Registry.default)
+    def initialize(vocabulary: Vocabulary::English.new, hir_builder: HIR::Builder.new,
+                   lowerer: HIR::Lowerer.new, backends: Backends::Registry.default)
       @vocabulary = vocabulary
-      @resolver = resolver
+      @hir_builder = hir_builder
+      @lowerer = lowerer
       @backends = backends
     end
 
@@ -27,20 +28,25 @@ module Semauri
     end
 
     def hir(source)
-      HIR::Builder.new.build(parse(source))
+      @hir_builder.build(parse(source))
     end
 
     def analyze(source)
       ast = parse(source)
-      [ast, @resolver.resolve(ast)]
+      hir_result = @hir_builder.build(ast)
+      [ast, @lowerer.lower(hir_result)]
     end
 
     def compile(source, backend: "html")
-      ast, semantic = analyze(source)
+      ast = parse(source)
+      hir_result = @hir_builder.build(ast)
+      semantic = @lowerer.lower(hir_result)
       output = @backends.fetch(backend).render(semantic.program)
+
       CompilationResult.new(
         output: output,
         ast: ast,
+        hir: hir_result.program,
         ir: semantic.program,
         explanations: semantic.explanations,
         symbols: semantic.symbols
