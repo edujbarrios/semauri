@@ -2,31 +2,38 @@
 
 **Natural to write. Deterministic to run.**
 
-Semauri is an experimental, deterministic programming language that explores how close programming can get to human language without asking a probabilistic model to guess what the program means.
+Semauri is an experimental deterministic programming language that explores how close programming can get to human language without asking a probabilistic model to guess what a program means.
 
-Semauri is open source from its first commit. It was created by **Eduardo J. Barrios** and is licensed under the **Apache License 2.0**.
+Created by **Eduardo J. Barrios**. Open source under the **Apache License 2.0**.
 
-> Status: **0.2 / experimental**. The language is intentionally small while its semantics and architecture are being established.
+> Status: **0.4.x / experimental**. Semauri already has a lexer, handwritten parser, typed expressions, lexical scopes, stable semantic symbols, deterministic references and conditional control flow. The language remains intentionally small while the compiler architecture matures.
 
-## Why Semauri?
+## Philosophy
 
-Most natural-language programming experiments either become unrestricted prose or delegate meaning to an LLM. Semauri takes a different approach:
+Semauri uses **controlled natural language** rather than unrestricted prose.
 
-- **Controlled natural language** — source code should read naturally, but accepted syntax has a specification.
-- **Deterministic semantics** — the same valid program has the same meaning every time.
-- **Explainable inference** — implicit decisions are inspectable with `semauri explain`.
-- **Explicit ambiguity errors** — the compiler refuses to guess when a reference has multiple meanings.
-- **No LLM required** — the reference compiler does not need network access or a model.
-- **Extensible by design** — surface vocabularies, semantic analysis and output backends are separate layers.
+- **Deterministic semantics** — ambiguity is a compiler error, not a request to guess.
+- **No LLM required** — the reference compiler is local and deterministic.
+- **Explainable resolution** — `semauri explain` exposes semantic decisions.
+- **Compiler tooling first** — tokens, AST, symbols and diagnostics are inspectable.
+- **Extensible boundaries** — vocabularies, semantics, IR and backends are separate layers.
 
 ## Example
 
-Create `shop.sema`:
-
 ```text
-Create a web for a pet store.
+Let basePrice be 18.
+Let tax be 4.
+Let total be basePrice plus tax.
+
+Create a web called Pet Shop.
 Add a button called Buy.
-Make it blue.
+
+If total is greater than 20 and not false:
+  Let accent be red.
+  Set the color of the button called Buy to accent.
+Otherwise:
+  Set the color of the button called Buy to green.
+End.
 ```
 
 Build it:
@@ -35,76 +42,34 @@ Build it:
 ruby bin/semauri build shop.sema -o shop.html
 ```
 
-Semauri creates a web document, adds a semantic button entity and resolves `it` to that button because it is the only addressable element in scope.
-
-You can inspect those decisions:
+Inspect compiler stages:
 
 ```bash
+ruby bin/semauri tokens shop.sema
+ruby bin/semauri ast shop.sema
+ruby bin/semauri symbols shop.sema
 ruby bin/semauri explain shop.sema
+ruby bin/semauri check shop.sema
 ```
-
-```text
-1. 'web' resolved to an HTML web document (default web backend).
-2. Subject resolved to 'Pet Store'.
-3. No title was provided, so the web title defaults to its subject: 'Pet Store'.
-4. Added button 'Buy' as button-1.
-5. 'it' resolved to button 'Buy' (button-1).
-6. Set button-1.color to 'blue'.
-```
-
-If the program contains more than one possible referent, Semauri rejects the program instead of guessing:
-
-```text
-Create a web called Shop.
-Add a button called Buy.
-Add an image called Logo.
-Make it blue.
-```
-
-produces semantic error `S305` because `it` is ambiguous.
-
-You can disambiguate explicitly:
-
-```text
-Create a web called Shop.
-Add a button called Buy.
-Add an image called Logo.
-Make the button called Buy blue.
-```
-
-The explicit reference resolves only the `Buy` button; the image is left unchanged.
 
 ## Current language surface
 
-Semauri 0.2 currently supports:
+Semauri currently supports:
 
-```text
-Create a web for a pet store.
-Create a web called Hello World.
-Make a web called Hello World.
-Add a title called Happy Paws.
-Add a button called Buy.
-Add an image called Logo.
-Make it blue.
-Make the button called Buy red.
-```
+- web documents, buttons and images
+- explicit and constrained-pronoun references
+- colors, strings, numbers and booleans
+- immutable `Let` bindings
+- lexical shadowing
+- arithmetic with precedence and parentheses
+- typed comparisons
+- `and`, `or`, `not` with short-circuit semantics
+- `If / Otherwise / End`
+- canonical property assignment such as `Set the color of ... to ...`
 
-The supported color vocabulary is intentionally constrained and deterministic.
+Current `If` branches are selected during semantic analysis because all current values are compile-time-known. Runtime control flow will require a dedicated control-flow IR rather than silently changing this model.
 
-## CLI
-
-```text
-semauri tokens FILE
-semauri ast FILE
-semauri explain FILE
-semauri check FILE
-semauri build FILE [-o PATH]
-semauri version
-```
-
-During development, invoke the CLI with `ruby bin/semauri ...`.
-
-## Architecture
+## Compiler architecture
 
 ```text
 source text
@@ -113,22 +78,36 @@ vocabulary + lexer
     ↓
 tokens
     ↓
-parser
+recursive-descent parser
     ↓
-AST
+syntax AST
     ↓
-semantic resolver + entity table
+semantic scopes + symbol table + expression typing
     ↓
-IR
+semantic/domain IR
     ↓
 backend registry
     ↓
 HTML (today), other targets later
 ```
 
-The important rule is that **backends do not parse natural language**. References are resolved before code generation, so a backend receives explicit semantic entities rather than prose.
+A variable name is not its identity. Bindings receive stable semantic symbol IDs, so shadowed names remain distinct and tooling can inspect definitions independently of source spelling.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/LANGUAGE.md](docs/LANGUAGE.md).
+The next compiler architecture milestone is a **typed HIR** between syntax AST and target/domain IR. See [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## CLI
+
+```text
+semauri tokens FILE
+semauri ast FILE
+semauri symbols FILE
+semauri explain FILE
+semauri check FILE
+semauri build FILE [-o PATH]
+semauri version
+```
+
+During development, invoke the CLI with `ruby bin/semauri ...`.
 
 ## Development
 
@@ -137,30 +116,27 @@ Requirements:
 - Ruby 3.2+
 - no runtime gems for the compiler core
 
-Run the test suite:
+Run tests:
 
 ```bash
 ruby -Ilib -e 'Dir["test/test_*.rb"].sort.each { |file| require_relative file }'
 ```
 
+CI runs syntax checks and the complete suite on Ruby 3.2, 3.3 and 3.4.
+
 ## Design principles
 
-1. **Specification before convenience.** New syntax should have documented semantics.
-2. **Explicit ambiguity errors.** The compiler must reject ambiguity rather than silently guess.
-3. **Small core, extension points at boundaries.** Backends and vocabularies are registered/injected.
-4. **No semantic work in code generators.** Inference belongs to semantic analysis.
-5. **Tests are executable language documentation.** Every language feature needs positive and negative tests.
-6. **Compatibility matters.** Breaking syntax/semantic changes are documented while the language matures.
+1. **Specification before convenience.** New syntax needs explicit semantics.
+2. **Ambiguity is an error.** The compiler never probabilistically chooses a meaning.
+3. **Names and symbols are different concepts.** Semantic identity survives shadowing and future tooling passes.
+4. **Small core, explicit extension boundaries.** Backends and domains should not monkey-patch the parser.
+5. **No semantic work in code generators.** Resolution and typing happen before rendering.
+6. **Tests are executable language documentation.** Positive and negative behavior belongs in the suite.
+7. **Compatibility matters.** Existing surface syntax should lower through common semantic machinery.
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Language changes should include a specification update and tests.
-
-## Roadmap
-
-Next priorities include source spans, richer diagnostics with source excerpts, semantic provenance, variables/scope, conditions, semantic domains and additional backends.
-
-See [docs/ROADMAP.md](docs/ROADMAP.md) for milestones.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Language changes should include tests and a specification/roadmap update.
 
 ## License and attribution
 
