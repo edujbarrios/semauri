@@ -38,11 +38,38 @@ module Semauri
             code: "S305",
             line: reference.line,
             column: reference.column,
-            hint: "Possible references: #{candidates}. Explicit references will be added in a future release."
+            hint: "Possible references: #{candidates}. Use an explicit reference such as 'the button called Buy'."
           )
         end
 
         @entities.first
+      end
+
+      def resolve_named(reference)
+        candidates = @entities.select do |entity|
+          entity.kind == reference.kind && entity.label.casecmp?(reference.label)
+        end
+
+        if candidates.empty?
+          raise SemanticError.new(
+            "No #{reference.kind} called '#{reference.label}' exists",
+            code: "S309",
+            line: reference.line,
+            column: reference.column
+          )
+        end
+
+        if candidates.length > 1
+          raise SemanticError.new(
+            "Reference to #{reference.kind} '#{reference.label}' is ambiguous",
+            code: "S310",
+            line: reference.line,
+            column: reference.column,
+            hint: "Give elements unique names before referring to them explicitly."
+          )
+        end
+
+        candidates.first
       end
     end
   end

@@ -7,6 +7,7 @@ require_relative "ast/create_web"
 require_relative "ast/set_title"
 require_relative "ast/add_element"
 require_relative "ast/pronoun_reference"
+require_relative "ast/named_reference"
 require_relative "ast/set_property"
 
 module Semauri
@@ -52,8 +53,13 @@ module Semauri
     end
 
     def make_statement(start)
-      return create_statement(start) unless check?(:PRONOUN)
+      return pronoun_property_statement(start) if check?(:PRONOUN)
+      return named_property_statement(start) if named_reference_ahead?
 
+      create_statement(start)
+    end
+
+    def pronoun_property_statement(start)
       pronoun = advance
       color = consume(:COLOR, "Expected a supported color after '#{pronoun.lexeme}'", "S206")
       consume_optional_dot
@@ -61,6 +67,34 @@ module Semauri
       target = AST::PronounReference.new(pronoun: pronoun.lexeme, line: pronoun.line, column: pronoun.column)
       AST::SetProperty.new(target: target, property: :color, value: color.lexeme.downcase,
                            line: start.line, column: start.column)
+    end
+
+    def named_property_statement(start)
+      match?(:ARTICLE)
+      kind_token = advance
+      kind = kind_token.type == :BUTTON ? :button : :image
+      consume(:CALLED, "Expected 'called' or 'named' in an explicit reference", "S207")
+
+      reference_tokens = tokens_until(:DOT, :EOF)
+      error!(peek, "Expected a name and a color", "S208") if reference_tokens.length < 2
+
+      color = reference_tokens.last
+      unless color.type == :COLOR
+        error!(color, "Expected a supported color after the referenced element", "S208")
+      end
+
+      label = phrase_from_tokens(reference_tokens[0...-1])
+      consume_optional_dot
+
+      target = AST::NamedReference.new(kind: kind, label: normalize_phrase(label),
+                                       line: kind_token.line, column: kind_token.column)
+      AST::SetProperty.new(target: target, property: :color, value: color.lexeme.downcase,
+                           line: start.line, column: start.column)
+    end
+
+    def named_reference_ahead?
+      offset = check?(:ARTICLE) ? 1 : 0
+      %i[BUTTON IMAGE].include?(@tokens[@current + offset]&.type)
     end
 
     def add_statement
@@ -89,14 +123,19 @@ module Semauri
     end
 
     def phrase_until(*terminators)
-      parts = []
-      until terminators.include?(peek.type)
-        token = advance
-        parts << (token.literal || token.lexeme)
-      end
+      tokens = tokens_until(*terminators)
+      error!(peek, "Expected a name or description", "S205") if tokens.empty?
+      phrase_from_tokens(tokens)
+    end
 
-      error!(peek, "Expected a name or description", "S205") if parts.empty?
-      parts.join(" ")
+    def tokens_until(*terminators)
+      result = []
+      result << advance until terminators.include?(peek.type)
+      result
+    end
+
+    def phrase_from_tokens(tokens)
+      tokens.map { |token| token.literal || token.lexeme }.join(" ")
     end
 
     def normalize_phrase(value)

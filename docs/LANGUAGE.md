@@ -27,7 +27,8 @@ web_qualifier = CALLED phrase | FOR [ARTICLE] phrase ;
 
 add_title     = ADD [ARTICLE] TITLE CALLED phrase ["."] ;
 add_element   = ADD [ARTICLE] (BUTTON | IMAGE) [CALLED phrase] ["."] ;
-set_color     = MAKE PRONOUN COLOR ["."] ;
+set_color     = MAKE (PRONOUN | named_reference) COLOR ["."] ;
+named_reference = [ARTICLE] (BUTTON | IMAGE) CALLED phrase ;
 phrase        = token+ ;
 ```
 
@@ -35,7 +36,7 @@ The EBNF is descriptive; the handwritten parser is the executable implementation
 
 ## Contextual `make`
 
-`make` is intentionally contextual:
+`make` is contextual:
 
 ```text
 Make a web called Hello.
@@ -47,7 +48,7 @@ means creation, while:
 Make it blue.
 ```
 
-means property mutation. The parser represents the second form as a `SetProperty` AST node with a `PronounReference`; it does not decide which entity `it` means.
+means property mutation.
 
 ## Entity semantics
 
@@ -63,40 +64,26 @@ creates an entity equivalent to:
 Element(id="button-1", kind=button, label="Buy")
 ```
 
-The IR stores entities independently of HTML.
-
 ## Pronoun resolution
 
-`it` is currently the only supported pronoun.
+`it` is currently the only supported pronoun. It resolves only when exactly one addressable element exists. With zero candidates Semauri emits `S304`; with multiple candidates it emits `S305` rather than guessing.
 
-If exactly one addressable element exists:
+## Explicit references
 
-```text
-Create a web called Shop.
-Add a button called Buy.
-Make it blue.
-```
-
-`it` resolves deterministically to `button-1`.
-
-If no addressable element exists, semantic error `S304` is emitted.
-
-If multiple elements could be referenced, semantic error `S305` is emitted. Semauri does **not** silently select the most recent object:
+When a pronoun would be ambiguous, source can identify an entity by kind and label:
 
 ```text
 Create a web called Shop.
 Add a button called Buy.
 Add an image called Logo.
-Make it blue.
+Make the button called Buy blue.
 ```
 
-is intentionally ambiguous and therefore invalid.
+The explicit reference resolves to `button-1`, leaving `image-1` unchanged.
 
-This strict rule gives future versions room to add explicit named references without changing the meaning of existing source.
+If no matching entity exists, Semauri emits `S309`. If more than one entity has the same kind and label, it emits `S310`.
 
 ## Web semantics
-
-### Subject-derived title
 
 ```text
 Create a web for a pet store.
@@ -104,20 +91,15 @@ Create a web for a pet store.
 
 produces a `WebDocument` whose title defaults to `Pet Store`.
 
-### Title override
-
 ```text
-Create a web for a pet store.
 Add a title called Happy Paws.
 ```
 
-sets the title explicitly to `Happy Paws`.
+sets the title explicitly.
 
 ## Supported colors
 
-The current English vocabulary recognizes a constrained set of named colors: black, white, red, green, blue, yellow, orange, purple, pink, gray/grey and brown.
-
-This is intentionally narrower than CSS. Language semantics should not accidentally depend on browser-specific parsing rules.
+The current English vocabulary recognizes black, white, red, green, blue, yellow, orange, purple, pink, gray/grey and brown.
 
 ## Errors
 
@@ -126,13 +108,12 @@ This is intentionally narrower than CSS. Language semantics should not accidenta
 - `S3xx`: semantic errors
 - `S4xx`: backend errors
 
-Relevant 0.2 semantic diagnostics:
+Reference diagnostics:
 
 - `S304`: pronoun has no referent
 - `S305`: pronoun is ambiguous
-- `S306`: element added before document creation
-- `S307`: mutation before document creation
-- `S308`: unsupported reference kind
+- `S309`: explicit reference does not exist
+- `S310`: explicit reference is ambiguous
 
 ## Determinism rule
 

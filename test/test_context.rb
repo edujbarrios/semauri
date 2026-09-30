@@ -46,6 +46,34 @@ class ContextSemanticsTest < Minitest::Test
     assert_includes error.hint, "image 'Logo'"
   end
 
+  def test_explicit_reference_resolves_ambiguity
+    source = <<~SEMA
+      Create a web called Shop.
+      Add a button called Buy.
+      Add an image called Logo.
+      Make the button called Buy blue.
+    SEMA
+
+    _ast, semantic = @compiler.analyze(source)
+    button = semantic.program.elements.find { |element| element.kind == :button }
+    image = semantic.program.elements.find { |element| element.kind == :image }
+
+    assert_equal "blue", button.properties[:color]
+    assert_nil image.properties[:color]
+    assert semantic.explanations.any? { |line| line.include?("Explicit reference resolved") }
+  end
+
+  def test_explicit_reference_reports_missing_entity
+    source = <<~SEMA
+      Create a web called Shop.
+      Add an image called Logo.
+      Make the button called Buy blue.
+    SEMA
+
+    error = assert_raises(Semauri::SemanticError) { @compiler.analyze(source) }
+    assert_equal "S309", error.code
+  end
+
   def test_rejects_a_pronoun_without_a_referent
     source = <<~SEMA
       Create a web called Shop.

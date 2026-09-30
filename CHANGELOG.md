@@ -8,6 +8,7 @@ All notable changes to Semauri will be documented in this file.
 - Semantic entities for generated web elements.
 - Deterministic pronoun resolution for `it`.
 - Ambiguity diagnostics for references.
+- Explicit named references such as `Make the button called Buy blue.`.
 - Button and image elements.
 - Property mutation with natural syntax such as `Make it blue.`.
 - HTML rendering for semantic elements.

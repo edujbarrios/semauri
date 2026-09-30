@@ -28,6 +28,10 @@ module Semauri
         { type: "pronoun_reference", pronoun: node.pronoun, line: node.line, column: node.column }
       end
 
+      def visit_named_reference(node)
+        { type: "named_reference", kind: node.kind, label: node.label, line: node.line, column: node.column }
+      end
+
       def visit_set_property(node)
         {
           type: "set_property",

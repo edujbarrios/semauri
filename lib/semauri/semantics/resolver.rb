@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 require_relative "../errors"
+require_relative "../ast/pronoun_reference"
+require_relative "../ast/named_reference"
 require_relative "../ir/web_document"
 require_relative "../ir/element"
 require_relative "result"
@@ -69,7 +71,7 @@ module Semauri
         target = resolve_reference(node.target)
         updated = target.with_property(node.property, node.value)
         @document = @document.replace_element(updated)
-        @explanations << "'#{node.target.pronoun}' resolved to #{target.kind} '#{target.label}' (#{target.id})."
+        @explanations << reference_explanation(node.target, target)
         @explanations << "Set #{target.id}.#{node.property} to '#{node.value}'."
       end
 
@@ -79,8 +81,18 @@ module Semauri
         case reference
         when AST::PronounReference
           @entities.resolve_pronoun(reference)
+        when AST::NamedReference
+          @entities.resolve_named(reference)
         else
           raise SemanticError.new("Unsupported reference #{reference.class}", code: "S308")
+        end
+      end
+
+      def reference_explanation(reference, target)
+        if reference.is_a?(AST::PronounReference)
+          "'#{reference.pronoun}' resolved to #{target.kind} '#{target.label}' (#{target.id})."
+        else
+          "Explicit reference resolved to #{target.kind} '#{target.label}' (#{target.id})."
         end
       end
 
