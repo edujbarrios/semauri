@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby: ["3.2", "3.3", "3.4"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+      - name: Syntax check
+        run: |
+          find lib test -name '*.rb' -print0 | xargs -0 -n1 ruby -c
+          ruby -c bin/semauri
+      - name: Tests
+        run: ruby -Ilib -e 'Dir["test/test_*.rb"].sort.each { |file| require_relative file }'
