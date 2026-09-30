@@ -26,6 +26,8 @@ All notable changes to Semauri will be documented in this file.
 - Strict equality and numeric ordering comparisons.
 - Deterministic `If / Otherwise / End` control flow.
 - Child lexical scopes for conditional blocks.
+- Logical `and`, `or`, and `not` expressions.
+- Short-circuit boolean evaluation.
 
 ### Changed
 - `make` is parsed contextually: it can create an artifact or mutate an existing entity.
