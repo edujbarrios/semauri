@@ -24,9 +24,9 @@ module Semauri
       end
 
       def visit_variable_reference(node)
-        value = @scope.resolve(node)
-        @on_variable_resolution&.call(node, value)
-        value
+        binding = @scope.resolve_binding(node)
+        @on_variable_resolution&.call(node, binding.value, binding.symbol)
+        binding.value
       end
 
       def visit_unary_expression(node)

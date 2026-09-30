@@ -23,7 +23,12 @@ module Semauri
         @scope = Scope.new
         ast.accept(self)
         raise SemanticError.new("Program does not create an artifact", code: "S301") unless @document
-        Result.new(program: @document, explanations: @explanations.freeze)
+
+        Result.new(
+          program: @document,
+          explanations: @explanations.freeze,
+          symbols: @scope.symbols
+        )
       ensure
         @document = @explanations = @entities = @scope = nil
       end
@@ -76,8 +81,8 @@ module Semauri
 
       def visit_let_binding(node)
         value = evaluate(node.value)
-        @scope.define(node.name, value, node: node)
-        @explanations << "Bound '#{node.name}' to #{value.describe}."
+        binding = @scope.define(node.name, value, node: node)
+        @explanations << "Bound '#{node.name}' as symbol ##{binding.symbol.id} to #{value.describe}."
       end
 
       def visit_set_property(node)
@@ -94,8 +99,8 @@ module Semauri
       private
 
       def evaluate(expression)
-        ExpressionEvaluator.new(scope: @scope, on_variable_resolution: lambda { |reference, value|
-          @explanations << "Variable '#{reference.name}' resolved to #{value.describe}."
+        ExpressionEvaluator.new(scope: @scope, on_variable_resolution: lambda { |reference, value, symbol|
+          @explanations << "Variable '#{reference.name}' resolved to symbol ##{symbol.id} (#{value.describe})."
         }).evaluate(expression)
       end
 
