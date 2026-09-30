@@ -6,13 +6,15 @@
 
 Semauri is an experimental programming language that lets people write deterministic programs using controlled natural language.
 
-It is not an LLM wrapper and it does not ask AI to guess what the user meant. Semauri parses a defined language, builds compiler structures, resolves meaning, checks types and then lowers the program to a target backend.
+It is not an LLM wrapper and it does not ask AI to guess what the user meant. Semauri parses a defined language, builds compiler structures, resolves meaning, checks types and lowers the program to a target backend.
 
 Created by **Eduardo J. Barrios** and open sourced from the beginning under the **Apache License 2.0**.
 
 > Status: **0.4.x / experimental**
 
 ## Example
+
+Create `shop.sema`:
 
 ```text
 Let price be 18.
@@ -29,17 +31,61 @@ Otherwise:
 End.
 ```
 
-Compile it:
+### Compile it
 
 ```bash
-ruby bin/semauri build shop.sema -o shop.html
+ruby bin/semauri build shop.sema
 ```
+
+Output:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pet Shop</title>
+</head>
+<body>
+  <h1>Pet Shop</h1>
+    <button style="color: red">Buy</button>
+</body>
+</html>
+```
+
+`total` evaluates to `22`, so Semauri deterministically selects the first branch and the generated button is red.
+
+### Explain the same program
+
+```bash
+ruby bin/semauri explain shop.sema
+```
+
+Output:
+
+```text
+1. Bound 'price' as symbol #1 to number 18.
+2. Bound 'tax' as symbol #2 to number 4.
+3. Variable 'price' resolved to symbol #1 (number 18).
+4. Variable 'tax' resolved to symbol #2 (number 4).
+5. Bound 'total' as symbol #3 to number 22.
+6. 'web' resolved to an HTML web document (default web backend).
+7. Title explicitly set to 'Pet Shop'.
+8. Added button 'Buy' as button-1.
+9. Variable 'total' resolved to symbol #3 (number 22).
+10. If condition evaluated to true; selected consequence branch.
+11. Explicit reference resolved to button 'Buy' (button-1).
+12. Set button-1.color to "red".
+```
+
+The important part is that `explain` reports the compiler's actual semantic decisions; it is not an AI-generated explanation.
 
 ## How Semauri was built
 
 The reference compiler is written in **Ruby** and intentionally avoids runtime dependencies in its core.
 
-It started from a very small handwritten compiler and has been grown layer by layer:
+It started from a small handwritten compiler and has grown layer by layer:
 
 ```text
 source
@@ -53,6 +99,8 @@ recursive-descent parser
 AST
   ↓
 scopes + symbols + type checking
+  ↓
+typed HIR
   ↓
 semantic IR
   ↓
@@ -71,7 +119,7 @@ Important implementation choices:
 - visitor, strategy, registry and dependency-injection patterns
 - tests used as executable language specification
 
-The compiler is being developed incrementally so each stage remains understandable and replaceable. The next architectural step is a typed HIR between the syntax AST and lower-level/domain IR.
+The compiler is developed incrementally so each stage remains understandable, testable and replaceable.
 
 ## Current features
 
@@ -82,23 +130,12 @@ The compiler is being developed incrementally so each stage remains understandab
 - `and`, `or`, `not` with short-circuit evaluation
 - lexical scopes and shadowing
 - stable semantic symbols
+- typed HIR
 - `If / Otherwise / End`
 - web documents, buttons and images
 - explicit references and constrained `it` resolution
 - HTML backend
 - source-aware diagnostics
-
-## Inspect the compiler
-
-Semauri exposes its internal stages instead of hiding them:
-
-```bash
-ruby bin/semauri tokens shop.sema
-ruby bin/semauri ast shop.sema
-ruby bin/semauri symbols shop.sema
-ruby bin/semauri explain shop.sema
-ruby bin/semauri check shop.sema
-```
 
 ## Development
 
@@ -111,6 +148,8 @@ ruby -Ilib -e 'Dir["test/test_*.rb"].sort.each { |file| require_relative file }'
 ```
 
 CI tests Ruby 3.2, 3.3 and 3.4.
+
+Other compiler inspection commands are available through `semauri help`.
 
 ## Project principles
 
