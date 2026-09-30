@@ -28,6 +28,7 @@ module Semauri
       case command
       when "tokens" then tokens(argv)
       when "ast" then ast(argv)
+      when "hir" then hir(argv)
       when "symbols" then symbols(argv)
       when "explain" then explain(argv)
       when "check" then check(argv)
@@ -60,6 +61,12 @@ module Semauri
       source = read_source!(argv)
       tree = @compiler.parse(source)
       @stdout.puts JSON.pretty_generate(AST::Serializer.new.serialize(tree))
+      EXIT_SUCCESS
+    end
+
+    def hir(argv)
+      source = read_source!(argv)
+      @stdout.puts JSON.pretty_generate(@compiler.hir(source).to_h)
       EXIT_SUCCESS
     end
 
@@ -128,7 +135,8 @@ module Semauri
 
         Commands:
           tokens FILE              Print lexer tokens as JSON
-          ast FILE                 Print the parsed AST as JSON
+          ast FILE                 Print the parsed syntax AST as JSON
+          hir FILE                 Print typed HIR and symbol references as JSON
           symbols FILE             Print semantic symbols as JSON
           explain FILE             Explain semantic decisions
           check FILE               Validate source without generating output
