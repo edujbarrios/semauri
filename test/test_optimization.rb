@@ -8,7 +8,7 @@ class OptimizationTest < Minitest::Test
     @compiler = Semauri::Compiler.new
   end
 
-  def test_constant_propagation_and_dead_branch_elimination
+  def test_constant_propagation_dead_branch_and_dead_binding_elimination
     source = <<~SEMA
       Let price be 18.
       Let tax be 4.
@@ -27,8 +27,13 @@ class OptimizationTest < Minitest::Test
 
     refute_includes kinds, :if
     refute_includes kinds, :binary
+    refute_includes kinds, :let
     assert_operator optimized.changes, :>, 0
-    assert_equal ["constant_folding", "dead_control_flow"], optimized.passes.map { |pass| pass[:name] }
+    assert_equal [
+      "constant_folding",
+      "dead_control_flow",
+      "dead_binding_elimination"
+    ], optimized.passes.map { |pass| pass[:name] }
   end
 
   def test_optimization_preserves_generated_output
@@ -54,7 +59,7 @@ class OptimizationTest < Minitest::Test
     assert_includes result.output, "Works"
   end
 
-  def test_symbol_table_remains_full_program_after_dead_branch_elimination
+  def test_symbol_table_remains_full_program_after_dead_code_elimination
     source = <<~SEMA
       Create a web called Symbols.
       If true:
@@ -68,6 +73,36 @@ class OptimizationTest < Minitest::Test
 
     assert_equal %w[chosen discarded], optimized.symbols.map(&:name)
     refute_includes collect_kinds(optimized.program), :if
+    refute_includes collect_kinds(optimized.program), :let
+  end
+
+  def test_dead_binding_analysis_removes_transitive_unused_chain
+    source = <<~SEMA
+      Let base be 10.
+      Let doubled be base times 2.
+      Let unused be doubled plus 1.
+      Create a web called Clean.
+    SEMA
+
+    optimized = @compiler.optimized_hir(source)
+
+    refute_includes collect_kinds(optimized.program), :let
+    assert_equal %w[base doubled unused], optimized.symbols.map(&:name)
+  end
+
+  def test_binding_used_by_loop_body_is_not_removed_before_constant_propagation_needs_it
+    source = <<~SEMA
+      Let colors be a list of red, green.
+      Create a web called Loop.
+      Add a button called Buy.
+      For every accent in colors:
+        Set the color of the button called Buy to accent.
+      End.
+    SEMA
+
+    result = @compiler.compile(source)
+
+    assert_includes result.output, "color: green"
   end
 
   def test_compile_exposes_raw_and_optimized_hir
