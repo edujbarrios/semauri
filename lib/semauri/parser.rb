@@ -13,6 +13,9 @@ require_relative "ast/set_property"
 require_relative "ast/literal"
 require_relative "ast/variable_reference"
 require_relative "ast/let_binding"
+require_relative "ast/block"
+require_relative "ast/binary_expression"
+require_relative "ast/if_statement"
 
 module Semauri
   class Parser
@@ -35,8 +38,9 @@ module Semauri
       return add_statement if match?(:ADD)
       return let_statement(previous) if match?(:LET)
       return set_statement(previous) if match?(:SET)
+      return if_statement(previous) if match?(:IF)
 
-      error!(peek, "Expected a statement beginning with 'Create', 'Make', 'Add', 'Let' or 'Set'", "S201")
+      error!(peek, "Expected a statement beginning with 'Create', 'Make', 'Add', 'Let', 'Set' or 'If'", "S201")
     end
 
     def create_statement(start)
@@ -104,7 +108,7 @@ module Semauri
     def let_statement(start)
       name = consume(:WORD, "Expected a variable name after 'Let'", "S209")
       consume(:BE, "Expected 'be' after the variable name", "S210")
-      value = value_expression
+      value = expression
       consume_optional_dot
 
       AST::LetBinding.new(name: name.lexeme, value: value, span: span_from(start))
@@ -112,14 +116,146 @@ module Semauri
 
     def set_statement(start)
       match?(:ARTICLE)
-      consume(:COLOR_PROPERTY, "Semauri 0.3 currently supports setting the 'color' property", "S211")
+      consume(:COLOR_PROPERTY, "Semauri currently supports setting the 'color' property", "S211")
       consume(:OF, "Expected 'of' after the property name", "S212")
       target = canonical_reference
       consume(:TO, "Expected 'to' before the new value", "S213")
-      value = value_expression
+      value = expression
       consume_optional_dot
 
       AST::SetProperty.new(target: target, property: :color, value: value, span: span_from(start))
+    end
+
+    def if_statement(start)
+      condition = expression
+      consume(:COLON, "Expected ':' after the if condition", "S218")
+
+      consequence = block_until(:OTHERWISE, :END)
+      alternative = nil
+
+      if match?(:OTHERWISE)
+        consume(:COLON, "Expected ':' after 'Otherwise'", "S219")
+        alternative = block_until(:END)
+      end
+
+      consume(:END, "Expected 'End' to close the If block", "S220")
+      consume_optional_dot
+
+      AST::IfStatement.new(
+        condition: condition,
+        consequence: consequence,
+        alternative: alternative,
+        span: span_from(start)
+      )
+    end
+
+    def block_until(*terminators)
+      statements = []
+      statements << statement until terminators.include?(peek.type) || check?(:EOF)
+      error!(peek, "Expected at least one statement in the block", "S221") if statements.empty?
+
+      AST::Block.new(statements: statements, span: program_span(statements))
+    end
+
+    def expression
+      comparison
+    end
+
+    def comparison
+      left = additive
+      return left unless match?(:IS)
+
+      operator = if match?(:GREATER)
+                   consume(:THAN, "Expected 'than' after 'greater'", "S222")
+                   :greater_than
+                 elsif match?(:LESS)
+                   consume(:THAN, "Expected 'than' after 'less'", "S223")
+                   :less_than
+                 elsif match?(:EQUAL)
+                   consume(:TO, "Expected 'to' after 'equal'", "S224")
+                   :equal
+                 else
+                   error!(peek, "Expected 'greater than', 'less than', or 'equal to' after 'is'", "S225")
+                 end
+
+      right = additive
+      AST::BinaryExpression.new(left: left, operator: operator, right: right, span: span_between(left, right))
+    end
+
+    def additive
+      expression = multiplicative
+
+      while match?(:PLUS, :MINUS)
+        operator_token = previous
+        right = multiplicative
+        operator = operator_token.type == :PLUS ? :add : :subtract
+        expression = AST::BinaryExpression.new(left: expression, operator: operator, right: right,
+                                               span: span_between(expression, right))
+      end
+
+      expression
+    end
+
+    def multiplicative
+      expression = primary
+
+      loop do
+        if match?(:TIMES)
+          right = primary
+          expression = AST::BinaryExpression.new(left: expression, operator: :multiply, right: right,
+                                                 span: span_between(expression, right))
+        elsif match?(:DIVIDED)
+          consume(:BY, "Expected 'by' after 'divided'", "S226")
+          right = primary
+          expression = AST::BinaryExpression.new(left: expression, operator: :divide, right: right,
+                                                 span: span_between(expression, right))
+        else
+          break
+        end
+      end
+
+      expression
+    end
+
+    def primary
+      token = peek
+      case token.type
+      when :COLOR
+        advance
+        AST::Literal.new(value_type: :color, value: token.lexeme.downcase, span: token.span)
+      when :STRING
+        advance
+        AST::Literal.new(value_type: :string, value: token.literal, span: token.span)
+      when :NUMBER
+        advance
+        AST::Literal.new(value_type: :number, value: token.literal, span: token.span)
+      when :BOOLEAN
+        advance
+        AST::Literal.new(value_type: :boolean, value: token.lexeme.casecmp?("true"), span: token.span)
+      when :WORD
+        advance
+        AST::VariableReference.new(name: token.lexeme, span: token.span)
+      when :LPAREN
+        opening = advance
+        inner = expression
+        closing = consume(:RPAREN, "Expected ')' after expression", "S227")
+        re_span_expression(inner, span_between(opening, closing))
+      else
+        error!(token, "Expected a color, string, number, boolean, variable or parenthesized expression", "S217")
+      end
+    end
+
+    def re_span_expression(expression, span)
+      case expression
+      when AST::BinaryExpression
+        AST::BinaryExpression.new(left: expression.left, operator: expression.operator, right: expression.right, span: span)
+      when AST::Literal
+        AST::Literal.new(value_type: expression.value_type, value: expression.value, span: span)
+      when AST::VariableReference
+        AST::VariableReference.new(name: expression.name, span: span)
+      else
+        expression
+      end
     end
 
     def canonical_reference
@@ -135,31 +271,8 @@ module Semauri
       label_tokens = tokens_until(:TO, :EOF)
       error!(peek, "Expected the referenced element name", "S216") if label_tokens.empty?
 
-      AST::NamedReference.new(
-        kind: kind,
-        label: normalize_phrase(phrase_from_tokens(label_tokens)),
-        span: span_between(kind_token, label_tokens.last)
-      )
-    end
-
-    def value_expression
-      token = peek
-      case token.type
-      when :COLOR
-        advance
-        AST::Literal.new(value_type: :color, value: token.lexeme.downcase, span: token.span)
-      when :STRING
-        advance
-        AST::Literal.new(value_type: :string, value: token.literal, span: token.span)
-      when :NUMBER
-        advance
-        AST::Literal.new(value_type: :number, value: token.literal, span: token.span)
-      when :WORD
-        advance
-        AST::VariableReference.new(name: token.lexeme, span: token.span)
-      else
-        error!(token, "Expected a color, string, number or variable", "S217")
-      end
+      AST::NamedReference.new(kind: kind, label: normalize_phrase(phrase_from_tokens(label_tokens)),
+                              span: span_between(kind_token, label_tokens.last))
     end
 
     def named_reference_ahead?
@@ -219,12 +332,8 @@ module Semauri
     def program_span(statements)
       return SourceSpan.point(1, 1) if statements.empty?
 
-      SourceSpan.new(
-        start_line: statements.first.line,
-        start_column: statements.first.column,
-        end_line: statements.last.end_line,
-        end_column: statements.last.end_column
-      )
+      SourceSpan.new(start_line: statements.first.line, start_column: statements.first.column,
+                     end_line: statements.last.end_line, end_column: statements.last.end_column)
     end
 
     def span_from(start)
@@ -232,12 +341,8 @@ module Semauri
     end
 
     def span_between(first, last)
-      SourceSpan.new(
-        start_line: first.line,
-        start_column: first.column,
-        end_line: last.end_line,
-        end_column: last.end_column
-      )
+      SourceSpan.new(start_line: first.line, start_column: first.column,
+                     end_line: last.end_line, end_column: last.end_column)
     end
 
     def consume_optional_dot
