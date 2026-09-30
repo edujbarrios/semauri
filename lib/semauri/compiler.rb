@@ -53,6 +53,11 @@ module Semauri
       ast = parse(source)
       hir_result = @hir_builder.build(ast)
       optimized = @optimizer.run(hir_result)
+
+      # Keep a source-oriented trace while lowering the optimized program for
+      # the generated artifact. This deliberately separates observability from
+      # optimization implementation details.
+      source_semantic = @lowerer.lower(hir_result)
       semantic = @lowerer.lower(optimized)
       output = @backends.fetch(backend).render(semantic.program)
 
@@ -62,7 +67,7 @@ module Semauri
         hir: hir_result.program,
         optimized_hir: optimized.program,
         ir: semantic.program,
-        explanations: semantic.explanations,
+        explanations: source_semantic.explanations,
         symbols: semantic.symbols
       )
     end
