@@ -1,0 +1,12 @@
+Let price be 18.
+Let tax be 4.
+Let total be price plus tax.
+
+Create a web called Pet Shop.
+Add a button called Buy.
+
+If total is greater than 20:
+  Set the color of the button called Buy to red.
+Otherwise:
+  Set the color of the button called Buy to green.
+End.

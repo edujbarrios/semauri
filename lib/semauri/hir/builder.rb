@@ -36,7 +36,6 @@ module Semauri
           key = reference.name.to_s.downcase
           return @symbols[key] if @symbols.key?(key)
           return @parent.resolve(reference) if @parent
-
           raise SemanticError.new(
             "Unknown variable '#{reference.name}'",
             code: "S312",
@@ -58,31 +57,29 @@ module Semauri
 
       def visit_program(node)
         HIR::Node.new(kind: :program, type: :unit,
-                      fields: { statements: node.statements.map { |statement| statement.accept(self) } },
-                      span: node.span)
+                      fields: { statements: node.statements.map { |statement| statement.accept(self) } }, span: node.span)
       end
 
       def visit_block(node)
-        with_child_environment do
-          HIR::Node.new(kind: :block, type: :unit,
-                        fields: { statements: node.statements.map { |statement| statement.accept(self) } },
-                        span: node.span)
-        end
+        with_child_environment { build_block(node) }
       end
 
       def visit_let_binding(node)
         value = node.value.accept(self)
         symbol = @symbols.create(name: node.name, kind: :variable, type: value.type, definition_span: node.span)
         @environment.define(symbol, node: node)
-
         HIR::Node.new(kind: :let, type: :unit,
-                      fields: { symbol_id: symbol.id, name: symbol.name, value: value },
-                      span: node.span)
+                      fields: { symbol_id: symbol.id, name: symbol.name, value: value }, span: node.span)
       end
 
       def visit_literal(node)
-        HIR::Node.new(kind: :literal, type: node.value_type,
-                      fields: { value: node.value }, span: node.span)
+        HIR::Node.new(kind: :literal, type: node.value_type, fields: { value: node.value }, span: node.span)
+      end
+
+      def visit_list_literal(node)
+        items = node.items.map { |item| item.accept(self) }
+        type = Semantics::TypeSystem.list_type(items.map(&:type), node: node)
+        HIR::Node.new(kind: :list, type: type, fields: { items: items }, span: node.span)
       end
 
       def visit_variable_reference(node)
@@ -112,20 +109,31 @@ module Semauri
                                                message: "If condition must evaluate to boolean")
         consequence = node.consequence.accept(self)
         alternative = node.alternative&.accept(self)
-
         HIR::Node.new(kind: :if, type: :unit,
-                      fields: { condition: condition, consequence: consequence, alternative: alternative },
-                      span: node.span)
+                      fields: { condition: condition, consequence: consequence, alternative: alternative }, span: node.span)
+      end
+
+      def visit_for_each(node)
+        iterable = node.iterable.accept(self)
+        list_type = Semantics::TypeSystem.ensure_list!(iterable.type, node: node.iterable)
+
+        with_child_environment do
+          symbol = @symbols.create(name: node.variable_name, kind: :iterator,
+                                   type: list_type.element_type, definition_span: node.binding_span)
+          @environment.define(symbol, node: node)
+          body = build_block(node.body)
+          HIR::Node.new(kind: :for_each, type: :unit,
+                        fields: { iterator_symbol_id: symbol.id, iterator_name: symbol.name,
+                                  iterable: iterable, body: body }, span: node.span)
+        end
       end
 
       def visit_create_web(node)
-        HIR::Node.new(kind: :create_web, type: :unit,
-                      fields: { subject: node.subject, title: node.title }, span: node.span)
+        HIR::Node.new(kind: :create_web, type: :unit, fields: { subject: node.subject, title: node.title }, span: node.span)
       end
 
       def visit_set_title(node)
-        HIR::Node.new(kind: :set_title, type: :unit,
-                      fields: { title: node.title }, span: node.span)
+        HIR::Node.new(kind: :set_title, type: :unit, fields: { title: node.title }, span: node.span)
       end
 
       def visit_add_element(node)
@@ -147,12 +155,16 @@ module Semauri
         target = node.target.accept(self)
         value = node.value.accept(self)
         Semantics::TypeSystem.validate_property!(node.property, value.type, node: node.value)
-
         HIR::Node.new(kind: :set_property, type: :unit,
                       fields: { target: target, property: node.property, value: value }, span: node.span)
       end
 
       private
+
+      def build_block(node)
+        HIR::Node.new(kind: :block, type: :unit,
+                      fields: { statements: node.statements.map { |statement| statement.accept(self) } }, span: node.span)
+      end
 
       def with_child_environment
         parent = @environment

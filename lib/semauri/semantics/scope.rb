@@ -23,26 +23,31 @@ module Semauri
         self.class.new(parent: self, symbol_table: symbol_table)
       end
 
-      def define(name, value, node:, kind: :variable)
+      def define(name, value, node:, kind: :variable, definition_span: nil)
         key = normalize(name)
-        if @bindings.key?(key)
-          raise SemanticError.new(
-            "Variable '#{name}' is already defined in this scope",
-            code: "S311",
-            line: node.line,
-            column: node.column,
-            end_line: node.end_line,
-            end_column: node.end_column,
-            hint: "Choose a different name or reuse the existing variable."
-          )
-        end
-
+        ensure_available!(key, name, node)
         symbol = symbol_table.create(
           name: key,
           kind: kind,
           type: value.type,
-          definition_span: node.span
+          definition_span: definition_span || node.span
         )
+        bind(symbol, value, node: node)
+      end
+
+      def bind(symbol, value, node:)
+        key = normalize(symbol.name)
+        ensure_available!(key, symbol.name, node)
+
+        unless symbol.type == value.type
+          raise SemanticError.new(
+            "Internal binding type mismatch for '#{symbol.name}': #{symbol.type} vs #{value.type}",
+            code: "S323",
+            line: node.line, column: node.column,
+            end_line: node.end_line, end_column: node.end_column
+          )
+        end
+
         binding = Binding.new(symbol: symbol, value: value, span: node.span)
         @bindings[key] = binding
         binding
@@ -65,23 +70,24 @@ module Semauri
         )
       end
 
-      def resolve(reference)
-        resolve_binding(reference).value
-      end
-
-      def symbol_for(reference)
-        resolve_binding(reference).symbol
-      end
-
-      def symbols
-        symbol_table.symbols
-      end
+      def resolve(reference) = resolve_binding(reference).value
+      def symbol_for(reference) = resolve_binding(reference).symbol
+      def symbols = symbol_table.symbols
 
       private
 
-      def normalize(name)
-        name.to_s.downcase
+      def ensure_available!(key, display_name, node)
+        return unless @bindings.key?(key)
+        raise SemanticError.new(
+          "Variable '#{display_name}' is already defined in this scope",
+          code: "S311",
+          line: node.line, column: node.column,
+          end_line: node.end_line, end_column: node.end_column,
+          hint: "Choose a different name or reuse the existing variable."
+        )
       end
+
+      def normalize(name) = name.to_s.downcase
     end
   end
 end

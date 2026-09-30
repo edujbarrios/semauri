@@ -19,6 +19,11 @@ module Semauri
           alternative: node.alternative&.accept(self) }.merge(location(node))
       end
 
+      def visit_for_each(node)
+        { type: "for_each", variable_name: node.variable_name, binding_span: node.binding_span.to_h,
+          iterable: node.iterable.accept(self), body: node.body.accept(self) }.merge(location(node))
+      end
+
       def visit_unary_expression(node)
         { type: "unary_expression", operator: node.operator, operand: node.operand.accept(self) }.merge(location(node))
       end
@@ -26,6 +31,10 @@ module Semauri
       def visit_binary_expression(node)
         { type: "binary_expression", operator: node.operator, left: node.left.accept(self),
           right: node.right.accept(self) }.merge(location(node))
+      end
+
+      def visit_list_literal(node)
+        { type: "list_literal", items: node.items.map { |item| item.accept(self) } }.merge(location(node))
       end
 
       def visit_create_web(node) = { type: "create_web", subject: node.subject, title: node.title }.merge(location(node))
