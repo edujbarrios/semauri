@@ -90,6 +90,19 @@ class OptimizationTest < Minitest::Test
     assert_equal %w[base doubled unused], optimized.symbols.map(&:name)
   end
 
+  def test_dead_binding_elimination_does_not_hide_trapping_initializer
+    source = <<~SEMA
+      Let doomed be 1 divided by 0.
+      Create a web called Errors Matter.
+    SEMA
+
+    optimized = @compiler.optimized_hir(source)
+    assert_includes collect_kinds(optimized.program), :let
+
+    error = assert_raises(Semauri::SemanticError) { @compiler.compile(source) }
+    assert_equal "S317", error.code
+  end
+
   def test_binding_used_by_loop_body_is_not_removed_before_constant_propagation_needs_it
     source = <<~SEMA
       Let colors be a list of red, green.
