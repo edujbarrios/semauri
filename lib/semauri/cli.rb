@@ -29,6 +29,7 @@ module Semauri
       when "tokens" then tokens(argv)
       when "ast" then ast(argv)
       when "hir" then hir(argv)
+      when "optimize" then optimize(argv)
       when "symbols" then symbols(argv)
       when "explain" then explain(argv)
       when "check" then check(argv)
@@ -67,6 +68,12 @@ module Semauri
     def hir(argv)
       source = read_source!(argv)
       @stdout.puts JSON.pretty_generate(@compiler.hir(source).to_h)
+      EXIT_SUCCESS
+    end
+
+    def optimize(argv)
+      source = read_source!(argv)
+      @stdout.puts JSON.pretty_generate(@compiler.optimized_hir(source).to_h)
       EXIT_SUCCESS
     end
 
@@ -136,7 +143,8 @@ module Semauri
         Commands:
           tokens FILE              Print lexer tokens as JSON
           ast FILE                 Print the parsed syntax AST as JSON
-          hir FILE                 Print typed HIR and symbol references as JSON
+          hir FILE                 Print typed HIR before optimization
+          optimize FILE            Print optimized HIR and pass statistics
           symbols FILE             Print semantic symbols as JSON
           explain FILE             Explain semantic decisions
           check FILE               Validate source without generating output

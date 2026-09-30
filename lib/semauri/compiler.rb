@@ -5,16 +5,22 @@ require_relative "lexer"
 require_relative "parser"
 require_relative "hir/builder"
 require_relative "hir/lowerer"
+require_relative "hir/optimization/pass_manager"
 require_relative "backends/registry"
 
 module Semauri
-  CompilationResult = Struct.new(:output, :ast, :hir, :ir, :explanations, :symbols, keyword_init: true)
+  CompilationResult = Struct.new(
+    :output, :ast, :hir, :optimized_hir, :ir, :explanations, :symbols,
+    keyword_init: true
+  )
 
   class Compiler
     def initialize(vocabulary: Vocabulary::English.new, hir_builder: HIR::Builder.new,
+                   optimizer: HIR::Optimization::PassManager.default,
                    lowerer: HIR::Lowerer.new, backends: Backends::Registry.default)
       @vocabulary = vocabulary
       @hir_builder = hir_builder
+      @optimizer = optimizer
       @lowerer = lowerer
       @backends = backends
     end
@@ -31,6 +37,12 @@ module Semauri
       @hir_builder.build(parse(source))
     end
 
+    def optimized_hir(source)
+      @optimizer.run(hir(source))
+    end
+
+    # Analysis intentionally lowers unoptimized HIR so `explain` describes the
+    # source program rather than compiler rewrites.
     def analyze(source)
       ast = parse(source)
       hir_result = @hir_builder.build(ast)
@@ -40,15 +52,22 @@ module Semauri
     def compile(source, backend: "html")
       ast = parse(source)
       hir_result = @hir_builder.build(ast)
-      semantic = @lowerer.lower(hir_result)
+      optimized = @optimizer.run(hir_result)
+
+      # Keep a source-oriented trace while lowering the optimized program for
+      # the generated artifact. This deliberately separates observability from
+      # optimization implementation details.
+      source_semantic = @lowerer.lower(hir_result)
+      semantic = @lowerer.lower(optimized)
       output = @backends.fetch(backend).render(semantic.program)
 
       CompilationResult.new(
         output: output,
         ast: ast,
         hir: hir_result.program,
+        optimized_hir: optimized.program,
         ir: semantic.program,
-        explanations: semantic.explanations,
+        explanations: source_semantic.explanations,
         symbols: semantic.symbols
       )
     end

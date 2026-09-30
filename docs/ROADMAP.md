@@ -28,11 +28,24 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - separate symbol identity and compile-time value environments
 - full-program symbol table for tooling, including unselected branches
 
-## 0.5 — optimization and semantic domains — next
+## 0.5 — optimization and semantic domains — in progress
 
-- explicit constant-folding pass over HIR
-- dead-branch/dead-loop elimination as an optimization, not HIR construction
-- formal domain-extension API
+### 0.5.0 — HIR optimization pipeline ✅
+
+- explicit composable `PassManager`
+- constant propagation for immutable bindings
+- constant folding for arithmetic, comparisons and boolean expressions
+- short-circuit-aware folding
+- dead conditional branch elimination
+- dead empty-loop elimination infrastructure
+- `semauri optimize FILE` introspection with per-pass statistics
+- production `build` lowers optimized HIR while `explain` remains source-oriented
+
+### Next
+
+- dead immutable-binding elimination with liveness/use analysis
+- optimization verification and fixed-point pass scheduling where useful
+- formal semantic-domain extension API
 - domain vocabulary + semantic contracts without parser monkey-patching
 - migrate web operations behind the domain-extension boundary
 - explore filesystem and structured-data domains
