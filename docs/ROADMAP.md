@@ -24,21 +24,22 @@ Completed:
 - semantic entity table
 - immutable element properties in the IR
 - contextual `make` (`Make a web...` vs `Make it blue.`)
+- explicit named references (`Make the button called Buy blue.`)
+- deterministic missing/duplicate reference diagnostics
 
 Remaining before the 0.2 line is considered complete:
 
 - source spans rather than point locations
 - richer diagnostics with source excerpts
-- explicit named references
 - semantic provenance for property mutations
 
 ## 0.3 — values and scope
 
 - literals
 - variables
-- named references
 - lexical scope
 - assignment semantics
+- reusable reference expressions
 
 ## 0.4 — structured control flow
 
