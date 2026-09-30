@@ -17,6 +17,7 @@ module Semauri
       @stdout = stdout
       @stderr = stderr
       @compiler = compiler
+      @current_source = nil
     end
 
     def run(argv)
@@ -39,7 +40,7 @@ module Semauri
       @stderr.puts e.message
       EXIT_USAGE
     rescue Semauri::Error => e
-      @stderr.puts e.diagnostic
+      @stderr.puts e.diagnostic(source: @current_source)
       EXIT_COMPILE_ERROR
     rescue Errno::ENOENT => e
       @stderr.puts "S001: #{e.message}"
@@ -100,7 +101,7 @@ module Semauri
       raise ArgumentError, usage unless path
       raise ArgumentError, "Unexpected arguments: #{argv.join(' ')}" unless argv.empty?
 
-      File.read(path, encoding: "UTF-8")
+      @current_source = File.read(path, encoding: "UTF-8")
     end
 
     def version

@@ -32,11 +32,10 @@ module Semauri
 
       def visit_create_web(node)
         if @document
-          raise SemanticError.new(
+          raise semantic_error(
             "Semauri currently supports one web document per source file",
             code: "S302",
-            line: node.line,
-            column: node.column,
+            node: node,
             hint: "Split independent web documents into separate .sema files."
           )
         end
@@ -69,7 +68,7 @@ module Semauri
       def visit_set_property(node)
         require_document!(node, "Cannot modify an element before creating a web document", "S307")
         target = resolve_reference(node.target)
-        updated = target.with_property(node.property, node.value)
+        updated = target.with_property(node.property, node.value, source_span: node.span)
         @document = @document.replace_element(updated)
         @explanations << reference_explanation(node.target, target)
         @explanations << "Set #{target.id}.#{node.property} to '#{node.value}'."
@@ -99,8 +98,19 @@ module Semauri
       def require_document!(node, message, code)
         return if @document
 
-        raise SemanticError.new(message, code: code, line: node.line, column: node.column,
-                                hint: "Create a web first.")
+        raise semantic_error(message, code: code, node: node, hint: "Create a web first.")
+      end
+
+      def semantic_error(message, code:, node:, hint: nil)
+        SemanticError.new(
+          message,
+          code: code,
+          line: node.line,
+          column: node.column,
+          end_line: node.end_line,
+          end_column: node.end_column,
+          hint: hint
+        )
       end
 
       def infer_title(node)

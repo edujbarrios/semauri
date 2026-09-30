@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 require_relative "errors"
+require_relative "source_span"
 require_relative "ast/program"
 require_relative "ast/create_web"
 require_relative "ast/set_title"
@@ -20,7 +21,7 @@ module Semauri
     def parse
       statements = []
       statements << statement until check?(:EOF)
-      AST::Program.new(statements: statements)
+      AST::Program.new(statements: statements, span: program_span(statements))
     end
 
     private
@@ -48,8 +49,7 @@ module Semauri
       end
 
       consume_optional_dot
-      AST::CreateWeb.new(subject: normalize_phrase(subject), title: normalize_phrase(title),
-                         line: start.line, column: start.column)
+      AST::CreateWeb.new(subject: normalize_phrase(subject), title: normalize_phrase(title), span: span_from(start))
     end
 
     def make_statement(start)
@@ -64,9 +64,8 @@ module Semauri
       color = consume(:COLOR, "Expected a supported color after '#{pronoun.lexeme}'", "S206")
       consume_optional_dot
 
-      target = AST::PronounReference.new(pronoun: pronoun.lexeme, line: pronoun.line, column: pronoun.column)
-      AST::SetProperty.new(target: target, property: :color, value: color.lexeme.downcase,
-                           line: start.line, column: start.column)
+      target = AST::PronounReference.new(pronoun: pronoun.lexeme, span: pronoun.span)
+      AST::SetProperty.new(target: target, property: :color, value: color.lexeme.downcase, span: span_from(start))
     end
 
     def named_property_statement(start)
@@ -83,13 +82,16 @@ module Semauri
         error!(color, "Expected a supported color after the referenced element", "S208")
       end
 
-      label = phrase_from_tokens(reference_tokens[0...-1])
+      label_tokens = reference_tokens[0...-1]
+      label = phrase_from_tokens(label_tokens)
       consume_optional_dot
 
-      target = AST::NamedReference.new(kind: kind, label: normalize_phrase(label),
-                                       line: kind_token.line, column: kind_token.column)
-      AST::SetProperty.new(target: target, property: :color, value: color.lexeme.downcase,
-                           line: start.line, column: start.column)
+      target = AST::NamedReference.new(
+        kind: kind,
+        label: normalize_phrase(label),
+        span: span_between(kind_token, label_tokens.last)
+      )
+      AST::SetProperty.new(target: target, property: :color, value: color.lexeme.downcase, span: span_from(start))
     end
 
     def named_reference_ahead?
@@ -112,14 +114,14 @@ module Semauri
       consume(:CALLED, "Expected 'called' or 'named' after 'title'", "S204")
       title = phrase_until(:DOT, :EOF)
       consume_optional_dot
-      AST::SetTitle.new(title: normalize_phrase(title), line: start.line, column: start.column)
+      AST::SetTitle.new(title: normalize_phrase(title), span: span_from(start))
     end
 
     def add_element(start, kind)
       label = nil
       label = phrase_until(:DOT, :EOF) if match?(:CALLED)
       consume_optional_dot
-      AST::AddElement.new(kind: kind, label: normalize_phrase(label), line: start.line, column: start.column)
+      AST::AddElement.new(kind: kind, label: normalize_phrase(label), span: span_from(start))
     end
 
     def phrase_until(*terminators)
@@ -144,6 +146,30 @@ module Semauri
       value.strip.gsub(/\s+/, " ").split.map do |word|
         word.match?(/\A[A-Z0-9]+\z/) ? word : word.capitalize
       end.join(" ")
+    end
+
+    def program_span(statements)
+      return SourceSpan.point(1, 1) if statements.empty?
+
+      SourceSpan.new(
+        start_line: statements.first.line,
+        start_column: statements.first.column,
+        end_line: statements.last.end_line,
+        end_column: statements.last.end_column
+      )
+    end
+
+    def span_from(start)
+      span_between(start, previous)
+    end
+
+    def span_between(first, last)
+      SourceSpan.new(
+        start_line: first.line,
+        start_column: first.column,
+        end_line: last.end_line,
+        end_column: last.end_column
+      )
     end
 
     def consume_optional_dot
@@ -183,7 +209,8 @@ module Semauri
     end
 
     def error!(token, message, code)
-      raise ParseError.new(message, code: code, line: token.line, column: token.column)
+      raise ParseError.new(message, code: code, line: token.line, column: token.column,
+                           end_line: token.end_line, end_column: token.end_column)
     end
   end
 end

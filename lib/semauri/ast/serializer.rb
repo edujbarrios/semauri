@@ -9,27 +9,27 @@ module Semauri
       end
 
       def visit_program(node)
-        { type: "program", statements: node.statements.map { |statement| statement.accept(self) } }
+        { type: "program", statements: node.statements.map { |statement| statement.accept(self) }, span: node.span.to_h }
       end
 
       def visit_create_web(node)
-        { type: "create_web", subject: node.subject, title: node.title, line: node.line, column: node.column }
+        { type: "create_web", subject: node.subject, title: node.title }.merge(location(node))
       end
 
       def visit_set_title(node)
-        { type: "set_title", title: node.title, line: node.line, column: node.column }
+        { type: "set_title", title: node.title }.merge(location(node))
       end
 
       def visit_add_element(node)
-        { type: "add_element", kind: node.kind, label: node.label, line: node.line, column: node.column }
+        { type: "add_element", kind: node.kind, label: node.label }.merge(location(node))
       end
 
       def visit_pronoun_reference(node)
-        { type: "pronoun_reference", pronoun: node.pronoun, line: node.line, column: node.column }
+        { type: "pronoun_reference", pronoun: node.pronoun }.merge(location(node))
       end
 
       def visit_named_reference(node)
-        { type: "named_reference", kind: node.kind, label: node.label, line: node.line, column: node.column }
+        { type: "named_reference", kind: node.kind, label: node.label }.merge(location(node))
       end
 
       def visit_set_property(node)
@@ -37,9 +37,19 @@ module Semauri
           type: "set_property",
           target: node.target.accept(self),
           property: node.property,
-          value: node.value,
+          value: node.value
+        }.merge(location(node))
+      end
+
+      private
+
+      def location(node)
+        {
           line: node.line,
-          column: node.column
+          column: node.column,
+          end_line: node.end_line,
+          end_column: node.end_column,
+          span: node.span.to_h
         }
       end
     end

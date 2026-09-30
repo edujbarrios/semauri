@@ -27,6 +27,8 @@ module Semauri
             code: "S304",
             line: reference.line,
             column: reference.column,
+            end_line: reference.end_line,
+            end_column: reference.end_column,
             hint: "Add an element before referring to it."
           )
         end
@@ -38,6 +40,8 @@ module Semauri
             code: "S305",
             line: reference.line,
             column: reference.column,
+            end_line: reference.end_line,
+            end_column: reference.end_column,
             hint: "Possible references: #{candidates}. Use an explicit reference such as 'the button called Buy'."
           )
         end
@@ -55,7 +59,9 @@ module Semauri
             "No #{reference.kind} called '#{reference.label}' exists",
             code: "S309",
             line: reference.line,
-            column: reference.column
+            column: reference.column,
+            end_line: reference.end_line,
+            end_column: reference.end_column
           )
         end
 
@@ -65,6 +71,8 @@ module Semauri
             code: "S310",
             line: reference.line,
             column: reference.column,
+            end_line: reference.end_line,
+            end_column: reference.end_column,
             hint: "Give elements unique names before referring to them explicitly."
           )
         end
