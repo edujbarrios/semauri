@@ -4,14 +4,12 @@
 require_relative "../errors"
 require_relative "../ast/pronoun_reference"
 require_relative "../ast/named_reference"
-require_relative "../ast/literal"
-require_relative "../ast/variable_reference"
 require_relative "../ir/web_document"
 require_relative "../ir/element"
 require_relative "result"
 require_relative "entity_table"
 require_relative "scope"
-require_relative "value"
+require_relative "expression_evaluator"
 
 module Semauri
   module Semantics
@@ -25,29 +23,36 @@ module Semauri
         @scope = Scope.new
         ast.accept(self)
         raise SemanticError.new("Program does not create an artifact", code: "S301") unless @document
-
         Result.new(program: @document, explanations: @explanations.freeze)
       ensure
-        @document = nil
-        @explanations = nil
-        @entities = nil
-        @scope = nil
+        @document = @explanations = @entities = @scope = nil
       end
 
       def visit_program(node)
         node.statements.each { |statement| statement.accept(self) }
       end
 
+      def visit_block(node)
+        with_child_scope { node.statements.each { |statement| statement.accept(self) } }
+      end
+
+      def visit_if_statement(node)
+        condition = evaluate(node.condition)
+        unless condition.type == :boolean
+          raise semantic_error("If condition must evaluate to boolean, received #{condition.type}",
+                               code: "S316", node: node.condition,
+                               hint: "Use a comparison such as 'price is greater than 20'.")
+        end
+        branch = condition.value ? node.consequence : node.alternative
+        @explanations << "If condition evaluated to #{condition.value}; selected #{condition.value ? 'consequence' : 'alternative'} branch."
+        branch&.accept(self)
+      end
+
       def visit_create_web(node)
         if @document
-          raise semantic_error(
-            "Semauri currently supports one web document per source file",
-            code: "S302",
-            node: node,
-            hint: "Split independent web documents into separate .sema files."
-          )
+          raise semantic_error("Semauri currently supports one web document per source file", code: "S302", node: node,
+                               hint: "Split independent web documents into separate .sema files.")
         end
-
         title, origin = infer_title(node)
         @document = IR::WebDocument.new(title: title, subject: node.subject, title_origin: origin)
         @explanations << "'web' resolved to an HTML web document (default web backend)."
@@ -64,37 +69,22 @@ module Semauri
       def visit_add_element(node)
         require_document!(node, "Cannot add an element before creating a web document", "S306")
         label = node.label || node.kind.to_s.capitalize
-
-        element = @entities.register(kind: node.kind) do |id|
-          IR::Element.new(id: id, kind: node.kind, label: label)
-        end
-
+        element = @entities.register(kind: node.kind) { |id| IR::Element.new(id: id, kind: node.kind, label: label) }
         @document = @document.add_element(element)
         @explanations << "Added #{node.kind} '#{label}' as #{element.id}."
       end
 
       def visit_let_binding(node)
-        value = node.value.accept(self)
+        value = evaluate(node.value)
         @scope.define(node.name, value, node: node)
         @explanations << "Bound '#{node.name}' to #{value.describe}."
-      end
-
-      def visit_literal(node)
-        Value.new(type: node.value_type, value: node.value, definition_span: node.span)
-      end
-
-      def visit_variable_reference(node)
-        value = @scope.resolve(node)
-        @explanations << "Variable '#{node.name}' resolved to #{value.describe}."
-        value
       end
 
       def visit_set_property(node)
         require_document!(node, "Cannot modify an element before creating a web document", "S307")
         target = resolve_reference(node.target)
-        value = node.value.accept(self)
+        value = evaluate(node.value)
         validate_property_type!(node.property, value, node.value)
-
         updated = target.with_property(node.property, value.value, source_span: node.span)
         @document = @document.replace_element(updated)
         @explanations << reference_explanation(node.target, target)
@@ -103,27 +93,33 @@ module Semauri
 
       private
 
+      def evaluate(expression)
+        ExpressionEvaluator.new(scope: @scope, on_variable_resolution: lambda { |reference, value|
+          @explanations << "Variable '#{reference.name}' resolved to #{value.describe}."
+        }).evaluate(expression)
+      end
+
+      def with_child_scope
+        parent = @scope
+        @scope = parent.child
+        yield
+      ensure
+        @scope = parent
+      end
+
       def validate_property_type!(property, value, expression)
         expected = PROPERTY_TYPES[property]
         return unless expected
         return if value.type == expected
-
-        raise semantic_error(
-          "Property '#{property}' expects #{expected}, but received #{value.type}",
-          code: "S313",
-          node: expression,
-          hint: "Use a #{expected} literal or a variable containing a #{expected}."
-        )
+        raise semantic_error("Property '#{property}' expects #{expected}, but received #{value.type}", code: "S313",
+                             node: expression, hint: "Use a #{expected} literal or a variable containing a #{expected}.")
       end
 
       def resolve_reference(reference)
         case reference
-        when AST::PronounReference
-          @entities.resolve_pronoun(reference)
-        when AST::NamedReference
-          @entities.resolve_named(reference)
-        else
-          raise SemanticError.new("Unsupported reference #{reference.class}", code: "S308")
+        when AST::PronounReference then @entities.resolve_pronoun(reference)
+        when AST::NamedReference then @entities.resolve_named(reference)
+        else raise SemanticError.new("Unsupported reference #{reference.class}", code: "S308")
         end
       end
 
@@ -137,37 +133,25 @@ module Semauri
 
       def require_document!(node, message, code)
         return if @document
-
         raise semantic_error(message, code: code, node: node, hint: "Create a web first.")
       end
 
       def semantic_error(message, code:, node:, hint: nil)
-        SemanticError.new(
-          message,
-          code: code,
-          line: node.line,
-          column: node.column,
-          end_line: node.end_line,
-          end_column: node.end_column,
-          hint: hint
-        )
+        SemanticError.new(message, code: code, line: node.line, column: node.column,
+                          end_line: node.end_line, end_column: node.end_column, hint: hint)
       end
 
       def infer_title(node)
         return [node.title, :explicit] if node.title
         return [node.subject, :subject_default] if node.subject
-
         ["Untitled", :fallback]
       end
 
       def title_explanation(title, origin)
         case origin
-        when :explicit
-          "Title explicitly set to '#{title}'."
-        when :subject_default
-          "No title was provided, so the web title defaults to its subject: '#{title}'."
-        else
-          "No title or subject was provided, so the web title defaults to 'Untitled'."
+        when :explicit then "Title explicitly set to '#{title}'."
+        when :subject_default then "No title was provided, so the web title defaults to its subject: '#{title}'."
+        else "No title or subject was provided, so the web title defaults to 'Untitled'."
         end
       end
     end

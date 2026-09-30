@@ -27,31 +27,40 @@ Semauri is an experiment in deterministic natural-language-like programming. The
 - source-aware diagnostics
 - semantic provenance for property mutations
 
-## 0.3 — values and scope — in progress
+## 0.3 — values and lexical scope ✅
 
-Completed in the first 0.3 slice:
-
+- typed color, string, number and boolean literals
 - expression-oriented property values
-- typed color, string and numeric literals
 - immutable `Let` bindings
 - variable references
-- a scope abstraction with parent-scope support
+- parent-capable lexical scopes
 - unknown/duplicate binding diagnostics
 - property value type checking
 - canonical `Set the color of ... to ...` assignment syntax
+- reusable expression contexts
 
-Remaining before 0.3 is complete:
+## 0.4 — structured control flow — in progress
 
-- lexical blocks that create child scopes
-- more reusable expression contexts
-- richer semantic value constraints
+Implemented in the first 0.4 slice:
 
-## 0.4 — structured control flow
+- first-class `Block` AST nodes
+- child lexical scopes for blocks
+- first-class `BinaryExpression` AST nodes
+- arithmetic precedence (`times`/`divided by` before `plus`/`minus`)
+- parentheses
+- strict typed equality
+- numeric ordering comparisons
+- boolean conditions
+- deterministic `If / Otherwise / End` blocks
+- semantic-time branch evaluation while all language values are compile-time known
 
-- conditions
+Next:
+
+- unary expressions
+- logical `and` / `or` / `not`
 - iteration
-- blocks
-- early constraint/type checking
+- collections
+- a control-flow IR once Semauri introduces runtime/external values
 
 ## 0.5 — semantic domains
 
@@ -59,7 +68,7 @@ Establish a formal extension API for domains such as web, filesystem and structu
 
 ## Later
 
-- functions
+- functions and call frames
 - formatter
 - Language Server Protocol implementation
 - package/extension model

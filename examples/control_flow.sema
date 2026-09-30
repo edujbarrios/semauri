@@ -1,0 +1,13 @@
+Let basePrice be 18.
+Let tax be 4.
+Let total be basePrice plus tax.
+
+Create a web called Pet Shop.
+Add a button called Buy.
+
+If total is greater than 20:
+  Let accent be red.
+  Set the color of the button called Buy to accent.
+Otherwise:
+  Set the color of the button called Buy to green.
+End.
