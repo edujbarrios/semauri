@@ -1,4 +1,4 @@
-# Semauri language specification — draft 0.3
+# Semauri language specification — draft 0.4
 
 This document describes the currently implemented language, not aspirational syntax.
 
@@ -19,22 +19,32 @@ Approximate grammar:
 ```ebnf
 program          = statement* EOF ;
 statement        = create_web | add_title | add_element | make_property
-                 | let_binding | set_property ;
+                 | let_binding | set_property | if_statement ;
 
 create_web       = (CREATE | MAKE) [ARTICLE] WEB [web_qualifier] ["."] ;
 web_qualifier    = CALLED phrase | FOR [ARTICLE] phrase ;
 add_title        = ADD [ARTICLE] TITLE CALLED phrase ["."] ;
 add_element      = ADD [ARTICLE] (BUTTON | IMAGE) [CALLED phrase] ["."] ;
-
 make_property    = MAKE (PRONOUN | named_reference) COLOR ["."] ;
 
-let_binding      = LET identifier BE value ["."] ;
-set_property     = SET [ARTICLE] COLOR_PROPERTY OF reference TO value ["."] ;
+let_binding      = LET identifier BE expression ["."] ;
+set_property     = SET [ARTICLE] COLOR_PROPERTY OF reference TO expression ["."] ;
+
+if_statement     = IF expression ":" block
+                   [ OTHERWISE ":" block ]
+                   END ["."] ;
+block            = statement+ ;
+
+expression       = comparison ;
+comparison       = additive [ IS comparison_operator additive ] ;
+comparison_operator = GREATER THAN | LESS THAN | EQUAL TO ;
+additive         = multiplicative { (PLUS | MINUS) multiplicative } ;
+multiplicative   = primary { TIMES primary | DIVIDED BY primary } ;
+primary          = COLOR | STRING | NUMBER | BOOLEAN
+                 | variable_reference | "(" expression ")" ;
 
 reference        = PRONOUN | named_reference ;
 named_reference  = [ARTICLE] (BUTTON | IMAGE) CALLED phrase ;
-
-value            = COLOR | STRING | NUMBER | variable_reference ;
 variable_reference = identifier ;
 identifier       = WORD ;
 phrase           = token+ ;
@@ -42,80 +52,105 @@ phrase           = token+ ;
 
 The EBNF is descriptive; the handwritten recursive-descent parser remains the executable grammar during 0.x.
 
-## Values
+## Values and expressions
 
-0.3 introduces typed values. Current value types are:
+Current semantic value types are `color`, `string`, `number`, and `boolean`.
 
-- `color`: controlled color words such as `blue` or `red`
-- `string`: quoted text such as `"Hello"`
-- `number`: integer or decimal numbers such as `3` or `2.5`
-
-A color literal and a string containing a color name are intentionally different:
+Expressions are typed. Arithmetic is restricted to numbers:
 
 ```text
-blue       # color
-"blue"     # string
+Let subtotal be 10 plus 5 times 2.
+Let total be (10 plus 5) times 2.
 ```
 
-This distinction allows semantic type checking without relying on target-specific behavior such as CSS parsing.
+Multiplication and division bind more tightly than addition and subtraction. Division by zero is semantic error `S317`.
 
-## Variables
+## Comparisons
 
-Declare a variable with `Let`:
+Numeric ordering:
+
+```text
+price is greater than 20
+price is less than 20
+```
+
+Strict equality:
+
+```text
+price is equal to 20
+accent is equal to blue
+```
+
+Equality requires operands of the same semantic type. Semauri does not silently coerce `1` into `"1"`.
+
+## Variables and lexical scope
+
+Declare immutable bindings with `Let`:
 
 ```text
 Let accent be blue.
+Let price be 25.
 ```
 
-The current 0.3 surface requires a single-word variable name. Variable names are case-insensitive and normalized to lowercase.
-
-Bindings are immutable within a scope. Redeclaring the same name in one scope is semantic error `S311`.
-
-Using an undeclared variable is semantic error `S312`.
-
-## Canonical property assignment
-
-The preferred extensible assignment syntax is:
+Blocks create child lexical scopes. Parent bindings are visible inside a block; a child block may shadow a parent name without mutating it.
 
 ```text
-Set the color of the button called Buy to blue.
+Let accent be blue.
+
+If true:
+  Let accent be red.
+End.
 ```
 
-or with a variable:
+The inner `accent` is `red`; after the block the outer `accent` is still `blue`. Bindings declared inside a block do not escape that block.
+
+## Conditional control flow
+
+```text
+Let price be 25.
+Create a web called Shop.
+
+If price is greater than 20:
+  Add a button called Premium.
+Otherwise:
+  Add a button called Standard.
+End.
+```
+
+The condition must have type `boolean`; otherwise Semauri emits `S316`.
+
+### Current evaluation model
+
+In 0.4, all available values are immutable and known during semantic analysis. Therefore `If` branches are selected **during semantic resolution** and only the selected branch contributes to the resolved IR.
+
+This is deliberately not presented as runtime control flow. When Semauri gains external/runtime values, conditions that cannot be resolved statically will require a dedicated control-flow IR rather than being guessed or prematurely evaluated.
+
+## Canonical property assignment
 
 ```text
 Let accent be blue.
 Set the color of the button called Buy to accent.
 ```
 
-The existing shorthand remains valid:
+Legacy shorthand remains valid:
 
 ```text
 Make it blue.
 Make the button called Buy blue.
 ```
 
-Shorthand is parsed into the same expression-oriented AST and semantic pipeline.
+Both forms lower through the same expression-oriented semantic pipeline.
 
 ## Type checking
 
 Properties declare an expected semantic value type. `color` currently expects a `color` value.
-
-Therefore this is valid:
-
-```text
-Let accent be blue.
-Set the color of the button called Buy to accent.
-```
-
-but this is not:
 
 ```text
 Let accent be "blue".
 Set the color of the button called Buy to accent.
 ```
 
-The second program fails with `S313` because a `string` is not a `color`.
+fails with `S313`, because a string is not a color.
 
 ## References
 
@@ -130,11 +165,16 @@ Semauri never selects a referent probabilistically.
 - `S3xx`: semantic errors
 - `S4xx`: backend errors
 
-New 0.3 semantic diagnostics:
+Relevant semantic diagnostics:
 
 - `S311`: duplicate variable binding
 - `S312`: unknown variable
 - `S313`: property/value type mismatch
+- `S314`: arithmetic/order operator received non-number operands
+- `S315`: equality operands have incompatible types
+- `S316`: non-boolean `If` condition
+- `S317`: division by zero
+- `S318`: unsupported expression operator
 
 ## Determinism rule
 
