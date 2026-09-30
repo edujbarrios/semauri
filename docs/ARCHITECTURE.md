@@ -20,6 +20,11 @@ Typed HIR Builder
   ├── stable symbol IDs
   └── type checking
   ↓
+HIR Optimization Passes
+  ├── constant propagation
+  ├── constant folding
+  └── dead control-flow elimination
+  ↓
 HIR Lowerer
   ├── compile-time expression evaluation
   ├── static branch/loop execution
@@ -46,7 +51,23 @@ A source variable such as `price` is no longer identified by its spelling after 
 price → symbol_ref(#3, number)
 ```
 
-This is the representation future tooling and optimization passes should consume.
+This is the representation tooling and optimization passes consume.
+
+## HIR optimization
+
+Optimization is an explicit compiler phase driven by `HIR::Optimization::PassManager`. Passes receive typed HIR and return typed HIR; they do not emit HTML or perform domain-specific rendering.
+
+The initial pass pipeline performs:
+
+- propagation of compile-time-known immutable bindings
+- arithmetic/comparison/logical constant folding
+- short-circuit-aware folding
+- elimination of statically unreachable conditional branches
+- removal infrastructure for statically empty loops
+
+`build` lowers optimized HIR. `explain` intentionally lowers unoptimized HIR so its trace describes the source program rather than optimizer rewrites.
+
+Optimization must preserve the semantic result. Tests compare optimized output against a no-pass baseline.
 
 ## HIR lowering
 
@@ -83,13 +104,14 @@ This prevents static loop execution from inventing a new declaration on every it
 ## Dependency direction
 
 ```text
-CLI → Compiler → Lexer/Parser → AST → HIR → Lowering → Domain IR ← Backends
+CLI → Compiler → Lexer/Parser → AST → HIR → Optimization → Lowering → Domain IR ← Backends
 ```
 
 Key rules:
 
 - AST must not depend on HTML.
 - HIR must not depend on a target backend.
+- optimization passes must not perform backend/domain rendering.
 - domain IR must not depend on parser tokens.
 - backends must not parse source text.
 - ambiguity resolution must not happen in a backend.
