@@ -14,7 +14,7 @@ It is not an LLM wrapper and it does not ask AI to guess what the user meant. Se
 
 Created by **Eduardo J. Barrios** and open sourced from the beginning under the **Apache License 2.0**.
 
-> Status: **0.4.x / experimental**
+> Status: **0.5.x / experimental**
 
 ## Example
 
@@ -106,6 +106,8 @@ scopes + symbols + type checking
   ↓
 typed HIR
   ↓
+optimization passes
+  ↓
 semantic IR
   ↓
 backend
@@ -118,6 +120,7 @@ Important implementation choices:
 - lexical scopes and stable semantic symbol IDs
 - typed expressions and strict comparisons
 - deterministic reference resolution
+- composable HIR optimization passes
 - explicit ambiguity errors
 - source spans and compiler diagnostics
 - visitor, strategy, registry and dependency-injection patterns
@@ -129,12 +132,14 @@ The compiler is developed incrementally so each stage remains understandable, te
 
 - numbers, strings, booleans and colors
 - immutable `Let` bindings
+- homogeneous `List<T>` values and `For every` iteration
 - arithmetic and parentheses
 - typed comparisons
 - `and`, `or`, `not` with short-circuit evaluation
 - lexical scopes and shadowing
 - stable semantic symbols
 - typed HIR
+- constant propagation/folding and dead-branch elimination
 - `If / Otherwise / End`
 - web documents, buttons and images
 - explicit references and constrained `it` resolution
@@ -153,7 +158,7 @@ ruby -Ilib -e 'Dir["test/test_*.rb"].sort.each { |file| require_relative file }'
 
 CI tests Ruby 3.2, 3.3 and 3.4.
 
-Other compiler inspection commands are available through `semauri help`.
+Other compiler inspection commands are available through `semauri help`, including `semauri hir` and `semauri optimize`.
 
 ## Project principles
 
