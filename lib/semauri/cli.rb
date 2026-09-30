@@ -28,6 +28,7 @@ module Semauri
       case command
       when "tokens" then tokens(argv)
       when "ast" then ast(argv)
+      when "symbols" then symbols(argv)
       when "explain" then explain(argv)
       when "check" then check(argv)
       when "build" then build(argv)
@@ -59,6 +60,13 @@ module Semauri
       source = read_source!(argv)
       tree = @compiler.parse(source)
       @stdout.puts JSON.pretty_generate(AST::Serializer.new.serialize(tree))
+      EXIT_SUCCESS
+    end
+
+    def symbols(argv)
+      source = read_source!(argv)
+      _ast, semantic = @compiler.analyze(source)
+      @stdout.puts JSON.pretty_generate(semantic.symbols.map(&:to_h))
       EXIT_SUCCESS
     end
 
@@ -121,6 +129,7 @@ module Semauri
         Commands:
           tokens FILE              Print lexer tokens as JSON
           ast FILE                 Print the parsed AST as JSON
+          symbols FILE             Print semantic symbols as JSON
           explain FILE             Explain semantic decisions
           check FILE               Validate source without generating output
           build FILE [-o PATH]     Compile source (HTML by default)

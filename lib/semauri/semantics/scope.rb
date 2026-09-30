@@ -2,24 +2,28 @@
 # SPDX-License-Identifier: Apache-2.0
 
 require_relative "../errors"
+require_relative "symbol_table"
 
 module Semauri
   module Semantics
     class Scope
-      Binding = Struct.new(:name, :value, :span, keyword_init: true)
+      Binding = Struct.new(:symbol, :value, :span, keyword_init: true) do
+        def name = symbol.name
+      end
 
-      attr_reader :parent
+      attr_reader :parent, :symbol_table
 
-      def initialize(parent: nil)
+      def initialize(parent: nil, symbol_table: nil)
         @parent = parent
+        @symbol_table = symbol_table || parent&.symbol_table || SymbolTable.new
         @bindings = {}
       end
 
       def child
-        self.class.new(parent: self)
+        self.class.new(parent: self, symbol_table: symbol_table)
       end
 
-      def define(name, value, node:)
+      def define(name, value, node:, kind: :variable)
         key = normalize(name)
         if @bindings.key?(key)
           raise SemanticError.new(
@@ -33,15 +37,22 @@ module Semauri
           )
         end
 
-        @bindings[key] = Binding.new(name: key, value: value, span: node.span)
-        value
+        symbol = symbol_table.create(
+          name: key,
+          kind: kind,
+          type: value.type,
+          definition_span: node.span
+        )
+        binding = Binding.new(symbol: symbol, value: value, span: node.span)
+        @bindings[key] = binding
+        binding
       end
 
-      def resolve(reference)
+      def resolve_binding(reference)
         key = normalize(reference.name)
         binding = @bindings[key]
-        return binding.value if binding
-        return parent.resolve(reference) if parent
+        return binding if binding
+        return parent.resolve_binding(reference) if parent
 
         raise SemanticError.new(
           "Unknown variable '#{reference.name}'",
@@ -52,6 +63,18 @@ module Semauri
           end_column: reference.end_column,
           hint: "Declare it first with 'Let #{reference.name} be ...'."
         )
+      end
+
+      def resolve(reference)
+        resolve_binding(reference).value
+      end
+
+      def symbol_for(reference)
+        resolve_binding(reference).symbol
+      end
+
+      def symbols
+        symbol_table.symbols
       end
 
       private

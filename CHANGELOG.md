@@ -20,14 +20,15 @@ All notable changes to Semauri will be documented in this file.
 - Scope-based name resolution with duplicate/unknown-variable diagnostics.
 - Canonical property assignment syntax: `Set the color of ... to ...`.
 - Semantic type checking for property values.
-- First-class lexical `Block` AST nodes.
-- First-class `BinaryExpression` AST nodes.
+- First-class lexical `Block`, `BinaryExpression` and `UnaryExpression` AST nodes.
 - Arithmetic expressions with precedence and parentheses.
 - Strict equality and numeric ordering comparisons.
 - Deterministic `If / Otherwise / End` control flow.
 - Child lexical scopes for conditional blocks.
-- Logical `and`, `or`, and `not` expressions.
-- Short-circuit boolean evaluation.
+- Logical `and`, `or`, and `not` expressions with short-circuit evaluation.
+- Stable semantic symbols with unique IDs, kind, type and definition spans.
+- Shared symbol tables across lexical child scopes.
+- `semauri symbols FILE` compiler introspection command.
 
 ### Changed
 - `make` is parsed contextually: it can create an artifact or mutate an existing entity.
@@ -35,3 +36,5 @@ All notable changes to Semauri will be documented in this file.
 - Property values are represented as AST expressions before semantic resolution.
 - Expression evaluation is isolated in `Semantics::ExpressionEvaluator`.
 - Conditional branches are currently selected at semantic-analysis time while all values are compile-time known.
+- Scope bindings now separate source names, semantic symbols and runtime/constant values.
+- Variable-resolution explanations include the resolved symbol identity.

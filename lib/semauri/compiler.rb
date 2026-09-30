@@ -7,7 +7,7 @@ require_relative "semantics/resolver"
 require_relative "backends/registry"
 
 module Semauri
-  CompilationResult = Struct.new(:output, :ast, :ir, :explanations, keyword_init: true)
+  CompilationResult = Struct.new(:output, :ast, :ir, :explanations, :symbols, keyword_init: true)
 
   class Compiler
     def initialize(vocabulary: Vocabulary::English.new, resolver: Semantics::Resolver.new,
@@ -33,7 +33,13 @@ module Semauri
     def compile(source, backend: "html")
       ast, semantic = analyze(source)
       output = @backends.fetch(backend).render(semantic.program)
-      CompilationResult.new(output: output, ast: ast, ir: semantic.program, explanations: semantic.explanations)
+      CompilationResult.new(
+        output: output,
+        ast: ast,
+        ir: semantic.program,
+        explanations: semantic.explanations,
+        symbols: semantic.symbols
+      )
     end
   end
 end
