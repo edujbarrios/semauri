@@ -41,9 +41,16 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - `semauri optimize FILE` introspection with per-pass statistics
 - production `build` lowers optimized HIR while `explain` remains source-oriented
 
+### 0.5.1 — liveness/use analysis ✅
+
+- backwards symbol-use analysis over statement scopes
+- dead immutable `Let` elimination
+- transitive removal of compile-time-only binding chains
+- loop-body liveness propagation to enclosing scopes
+- full semantic symbol table retained for tooling even when optimized HIR drops bindings
+
 ### Next
 
-- dead immutable-binding elimination with liveness/use analysis
 - optimization verification and fixed-point pass scheduling where useful
 - formal semantic-domain extension API
 - domain vocabulary + semantic contracts without parser monkey-patching
