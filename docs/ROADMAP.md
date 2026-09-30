@@ -41,7 +41,7 @@ Semauri is an experiment in deterministic natural-language-like programming. The
 
 ## 0.4 — structured control flow — in progress
 
-Implemented in the first 0.4 slice:
+Implemented:
 
 - first-class `Block` AST nodes
 - child lexical scopes for blocks
@@ -53,11 +53,11 @@ Implemented in the first 0.4 slice:
 - boolean conditions
 - deterministic `If / Otherwise / End` blocks
 - semantic-time branch evaluation while all language values are compile-time known
+- logical `and` / `or` / `not` with defined precedence
+- short-circuit boolean evaluation
 
 Next:
 
-- unary expressions
-- logical `and` / `or` / `not`
 - iteration
 - collections
 - a control-flow IR once Semauri introduces runtime/external values

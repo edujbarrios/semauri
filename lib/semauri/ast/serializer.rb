@@ -19,6 +19,10 @@ module Semauri
           alternative: node.alternative&.accept(self) }.merge(location(node))
       end
 
+      def visit_unary_expression(node)
+        { type: "unary_expression", operator: node.operator, operand: node.operand.accept(self) }.merge(location(node))
+      end
+
       def visit_binary_expression(node)
         { type: "binary_expression", operator: node.operator, left: node.left.accept(self),
           right: node.right.accept(self) }.merge(location(node))

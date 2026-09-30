@@ -16,6 +16,7 @@ require_relative "ast/let_binding"
 require_relative "ast/block"
 require_relative "ast/binary_expression"
 require_relative "ast/if_statement"
+require_relative "ast/unary_expression"
 
 module Semauri
   class Parser
@@ -96,11 +97,7 @@ module Semauri
       label = phrase_from_tokens(label_tokens)
       consume_optional_dot
 
-      target = AST::NamedReference.new(
-        kind: kind,
-        label: normalize_phrase(label),
-        span: span_between(kind_token, label_tokens.last)
-      )
+      target = AST::NamedReference.new(kind: kind, label: normalize_phrase(label), span: span_between(kind_token, label_tokens.last))
       value = AST::Literal.new(value_type: :color, value: color.lexeme.downcase, span: color.span)
       AST::SetProperty.new(target: target, property: :color, value: value, span: span_from(start))
     end
@@ -110,7 +107,6 @@ module Semauri
       consume(:BE, "Expected 'be' after the variable name", "S210")
       value = expression
       consume_optional_dot
-
       AST::LetBinding.new(name: name.lexeme, value: value, span: span_from(start))
     end
 
@@ -122,14 +118,12 @@ module Semauri
       consume(:TO, "Expected 'to' before the new value", "S213")
       value = expression
       consume_optional_dot
-
       AST::SetProperty.new(target: target, property: :color, value: value, span: span_from(start))
     end
 
     def if_statement(start)
       condition = expression
       consume(:COLON, "Expected ':' after the if condition", "S218")
-
       consequence = block_until(:OTHERWISE, :END)
       alternative = nil
 
@@ -140,24 +134,47 @@ module Semauri
 
       consume(:END, "Expected 'End' to close the If block", "S220")
       consume_optional_dot
-
-      AST::IfStatement.new(
-        condition: condition,
-        consequence: consequence,
-        alternative: alternative,
-        span: span_from(start)
-      )
+      AST::IfStatement.new(condition: condition, consequence: consequence, alternative: alternative, span: span_from(start))
     end
 
     def block_until(*terminators)
       statements = []
       statements << statement until terminators.include?(peek.type) || check?(:EOF)
       error!(peek, "Expected at least one statement in the block", "S221") if statements.empty?
-
       AST::Block.new(statements: statements, span: program_span(statements))
     end
 
     def expression
+      logical_or
+    end
+
+    def logical_or
+      expression = logical_and
+      while match?(:OR)
+        right = logical_and
+        expression = AST::BinaryExpression.new(left: expression, operator: :or, right: right,
+                                               span: span_between(expression, right))
+      end
+      expression
+    end
+
+    def logical_and
+      expression = logical_not
+      while match?(:AND)
+        right = logical_not
+        expression = AST::BinaryExpression.new(left: expression, operator: :and, right: right,
+                                               span: span_between(expression, right))
+      end
+      expression
+    end
+
+    def logical_not
+      if match?(:NOT)
+        operator = previous
+        operand = logical_not
+        return AST::UnaryExpression.new(operator: :not, operand: operand, span: span_between(operator, operand))
+      end
+
       comparison
     end
 
@@ -184,7 +201,6 @@ module Semauri
 
     def additive
       expression = multiplicative
-
       while match?(:PLUS, :MINUS)
         operator_token = previous
         right = multiplicative
@@ -192,13 +208,11 @@ module Semauri
         expression = AST::BinaryExpression.new(left: expression, operator: operator, right: right,
                                                span: span_between(expression, right))
       end
-
       expression
     end
 
     def multiplicative
       expression = primary
-
       loop do
         if match?(:TIMES)
           right = primary
@@ -213,7 +227,6 @@ module Semauri
           break
         end
       end
-
       expression
     end
 
@@ -253,6 +266,8 @@ module Semauri
         AST::Literal.new(value_type: expression.value_type, value: expression.value, span: span)
       when AST::VariableReference
         AST::VariableReference.new(name: expression.name, span: span)
+      when AST::UnaryExpression
+        AST::UnaryExpression.new(operator: expression.operator, operand: expression.operand, span: span)
       else
         expression
       end
@@ -270,9 +285,7 @@ module Semauri
       consume(:CALLED, "Canonical references must name the target with 'called' or 'named'", "S215")
       label_tokens = tokens_until(:TO, :EOF)
       error!(peek, "Expected the referenced element name", "S216") if label_tokens.empty?
-
-      AST::NamedReference.new(kind: kind, label: normalize_phrase(phrase_from_tokens(label_tokens)),
-                              span: span_between(kind_token, label_tokens.last))
+      AST::NamedReference.new(kind: kind, label: normalize_phrase(phrase_from_tokens(label_tokens)), span: span_between(kind_token, label_tokens.last))
     end
 
     def named_reference_ahead?
@@ -283,11 +296,9 @@ module Semauri
     def add_statement
       start = previous
       match?(:ARTICLE)
-
       return add_title(start) if match?(:TITLE)
       return add_element(start, :button) if match?(:BUTTON)
       return add_element(start, :image) if match?(:IMAGE)
-
       error!(peek, "Expected 'title', 'button' or 'image' after 'Add'", "S203")
     end
 
@@ -323,22 +334,16 @@ module Semauri
 
     def normalize_phrase(value)
       return nil unless value
-
-      value.strip.gsub(/\s+/, " ").split.map do |word|
-        word.match?(/\A[A-Z0-9]+\z/) ? word : word.capitalize
-      end.join(" ")
+      value.strip.gsub(/\s+/, " ").split.map { |word| word.match?(/\A[A-Z0-9]+\z/) ? word : word.capitalize }.join(" ")
     end
 
     def program_span(statements)
       return SourceSpan.point(1, 1) if statements.empty?
-
       SourceSpan.new(start_line: statements.first.line, start_column: statements.first.column,
                      end_line: statements.last.end_line, end_column: statements.last.end_column)
     end
 
-    def span_from(start)
-      span_between(start, previous)
-    end
+    def span_from(start) = span_between(start, previous)
 
     def span_between(first, last)
       SourceSpan.new(start_line: first.line, start_column: first.column,
@@ -365,26 +370,16 @@ module Semauri
       true
     end
 
-    def check?(type)
-      peek.type == type
-    end
+    def check?(type) = peek.type == type
 
     def advance
       @current += 1 unless at_end?
       previous
     end
 
-    def at_end?
-      peek.type == :EOF
-    end
-
-    def peek
-      @tokens[@current]
-    end
-
-    def previous
-      @tokens[@current - 1]
-    end
+    def at_end? = peek.type == :EOF
+    def peek = @tokens[@current]
+    def previous = @tokens[@current - 1]
 
     def error!(token, message, code)
       raise ParseError.new(message, code: code, line: token.line, column: token.column,

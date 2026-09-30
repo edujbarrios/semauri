@@ -35,7 +35,10 @@ if_statement     = IF expression ":" block
                    END ["."] ;
 block            = statement+ ;
 
-expression       = comparison ;
+expression       = logical_or ;
+logical_or       = logical_and { OR logical_and } ;
+logical_and      = logical_not { AND logical_not } ;
+logical_not      = [ NOT ] (logical_not | comparison) ;
 comparison       = additive [ IS comparison_operator additive ] ;
 comparison_operator = GREATER THAN | LESS THAN | EQUAL TO ;
 additive         = multiplicative { (PLUS | MINUS) multiplicative } ;
@@ -82,6 +85,26 @@ accent is equal to blue
 ```
 
 Equality requires operands of the same semantic type. Semauri does not silently coerce `1` into `"1"`.
+
+## Logical expressions
+
+Boolean expressions support `and`, `or`, and `not` with deterministic precedence:
+
+```text
+not       # applies to the following logical/comparison expression
+and       # binds tighter than or
+or
+```
+
+For example:
+
+```text
+If not price is greater than 20 and inStock:
+  Add a button called Buy.
+End.
+```
+
+`and` and `or` use **short-circuit evaluation**. The right-hand expression is not evaluated when the left side already determines the result. This matters for name resolution and, later, side-effect-free function calls. Logical operands must be boolean (`S319`).
 
 ## Variables and lexical scope
 
@@ -175,6 +198,7 @@ Relevant semantic diagnostics:
 - `S316`: non-boolean `If` condition
 - `S317`: division by zero
 - `S318`: unsupported expression operator
+- `S319`: logical operator received a non-boolean operand
 
 ## Determinism rule
 
