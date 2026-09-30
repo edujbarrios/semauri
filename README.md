@@ -1,10 +1,14 @@
 # Semauri
 
+**SEMAURI — Semantic Expression Mapping and Unified Runtime Interpretation**
+
 **Natural to write. Deterministic to run.**
 
 ## About
 
 Semauri is an experimental programming language that lets people write deterministic programs using controlled natural language.
+
+Its name reflects the compiler's goal: map human-readable expressions into a unified semantic representation that can be interpreted and lowered deterministically.
 
 It is not an LLM wrapper and it does not ask AI to guess what the user meant. Semauri parses a defined language, builds compiler structures, resolves meaning, checks types and lowers the program to a target backend.
 
