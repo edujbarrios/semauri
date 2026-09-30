@@ -14,6 +14,11 @@ module Semauri
         freeze
       end
 
+      def line = span&.start_line || 1
+      def column = span&.start_column || 1
+      def end_line = span&.end_line || line
+      def end_column = span&.end_column || column + 1
+
       def to_h
         {
           kind: kind,

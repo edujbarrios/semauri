@@ -4,52 +4,50 @@ Semauri prioritizes compiler and language foundations over rapidly adding target
 
 ## 0.1 — compiler skeleton ✅
 
-Lexer, handwritten recursive-descent parser, AST, semantic resolution, backend registry, HTML backend, CLI introspection and zero-dependency core tests.
+Lexer, handwritten parser, AST, backend registry, HTML backend, CLI introspection and zero-dependency core tests.
 
 ## 0.2 — semantic context and references ✅
 
-Deterministic pronouns/explicit references, ambiguity errors, entity table, immutable IR properties, source spans, diagnostics and provenance.
+Deterministic references, ambiguity diagnostics, entity table, immutable IR, source spans and provenance.
 
 ## 0.3 — values and lexical scope ✅
 
-Typed primitive literals, immutable `Let`, lexical scopes/shadowing, property type checking and expression-oriented assignment.
+Typed primitive values, immutable bindings, lexical scope, shadowing and property type checking.
 
-## 0.4 — structured control flow and compiler IR — in progress
-
-Implemented:
+## 0.4 — structured control flow and compiler IR ✅
 
 - arithmetic, comparisons and boolean algebra
 - `If / Otherwise / End`
 - short-circuit evaluation
-- stable symbols and symbol introspection
-- typed HIR with stable symbol references
-- HIR branch preservation
-- shared type rules
-- homogeneous `List<T>` values
-- static `For every ... in ...` iteration
-- iterator symbols with one identity across all iterations
-- HIR-preserved `for_each`
+- stable symbols
+- typed HIR
+- homogeneous `List<T>`
+- static `For every ... in ...`
+- HIR-preserved branches and loops
+- production lowering consumes HIR rather than AST
+- separate symbol identity and compile-time value environments
+- full-program symbol table for tooling, including unselected branches
 
-Next:
+## 0.5 — optimization and semantic domains — next
 
-- migrate domain lowering to consume HIR
-- explicit constant-folding/lowering passes
-- collection operations (`length`, indexing/map/filter design)
-- dynamic/external values
-- CFG/basic blocks when runtime control flow becomes necessary
-
-## 0.5 — semantic domains
-
-Formal extension API for domains such as web, filesystem and structured data. Domains must extend vocabulary, semantics and IR through explicit contracts rather than parser monkey-patching.
+- explicit constant-folding pass over HIR
+- dead-branch/dead-loop elimination as an optimization, not HIR construction
+- formal domain-extension API
+- domain vocabulary + semantic contracts without parser monkey-patching
+- migrate web operations behind the domain-extension boundary
+- explore filesystem and structured-data domains
 
 ## Later
 
+- dynamic/external values
+- CFG/basic blocks and runtime branch/loop lowering
 - functions and call frames
+- collection operations
 - formatter
-- LSP, safe rename and go-to-definition powered by symbol IDs
+- LSP, safe rename and go-to-definition
 - package/extension model
-- additional controlled-language surfaces and backends
-- optional free-form NLP/LLM adapter outside the deterministic compiler core
+- additional language surfaces/backends
+- optional NLP/LLM adapter outside the deterministic core
 
 ## Non-goals for now
 

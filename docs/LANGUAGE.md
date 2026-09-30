@@ -36,7 +36,33 @@ The handwritten recursive-descent parser remains the executable grammar during 0
 
 Primitive semantic value types are `color`, `string`, `number`, and `boolean`.
 
-Arithmetic is numeric and strictly typed. Multiplication/division bind more tightly than addition/subtraction. Equality requires both operands to have the same semantic type. `and` / `or` short-circuit and logical operators require booleans.
+Arithmetic is numeric and strictly typed. Multiplication/division bind more tightly than addition/subtraction. Equality requires both operands to have the same semantic type.
+
+### Logical expressions and short-circuiting
+
+`and`, `or` and `not` operate on booleans. `and` / `or` use runtime/constant-evaluation short-circuiting: the right-hand expression is not **evaluated** when the left-hand value already determines the result.
+
+However, name resolution and type checking happen earlier while building Typed HIR. Therefore every referenced name must exist and every subexpression must type-check, even if its runtime value would be short-circuited.
+
+Valid short-circuit example:
+
+```text
+If true or 1 divided by 0 is equal to 1:
+  Add a button called Safe.
+End.
+```
+
+The division expression is well-formed and typed, but it is never evaluated, so no division-by-zero error occurs.
+
+This is still invalid:
+
+```text
+If true or missingVariable is equal to true:
+  Add a button called Invalid.
+End.
+```
+
+`missingVariable` fails name resolution with `S312` before evaluation begins.
 
 ## Collections
 
@@ -47,19 +73,13 @@ Let prices be a list of 10, 20, 30.
 Let colors be a list of red, green, blue.
 ```
 
-Their types are `list<number>` and `list<color>` respectively. Mixed lists are rejected with `S321`:
-
-```text
-Let invalid be a list of 1, "two".
-```
-
-List literals currently require at least one item so the element type can be inferred. There is no implicit union/coercion rule.
+Their types are `list<number>` and `list<color>`. Mixed lists are rejected with `S321`. There is no implicit union/coercion rule.
 
 ## Variables and lexical scope
 
 `Let` creates immutable bindings. Blocks create child lexical scopes, parent bindings are visible inside child scopes, and child bindings can shadow parent names without mutating them.
 
-Bindings have stable semantic symbol identities independent from source spelling. This supports HIR references and future tooling such as safe rename and go-to-definition.
+Bindings have stable semantic symbol identities independent from source spelling. Typed HIR references symbols by ID rather than repeating string lookup.
 
 ## Conditional control flow
 
@@ -71,7 +91,9 @@ Otherwise:
 End.
 ```
 
-The condition must be boolean (`S316`). The typed HIR preserves both branches. The current executable semantic lowering selects a branch statically because all current values are compile-time-known.
+The condition must be boolean (`S316`). Typed HIR preserves both branches. The current HIR lowerer selects a branch statically because all current values are compile-time-known.
+
+The symbol table describes the complete typed program, including declarations inside a statically unselected branch. Branch elimination belongs to a later optimization/lowering phase, not name resolution.
 
 ## Static iteration
 
@@ -85,9 +107,9 @@ End.
 
 `For every` requires a list (`S322`). The iteration variable has the list's element type and is visible only inside the loop body.
 
-The iterator is one semantic declaration with one symbol ID. Static execution may bind different values to that same symbol across iterations; it does not create a new symbol per iteration.
+The iterator is one semantic declaration with one symbol ID. Static execution binds different values to that same symbol across iterations; it does not create a new declaration for each item.
 
-The HIR preserves `for_each` structurally. The current executable lowering iterates compile-time-known lists during semantic analysis. Runtime/external collections will require a later control-flow IR.
+HIR preserves `for_each` structurally. The current lowerer iterates compile-time-known lists. Runtime/external collections will require a later control-flow IR.
 
 ## References and properties
 
@@ -99,24 +121,26 @@ The HIR preserves `for_each` structurally. The current executable lowering itera
 
 - `S1xx`: lexical errors
 - `S2xx`: parse errors
-- `S3xx`: semantic errors
+- `S3xx`: semantic/HIR errors
 - `S4xx`: backend errors
 
-Relevant semantic diagnostics include:
+Relevant diagnostics include:
 
 - `S311`: duplicate binding
-- `S312`: unknown variable
+- `S312`: unknown variable during name resolution
 - `S313`: property/value type mismatch
 - `S314`: invalid numeric operands
 - `S315`: incompatible equality operands
 - `S316`: non-boolean `If` condition
-- `S317`: division by zero
+- `S317`: division by zero during evaluation
 - `S318`: unsupported expression operator
 - `S319`: invalid logical operands
 - `S320`: list element type cannot be inferred
 - `S321`: heterogeneous list
 - `S322`: iteration over a non-list value
 - `S323`: internal symbol/value binding type mismatch
+- `S324`: invalid HIR symbol binding/value environment
+- `S325`: unsupported HIR node/operator
 
 ## Determinism rule
 

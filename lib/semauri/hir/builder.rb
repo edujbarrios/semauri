@@ -36,6 +36,7 @@ module Semauri
           key = reference.name.to_s.downcase
           return @symbols[key] if @symbols.key?(key)
           return @parent.resolve(reference) if @parent
+
           raise SemanticError.new(
             "Unknown variable '#{reference.name}'",
             code: "S312",
@@ -69,7 +70,7 @@ module Semauri
         symbol = @symbols.create(name: node.name, kind: :variable, type: value.type, definition_span: node.span)
         @environment.define(symbol, node: node)
         HIR::Node.new(kind: :let, type: :unit,
-                      fields: { symbol_id: symbol.id, name: symbol.name, value: value }, span: node.span)
+                      fields: { symbol_id: symbol.id, name: symbol.name, source_name: node.name, value: value }, span: node.span)
       end
 
       def visit_literal(node)
@@ -85,7 +86,7 @@ module Semauri
       def visit_variable_reference(node)
         symbol = @environment.resolve(node)
         HIR::Node.new(kind: :symbol_ref, type: symbol.type,
-                      fields: { symbol_id: symbol.id, name: symbol.name }, span: node.span)
+                      fields: { symbol_id: symbol.id, name: symbol.name, source_name: node.name }, span: node.span)
       end
 
       def visit_unary_expression(node)
@@ -124,7 +125,7 @@ module Semauri
           body = build_block(node.body)
           HIR::Node.new(kind: :for_each, type: :unit,
                         fields: { iterator_symbol_id: symbol.id, iterator_name: symbol.name,
-                                  iterable: iterable, body: body }, span: node.span)
+                                  iterator_source_name: node.variable_name, iterable: iterable, body: body }, span: node.span)
         end
       end
 

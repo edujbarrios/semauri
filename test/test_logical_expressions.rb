@@ -26,16 +26,22 @@ class LogicalExpressionsTest < Minitest::Test
     assert_equal ["Buy"], semantic.program.elements.map(&:label)
   end
 
-  def test_and_short_circuits_rhs
-    source = "Create a web. If false and missing is equal to true: Add a button called Never. End."
+  def test_and_short_circuits_rhs_value_evaluation
+    source = "Create a web. If false and 1 divided by 0 is equal to 1: Add a button called Never. End."
     _ast, semantic = @compiler.analyze(source)
     assert_empty semantic.program.elements
   end
 
-  def test_or_short_circuits_rhs
-    source = "Create a web. If true or missing is equal to true: Add a button called Buy. End."
+  def test_or_short_circuits_rhs_value_evaluation
+    source = "Create a web. If true or 1 divided by 0 is equal to 1: Add a button called Buy. End."
     _ast, semantic = @compiler.analyze(source)
     assert_equal ["Buy"], semantic.program.elements.map(&:label)
+  end
+
+  def test_short_circuit_does_not_skip_name_resolution
+    source = "Create a web. If true or missing is equal to true: Add a button called Invalid. End."
+    error = assert_raises(Semauri::SemanticError) { @compiler.analyze(source) }
+    assert_equal "S312", error.code
   end
 
   def test_logical_operators_require_booleans
