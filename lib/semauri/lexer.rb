@@ -51,7 +51,7 @@ module Semauri
         code: "S101",
         line: start_line,
         column: start_column,
-        hint: "Semauri 0.1 currently accepts words, quoted strings, '.', ',' and ':'."
+        hint: "Semauri currently accepts words, quoted strings, '.', ',' and ':'."
       )
     end
 
@@ -59,7 +59,8 @@ module Semauri
       text = +""
       text << advance while !eof? && word_char?(current)
       type = @vocabulary.token_type(text)
-      Token.new(type: type, lexeme: text, literal: type == :WORD ? text : nil, line: line, column: column)
+      literal = %i[WORD COLOR].include?(type) ? text : nil
+      Token.new(type: type, lexeme: text, literal: literal, line: line, column: column)
     end
 
     def string_token(line, column)
@@ -80,9 +81,7 @@ module Semauri
     end
 
     def skip_whitespace
-      while !eof? && current.match?(/\s/)
-        advance
-      end
+      advance while !eof? && current.match?(/\s/)
     end
 
     def word_start?(char)

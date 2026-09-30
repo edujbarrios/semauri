@@ -4,9 +4,11 @@
 module Semauri
   module Vocabulary
     class English
+      COLORS = %w[black blue brown gray green orange pink purple red white yellow].freeze
+
       KEYWORDS = {
         "create" => :CREATE,
-        "make" => :CREATE,
+        "make" => :MAKE,
         "a" => :ARTICLE,
         "an" => :ARTICLE,
         "the" => :ARTICLE,
@@ -18,11 +20,16 @@ module Semauri
         "called" => :CALLED,
         "named" => :CALLED,
         "add" => :ADD,
-        "title" => :TITLE
+        "title" => :TITLE,
+        "button" => :BUTTON,
+        "it" => :PRONOUN
       }.freeze
 
       def token_type(word)
-        KEYWORDS.fetch(word.downcase, :WORD)
+        normalized = word.downcase
+        return :COLOR if COLORS.include?(normalized)
+
+        KEYWORDS.fetch(normalized, :WORD)
       end
     end
   end

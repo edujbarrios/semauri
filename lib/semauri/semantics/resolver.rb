@@ -3,7 +3,9 @@
 
 require_relative "../errors"
 require_relative "../ir/web_document"
+require_relative "../ir/element"
 require_relative "result"
+require_relative "context"
 
 module Semauri
   module Semantics
@@ -11,6 +13,7 @@ module Semauri
       def resolve(ast)
         @document = nil
         @explanations = []
+        @context = Context.new
         ast.accept(self)
         raise SemanticError.new("Program does not create an artifact", code: "S301") unless @document
 
@@ -18,6 +21,7 @@ module Semauri
       ensure
         @document = nil
         @explanations = nil
+        @context = nil
       end
 
       def visit_program(node)
@@ -27,7 +31,7 @@ module Semauri
       def visit_create_web(node)
         if @document
           raise SemanticError.new(
-            "Semauri 0.1 supports one web document per source file",
+            "Semauri currently supports one web document per source file",
             code: "S302",
             line: node.line,
             column: node.column,
@@ -43,21 +47,48 @@ module Semauri
       end
 
       def visit_set_title(node)
-        unless @document
-          raise SemanticError.new(
-            "Cannot add a title before creating a web document",
-            code: "S303",
-            line: node.line,
-            column: node.column,
-            hint: "Create a web first, then add its title."
-          )
-        end
-
+        require_document!(node, "Cannot add a title before creating a web document", "S303")
         @document = @document.with_title(node.title)
         @explanations << "Title explicitly set to '#{node.title}'."
       end
 
+      def visit_create_element(node)
+        require_document!(node, "Cannot add an element before creating a web document", "S304")
+
+        id = @context.next_id(node.element_type)
+        element = IR::Element.new(id: id, element_type: node.element_type, name: node.name)
+        @document = @document.add_element(element)
+        @context.register(id: id, entity_type: node.element_type, name: node.name)
+
+        description = node.name ? "#{node.element_type} '#{node.name}'" : node.element_type.to_s
+        @explanations << "Created #{description} as #{id}."
+      end
+
+      def visit_set_property(node)
+        require_document!(node, "Cannot modify an element before creating a web document", "S307")
+
+        target = @context.resolve(node.target, line: node.line, column: node.column)
+        @document = @document.update_element(target.id) do |element|
+          element.with_property(node.property, node.value)
+        end
+
+        @explanations << "Reference #{reference_text(node.target)} resolved to #{target.name || target.id}."
+        @explanations << "Set #{node.property} of #{target.name || target.id} to '#{node.value}'."
+      end
+
       private
+
+      def require_document!(node, message, code)
+        return if @document
+
+        raise SemanticError.new(
+          message,
+          code: code,
+          line: node.line,
+          column: node.column,
+          hint: "Create a web first."
+        )
+      end
 
       def infer_title(node)
         return [node.title, :explicit] if node.title
@@ -75,6 +106,13 @@ module Semauri
         else
           "No title or subject was provided, so the web title defaults to 'Untitled'."
         end
+      end
+
+      def reference_text(reference)
+        return "'it'" if reference.mode == :pronoun
+        return "'#{reference.entity_type} called #{reference.name}'" if reference.name
+
+        "'#{reference.entity_type}'"
       end
     end
   end

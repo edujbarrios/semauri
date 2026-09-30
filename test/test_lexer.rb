@@ -11,8 +11,14 @@ class LexerTest < Minitest::Test
     assert_equal "store", tokens[6].lexeme
   end
 
-  def test_supports_surface_synonyms
+  def test_supports_contextual_make_keyword
     tokens = Semauri::Lexer.new("Make a website named Hello.").tokens
-    assert_equal %i[CREATE ARTICLE WEB CALLED WORD DOT EOF], tokens.map(&:type)
+    assert_equal %i[MAKE ARTICLE WEB CALLED WORD DOT EOF], tokens.map(&:type)
+  end
+
+  def test_tokenizes_pronouns_and_colors
+    tokens = Semauri::Lexer.new("Make it blue.").tokens
+    assert_equal %i[MAKE PRONOUN COLOR DOT EOF], tokens.map(&:type)
+    assert_equal "blue", tokens[2].literal
   end
 end

@@ -19,84 +19,75 @@ Vocabulary ──► Lexer ──► Tokens
                          ▼
                  Semantic Resolver
                          │
-                         ▼
-                         IR
-                         │
-                         ▼
-                 Backend Registry
-                         │
-                         ▼
-                  Target Artifact
+                  ┌──────┴──────┐
+                  ▼             ▼
+          Semantic Context      IR
+          / reference table      │
+                                 ▼
+                         Backend Registry
+                                 │
+                                 ▼
+                          Target Artifact
 ```
 
 ## Components
 
 ### Vocabulary — Strategy
 
-`Vocabulary::English` maps surface forms (`create`, `make`, `website`, `web`) into stable lexical categories. The lexer receives a vocabulary object through dependency injection.
-
-This makes future controlled-language surfaces possible without coupling every translation to the parser.
+`Vocabulary::English` maps surface forms into stable lexical categories. It classifies words but does not make contextual semantic decisions. For example, `make` becomes `MAKE`; the parser decides whether a particular `MAKE` statement is creation compatibility syntax or a mutation.
 
 ### Lexer
 
-The lexer owns character-level concerns and source coordinates. It never assigns contextual meaning.
+The lexer owns character-level concerns and source coordinates. It never resolves pronouns or selects program entities.
 
 ### Parser — recursive descent
 
-The parser is handwritten on purpose. Semauri is currently small enough that a recursive-descent parser keeps the grammar understandable to contributors and makes diagnostics easy to control.
-
-The parser outputs syntax-oriented AST nodes such as `CreateWeb` and `SetTitle`.
+The handwritten parser converts controlled language into syntax-oriented AST nodes. In 0.2 the main nodes include `CreateWeb`, `SetTitle`, `CreateElement` and `SetProperty`.
 
 ### AST — Visitor
 
-AST nodes expose `accept(visitor)`. Semantic resolution and serialization use visitors so that operations over syntax are separated from the data structure itself.
-
-When a new AST node is introduced, visitors fail explicitly until they support the node instead of silently generating output incorrectly.
+AST nodes expose `accept(visitor)`. Semantic resolution and serialization are visitors. `AST::Reference` is an immutable value object representing unresolved references such as `it`, `the button`, or `the button called Buy`.
 
 ### Semantic resolver
 
-This is where natural-looking syntax obtains deterministic meaning.
+The semantic resolver converts syntax into deterministic meaning. It owns rules such as `title := subject` and delegates entity lookup to `Semantics::Context`.
 
-For example:
+### Semantic context — Symbol Table / Resolver
 
-```text
-Create a web for a pet store.
-```
+`Semantics::Context` is the first symbol-table-like component in Semauri. It assigns stable internal IDs to referable entities and resolves references.
 
-parses with a `subject` but no explicit `title`. The resolver applies the documented `WebDocument` rule `title := subject` and records an explanation for that decision.
+A reference succeeds only when it has exactly one candidate. Zero candidates and multiple candidates are semantic errors. This rule is central to Semauri's philosophy: **natural syntax must not imply probabilistic semantics**.
 
-The resolver should reject ambiguity rather than choose probabilistically.
+Future scopes, variables, collections and pronouns should extend this component rather than adding ad-hoc lookup logic to the parser.
 
 ### IR
 
-The intermediate representation contains resolved program meaning. `IR::WebDocument` does not know whether its title came from `called`, `for`, a future Spanish surface syntax, or another parser construct except for optional provenance metadata useful to diagnostics.
-
-This boundary is essential for multiple backends.
+The intermediate representation contains resolved program meaning. `IR::WebDocument` owns immutable `IR::Element` values. Mutations in source create new IR values rather than mutating previously resolved nodes in place.
 
 ### Backends — Strategy + Registry
 
-Backends implement a small rendering interface. `Backends::Registry` maps a backend name to a factory, allowing embedding applications and future plugins to register a backend without changing `Compiler`.
-
-Today there is one backend: HTML.
+Backends consume IR, never source or AST. The HTML backend maps semantic button color to `background-color`; another backend may render the same semantic property differently.
 
 ## Dependency direction
 
-Preferred dependency direction:
-
 ```text
 CLI → Compiler → Lexer / Parser / Semantics → IR ← Backends
+                                  │
+                                  ▼
+                           Semantic Context
 ```
 
-Avoid dependencies in the other direction. In particular:
+Avoid dependencies in the other direction:
 
 - AST must not depend on HTML.
 - IR must not depend on parser tokens.
 - Backends must not parse source text.
 - Core semantics must not depend on the CLI.
+- Reference resolution must not be implemented inside a backend.
 
 ## Why no LLM in the compiler core?
 
-The reference compiler is deterministic. An optional future free-form-language adapter could use an LLM to translate unrestricted prose into strict Semauri source, but that adapter would sit *before* the compiler boundary:
+The reference compiler is deterministic. An optional future free-form-language adapter could translate unrestricted prose into strict Semauri source, but it would sit before the compiler boundary:
 
 ```text
 free-form language → optional adapter → strict Semauri → compiler

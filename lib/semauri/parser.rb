@@ -5,6 +5,9 @@ require_relative "errors"
 require_relative "ast/program"
 require_relative "ast/create_web"
 require_relative "ast/set_title"
+require_relative "ast/create_element"
+require_relative "ast/set_property"
+require_relative "ast/reference"
 
 module Semauri
   class Parser
@@ -22,17 +25,57 @@ module Semauri
     private
 
     def statement
-      return create_statement if match?(:CREATE)
-      return add_statement if match?(:ADD)
+      return create_statement(previous) if match?(:CREATE)
+      return make_statement(previous) if match?(:MAKE)
+      return add_statement(previous) if match?(:ADD)
 
-      error!(peek, "Expected a statement beginning with 'Create' or 'Add'", "S201")
+      error!(peek, "Expected a statement beginning with 'Create', 'Add' or 'Make'", "S201")
     end
 
-    def create_statement
-      start = previous
+    def create_statement(start)
       match?(:ARTICLE)
-      consume(:WEB, "Expected 'web', 'website' or 'page' after 'Create'", "S202")
+      return create_web_statement(start) if match?(:WEB)
+      return create_element_statement(start, :button) if match?(:BUTTON)
 
+      error!(peek, "Expected 'web' or 'button' after 'Create'", "S202")
+    end
+
+    def make_statement(start)
+      if web_creation_ahead?
+        match?(:ARTICLE)
+        consume(:WEB, "Expected a web artifact", "S202")
+        return create_web_statement(start)
+      end
+
+      target = reference
+      color = consume(:COLOR, "Expected a supported color after the target", "S206")
+      consume_optional_dot
+
+      AST::SetProperty.new(
+        target: target,
+        property: :color,
+        value: color.literal.downcase,
+        line: start.line,
+        column: start.column
+      )
+    end
+
+    def add_statement(start)
+      match?(:ARTICLE)
+
+      if match?(:TITLE)
+        consume(:CALLED, "Expected 'called' or 'named' after 'title'", "S204")
+        title = phrase_until(:DOT, :EOF)
+        consume_optional_dot
+        return AST::SetTitle.new(title: normalize_phrase(title), line: start.line, column: start.column)
+      end
+
+      return create_element_statement(start, :button) if match?(:BUTTON)
+
+      error!(peek, "Expected 'title' or 'button' after 'Add'", "S203")
+    end
+
+    def create_web_statement(start)
       subject = nil
       title = nil
 
@@ -44,19 +87,38 @@ module Semauri
       end
 
       consume_optional_dot
-      AST::CreateWeb.new(subject: normalize_phrase(subject), title: normalize_phrase(title),
-                         line: start.line, column: start.column)
+      AST::CreateWeb.new(
+        subject: normalize_phrase(subject),
+        title: normalize_phrase(title),
+        line: start.line,
+        column: start.column
+      )
     end
 
-    def add_statement
-      start = previous
-      match?(:ARTICLE)
-      consume(:TITLE, "Semauri 0.1 currently supports 'Add a title called ...'", "S203")
-      consume(:CALLED, "Expected 'called' or 'named' after 'title'", "S204")
-      title = phrase_until(:DOT, :EOF)
+    def create_element_statement(start, element_type)
+      name = match?(:CALLED) ? normalize_phrase(phrase_until(:DOT, :EOF)) : nil
       consume_optional_dot
+      AST::CreateElement.new(element_type: element_type, name: name, line: start.line, column: start.column)
+    end
 
-      AST::SetTitle.new(title: normalize_phrase(title), line: start.line, column: start.column)
+    def reference
+      return AST::Reference.pronoun if match?(:PRONOUN)
+
+      match?(:ARTICLE)
+      consume(:BUTTON, "Expected 'it' or a supported element such as 'button'", "S207")
+
+      if match?(:CALLED)
+        name = normalize_phrase(phrase_until(:COLOR, :DOT, :EOF))
+        return AST::Reference.named(:button, name)
+      end
+
+      AST::Reference.kind(:button)
+    end
+
+    def web_creation_ahead?
+      return true if check?(:WEB)
+
+      check?(:ARTICLE) && peek_next.type == :WEB
     end
 
     def phrase_until(*terminators)
@@ -82,11 +144,13 @@ module Semauri
 
     def consume(type, message, code)
       return advance if check?(type)
+
       error!(peek, message, code)
     end
 
     def match?(*types)
       return false unless types.any? { |type| check?(type) }
+
       advance
       true
     end
@@ -106,6 +170,10 @@ module Semauri
 
     def peek
       @tokens[@current]
+    end
+
+    def peek_next
+      @tokens[[@current + 1, @tokens.length - 1].min]
     end
 
     def previous
