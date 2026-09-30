@@ -59,11 +59,19 @@ module Semauri
 
           def optimize_let(node, live_after)
             symbol_id = node.fields.fetch(:symbol_id)
-            return remove_dead_let(live_after) unless live_after.include?(symbol_id)
+            value = node.fields.fetch(:value)
+
+            unless live_after.include?(symbol_id)
+              return remove_dead_let(live_after) if removable_expression?(value)
+
+              # A dead binding whose initializer can trap is observable. Keep it
+              # and keep any symbols required to evaluate the initializer.
+              return [node, live_after | symbol_refs(value)]
+            end
 
             live_before = live_after.dup
             live_before.delete(symbol_id)
-            live_before.merge(symbol_refs(node.fields.fetch(:value)))
+            live_before.merge(symbol_refs(value))
             [node, live_before]
           end
 
@@ -93,6 +101,32 @@ module Semauri
 
             live_before = live_after | body_live | symbol_refs(node.fields.fetch(:iterable))
             [rebuild(node, body: body), live_before]
+          end
+
+          # Expressions are pure, but some can still fail during evaluation.
+          # Dead-code elimination may only remove an initializer when evaluation
+          # is guaranteed not to produce an observable compiler/runtime error.
+          def removable_expression?(node)
+            case node.kind
+            when :literal, :symbol_ref
+              true
+            when :list
+              node.fields.fetch(:items).all? { |item| removable_expression?(item) }
+            when :unary
+              removable_expression?(node.fields.fetch(:operand))
+            when :binary
+              left = node.fields.fetch(:left)
+              right = node.fields.fetch(:right)
+              return false unless removable_expression?(left) && removable_expression?(right)
+
+              if node.fields.fetch(:operator) == :divide
+                return right.kind == :literal && !right.fields.fetch(:value).zero?
+              end
+
+              true
+            else
+              false
+            end
           end
 
           def symbol_refs(node)
