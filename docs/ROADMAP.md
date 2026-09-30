@@ -14,9 +14,7 @@ Semauri is an experiment in deterministic natural-language-like programming. The
 - CLI introspection commands
 - zero-dependency core tests
 
-## 0.2 — semantic context and references — in progress
-
-Completed:
+## 0.2 — semantic context and references ✅
 
 - explicit AST reference model
 - constrained pronoun `it`
@@ -26,14 +24,13 @@ Completed:
 - contextual `make` (`Make a web...` vs `Make it blue.`)
 - explicit named references (`Make the button called Buy blue.`)
 - deterministic missing/duplicate reference diagnostics
-
-Remaining before the 0.2 line is considered complete:
-
-- source spans rather than point locations
-- richer diagnostics with source excerpts
+- source spans with exclusive end positions
+- source-aware diagnostics with code excerpts
 - semantic provenance for property mutations
 
-## 0.3 — values and scope
+The 0.2 line establishes the compiler infrastructure required for later editor tooling and source-to-IR traceability.
+
+## 0.3 — values and scope — next
 
 - literals
 - variables

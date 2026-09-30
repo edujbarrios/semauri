@@ -8,9 +8,9 @@ module Semauri
     class Program < Node
       attr_reader :statements
 
-      def initialize(statements:, line: 1, column: 1)
+      def initialize(statements:, line: 1, column: 1, end_line: nil, end_column: nil, span: nil)
         @statements = statements.freeze
-        super(line: line, column: column)
+        super(line: line, column: column, end_line: end_line, end_column: end_column, span: span)
       end
 
       def accept(visitor)

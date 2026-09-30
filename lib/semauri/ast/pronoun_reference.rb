@@ -8,9 +8,9 @@ module Semauri
     class PronounReference < Node
       attr_reader :pronoun
 
-      def initialize(pronoun:, line:, column:)
+      def initialize(pronoun:, line: nil, column: nil, end_line: nil, end_column: nil, span: nil)
         @pronoun = pronoun.downcase.freeze
-        super(line: line, column: column)
+        super(line: line, column: column, end_line: end_line, end_column: end_column, span: span)
       end
 
       def accept(visitor)

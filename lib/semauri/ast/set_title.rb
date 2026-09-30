@@ -8,9 +8,9 @@ module Semauri
     class SetTitle < Node
       attr_reader :title
 
-      def initialize(title:, line:, column:)
+      def initialize(title:, line: nil, column: nil, end_line: nil, end_column: nil, span: nil)
         @title = title
-        super(line: line, column: column)
+        super(line: line, column: column, end_line: end_line, end_column: end_column, span: span)
       end
 
       def accept(visitor)

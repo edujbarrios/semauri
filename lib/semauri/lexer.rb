@@ -42,7 +42,8 @@ module Semauri
       if PUNCTUATION.key?(char)
         advance
         return Token.new(type: PUNCTUATION.fetch(char), lexeme: char, literal: nil,
-                         line: start_line, column: start_column)
+                         line: start_line, column: start_column,
+                         end_line: @line, end_column: @column)
       end
 
       return string_token(start_line, start_column) if char == '"'
@@ -52,7 +53,9 @@ module Semauri
         "Unexpected character #{char.inspect}",
         code: "S101",
         line: start_line,
-        column: start_column
+        column: start_column,
+        end_line: start_line,
+        end_column: start_column + 1
       )
     end
 
@@ -61,7 +64,8 @@ module Semauri
       text << advance while !eof? && word_char?(current)
       type = @vocabulary.token_type(text)
       literal = LITERAL_TOKEN_TYPES.include?(type) ? text : nil
-      Token.new(type: type, lexeme: text, literal: literal, line: line, column: column)
+      Token.new(type: type, lexeme: text, literal: literal, line: line, column: column,
+                end_line: @line, end_column: @column)
     end
 
     def string_token(line, column)
@@ -70,15 +74,20 @@ module Semauri
 
       until eof? || current == '"'
         if current == "\n"
-          raise LexError.new("Strings cannot span multiple lines yet", code: "S102", line: line, column: column)
+          raise LexError.new("Strings cannot span multiple lines yet", code: "S102",
+                             line: line, column: column, end_line: @line, end_column: @column)
         end
         value << advance
       end
 
-      raise LexError.new("Unterminated string", code: "S103", line: line, column: column) if eof?
+      if eof?
+        raise LexError.new("Unterminated string", code: "S103", line: line, column: column,
+                           end_line: @line, end_column: @column)
+      end
 
       advance
-      Token.new(type: :STRING, lexeme: value, literal: value, line: line, column: column)
+      Token.new(type: :STRING, lexeme: value, literal: value, line: line, column: column,
+                end_line: @line, end_column: @column)
     end
 
     def skip_whitespace
@@ -114,7 +123,8 @@ module Semauri
     end
 
     def token(type, lexeme)
-      Token.new(type: type, lexeme: lexeme, literal: nil, line: @line, column: @column)
+      Token.new(type: type, lexeme: lexeme, literal: nil, line: @line, column: @column,
+                end_line: @line, end_column: @column)
     end
   end
 end
