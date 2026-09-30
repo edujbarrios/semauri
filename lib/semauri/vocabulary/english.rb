@@ -7,6 +7,12 @@ module Semauri
       KEYWORDS = {
         "create" => :CREATE,
         "make" => :MAKE,
+        "let" => :LET,
+        "be" => :BE,
+        "set" => :SET,
+        "of" => :OF,
+        "to" => :TO,
+        "color" => :COLOR_PROPERTY,
         "a" => :ARTICLE,
         "an" => :ARTICLE,
         "the" => :ARTICLE,

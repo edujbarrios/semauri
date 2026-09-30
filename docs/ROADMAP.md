@@ -21,22 +21,30 @@ Semauri is an experiment in deterministic natural-language-like programming. The
 - deterministic ambiguity errors
 - semantic entity table
 - immutable element properties in the IR
-- contextual `make` (`Make a web...` vs `Make it blue.`)
-- explicit named references (`Make the button called Buy blue.`)
-- deterministic missing/duplicate reference diagnostics
-- source spans with exclusive end positions
-- source-aware diagnostics with code excerpts
+- contextual `make`
+- explicit named references
+- source spans
+- source-aware diagnostics
 - semantic provenance for property mutations
 
-The 0.2 line establishes the compiler infrastructure required for later editor tooling and source-to-IR traceability.
+## 0.3 — values and scope — in progress
 
-## 0.3 — values and scope — next
+Completed in the first 0.3 slice:
 
-- literals
-- variables
-- lexical scope
-- assignment semantics
-- reusable reference expressions
+- expression-oriented property values
+- typed color, string and numeric literals
+- immutable `Let` bindings
+- variable references
+- a scope abstraction with parent-scope support
+- unknown/duplicate binding diagnostics
+- property value type checking
+- canonical `Set the color of ... to ...` assignment syntax
+
+Remaining before 0.3 is complete:
+
+- lexical blocks that create child scopes
+- more reusable expression contexts
+- richer semantic value constraints
 
 ## 0.4 — structured control flow
 

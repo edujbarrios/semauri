@@ -32,12 +32,24 @@ module Semauri
         { type: "named_reference", kind: node.kind, label: node.label }.merge(location(node))
       end
 
+      def visit_literal(node)
+        { type: "literal", value_type: node.value_type, value: node.value }.merge(location(node))
+      end
+
+      def visit_variable_reference(node)
+        { type: "variable_reference", name: node.name }.merge(location(node))
+      end
+
+      def visit_let_binding(node)
+        { type: "let_binding", name: node.name, value: node.value.accept(self) }.merge(location(node))
+      end
+
       def visit_set_property(node)
         {
           type: "set_property",
           target: node.target.accept(self),
           property: node.property,
-          value: node.value
+          value: node.value.accept(self)
         }.merge(location(node))
       end
 
