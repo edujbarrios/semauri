@@ -63,6 +63,17 @@ Make it blue.
 
 produces semantic error `S305` because `it` is ambiguous.
 
+You can disambiguate explicitly:
+
+```text
+Create a web called Shop.
+Add a button called Buy.
+Add an image called Logo.
+Make the button called Buy blue.
+```
+
+The explicit reference resolves only the `Buy` button; the image is left unchanged.
+
 ## Current language surface
 
 Semauri 0.2 currently supports:
@@ -75,6 +86,7 @@ Add a title called Happy Paws.
 Add a button called Buy.
 Add an image called Logo.
 Make it blue.
+Make the button called Buy red.
 ```
 
 The supported color vocabulary is intentionally constrained and deterministic.
@@ -146,7 +158,7 @@ Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before
 
 ## Roadmap
 
-Next priorities include source spans, richer diagnostics, explicit named references, variables/scope, conditions, semantic domains and additional backends.
+Next priorities include source spans, richer diagnostics with source excerpts, semantic provenance, variables/scope, conditions, semantic domains and additional backends.
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for milestones.
 
