@@ -3,6 +3,7 @@
 
 require_relative "lexer"
 require_relative "parser"
+require_relative "hir/builder"
 require_relative "semantics/resolver"
 require_relative "backends/registry"
 
@@ -23,6 +24,10 @@ module Semauri
 
     def parse(source)
       Parser.new(tokenize(source)).parse
+    end
+
+    def hir(source)
+      HIR::Builder.new.build(parse(source))
     end
 
     def analyze(source)

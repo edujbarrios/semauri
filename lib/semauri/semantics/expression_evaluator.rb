@@ -3,11 +3,11 @@
 
 require_relative "../errors"
 require_relative "value"
+require_relative "type_system"
 
 module Semauri
   module Semantics
     class ExpressionEvaluator
-      NUMERIC_OPERATORS = %i[add subtract multiply divide greater_than less_than].freeze
       LOGICAL_OPERATORS = %i[and or].freeze
 
       def initialize(scope:, on_variable_resolution: nil)
@@ -31,13 +31,8 @@ module Semauri
 
       def visit_unary_expression(node)
         value = evaluate(node.operand)
-
-        unless node.operator == :not
-          raise semantic_error(node, "Unsupported unary operator '#{node.operator}'", "S318")
-        end
-
-        ensure_boolean!(value, node.operand)
-        Value.new(type: :boolean, value: !value.value, definition_span: node.span)
+        result_type = TypeSystem.unary_type(node.operator, value.type, node: node)
+        Value.new(type: result_type, value: !value.value, definition_span: node.span)
       end
 
       def visit_binary_expression(node)
@@ -45,42 +40,7 @@ module Semauri
 
         left = evaluate(node.left)
         right = evaluate(node.right)
-
-        return evaluate_numeric(node, left, right) if NUMERIC_OPERATORS.include?(node.operator)
-        return evaluate_equality(node, left, right) if node.operator == :equal
-
-        raise semantic_error(node, "Unsupported operator '#{node.operator}'", "S318")
-      end
-
-      private
-
-      def evaluate_logical(node)
-        left = evaluate(node.left)
-        ensure_boolean!(left, node.left)
-
-        if node.operator == :and && !left.value
-          return Value.new(type: :boolean, value: false, definition_span: node.span)
-        end
-
-        if node.operator == :or && left.value
-          return Value.new(type: :boolean, value: true, definition_span: node.span)
-        end
-
-        right = evaluate(node.right)
-        ensure_boolean!(right, node.right)
-
-        result = node.operator == :and ? left.value && right.value : left.value || right.value
-        Value.new(type: :boolean, value: result, definition_span: node.span)
-      end
-
-      def evaluate_numeric(node, left, right)
-        unless left.type == :number && right.type == :number
-          raise semantic_error(
-            node,
-            "Operator '#{operator_name(node.operator)}' requires number operands, got #{left.type} and #{right.type}",
-            "S314"
-          )
-        end
+        result_type = TypeSystem.binary_type(node.operator, left.type, right.type, node: node)
 
         result = case node.operator
                  when :add then left.value + right.value
@@ -91,39 +51,33 @@ module Semauri
                    left.value.fdiv(right.value)
                  when :greater_than then left.value > right.value
                  when :less_than then left.value < right.value
+                 when :equal then left.value == right.value
+                 else
+                   raise semantic_error(node, "Unsupported operator '#{node.operator}'", "S318")
                  end
 
-        type = %i[greater_than less_than].include?(node.operator) ? :boolean : :number
-        Value.new(type: type, value: result, definition_span: node.span)
+        Value.new(type: result_type, value: result, definition_span: node.span)
       end
 
-      def evaluate_equality(node, left, right)
-        unless left.type == right.type
-          raise semantic_error(
-            node,
-            "Equality requires operands of the same type, got #{left.type} and #{right.type}",
-            "S315"
-          )
+      private
+
+      def evaluate_logical(node)
+        left = evaluate(node.left)
+        TypeSystem.ensure_boolean!(left.type, node: node.left,
+                                   message: "Logical operators require boolean operands", code: "S319")
+
+        if node.operator == :and && !left.value
+          return Value.new(type: :boolean, value: false, definition_span: node.span)
         end
 
-        Value.new(type: :boolean, value: left.value == right.value, definition_span: node.span)
-      end
+        if node.operator == :or && left.value
+          return Value.new(type: :boolean, value: true, definition_span: node.span)
+        end
 
-      def ensure_boolean!(value, node)
-        return if value.type == :boolean
-
-        raise semantic_error(node, "Logical operators require boolean operands, received #{value.type}", "S319")
-      end
-
-      def operator_name(operator)
-        {
-          add: "plus",
-          subtract: "minus",
-          multiply: "times",
-          divide: "divided by",
-          greater_than: "is greater than",
-          less_than: "is less than"
-        }.fetch(operator, operator.to_s)
+        right = evaluate(node.right)
+        TypeSystem.binary_type(node.operator, left.type, right.type, node: node)
+        result = node.operator == :and ? left.value && right.value : left.value || right.value
+        Value.new(type: :boolean, value: result, definition_span: node.span)
       end
 
       def semantic_error(node, message, code)
