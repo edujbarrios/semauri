@@ -3,7 +3,9 @@
 
 require_relative "../errors"
 require_relative "../ir/web_document"
+require_relative "../ir/element"
 require_relative "result"
+require_relative "entity_table"
 
 module Semauri
   module Semantics
@@ -11,6 +13,7 @@ module Semauri
       def resolve(ast)
         @document = nil
         @explanations = []
+        @entities = EntityTable.new
         ast.accept(self)
         raise SemanticError.new("Program does not create an artifact", code: "S301") unless @document
 
@@ -18,6 +21,7 @@ module Semauri
       ensure
         @document = nil
         @explanations = nil
+        @entities = nil
       end
 
       def visit_program(node)
@@ -27,7 +31,7 @@ module Semauri
       def visit_create_web(node)
         if @document
           raise SemanticError.new(
-            "Semauri 0.1 supports one web document per source file",
+            "Semauri currently supports one web document per source file",
             code: "S302",
             line: node.line,
             column: node.column,
@@ -43,21 +47,49 @@ module Semauri
       end
 
       def visit_set_title(node)
-        unless @document
-          raise SemanticError.new(
-            "Cannot add a title before creating a web document",
-            code: "S303",
-            line: node.line,
-            column: node.column,
-            hint: "Create a web first, then add its title."
-          )
-        end
-
+        require_document!(node, "Cannot add a title before creating a web document", "S303")
         @document = @document.with_title(node.title)
         @explanations << "Title explicitly set to '#{node.title}'."
       end
 
+      def visit_add_element(node)
+        require_document!(node, "Cannot add an element before creating a web document", "S306")
+        label = node.label || node.kind.to_s.capitalize
+
+        element = @entities.register(kind: node.kind) do |id|
+          IR::Element.new(id: id, kind: node.kind, label: label)
+        end
+
+        @document = @document.add_element(element)
+        @explanations << "Added #{node.kind} '#{label}' as #{element.id}."
+      end
+
+      def visit_set_property(node)
+        require_document!(node, "Cannot modify an element before creating a web document", "S307")
+        target = resolve_reference(node.target)
+        updated = target.with_property(node.property, node.value)
+        @document = @document.replace_element(updated)
+        @explanations << "'#{node.target.pronoun}' resolved to #{target.kind} '#{target.label}' (#{target.id})."
+        @explanations << "Set #{target.id}.#{node.property} to '#{node.value}'."
+      end
+
       private
+
+      def resolve_reference(reference)
+        case reference
+        when AST::PronounReference
+          @entities.resolve_pronoun(reference)
+        else
+          raise SemanticError.new("Unsupported reference #{reference.class}", code: "S308")
+        end
+      end
+
+      def require_document!(node, message, code)
+        return if @document
+
+        raise SemanticError.new(message, code: code, line: node.line, column: node.column,
+                                hint: "Create a web first.")
+      end
 
       def infer_title(node)
         return [node.title, :explicit] if node.title

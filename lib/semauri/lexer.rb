@@ -13,6 +13,8 @@ module Semauri
       ":" => :COLON
     }.freeze
 
+    LITERAL_TOKEN_TYPES = %i[WORD COLOR].freeze
+
     def initialize(source, vocabulary: Vocabulary::English.new)
       @source = source
       @vocabulary = vocabulary
@@ -50,8 +52,7 @@ module Semauri
         "Unexpected character #{char.inspect}",
         code: "S101",
         line: start_line,
-        column: start_column,
-        hint: "Semauri 0.1 currently accepts words, quoted strings, '.', ',' and ':'."
+        column: start_column
       )
     end
 
@@ -59,7 +60,8 @@ module Semauri
       text = +""
       text << advance while !eof? && word_char?(current)
       type = @vocabulary.token_type(text)
-      Token.new(type: type, lexeme: text, literal: type == :WORD ? text : nil, line: line, column: column)
+      literal = LITERAL_TOKEN_TYPES.include?(type) ? text : nil
+      Token.new(type: type, lexeme: text, literal: literal, line: line, column: column)
     end
 
     def string_token(line, column)
@@ -80,9 +82,7 @@ module Semauri
     end
 
     def skip_whitespace
-      while !eof? && current.match?(/\s/)
-        advance
-      end
+      advance while !eof? && current.match?(/\s/)
     end
 
     def word_start?(char)

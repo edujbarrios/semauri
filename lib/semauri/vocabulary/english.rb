@@ -6,7 +6,7 @@ module Semauri
     class English
       KEYWORDS = {
         "create" => :CREATE,
-        "make" => :CREATE,
+        "make" => :MAKE,
         "a" => :ARTICLE,
         "an" => :ARTICLE,
         "the" => :ARTICLE,
@@ -18,7 +18,23 @@ module Semauri
         "called" => :CALLED,
         "named" => :CALLED,
         "add" => :ADD,
-        "title" => :TITLE
+        "title" => :TITLE,
+        "button" => :BUTTON,
+        "image" => :IMAGE,
+        "picture" => :IMAGE,
+        "it" => :PRONOUN,
+        "black" => :COLOR,
+        "white" => :COLOR,
+        "red" => :COLOR,
+        "green" => :COLOR,
+        "blue" => :COLOR,
+        "yellow" => :COLOR,
+        "orange" => :COLOR,
+        "purple" => :COLOR,
+        "pink" => :COLOR,
+        "gray" => :COLOR,
+        "grey" => :COLOR,
+        "brown" => :COLOR
       }.freeze
 
       def token_type(word)
