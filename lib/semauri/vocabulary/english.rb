@@ -26,6 +26,7 @@ module Semauri
         "for" => :FOR,
         "every" => :EVERY,
         "in" => :IN,
+        "within" => :WITHIN,
         "list" => :LIST,
         "is" => :IS,
         "greater" => :GREATER,
