@@ -20,14 +20,17 @@ module Semauri
         key = domain.name.to_sym
         raise ArgumentError, "Domain '#{key}' is already registered" if @domains.key?(key)
 
-        domain.words.each do |word|
-          if @terms.key?(word)
-            owner = @terms.fetch(word).domain
-            raise ArgumentError, "Domain term '#{word}' conflicts between '#{owner}' and '#{key}'"
-          end
-          @terms[word] = domain.classify(word)
+        conflicts = domain.words.filter_map do |word|
+          next unless @terms.key?(word)
+          [word, @terms.fetch(word).domain]
         end
 
+        unless conflicts.empty?
+          word, owner = conflicts.first
+          raise ArgumentError, "Domain term '#{word}' conflicts between '#{owner}' and '#{key}'"
+        end
+
+        domain.words.each { |word| @terms[word] = domain.classify(word) }
         @domains[key] = domain
         self
       end
@@ -43,6 +46,7 @@ module Semauri
       end
 
       def names = @domains.keys.sort.freeze
+      def words = @terms.keys.sort.freeze
 
       def to_h
         { domains: names.map { |name| fetch(name).to_h } }
