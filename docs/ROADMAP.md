@@ -87,9 +87,20 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - POSIX shell backend generated from filesystem plans; compilation never performs filesystem effects
 - external-domain contract test proving a new verb reaches HIR without parser-specific code
 
+### 0.6.1 — multi-domain ProgramIR ✅
+
+- immutable `IR::Program` composed of independent semantic-domain units
+- separate domain artifacts/plans and entity tables during lowering
+- Web, Structured Data and Filesystem may coexist in one source file
+- `Semantics::Result` exposes `program_ir` while preserving single-domain compatibility
+- `CompilationResult.outputs` renders each domain with its own default backend
+- single-domain `output` / `backend` behavior remains backwards compatible
+- CLI prints multi-domain outputs separately or writes them to a directory with deterministic names
+- one global backend override is rejected for multi-domain programs (`S405`)
+- procedural operations do not steal contextual focus from declarative artifacts
+
 ### Next
 
-- multi-domain `ProgramIR` instead of one active semantic domain
 - lexical domain scopes / explicit qualification to resolve common-verb collisions
 - nominal domain types (`filesystem.path`, `http.url`, `sql.rowset`, `ml.tensor`, ...)
 - operation expressions that can produce runtime values
