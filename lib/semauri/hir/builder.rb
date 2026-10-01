@@ -158,6 +158,7 @@ module Semauri
         operation = domain.operation(node.operation)
         arguments = node.arguments.transform_values { |value| value.accept(self) }
         operation.validate_argument_types!(arguments, node: node)
+        arguments = promote_operation_arguments(operation, arguments)
 
         HIR::Node.new(
           kind: :domain_operation,
@@ -208,6 +209,25 @@ module Semauri
       end
 
       private
+
+      def promote_operation_arguments(operation, arguments)
+        arguments.transform do |name, value|
+          expected = operation.expected_type(name)
+          kind = expected && Semantics::TypeSystem.assignment_kind(value.type, expected)
+
+          promoted = if kind == :promote
+                       HIR::Node.new(
+                         kind: :promote,
+                         type: expected,
+                         fields: { value: value, from_type: value.type },
+                         span: value.span
+                       )
+                     else
+                       value
+                     end
+          [name, promoted]
+        end
+      end
 
       def build_block(node)
         HIR::Node.new(kind: :block, type: :unit,
