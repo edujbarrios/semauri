@@ -48,7 +48,7 @@ policy = Semauri::Effects::CapabilityPolicy.allow(
 compiler.compile(source, capability_policy: policy)
 ```
 
-A required effect that is not explicitly allowed fails with `S333`.
+A required effect that is not explicitly allowed fails with `S334`.
 
 For CLI validation:
 
