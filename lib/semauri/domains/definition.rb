@@ -27,6 +27,16 @@ module Semauri
         @terms.values.select { |term| term.category == :property }.map(&:kind).uniq.freeze
       end
 
+      def to_h
+        grouped = @terms.group_by { |_surface, term| term.category }
+        {
+          name: name,
+          artifacts: serialize_terms(grouped[:artifact]),
+          elements: serialize_terms(grouped[:element]),
+          properties: serialize_terms(grouped[:property])
+        }
+      end
+
       def property_type(property)
         nil
       end
@@ -53,6 +63,10 @@ module Semauri
       end
 
       private
+
+      def serialize_terms(entries)
+        Array(entries).to_h { |surface, term| [surface, term.kind] }
+      end
 
       def register_terms(category, mapping)
         mapping.each do |surface, kind|
