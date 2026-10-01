@@ -72,7 +72,7 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - semantic domains declare default backends
 - `build` infers `html` for Web and `json-schema` for Structured Data
 
-## 0.6 — universal semantic operations — in progress
+## 0.6 — universal semantic operations ✅
 
 ### 0.6.0 — declarative domain operations ✅
 
@@ -147,17 +147,38 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - pure runtime programs direct `build` users to `plan` with `S406`
 - compilation/planning still never performs declared external effects
 
+## 0.7 — AI / ML semantic foundations — in progress
+
+### 0.7.0 — built-in ML domain ✅
+
+- built-in `ml` semantic domain registered through the same public domain API
+- nominal types: `ml.dataset`, `ml.model`, `ml.device`, `ml.training_run`, `ml.inference_run`
+- typed dataset opening, model loading and device selection operations
+- typed training and inference operations
+- ML values flow through `RuntimePlan` using SSA-like runtime references
+- explicit ML effects: `filesystem_read`, `model_load`, `compute`, `model_training`, `model_inference`
+- compilation creates inspectable plans and never imports or runs an ML framework
+- framework-independent contract documented in `ML.md`
+
 ### Next
 
+- structured training configuration: optimizer, learning rate, batch size, precision, seed and checkpoint policy
+- model architecture/configuration semantics including CNN construction
+- fine-tuning semantics: frozen components, LoRA/QLoRA and trainable parameter sets
+- dataset transforms, splits and fingerprints
+- evaluation/metric plans
+- hardware/resource constraints and memory planning
 - runtime expressions beyond direct operation-to-operation dataflow
 - SSA/CFG/basic blocks for runtime `If`, loops and arithmetic
-- formal plugin/package discovery for external domains and backends
-- first AI/ML semantic-domain foundations (`ml.dataset`, `ml.model`, `ml.device`, training/inference plans)
+- formal plugin/package discovery for external domains and runtimes
 
-See [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) and [`RUNTIME.md`](RUNTIME.md) for the architecture target.
+See [`ML.md`](ML.md), [`RUNTIME.md`](RUNTIME.md) and [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) for the architecture direction.
 
 ## Later
 
+- PyTorch/Transformers execution runtime
+- checkpoint/artifact lineage
+- model interpretability operations (Grad-CAM, Integrated Gradients, attention/feature attribution)
 - functions and call frames
 - collection operations
 - formatter
@@ -172,3 +193,4 @@ See [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) and [`RUNTIME.md`](RUNTIME.md
 - direct LLM-to-target-code generation
 - silently guessing ambiguous programs
 - performing external side effects merely because source code was compiled
+- coupling ML source semantics directly to one framework

@@ -4,15 +4,13 @@
 
 **Natural to write. Deterministic to run.**
 
-> Status: **0.6.x / experimental**
+> Status: **0.7.x / experimental**
 
-Semauri is an experimental open-source programming language for writing deterministic programs with controlled natural language. The compiler parses a defined language, builds typed compiler structures, resolves meaning explicitly and lowers semantic programs to target backends.
-
-Semauri is **not** an LLM wrapper and does not ask an AI model to guess what source code means.
+Semauri is an experimental open-source programming language for writing deterministic programs with controlled natural language. It is not an LLM wrapper: source code is parsed, typed, lowered and validated by a compiler with explicit semantics.
 
 ## Install Semauri
 
-Semauri is currently experimental, so the supported installation path is directly from the open-source repository.
+Semauri is still experimental, so the supported installation path is directly from the open-source repository.
 
 ### Requirements
 
@@ -27,7 +25,7 @@ cd semauri
 ruby bin/semauri help
 ```
 
-No runtime gem dependencies are required by the compiler core.
+The compiler core has no runtime gem dependencies.
 
 To update an existing checkout:
 
@@ -37,13 +35,13 @@ git pull
 
 ### Quick installation — planned
 
-A release-based quick installer is planned once the language and CLI become stable enough to distribute safely. The intended experience is a small installer, for example through `curl` or an equivalent release mechanism, that installs a versioned Semauri CLI without requiring users to work directly inside the repository.
+A versioned quick installer is planned once the CLI and release process are stable enough. The intended experience is a small `curl`-style or equivalent installer backed by reviewable releases.
 
-Until that exists, the repository is the canonical installation source. The project will not document a one-line remote installer before there is a versioned, reviewable installation path behind it.
+Until then, the repository is the canonical installation source.
 
 ## Use the language
 
-Create a file named `shop.sema`:
+Create `shop.sema`:
 
 ```text
 Let price be 18.
@@ -60,67 +58,84 @@ Otherwise:
 End.
 ```
 
-Build it:
+### Build
 
 ```bash
 ruby bin/semauri build shop.sema
 ```
 
-Inspect what the compiler understood:
+Output:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pet Shop</title>
+</head>
+<body>
+  <h1>Pet Shop</h1>
+    <button style="color: red">Buy</button>
+</body>
+</html>
+```
+
+`total` evaluates to `22`, so the compiler deterministically selects the first branch.
+
+### Explain the same program
 
 ```bash
 ruby bin/semauri explain shop.sema
+```
+
+Output:
+
+```text
+1. Bound 'price' as symbol #1 to number 18.
+2. Bound 'tax' as symbol #2 to number 4.
+3. Variable 'price' resolved to symbol #1 (number 18).
+4. Variable 'tax' resolved to symbol #2 (number 4).
+5. Bound 'total' as symbol #3 to number 22.
+6. 'web' resolved to an HTML web document (default web backend).
+7. Title explicitly set to 'Pet Shop'.
+8. Added button 'Buy' as button-1.
+9. Variable 'total' resolved to symbol #3 (number 22).
+10. If condition evaluated to true; selected consequence branch.
+11. Explicit reference resolved to button 'Buy' (button-1).
+12. Set button-1.color to "red".
+```
+
+`explain` reports semantic decisions produced by the compiler itself; it is not an AI-generated narrative.
+
+## Compiler inspection
+
+Useful commands include:
+
+```bash
 ruby bin/semauri hir shop.sema
 ruby bin/semauri optimize shop.sema
+ruby bin/semauri symbols shop.sema
 ruby bin/semauri effects shop.sema
 ruby bin/semauri domains
 ```
 
-The generated HTML for the example contains a red `Buy` button because `total` deterministically evaluates to `22` and the compiler selects the first branch.
+Programs containing runtime operations can also be inspected with:
 
-## Editor support — planned
+```bash
+ruby bin/semauri plan program.sema
+```
 
-A **Visual Studio Code extension** is planned if the language/tooling architecture remains suitable for it. The intended path is to build editor support on top of compiler-owned information rather than duplicate language semantics inside the extension.
+Planning never executes the declared operations.
 
-Potential tooling includes:
+## How Semauri is built
 
-- syntax highlighting
-- diagnostics with source spans
-- hover information for semantic types and symbols
-- go-to-definition and references
-- semantic domain/operation inspection
-- formatting
-- safe rename
-- HIR / compiled-plan inspection
-
-A Language Server Protocol layer is the likely long-term integration point. This remains planned work, not a currently released extension.
-
-## Why Semauri exists
-
-Most natural-language programming approaches eventually delegate meaning to a probabilistic model. Semauri takes the opposite approach: natural-looking syntax is only accepted when the compiler can assign deterministic semantics to it.
-
-The project is built around a few rules:
-
-- natural syntax does not mean ambiguous semantics
-- the compiler must fail instead of guessing
-- no LLM is required by the deterministic compiler core
-- compiling source must not silently perform external side effects
-- semantic work happens before code generation
-- new language features require tests and documented semantics
-- extension points should remain explicit and maintainable
-
-Created by **Eduardo J. Barrios** and open sourced from the beginning under the **Apache License 2.0**.
-
-## A compiler with semantic domains
-
-Semauri separates the language core from application-specific meaning through semantic domains.
+The reference compiler is written in **Ruby** and intentionally keeps the core dependency-free.
 
 ```text
 semantic domains
   ↓
 lexer
-  ↓
-tokens
   ↓
 recursive-descent parser
   ↓
@@ -132,127 +147,88 @@ typed HIR
   ↓
 optimization passes
   ↓
-domain IR / operation plans
+ProgramIR / RuntimePlan
   ↓
-backend / runtime
+backend / future runtime
 ```
 
-Built-in domains currently include Web, Structured Data and Filesystem. Domains can contribute vocabulary, nominal types, typed operations, effects, domain IR and default backends without adding domain-specific parser branches.
+Important implementation choices include stable semantic symbols, nominal domain types, immutable IR where practical, source spans, deterministic ambiguity errors, composable optimization passes, effect analysis, capability policies and explicit compiler extension points.
 
-Example filesystem program:
+The compiler remains in Ruby because compilation speed is not currently the project bottleneck. Rust remains a possible future choice for sandboxed execution, process/resource supervision, standalone distribution or any component where profiling demonstrates a concrete benefit.
 
-```text
-Within filesystem:
-  Write "build metadata" to "build.txt".
-  Copy "build.txt" to "backup.txt".
-End.
-```
+## Semantic domains
 
-The compiler builds a filesystem operation plan and may lower it to POSIX shell. Compilation itself does not execute those filesystem effects.
+Semauri keeps application-specific meaning outside the core language through semantic domains. Built-in domains currently include:
 
-Inspect the permissions such a program may require before any future runtime executes it:
+- **Web** — web documents and elements, lowered to HTML
+- **Structured Data** — schemas and fields, lowered to JSON Schema
+- **Filesystem** — typed filesystem operations, lowered to POSIX shell plans
+- **ML** — typed AI/ML dataset, model, device, training and inference runtime plans
+
+Domains can contribute vocabulary, nominal types, typed operations, effects and semantic IR without adding hardcoded domain branches to the lexer/parser.
+
+## AI / ML direction
+
+Semauri 0.7 introduces the first built-in `ml` semantic domain.
+
+The compiler can now represent typed concepts such as:
+
+- `ml.dataset`
+- `ml.model`
+- `ml.device`
+- `ml.training_run`
+- `ml.inference_run`
+
+and lower model loading, dataset access, device selection, training and inference intent into an inspectable `RuntimePlan`.
+
+**No ML framework is executed during compilation.** PyTorch, Transformers, ONNX Runtime, OpenVINO or other systems belong behind future execution backends/runtimes.
+
+The next AI milestones include structured training configuration, CNN/model construction, fine-tuning strategies such as LoRA/QLoRA, checkpoint lineage, resource planning, evaluation and interpretability operations.
+
+See [docs/ML.md](docs/ML.md) for the current ML contract.
+
+## Explainability
+
+Semauri treats explainability as a compiler/runtime property rather than generated prose.
+
+The existing semantic trace can be extended to AI workloads to preserve model and dataset provenance, transforms, trainable/frozen components, hyperparameters, effects, runtime selection, checkpoints and execution traces.
+
+This provides explainability of the **program and model lifecycle**. Model-internal interpretability techniques such as Grad-CAM, Integrated Gradients, feature attribution or attention inspection should be exposed as explicit typed analysis operations rather than claimed automatically by the compiler.
+
+## Effects and capabilities
+
+Semantic operations declare effects such as filesystem access, model loading, compute or model training. Semauri can inspect these requirements before execution:
 
 ```bash
-ruby bin/semauri effects files.sema
+ruby bin/semauri effects program.sema
 ```
 
-Capability policies can then explicitly allow or reject effects such as `filesystem_read` and `filesystem_write`. This is intentionally separate from compilation: `build` produces plans/code, while a future `run` runtime will be expected to authorize effects before executing them.
+Capability policies can validate an explicit allow-list. Compilation itself never grants permissions or silently performs external effects.
 
-## Current features
+## Current language/compiler features
 
-- numbers, strings, booleans and colors
 - immutable `Let` bindings
-- homogeneous `List<T>` values and `For every` iteration
-- arithmetic and parentheses
-- typed comparisons
-- `and`, `or`, `not` with short-circuit evaluation
+- numbers, strings, booleans, colors and homogeneous `List<T>`
+- arithmetic, comparisons and boolean logic
 - lexical scopes and shadowing
+- `If / Otherwise / End`
+- `For every ... in ...`
 - stable semantic symbols
 - typed HIR
-- constant propagation/folding, dead control flow and dead-binding elimination
-- `If / Otherwise / End`
-- extensible semantic-domain registry
-- explicit `Within <domain>: ... End.` semantic scopes
+- constant propagation/folding and dead-code optimizations
+- explicit semantic-domain scopes with `Within <domain>: ... End.`
+- nominal semantic types
 - multi-domain ProgramIR
-- declarative domain operations with typed arguments and effects
-- nominal semantic types such as `filesystem.path`
-- conservative static effect analysis with source provenance
-- explicit capability allow-list policies
-- Web domain with web documents, buttons, images and typed properties
-- Structured Data domain with schemas, fields and domain-specific validation
-- Filesystem operation domain that compiles plans to POSIX shell without executing filesystem effects during compilation
-- automatic domain-to-backend selection
-- HTML, JSON Schema and POSIX shell backends
-- explicit references and constrained `it` resolution
+- runtime operation values with SSA-like references
+- static effect analysis and capability policies
+- deterministic reference/ambiguity handling
 - source-aware diagnostics
 
-## AI-native direction
+## Editor support — planned
 
-A major long-term direction for Semauri is to become a programming language for **AI and machine-learning workflows** while preserving deterministic compiler semantics.
+A **Visual Studio Code extension** is planned if the tooling architecture remains viable. The intended integration point is a future Language Server Protocol implementation backed by compiler-owned semantics.
 
-The goal is not unrestricted prose that asks an LLM to generate training code. Instead, AI capabilities should be added as semantic domains with typed operations and explicit effects.
-
-A future Semauri program could express concepts such as:
-
-```text
-Within ml:
-  Load an image dataset from "./cats-vs-dogs".
-  Create a cnn called Classifier for 2 classes.
-  Train Classifier for 10 epochs using the dataset.
-  Evaluate Classifier on the validation split.
-End.
-```
-
-Or higher-level adaptation workflows such as fine-tuning a pretrained vision model while freezing selected components, applying LoRA/QLoRA where valid, configuring reproducibility, selecting hardware constraints and recording evaluation metrics.
-
-The compiler should lower such source into a typed **training/inference plan** before any framework executes it. Backends or runtimes could then target PyTorch, other ML frameworks, local accelerators or remote execution environments.
-
-Important design goals for an AI domain include:
-
-- explicit dataset and model provenance
-- typed model/dataset/tensor concepts
-- reproducible seeds and configuration
-- hardware/resource constraints
-- declared training, filesystem and network effects
-- dry-run and plan inspection before expensive execution
-- checkpoint and artifact lineage
-- framework-independent semantic IR where practical
-- deterministic compilation even when the underlying numerical training process is not bit-for-bit deterministic
-
-This direction will be introduced incrementally; it is not part of the stable language surface yet.
-
-## Semauri as an explainability layer
-
-Semauri also has potential as an **explainability and provenance layer for AI workflows**.
-
-`explain` already reports the compiler's actual semantic decisions rather than generating a narrative after the fact. The same principle can extend to AI programs: Semauri can retain why a dataset was selected, which transforms were applied, what parts of a model were frozen, which parameters were trainable, which optimizer/settings were chosen, which effects were authorized and how an execution plan was lowered to a concrete runtime.
-
-That would make Semauri useful for **XAI around the program and model lifecycle**: reproducibility, provenance, configuration transparency and execution traces. It should not be confused with a universal explanation of a neural network's internal reasoning. Model-level interpretability techniques can later be exposed as their own typed operations and analysis domains.
-
-## Why the compiler is still Ruby
-
-The reference compiler is written in **Ruby** and intentionally avoids runtime dependencies in its core.
-
-At the current stage, rewriting the language in Rust would mainly trade development speed for implementation work without addressing the project's main bottleneck. Parsing, semantic analysis and HIR optimization are currently small compared with the cost of real external workloads such as model training, inference, filesystem operations or network execution.
-
-Rust remains a strong option for future components where it provides a measurable benefit, for example:
-
-- a sandboxed execution runtime
-- high-performance or concurrent backends
-- process/resource supervision
-- native ML/runtime integrations
-- portable standalone distribution
-- performance-critical compiler stages if profiling eventually justifies them
-
-The architecture is intentionally layered so individual components can be replaced without rewriting the language definition.
-
-## Explain a program
-
-```bash
-ruby bin/semauri explain shop.sema
-```
-
-Example output includes symbol bindings, reference resolution, branch selection and domain mutations. The important property is that these explanations are derived from the compiler structures that actually produced the program.
+Potential features include syntax highlighting, diagnostics, hover types, go-to-definition, references, safe rename, formatting and HIR/runtime-plan inspection.
 
 ## Development
 
@@ -264,35 +240,15 @@ ruby -Ilib -e 'Dir["test/test_*.rb"].sort.each { |file| require_relative file }'
 
 CI tests Ruby 3.2, 3.3 and 3.4.
 
-Important implementation choices include:
-
-- handwritten recursive-descent parser
-- immutable AST/semantic objects where practical
-- lexical scopes and stable semantic symbol IDs
-- typed expressions and strict comparisons
-- deterministic reference resolution
-- composable HIR optimization passes
-- semantic domains injected through an explicit registry
-- generic artifact/element/property/action parser categories rather than hardcoded domain nouns or verbs
-- declarative typed domain operations with effect metadata
-- nominal domain types with explicit HIR promotion boundaries
-- conservative effect analysis and explicit capability policies
-- per-domain semantic validation and default backend selection
-- explicit ambiguity and cross-domain errors
-- source spans and compiler diagnostics
-- tests used as executable language specification
-
-The compiler is developed incrementally so each stage remains understandable, testable and replaceable.
-
 ## Documentation
-
-See:
 
 - [Language](docs/LANGUAGE.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Semantic domains](docs/DOMAINS.md)
 - [Nominal types](docs/NOMINAL_TYPES.md)
 - [Effects and capabilities](docs/EFFECTS.md)
+- [Runtime planning](docs/RUNTIME.md)
+- [ML semantic domain](docs/ML.md)
 - [Universal domains](docs/UNIVERSAL_DOMAINS.md)
 - [Roadmap](docs/ROADMAP.md)
 

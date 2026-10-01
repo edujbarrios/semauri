@@ -72,8 +72,9 @@ class StructuredDataDomainTest < Minitest::Test
   end
 
   def test_default_domain_registry_exposes_builtin_domains
-    assert_equal %i[filesystem structured_data web], @compiler.domains.names
+    assert_equal %i[filesystem ml structured_data web], @compiler.domains.names
     assert_equal "posix-sh", @compiler.domains.fetch(:filesystem).default_backend
+    assert_nil @compiler.domains.fetch(:ml).default_backend
     assert_equal "json-schema", @compiler.domains.fetch(:structured_data).default_backend
     assert_equal "html", @compiler.domains.fetch(:web).default_backend
   end
