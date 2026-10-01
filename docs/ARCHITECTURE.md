@@ -5,77 +5,134 @@ Semauri follows a compiler pipeline with strict boundaries so language evolution
 ## Pipeline
 
 ```text
-Source
-  ↓
-Vocabulary + Lexer
-  ↓
-Tokens
-  ↓
-Recursive-descent Parser
-  ↓
-Syntax AST
-  ↓
-Typed HIR Builder
-  ├── lexical name resolution
-  ├── stable symbol IDs
-  └── type checking
-  ↓
-HIR Optimization Passes
-  ├── constant propagation
-  ├── constant folding
-  └── dead control-flow elimination
-  ↓
-HIR Lowerer
-  ├── compile-time expression evaluation
-  ├── static branch/loop execution
-  └── deterministic entity/reference resolution
-  ↓
-Semantic / Domain IR
-  ↓
-Backend Registry
-  ↓
-Target Artifact
+Semantic Domain Registry
+  ├── vocabulary terms
+  ├── property type contracts
+  └── domain-IR construction
+            │
+            ▼
+Source → Vocabulary + Lexer → Tokens
+                              ↓
+                   Recursive-descent Parser
+                              ↓
+                         Syntax AST
+                              ↓
+                     Typed HIR Builder
+                      ├── name resolution
+                      ├── stable symbols
+                      └── type checking
+                              ↓
+                    HIR Optimization Passes
+                      ├── constant folding
+                      ├── dead control flow
+                      └── dead bindings
+                              ↓
+                         HIR Lowerer
+                      ├── value evaluation
+                      ├── static control flow
+                      └── domain dispatch
+                              ↓
+                      Semantic / Domain IR
+                              ↓
+                        Backend Registry
+                              ↓
+                         Target Artifact
 ```
+
+## Semantic domains
+
+A semantic domain is the extension boundary between the language core and application-specific concepts.
+
+A domain contributes:
+
+- artifact words such as `web`
+- element words such as `button` and `image`
+- property words such as `color`
+- semantic kinds for those surface forms
+- property type contracts
+- domain-IR construction and mutation hooks
+- optional source-oriented explanations
+
+The built-in `Domains::Web` is registered through the same public contract used by external domains.
+
+The lexer does not contain tokens named `WEB`, `BUTTON` or `IMAGE`. Domain words are classified into generic categories:
+
+```text
+web     → DOMAIN_ARTIFACT { domain: web, kind: web }
+button  → DOMAIN_ELEMENT  { domain: web, kind: button }
+color   → DOMAIN_PROPERTY { domain: web, kind: color }
+```
+
+The parser consumes those generic categories, which means a new domain can add vocabulary without editing lexer or parser code.
+
+`Domains::Registry` rejects conflicting surface terms and is dependency-injected through `Compiler`, `Vocabulary::English`, `Parser`, `HIR::Builder` and `HIR::Lowerer`.
+
+A custom compiler can therefore be assembled explicitly:
+
+```ruby
+registry = Semauri::Domains::Registry.new.register(MyDomain.new)
+compiler = Semauri::Compiler.new(domains: registry)
+```
+
+`semauri domains` exposes loaded domain metadata for tooling and debugging.
 
 ## Syntax AST
 
-The AST represents source syntax and source spans. It does not decide what a pronoun refers to and it does not contain HTML knowledge.
+The AST represents source syntax and source spans. Domain operations carry explicit domain identity, but the AST does not construct domain IR or target markup.
+
+For example:
+
+```text
+Create a web called Shop.
+```
+
+becomes conceptually:
+
+```text
+CreateArtifact(domain=web, kind=web, title="Shop")
+```
 
 ## Typed HIR
 
-HIR is the compiler's semantic structural representation. Names become stable symbol references, expressions carry types, and both branches of conditionals and loop structure are preserved.
+HIR is the compiler's semantic structural representation. Names become stable symbol references, expressions carry types, and domain operations retain their domain identity.
 
-A source variable such as `price` is no longer identified by its spelling after this phase:
+A source variable such as `price` is no longer identified by spelling after this phase:
 
 ```text
 price → symbol_ref(#3, number)
 ```
 
-This is the representation tooling and optimization passes consume.
+Property checking is delegated through the active semantic domain. The core type system still owns primitive/expression types; domains define what types their properties accept.
 
 ## HIR optimization
 
-Optimization is an explicit compiler phase driven by `HIR::Optimization::PassManager`. Passes receive typed HIR and return typed HIR; they do not emit HTML or perform domain-specific rendering.
+Optimization is an explicit compiler phase driven by `HIR::Optimization::PassManager`. Passes receive typed HIR and return typed HIR; they do not emit target code or call backend renderers.
 
-The initial pass pipeline performs:
+The current pipeline includes:
 
 - propagation of compile-time-known immutable bindings
 - arithmetic/comparison/logical constant folding
 - short-circuit-aware folding
 - elimination of statically unreachable conditional branches
-- removal infrastructure for statically empty loops
+- conservative dead immutable-binding elimination with liveness/use analysis
 
 `build` lowers optimized HIR. `explain` intentionally lowers unoptimized HIR so its trace describes the source program rather than optimizer rewrites.
 
-Optimization must preserve the semantic result. Tests compare optimized output against a no-pass baseline.
-
 ## HIR lowering
 
-The executable compiler lowers HIR into domain IR. Because all current values are compile-time-known, the lowerer can currently evaluate conditions and iterate static lists.
+The lowerer owns language-level execution of compile-time-known constructs, but delegates domain operations to the registered domain implementation.
 
-Importantly, those execution decisions happen **after HIR construction**. HIR itself preserves program structure, so introducing runtime values later does not require redesigning the parser or symbol model.
+For example, the lowerer does **not** construct `IR::WebDocument` directly. It requests:
 
-The previous AST-based `Semantics::Resolver` remains temporarily as a regression/reference implementation during the 0.x migration, but the production `Compiler` pipeline consumes HIR.
+```text
+domain.create_artifact(...)
+domain.add_element(...)
+domain.set_property(...)
+```
+
+This keeps domain IR out of parser and HIR infrastructure.
+
+Because all current values are compile-time-known, the lowerer can currently evaluate conditions and iterate static lists. HIR itself still preserves branch and loop structure for future runtime lowering.
 
 ## Symbols and value environments
 
@@ -95,27 +152,30 @@ This prevents static loop execution from inventing a new declaration on every it
 
 ## Entity table
 
-`Semantics::EntityTable` resolves generated domain entities such as buttons and images. AST and HIR both delegate to the same data-oriented resolution logic so ambiguity diagnostics stay consistent.
+`Semantics::EntityTable` resolves addressable entities within the active artifact. Domain identity is validated before named references are resolved, preventing a property or element from one domain being silently applied to another.
 
-## Semantic IR and backends
+## Domain IR and backends
 
-`IR::WebDocument` and `IR::Element` contain resolved domain meaning, not source text or target markup. Backends consume that IR and never parse natural language or resolve references.
+Domains own their semantic IR. The built-in Web domain currently produces `IR::WebDocument` and `IR::Element`; another domain may return entirely different immutable structures.
+
+Backends consume domain IR and never parse natural language or resolve references.
 
 ## Dependency direction
 
 ```text
-CLI → Compiler → Lexer/Parser → AST → HIR → Optimization → Lowering → Domain IR ← Backends
+CLI → Compiler → Domains + Lexer/Parser → AST → HIR → Optimization → Lowering → Domain IR ← Backends
 ```
 
 Key rules:
 
-- AST must not depend on HTML.
-- HIR must not depend on a target backend.
-- optimization passes must not perform backend/domain rendering.
-- domain IR must not depend on parser tokens.
-- backends must not parse source text.
-- ambiguity resolution must not happen in a backend.
-- optional NLP/LLM support must sit before the deterministic compiler boundary.
+- lexer/parser must not hardcode domain nouns
+- AST must not depend on a target backend
+- HIR must not depend on target markup
+- optimization passes must not perform domain rendering
+- domain IR must not depend on parser tokens
+- backends must not parse source text
+- ambiguity resolution must not happen in a backend
+- optional NLP/LLM support must sit before the deterministic compiler boundary
 
 ## Why no LLM in the compiler core?
 
