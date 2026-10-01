@@ -14,7 +14,7 @@ It is not an LLM wrapper and it does not ask AI to guess what the user meant. Se
 
 Created by **Eduardo J. Barrios** and open sourced from the beginning under the **Apache License 2.0**.
 
-> Status: **0.5.x / experimental**
+> Status: **0.6.x / experimental**
 
 ## Example
 
@@ -108,7 +108,7 @@ typed HIR
   ↓
 optimization passes
   ↓
-domain IR
+domain IR / operation plans
   ↓
 backend
 ```
@@ -122,14 +122,15 @@ Important implementation choices:
 - deterministic reference resolution
 - composable HIR optimization passes
 - semantic domains injected through an explicit registry
-- generic artifact/element/property parser categories rather than hardcoded domain nouns
+- generic artifact/element/property/action parser categories rather than hardcoded domain nouns or verbs
+- declarative typed domain operations with effect metadata
 - per-domain semantic validation and default backend selection
 - explicit ambiguity and cross-domain errors
 - source spans and compiler diagnostics
 - visitor, strategy, registry and dependency-injection patterns
 - tests used as executable language specification
 
-Built-in domains use the same extension contract available to external domains. A new domain can contribute artifact words, element words, properties, property types and domain-IR construction without modifying the lexer or parser.
+Built-in domains use the same extension contract available to external domains. Domains can contribute vocabulary, typed properties, semantic operations, effects, domain IR and backend defaults without adding domain-specific cases to the lexer or parser.
 
 The compiler is developed incrementally so each stage remains understandable, testable and replaceable.
 
@@ -147,10 +148,12 @@ The compiler is developed incrementally so each stage remains understandable, te
 - constant propagation/folding, dead control flow and dead-binding elimination
 - `If / Otherwise / End`
 - extensible semantic-domain registry
+- declarative domain operations with typed arguments and effects
 - Web domain with web documents, buttons, images and typed properties
 - Structured Data domain with schemas, fields and domain-specific validation
+- Filesystem operation domain that compiles plans to POSIX shell without executing filesystem effects during compilation
 - automatic domain-to-backend selection
-- HTML and JSON Schema backends
+- HTML, JSON Schema and POSIX shell backends
 - explicit references and constrained `it` resolution
 - source-aware diagnostics
 
@@ -173,11 +176,12 @@ Compiler inspection commands are available through `semauri help`, including `se
 - natural syntax does not mean ambiguous semantics
 - the compiler must fail instead of guessing
 - no LLM is required by the deterministic compiler core
+- compiling source must not silently perform external side effects
 - semantic work happens before code generation
 - new language features require tests and documented semantics
 - extension points should be explicit and maintainable
 
-See [docs/LANGUAGE.md](docs/LANGUAGE.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DOMAINS.md](docs/DOMAINS.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
+See [docs/LANGUAGE.md](docs/LANGUAGE.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DOMAINS.md](docs/DOMAINS.md), [docs/UNIVERSAL_DOMAINS.md](docs/UNIVERSAL_DOMAINS.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Contributing
 
