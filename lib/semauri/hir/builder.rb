@@ -211,21 +211,20 @@ module Semauri
       private
 
       def promote_operation_arguments(operation, arguments)
-        arguments.transform do |name, value|
+        arguments.each_with_object({}) do |(name, value), promoted_arguments|
           expected = operation.expected_type(name)
           kind = expected && Semantics::TypeSystem.assignment_kind(value.type, expected)
 
-          promoted = if kind == :promote
-                       HIR::Node.new(
-                         kind: :promote,
-                         type: expected,
-                         fields: { value: value, from_type: value.type },
-                         span: value.span
-                       )
-                     else
-                       value
-                     end
-          [name, promoted]
+          promoted_arguments[name] = if kind == :promote
+                                       HIR::Node.new(
+                                         kind: :promote,
+                                         type: expected,
+                                         fields: { value: value, from_type: value.type },
+                                         span: value.span
+                                       )
+                                     else
+                                       value
+                                     end
         end
       end
 
