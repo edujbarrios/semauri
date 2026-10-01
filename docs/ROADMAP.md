@@ -121,12 +121,25 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - Filesystem path parameters migrated from raw `string` to `filesystem.path`
 - backwards-compatible source ergonomics: string expressions may be promoted at a typed operation boundary
 
+### 0.6.4 — effect analysis and capability policies ✅
+
+- static effect analysis over unoptimized Typed HIR
+- per-effect provenance records domain, operation and source span
+- conservative manifests include potentially reachable effectful operations before optimization
+- immutable `CapabilityPolicy` with explicit allow-list semantics
+- denied capabilities fail with `S334`
+- `CompilationResult` exposes its effect analysis
+- `semauri effects FILE` prints the capability/effect manifest as JSON
+- `semauri check FILE --allow EFFECT` validates an explicit capability policy
+- compilation may optionally validate a policy but still never performs external effects
+- future execution runtimes can make capability authorization mandatory before running plans
+
 ### Next
 
 - operation expressions that can produce runtime values
-- effect-aware validation and capability policies
+- runtime-value design: inputs, SSA/CFG/basic blocks and the compile-time/runtime boundary
 - formal plugin/package discovery for external domains and backends
-- runtime-value design: inputs, CFG/basic blocks and the compile-time/runtime boundary
+- first AI/ML semantic-domain foundations (`ml.dataset`, `ml.model`, `ml.device`, training/inference plans)
 
 See [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) for the architecture target.
 

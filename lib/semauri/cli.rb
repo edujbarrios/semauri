@@ -33,6 +33,7 @@ module Semauri
       when "hir" then hir(argv)
       when "optimize" then optimize(argv)
       when "symbols" then symbols(argv)
+      when "effects" then effects(argv)
       when "explain" then explain(argv)
       when "check" then check(argv)
       when "build" then build(argv)
@@ -92,6 +93,12 @@ module Semauri
       EXIT_SUCCESS
     end
 
+    def effects(argv)
+      source = read_source!(argv)
+      @stdout.puts JSON.pretty_generate(@compiler.effect_analysis(source).to_h)
+      EXIT_SUCCESS
+    end
+
     def explain(argv)
       source = read_source!(argv)
       _ast, semantic = @compiler.analyze(source)
@@ -100,8 +107,21 @@ module Semauri
     end
 
     def check(argv)
+      options = { allowed: nil }
+      parser = OptionParser.new do |opts|
+        opts.on("--allow EFFECT", "Allow one capability; repeat for multiple capabilities") do |value|
+          (options[:allowed] ||= []) << value
+        end
+        opts.on("--allow-none", "Reject any program that declares effects") { options[:allowed] = [] }
+      end
+      parser.parse!(argv)
+
       source = read_source!(argv)
       @compiler.analyze(source)
+      if options[:allowed]
+        policy = Effects::CapabilityPolicy.new(allowed: options[:allowed])
+        @compiler.validate_capabilities(source, policy: policy)
+      end
       @stdout.puts "OK"
       EXIT_SUCCESS
     end
@@ -176,8 +196,9 @@ module Semauri
           hir FILE                 Print typed HIR before optimization
           optimize FILE            Print optimized HIR and pass statistics
           symbols FILE             Print semantic symbols as JSON
+          effects FILE             Print statically required effects/capabilities
           explain FILE             Explain semantic decisions
-          check FILE               Validate source without generating output
+          check FILE [--allow ...] Validate source and optionally enforce capabilities
           build FILE [-o PATH]     Compile one or more semantic-domain outputs
           version                  Print version
       TEXT

@@ -72,6 +72,7 @@ Inspect what the compiler understood:
 ruby bin/semauri explain shop.sema
 ruby bin/semauri hir shop.sema
 ruby bin/semauri optimize shop.sema
+ruby bin/semauri effects shop.sema
 ruby bin/semauri domains
 ```
 
@@ -149,6 +150,14 @@ End.
 
 The compiler builds a filesystem operation plan and may lower it to POSIX shell. Compilation itself does not execute those filesystem effects.
 
+Inspect the permissions such a program may require before any future runtime executes it:
+
+```bash
+ruby bin/semauri effects files.sema
+```
+
+Capability policies can then explicitly allow or reject effects such as `filesystem_read` and `filesystem_write`. This is intentionally separate from compilation: `build` produces plans/code, while a future `run` runtime will be expected to authorize effects before executing them.
+
 ## Current features
 
 - numbers, strings, booleans and colors
@@ -167,6 +176,8 @@ The compiler builds a filesystem operation plan and may lower it to POSIX shell.
 - multi-domain ProgramIR
 - declarative domain operations with typed arguments and effects
 - nominal semantic types such as `filesystem.path`
+- conservative static effect analysis with source provenance
+- explicit capability allow-list policies
 - Web domain with web documents, buttons, images and typed properties
 - Structured Data domain with schemas, fields and domain-specific validation
 - Filesystem operation domain that compiles plans to POSIX shell without executing filesystem effects during compilation
@@ -265,6 +276,7 @@ Important implementation choices include:
 - generic artifact/element/property/action parser categories rather than hardcoded domain nouns or verbs
 - declarative typed domain operations with effect metadata
 - nominal domain types with explicit HIR promotion boundaries
+- conservative effect analysis and explicit capability policies
 - per-domain semantic validation and default backend selection
 - explicit ambiguity and cross-domain errors
 - source spans and compiler diagnostics
@@ -280,6 +292,7 @@ See:
 - [Architecture](docs/ARCHITECTURE.md)
 - [Semantic domains](docs/DOMAINS.md)
 - [Nominal types](docs/NOMINAL_TYPES.md)
+- [Effects and capabilities](docs/EFFECTS.md)
 - [Universal domains](docs/UNIVERSAL_DOMAINS.md)
 - [Roadmap](docs/ROADMAP.md)
 

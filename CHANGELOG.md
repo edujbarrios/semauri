@@ -25,9 +25,13 @@ All notable changes to Semauri are documented here.
 - Explicit primitive-to-nominal `HIR::promote` nodes.
 - Domain type registration/introspection and structured operation-signature type metadata.
 - `filesystem.path` as the first built-in nominal domain type.
+- Static effect analysis with per-use domain, operation and source provenance.
+- Immutable capability allow-list policies with denied-capability diagnostic `S334`.
+- `semauri effects FILE` and capability-aware `semauri check` validation.
 - Generic immutable `IR::OperationPlan` / `IR::Operation` for operation-oriented domains.
 - Immutable multi-domain `IR::Program` / ProgramIR container.
 - `CompilationResult.outputs` with one typed output per semantic domain/backend.
+- `CompilationResult.effects` with the conservative source-oriented effect manifest.
 - Operation-only domains that can lazily initialize semantic plans without an explicit artifact statement.
 - Built-in Web domain implemented through the same extension contract available to external domains.
 - Structured Data domain with `schema`, `field`, `datatype` and `required` semantics.
@@ -56,6 +60,8 @@ All notable changes to Semauri are documented here.
 - Distinct nominal types are never implicitly reinterpreted as one another, even when they share a primitive base.
 - Filesystem path arguments are semantically `filesystem.path` while existing string source syntax remains compatible through explicit HIR promotion.
 - Domain implementations own property type contracts, nominal types, operation signatures, effect declarations, domain-IR construction/mutation hooks and optional default backend selection.
+- Effect analysis is conservative over unoptimized Typed HIR so policy does not depend on optimizer behavior.
+- Capability policies are optional during compilation because `build` does not execute effects; future execution runtimes are expected to enforce them.
 - HIR lowering accumulates independent per-domain artifacts/plans instead of enforcing one active semantic domain.
 - Entity tables are isolated per semantic domain during lowering.
 - Procedural domain operations do not steal declarative artifact focus used by domain-neutral metadata syntax.
