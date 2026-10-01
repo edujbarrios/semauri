@@ -1,48 +1,57 @@
 # Contributing to Semauri
 
-Thank you for helping build Semauri. The project is intentionally designed so that contributors can add capabilities without turning the compiler into a collection of special cases.
+Thank you for helping build Semauri. The project is intentionally designed so contributors can add capabilities without turning the compiler into a collection of special cases.
 
 ## Before opening a PR
 
 For bug fixes, include a regression test.
 
-For a language change, please include all of the following:
+For a language change, please include:
 
-1. the motivating example program;
-2. the intended AST/semantic meaning;
+1. the motivating program;
+2. the intended AST/HIR/semantic meaning;
 3. ambiguity and error cases;
-4. an update to `docs/LANGUAGE.md`;
-5. parser/semantic tests;
-6. backend tests only when code generation changes.
+4. an update to `docs/LANGUAGE.md` when language behavior changes;
+5. compiler tests;
+6. backend tests when target generation changes.
 
 Large syntax or semantic changes should start as a GitHub issue so design trade-offs can be discussed before implementation.
 
 ## Architectural boundaries
 
-Please keep these boundaries intact:
+Keep these boundaries intact:
 
-- **Vocabulary** maps surface words to lexical token categories.
+- **Semantic Domains** own application-specific vocabulary, property contracts and domain IR construction.
+- **Vocabulary** maps core surface words plus registered domain terms to lexical categories.
 - **Lexer** produces tokens and source locations.
-- **Parser** produces AST nodes; it does not choose output formats.
-- **Semantic resolver** handles contextual defaults and meaning.
-- **IR** represents resolved program meaning independent of syntax.
-- **Backends** render IR into target formats.
+- **Parser** produces syntax AST; domain nouns use generic artifact/element/property categories.
+- **Typed HIR** owns resolved symbol identity and type-checked structure.
+- **HIR optimization** rewrites semantic structure without rendering targets.
+- **HIR lowering** evaluates compile-time-known constructs and dispatches domain operations.
+- **Domain IR** represents resolved artifact meaning.
+- **Backends** render domain IR into target formats.
 
-A new backend should generally not require changes to the lexer or parser. A new synonym should generally not require changes to a backend.
+A new semantic domain should not require changes to the lexer or parser. A new backend should not require grammar changes.
 
 ## Extension patterns
 
-### Add a surface synonym
+### Add a semantic domain
 
-Edit or introduce a vocabulary implementation under `lib/semauri/vocabulary/` and add lexer tests.
+Read [`docs/DOMAINS.md`](docs/DOMAINS.md). New domains should extend `Semauri::Domains::Definition`, register their vocabulary through `Domains::Registry`, define property types and produce their own semantic IR where appropriate.
+
+A domain PR must include negative tests for invalid values and ambiguity, not only a happy-path example.
 
 ### Add a backend
 
-Implement `Semauri::Backends::Base#render`, then register it in a registry. Avoid putting backend-specific logic into the parser.
+Implement `Semauri::Backends::Base#render`, then register it in a backend registry. Keep backend-specific logic out of AST, HIR and semantic domains unless it is genuinely semantic rather than representational.
 
-### Add syntax
+### Add core syntax
 
-Add the smallest required token/grammar changes, a dedicated AST node where appropriate, semantic handling via the visitor interface, and tests.
+Core syntax is intentionally smaller than domain vocabulary. Add grammar only for concepts that should exist across domains. Introduce a dedicated AST/HIR representation where appropriate and document deterministic error behavior.
+
+### Add an optimization pass
+
+Implement a pass that accepts and returns Typed HIR, register it with `HIR::Optimization::PassManager`, and add equivalence tests showing optimized and unoptimized compilation preserve observable semantics. Passes must not hide potentially observable compiler/runtime errors.
 
 ## Testing
 
@@ -50,16 +59,18 @@ Add the smallest required token/grammar changes, a dedicated AST node where appr
 ruby -Ilib -e 'Dir["test/test_*.rb"].sort.each { |file| require_relative file }'
 ```
 
-All behavior changes should be covered by tests. The core currently depends only on the Ruby standard library so that contributors can run it with a stock Ruby installation.
+All behavior changes require tests. CI currently validates Ruby 3.2, 3.3 and 3.4. The core intentionally depends only on the Ruby standard library.
 
 ## Style
 
 - Prefer small objects with one responsibility.
 - Prefer dependency injection at extension boundaries.
 - Avoid global mutable state.
+- Prefer immutable compiler/domain data structures where practical.
 - Do not introduce a dependency for something the standard library handles clearly.
 - Keep public APIs documented.
 - Use descriptive diagnostic codes for user-facing compiler errors.
+- Reject ambiguity instead of adding heuristics that silently change program meaning.
 
 ## License
 
