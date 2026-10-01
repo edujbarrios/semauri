@@ -70,6 +70,18 @@ module Semauri
         with_child_environment { build_block(node) }
       end
 
+      def visit_domain_scope(node)
+        @domains.fetch(node.domain)
+        with_child_environment do
+          HIR::Node.new(
+            kind: :domain_scope,
+            type: :unit,
+            fields: { domain: node.domain, body: build_block(node.body) },
+            span: node.span
+          )
+        end
+      end
+
       def visit_let_binding(node)
         value = node.value.accept(self)
         symbol = @symbols.create(name: node.name, kind: :variable, type: value.type, definition_span: node.span)
