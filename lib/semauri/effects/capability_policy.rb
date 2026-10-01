@@ -30,7 +30,7 @@ module Semauri
         first_use = missing.lazy.map { |effect| analysis.uses_for(effect).first }.find(&:itself)
         raise SemanticError.new(
           "Program requires capabilities not allowed by policy: #{missing.join(', ')}",
-          code: "S333",
+          code: "S334",
           line: first_use&.span&.start_line,
           column: first_use&.span&.start_column,
           end_line: first_use&.span&.end_line,
