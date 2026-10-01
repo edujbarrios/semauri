@@ -8,6 +8,33 @@ require_relative "../semantics/result"
 module Semauri
   module HIR
     module RuntimeLowering
+      def lower(hir_result)
+        @symbols = hir_result.symbols
+        @symbols_by_id = @symbols.to_h { |symbol| [symbol.id, symbol] }
+        @environment = ValueEnvironment.new
+        @program = IR::Program.new
+        @runtime_plan = IR::RuntimePlan.new
+        @focus_domain = nil
+        @domain_scope_stack = []
+        @entities_by_domain = {}
+        @explanations = []
+
+        lower_statement(hir_result.program)
+        if @program.empty? && @runtime_plan.empty?
+          raise SemanticError.new("Program does not create or produce semantic output", code: "S301")
+        end
+
+        Semantics::Result.new(
+          program_ir: @program,
+          runtime_plan: @runtime_plan,
+          explanations: @explanations.freeze,
+          symbols: @symbols
+        )
+      ensure
+        @symbols = @symbols_by_id = @environment = @program = @runtime_plan = @focus_domain = nil
+        @domain_scope_stack = @entities_by_domain = @explanations = nil
+      end
+
       private
 
       def lower_let(node)
@@ -52,8 +79,9 @@ module Semauri
       def lower_runtime_value(node)
         case node.kind
         when :domain_operation
-          append_runtime_operation(node, @domains.fetch(node.fields.fetch(:domain)),
-                                   @domains.fetch(node.fields.fetch(:domain)).operation(node.fields.fetch(:operation)))
+          domain = @domains.fetch(node.fields.fetch(:domain))
+          operation = domain.operation(node.fields.fetch(:operation))
+          append_runtime_operation(node, domain, operation)
         when :symbol_ref
           bound = @environment.resolve(node.fields.fetch(:symbol_id), node: node)
           return bound if bound.is_a?(IR::RuntimeValueRef)
@@ -114,5 +142,7 @@ module Semauri
         end
       end
     end
+
+    Lowerer.prepend(RuntimeLowering)
   end
 end
