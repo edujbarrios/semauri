@@ -6,9 +6,10 @@ require_relative "node"
 module Semauri
   module AST
     class AddElement < Node
-      attr_reader :kind, :label
+      attr_reader :domain, :kind, :label
 
-      def initialize(kind:, label: nil, line: nil, column: nil, end_line: nil, end_column: nil, span: nil)
+      def initialize(domain:, kind:, label: nil, line: nil, column: nil, end_line: nil, end_column: nil, span: nil)
+        @domain = domain.to_sym
         @kind = kind.to_sym
         @label = label
         super(line: line, column: column, end_line: end_line, end_column: end_column, span: span)
