@@ -144,7 +144,7 @@ module Semauri
           raise semantic_error(node, "Domain '#{domain.name}' returned an invalid operation result", "S331")
         end
 
-        put_artifact(domain, result.artifact) if result.artifact
+        put_artifact(domain, result.artifact, focus: false) if result.artifact
         @explanations.concat(result.explanations)
       end
 
@@ -251,9 +251,9 @@ module Semauri
         raise semantic_error(node, message, code, hint: "Create an artifact first.")
       end
 
-      def put_artifact(domain, artifact)
+      def put_artifact(domain, artifact, focus: true)
         @program = @program.put(domain: domain.name, artifact: artifact)
-        @focus_domain = domain.name
+        @focus_domain = domain.name if focus
         entity_table(domain.name)
       end
 
