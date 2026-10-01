@@ -44,6 +44,10 @@ module Semauri
 
       def names = @domains.keys.sort.freeze
 
+      def to_h
+        { domains: names.map { |name| fetch(name).to_h } }
+      end
+
       def infer_property_for_type(value_type)
         candidates = @domains.values.flat_map do |domain|
           domain.property_kinds.filter_map do |property|
