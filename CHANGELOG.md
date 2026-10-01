@@ -44,8 +44,11 @@ All notable changes to Semauri are documented here.
 - Built-in ML semantic domain with nominal `ml.dataset`, `ml.model`, `ml.device`, `ml.training_config`, `ml.training_run` and `ml.inference_run` types.
 - Typed ML planning operations for dataset access, model loading, device selection, training and inference.
 - Typed `Configure training` / `Fit` workflow carrying epochs, optimizer, learning rate, batch size and seed.
+- ML model construction through `Build cnn` with typed class/input-channel configuration.
+- Immutable model-derivation operations for component freezing and LoRA adaptation.
+- Explicit model lineage through RuntimePlan references across build, freeze, adapter and training steps.
 - Domain-level operation semantic validation hook reusable by external domains.
-- ML static configuration validation with diagnostic `S336`.
+- ML training validation diagnostic `S336` and model-configuration diagnostic `S337`.
 - ML effect metadata for filesystem access, model loading, compute, training and inference.
 - POSIX shell backend for filesystem plans; compilation generates a script and never performs filesystem effects itself.
 - Independent `IR::SchemaDocument` / `IR::SchemaField` representation.
@@ -67,7 +70,7 @@ All notable changes to Semauri are documented here.
 - Domain scopes are lexical variable scopes and survive optimization rather than being parser-only hints.
 - Syntax AST and Typed HIR carry explicit domain identity for artifacts, elements, references, properties, operations and scopes.
 - Operation argument checking uses explicit assignability rules instead of raw type equality.
-- Primitive-to-nominal promotion is now opt-in per nominal type rather than automatic for every matching base representation.
+- Primitive-to-nominal promotion is opt-in per nominal type rather than automatic for every matching base representation.
 - ML runtime-produced nominal values are opaque to primitive promotion and must be produced by ML semantic operations.
 - Distinct nominal types are never implicitly reinterpreted as one another, even when they share a primitive base.
 - Filesystem path arguments remain semantically `filesystem.path` with explicit string promotion for source ergonomics.
@@ -77,6 +80,7 @@ All notable changes to Semauri are documented here.
 - Non-unit domain operations lower to runtime plans rather than being evaluated or executed during compilation.
 - Unit operations that consume runtime values are also retained in the runtime plan to preserve dataflow and effects.
 - Runtime values may flow directly between operations; runtime arithmetic/control flow remains explicit future CFG/SSA work.
+- ML model configuration is represented as immutable plan derivation rather than hidden framework mutation.
 - ML source semantics remain framework-independent; compilation does not import PyTorch, Transformers or execute model workloads.
 - HIR lowering accumulates independent per-domain artifacts/plans instead of enforcing one active semantic domain.
 - Entity tables are isolated per semantic domain during lowering.

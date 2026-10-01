@@ -1,8 +1,6 @@
 # ML semantic domain
 
-The built-in `ml` domain is the first AI-native semantic domain in Semauri.
-
-Its purpose is to describe machine-learning intent as typed compiler semantics before any framework or accelerator runtime executes the workload.
+The built-in `ml` domain is Semauri's AI-native semantic domain. It describes machine-learning intent as typed compiler semantics before any framework or accelerator runtime executes the workload.
 
 ## Current types
 
@@ -15,7 +13,47 @@ ml.training_run
 ml.inference_run
 ```
 
-These are nominal semantic types. ML runtime objects are not aliases for strings and cannot be fabricated accidentally from primitive values.
+ML runtime objects are nominal values. They are produced by semantic operations rather than forged from primitive strings.
+
+## Load or construct a model
+
+A model may come from an external identifier:
+
+```text
+Let model be Load model "resnet18".
+```
+
+or from Semauri model-construction semantics:
+
+```text
+Let model be Build cnn for 2 classes input channels 3.
+```
+
+Both produce `ml.model`, but their provenance remains different in the RuntimePlan.
+
+CNN construction currently validates statically-known class and input-channel counts and rejects invalid values with `S337`.
+
+## Immutable model transforms
+
+Model configuration and fine-tuning preparation are represented as immutable derivations:
+
+```text
+Let model be Build cnn for 2 classes input channels 3.
+Let frozen be Freeze model component "features".
+Let adapted be Apply lora to frozen rank 16 alpha 32.
+```
+
+Conceptually:
+
+```text
+%1 : ml.model = ml.build_cnn(classes=2, input_channels=3)
+%2 : ml.model = ml.freeze_component(%1, "features")
+%3 : ml.model = ml.apply_lora(%2, rank=16, alpha=32)
+```
+
+The compiler does not mutate an in-memory neural network. Each operation produces a new typed model reference, making model lineage explicit and inspectable.
+
+Current validation includes positive CNN dimensions, non-empty frozen component names, positive LoRA rank and positive LoRA alpha. Invalid model configuration reports `S337`.
 
 ## Basic training and inference
 
@@ -29,76 +67,47 @@ Within ml:
 End.
 ```
 
-The program lowers to a runtime plan similar to:
-
-```text
-%1 : ml.dataset = ml.open_dataset("./images")
-%2 : ml.model = ml.load_model("resnet18")
-%3 : ml.device = ml.select_device("cuda")
-%4 : ml.training_run = ml.train(%2, %1, %3, 10)
-%5 : ml.inference_run = ml.infer(%2, %1, %3)
-```
-
 No dataset is opened, model is loaded or training is started merely because the source file is compiled.
 
 ## Typed training configuration
 
-For a more explicit training plan, create an opaque `ml.training_config` value:
+For a more explicit training plan, create an opaque `ml.training_config`:
 
 ```text
 Within ml:
   Let dataset be Open dataset "./images".
-  Let model be Load model "resnet18".
+  Let model be Build cnn for 2 classes input channels 3.
   Let device be Select device "cuda".
-
   Let config be Configure training for 12 epochs using optimizer "adamw" learning rate 0.0003 batch size 32 seed 42.
   Let run be Fit model using dataset on device with config.
 End.
 ```
 
-Conceptually this becomes:
+`ml.training_config` must be produced by the ML domain. Current static validation includes:
 
-```text
-%1 : ml.dataset = ml.open_dataset("./images")
-%2 : ml.model = ml.load_model("resnet18")
-%3 : ml.device = ml.select_device("cuda")
-%4 : ml.training_config = ml.configure_training(
-  epochs=12,
-  optimizer="adamw",
-  learning_rate=0.0003,
-  batch_size=32,
-  seed=42
-)
-%5 : ml.training_run = ml.fit(%2, %1, %3, %4)
-```
+- optimizer: `adam`, `adamw` or `sgd`
+- positive integer epochs
+- positive learning rate
+- positive integer batch size
+- non-negative integer seed
 
-`ml.training_config` is opaque: it must be produced by the ML domain and cannot be replaced with a string that merely looks like configuration.
+Invalid statically-known training configuration reports `S336`.
 
-Current static validation includes:
+## Inspect before execution
 
-- optimizer must be `adam`, `adamw` or `sgd`
-- epochs must be a positive integer
-- learning rate must be greater than zero
-- batch size must be a positive integer
-- seed must be a non-negative integer
-
-Invalid statically-known configuration is rejected with `S336` before execution.
-
-Inspect a plan with:
+Inspect a runtime plan:
 
 ```bash
 ruby bin/semauri plan train.sema
 ```
 
-Inspect required effects/capabilities with:
+Inspect required effects/capabilities:
 
 ```bash
 ruby bin/semauri effects train.sema
 ```
 
-## Effects
-
-The ML domain declares semantic effects such as:
+The current ML domain may declare effects such as:
 
 ```text
 filesystem_read
@@ -108,34 +117,17 @@ model_training
 model_inference
 ```
 
-These names describe observable workload categories rather than implementation details such as `torch.cuda` calls.
-
-A future runtime can map semantic effects to concrete capabilities, resource policies and sandbox rules.
+Model-construction and configuration operations are currently pure planning operations; training, inference and external access remain observable effects.
 
 ## Framework boundary
 
-The ML language surface must remain framework-independent where practical.
+Semauri source describes semantic concepts rather than framework calls. A future runtime may implement the same plan using PyTorch, Transformers, ONNX Runtime, OpenVINO, JAX or another system.
 
-Semauri source should describe concepts such as:
+Framework-specific behavior should be an explicit runtime/extension concern rather than silently defining the language semantics.
 
-- dataset
-- model
-- device/resource target
-- training configuration
-- training and inference
-- evaluation
-- fine-tuning strategy
-- checkpoint
-- metrics
-- provenance
+## Direction
 
-A runtime/backend may then implement those concepts using PyTorch, Transformers, ONNX Runtime, OpenVINO, JAX or another system.
-
-Framework-specific features may exist later, but they should be explicit extensions rather than leaking into the core semantics by default.
-
-## Training model direction
-
-The training plan will continue to grow around typed concepts rather than framework flags:
+The ML plan will continue to grow around typed concepts:
 
 ```text
 model
@@ -145,68 +137,49 @@ model
 └── adapters
 
 dataset
-├── source provenance
+├── provenance / fingerprint
 ├── split
-├── transforms
-└── fingerprint
+└── transforms
 
 training
-├── epochs / steps
-├── optimizer
-├── learning rate
+├── optimizer / learning rate
 ├── precision
-├── batch size
-├── gradient accumulation
+├── batch size / gradient accumulation
 ├── seed
 └── checkpoint policy
 
 resources
 ├── device
 ├── memory constraints
-├── mixed precision
 └── distributed strategy
 ```
 
-The compiler should validate these plans before execution.
-
-## Fine-tuning direction
-
-Future Semauri should be able to represent operations such as:
-
-```text
-Freeze the vision encoder of model.
-Apply LoRA to model with rank 16.
-Fine tune model using dataset for 3 epochs.
-```
-
-These constructs should lower to a framework-independent semantic training plan first. A PyTorch/Transformers runtime would consume the plan afterwards.
+Planned work includes richer CNN/model architecture definitions, additional adapter strategies such as QLoRA, dataset transforms/splits, evaluation metrics, checkpoint lineage and hardware-aware validation.
 
 ## Explainability and provenance
 
-ML planning should preserve enough provenance for Semauri to answer deterministic questions such as:
+Because model derivations are explicit plan nodes, Semauri can preserve deterministic answers to questions such as:
 
-- which model revision was selected?
-- which dataset and split were used?
-- which transforms were applied?
-- which parameters/components are trainable?
+- where did this model originate?
+- which model value was frozen or adapted?
+- which LoRA configuration produced the trained model input?
+- which dataset/config/device flowed into training?
 - what effects/capabilities are required?
-- which backend/runtime lowered the plan?
-- which seed, precision and hardware constraints were requested?
+- which backend/runtime ultimately executed the plan?
 
-This is explainability of the **program and model lifecycle**. Model-internal interpretability techniques such as Grad-CAM, Integrated Gradients, attention inspection or feature attribution should be represented as separate typed analysis operations rather than claimed implicitly by the compiler.
+This is explainability of the **program and model lifecycle**. Model-internal interpretability such as Grad-CAM, Integrated Gradients, attention inspection or feature attribution should be added later as explicit typed analysis operations.
 
-## Non-goals of 0.7.1
+## Non-goals of 0.7.2
 
-0.7.1 does not yet:
+0.7.2 does not yet:
 
 - import PyTorch or Transformers
 - execute training or inference
-- download models
-- inspect GPUs
-- select optimal hyperparameters
-- implement CNN architecture construction
-- implement LoRA/QLoRA
+- download models during compilation
+- inspect real GPUs
+- generate arbitrary CNN layer graphs
+- implement QLoRA or arbitrary adapter targets
 - persist checkpoints
 - provide runtime `If`/loops over ML results
 
-Those features should build on the typed runtime-plan boundary rather than bypass it.
+Those features should build on the typed RuntimePlan boundary rather than bypass it.

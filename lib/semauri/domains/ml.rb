@@ -43,6 +43,47 @@ module Semauri
               effects: [:model_load]
             ),
             Operation.new(
+              name: :build_cnn,
+              verbs: ["build"],
+              pattern: [
+                Operation.literal("cnn"),
+                Operation.literal("for"),
+                Operation.expression(:classes, type: :number),
+                Operation.literal("classes"),
+                Operation.literal("input"),
+                Operation.literal("channels"),
+                Operation.expression(:input_channels, type: :number)
+              ],
+              returns: MODEL,
+              effects: []
+            ),
+            Operation.new(
+              name: :freeze_component,
+              verbs: ["freeze"],
+              pattern: [
+                Operation.expression(:model, type: MODEL),
+                Operation.literal("component"),
+                Operation.expression(:component, type: :string)
+              ],
+              returns: MODEL,
+              effects: []
+            ),
+            Operation.new(
+              name: :apply_lora,
+              verbs: ["apply"],
+              pattern: [
+                Operation.literal("lora"),
+                Operation.literal("to"),
+                Operation.expression(:model, type: MODEL),
+                Operation.literal("rank"),
+                Operation.expression(:rank, type: :number),
+                Operation.literal("alpha"),
+                Operation.expression(:alpha, type: :number)
+              ],
+              returns: MODEL,
+              effects: []
+            ),
+            Operation.new(
               name: :select_device,
               verbs: ["select"],
               pattern: [
@@ -124,13 +165,22 @@ module Semauri
       end
 
       def validate_operation_arguments!(operation:, arguments:, node:)
-        return arguments unless operation.name == :configure_training
-
-        validate_positive_integer!(arguments.fetch(:epochs), "epochs", node)
-        validate_optimizer!(arguments.fetch(:optimizer), node)
-        validate_positive_number!(arguments.fetch(:learning_rate), "learning rate", node)
-        validate_positive_integer!(arguments.fetch(:batch_size), "batch size", node)
-        validate_non_negative_integer!(arguments.fetch(:seed), "seed", node)
+        case operation.name
+        when :configure_training
+          validate_positive_integer!(arguments.fetch(:epochs), "epochs", node, code: "S336")
+          validate_optimizer!(arguments.fetch(:optimizer), node)
+          validate_positive_number!(arguments.fetch(:learning_rate), "learning rate", node, code: "S336")
+          validate_positive_integer!(arguments.fetch(:batch_size), "batch size", node, code: "S336")
+          validate_non_negative_integer!(arguments.fetch(:seed), "seed", node, code: "S336")
+        when :build_cnn
+          validate_positive_integer!(arguments.fetch(:classes), "class count", node, code: "S337")
+          validate_positive_integer!(arguments.fetch(:input_channels), "input channel count", node, code: "S337")
+        when :freeze_component
+          validate_non_empty_string!(arguments.fetch(:component), "component", node, code: "S337")
+        when :apply_lora
+          validate_positive_integer!(arguments.fetch(:rank), "LoRA rank", node, code: "S337")
+          validate_positive_number!(arguments.fetch(:alpha), "LoRA alpha", node, code: "S337")
+        end
         arguments
       end
 
@@ -145,38 +195,46 @@ module Semauri
         return unless value
         return if SUPPORTED_OPTIMIZERS.include?(value.to_s.downcase)
 
-        raise_ml_config_error(node, "Unsupported optimizer '#{value}'",
-                              "Supported optimizers: #{SUPPORTED_OPTIMIZERS.join(', ')}.")
+        raise_ml_error(node, "Unsupported optimizer '#{value}'", code: "S336",
+                       hint: "Supported optimizers: #{SUPPORTED_OPTIMIZERS.join(', ')}.")
       end
 
-      def validate_positive_number!(argument, name, node)
+      def validate_positive_number!(argument, name, node, code:)
         value = literal_value(argument)
         return unless value
         return if value.is_a?(Numeric) && value.positive?
 
-        raise_ml_config_error(node, "Training #{name} must be greater than zero")
+        raise_ml_error(node, "#{name} must be greater than zero", code: code)
       end
 
-      def validate_positive_integer!(argument, name, node)
+      def validate_positive_integer!(argument, name, node, code:)
         value = literal_value(argument)
         return unless value
         return if value.is_a?(Numeric) && value.positive? && value.to_i == value
 
-        raise_ml_config_error(node, "Training #{name} must be a positive integer")
+        raise_ml_error(node, "#{name} must be a positive integer", code: code)
       end
 
-      def validate_non_negative_integer!(argument, name, node)
+      def validate_non_negative_integer!(argument, name, node, code:)
         value = literal_value(argument)
         return unless value
         return if value.is_a?(Numeric) && !value.negative? && value.to_i == value
 
-        raise_ml_config_error(node, "Training #{name} must be a non-negative integer")
+        raise_ml_error(node, "#{name} must be a non-negative integer", code: code)
       end
 
-      def raise_ml_config_error(node, message, hint = nil)
+      def validate_non_empty_string!(argument, name, node, code:)
+        value = literal_value(argument)
+        return unless value
+        return if value.is_a?(String) && !value.strip.empty?
+
+        raise_ml_error(node, "#{name} must be a non-empty string", code: code)
+      end
+
+      def raise_ml_error(node, message, code:, hint: nil)
         raise SemanticError.new(
           message,
-          code: "S336",
+          code: code,
           line: node.line,
           column: node.column,
           end_line: node.end_line,
