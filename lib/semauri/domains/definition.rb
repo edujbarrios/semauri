@@ -23,6 +23,10 @@ module Semauri
 
       def words = @terms.keys.freeze
 
+      def property_kinds
+        @terms.values.select { |term| term.category == :property }.map(&:kind).uniq.freeze
+      end
+
       def property_type(property)
         nil
       end
