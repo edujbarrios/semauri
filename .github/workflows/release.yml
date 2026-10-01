@@ -2,8 +2,10 @@ name: Release Semauri Distribution
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
+    paths:
+      - "lib/semauri/version.rb"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,8 +15,45 @@ env:
   PORTABLE_RUBY_REVISION: "1"
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+      publish: ${{ steps.release.outputs.publish }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: meta
+        name: Resolve Semauri version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/.*VERSION = "\([^"]*\)".*/\1/p' lib/semauri/version.rb)
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - id: release
+        name: Check whether the release already exists
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1 && [[ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ]]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "$TAG is already published; nothing to do."
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
   package:
     name: package (${{ matrix.platform }})
+    needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -41,15 +80,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate tag matches language version
+      - name: Validate source version
         shell: bash
+        env:
+          EXPECTED_VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           set -euo pipefail
           version=$(sed -n 's/.*VERSION = "\([^"]*\)".*/\1/p' lib/semauri/version.rb)
-          if [[ "${GITHUB_REF_NAME}" != "v${version}" ]]; then
-            echo "Tag ${GITHUB_REF_NAME} does not match Semauri version v${version}" >&2
-            exit 1
-          fi
+          test "$version" = "$EXPECTED_VERSION"
 
       - name: Download pinned portable Ruby runtime
         shell: bash
@@ -69,7 +107,7 @@ jobs:
           mkdir portable-ruby
           tar -xzf portable-ruby.tar.gz -C portable-ruby
 
-      - name: Package Semauri distribution
+      - name: Package and smoke-test Semauri
         shell: bash
         env:
           SEMAURI_PLATFORM: ${{ matrix.platform }}
@@ -78,12 +116,10 @@ jobs:
           ruby_bin=$(find portable-ruby -type f -path '*/bin/ruby' -perm -111 -print -quit)
           test -n "$ruby_bin"
           RUBY_PREFIX=${ruby_bin%/bin/ruby}
-          export RUBY_PREFIX
-          export SEMAURI_PLATFORM
+          export RUBY_PREFIX SEMAURI_PLATFORM
           ./scripts/package-distribution.sh
 
-      - name: Upload packaged distribution
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: semauri-${{ matrix.platform }}
           path: dist/*.tar.gz
@@ -91,7 +127,8 @@ jobs:
 
   release:
     name: publish release
-    needs: package
+    needs: [prepare, package]
+    if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -107,6 +144,7 @@ jobs:
           set -euo pipefail
           mkdir release
           find artifacts -type f -name 'semauri-*.tar.gz' -exec cp {} release/ \;
+          test "$(find release -type f -name 'semauri-*.tar.gz' | wc -l)" -eq 4
           (cd release && sha256sum semauri-*.tar.gz > SHA256SUMS)
           cat release/SHA256SUMS
 
@@ -114,13 +152,15 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           set -euo pipefail
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" release/* --clobber
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" release/* --clobber
           else
-            gh release create "$GITHUB_REF_NAME" release/* \
-              --verify-tag \
+            gh release create "$TAG" release/* \
+              --target "$GITHUB_SHA" \
               --generate-notes \
-              --title "Semauri ${GITHUB_REF_NAME#v}"
+              --title "Semauri $VERSION"
           fi

@@ -23,5 +23,9 @@ jobs:
         run: |
           find lib test -name '*.rb' -print0 | xargs -0 -n1 ruby -c
           ruby -c bin/semauri
+      - name: Distribution shell syntax
+        run: |
+          sh -n install.sh distribution/bin/semauri
+          bash -n scripts/package-distribution.sh
       - name: Tests
         run: ruby -Ilib -e 'Dir["test/test_*.rb"].sort.each { |file| require_relative file }'
