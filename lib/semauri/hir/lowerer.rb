@@ -29,7 +29,12 @@ module Semauri
         lower_statement(hir_result.program)
         raise SemanticError.new("Program does not create an artifact", code: "S301") unless @artifact
 
-        Semantics::Result.new(program: @artifact, explanations: @explanations.freeze, symbols: @symbols)
+        Semantics::Result.new(
+          program: @artifact,
+          domain: @active_domain.name,
+          explanations: @explanations.freeze,
+          symbols: @symbols
+        )
       ensure
         @symbols = @symbols_by_id = @environment = @artifact = @active_domain = @entities = @explanations = nil
       end
