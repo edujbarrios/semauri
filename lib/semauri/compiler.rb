@@ -7,6 +7,8 @@ require_relative "parser"
 require_relative "hir/builder"
 require_relative "hir/lowerer"
 require_relative "hir/optimization/pass_manager"
+require_relative "effects/analyzer"
+require_relative "effects/capability_policy"
 require_relative "backends/registry"
 
 module Semauri
@@ -22,7 +24,7 @@ module Semauri
   end
 
   CompilationResult = Struct.new(
-    :output, :backend, :outputs, :ast, :hir, :optimized_hir, :ir, :explanations, :symbols,
+    :output, :backend, :outputs, :ast, :hir, :optimized_hir, :ir, :explanations, :symbols, :effects,
     keyword_init: true
   ) do
     def multi_domain? = outputs.length > 1
@@ -33,12 +35,14 @@ module Semauri
 
     def initialize(domains: Domains::Registry.default, vocabulary: nil, hir_builder: nil,
                    optimizer: HIR::Optimization::PassManager.default,
-                   lowerer: nil, backends: Backends::Registry.default)
+                   lowerer: nil, effect_analyzer: Effects::Analyzer.new,
+                   backends: Backends::Registry.default)
       @domains = domains
       @vocabulary = vocabulary || Vocabulary::English.new(domains: domains)
       @hir_builder = hir_builder || HIR::Builder.new(domains: domains)
       @optimizer = optimizer
       @lowerer = lowerer || HIR::Lowerer.new(domains: domains)
+      @effect_analyzer = effect_analyzer
       @backends = backends
     end
 
@@ -58,6 +62,14 @@ module Semauri
       @optimizer.run(hir(source))
     end
 
+    def effect_analysis(source)
+      @effect_analyzer.analyze(hir(source))
+    end
+
+    def validate_capabilities(source, policy:)
+      policy.validate!(effect_analysis(source))
+    end
+
     # Analysis intentionally lowers unoptimized HIR so `explain` describes the
     # source program rather than compiler rewrites.
     def analyze(source)
@@ -66,9 +78,11 @@ module Semauri
       [ast, @lowerer.lower(hir_result)]
     end
 
-    def compile(source, backend: nil)
+    def compile(source, backend: nil, capability_policy: nil)
       ast = parse(source)
       hir_result = @hir_builder.build(ast)
+      effects = @effect_analyzer.analyze(hir_result)
+      capability_policy&.validate!(effects)
       optimized = @optimizer.run(hir_result)
 
       # Keep a source-oriented trace while lowering the optimized program for
@@ -88,7 +102,8 @@ module Semauri
         optimized_hir: optimized.program,
         ir: semantic.program,
         explanations: source_semantic.explanations,
-        symbols: semantic.symbols
+        symbols: semantic.symbols,
+        effects: effects
       )
     end
 
