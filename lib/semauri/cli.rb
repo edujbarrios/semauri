@@ -106,10 +106,10 @@ module Semauri
     end
 
     def build(argv)
-      options = { backend: "html", output: nil }
+      options = { backend: nil, output: nil }
       parser = OptionParser.new do |opts|
         opts.on("-o", "--output PATH", "Write output to PATH") { |value| options[:output] = value }
-        opts.on("--backend NAME", "Select a backend (default: html)") { |value| options[:backend] = value }
+        opts.on("--backend NAME", "Override the semantic domain's default backend") { |value| options[:backend] = value }
       end
       parser.parse!(argv)
 
@@ -118,7 +118,7 @@ module Semauri
 
       if options[:output]
         File.write(options[:output], result.output)
-        @stdout.puts "Built #{options[:output]}"
+        @stdout.puts "Built #{options[:output]} with #{result.backend}"
       else
         @stdout.write result.output
       end
@@ -156,7 +156,7 @@ module Semauri
           symbols FILE             Print semantic symbols as JSON
           explain FILE             Explain semantic decisions
           check FILE               Validate source without generating output
-          build FILE [-o PATH]     Compile source (HTML by default)
+          build FILE [-o PATH]     Compile using the active domain's default backend
           version                  Print version
       TEXT
     end
