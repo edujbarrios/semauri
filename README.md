@@ -122,13 +122,14 @@ Important implementation choices:
 - deterministic reference resolution
 - composable HIR optimization passes
 - semantic domains injected through an explicit registry
-- generic artifact/element/property parser categories rather than hardcoded web nouns
+- generic artifact/element/property parser categories rather than hardcoded domain nouns
+- per-domain semantic validation and default backend selection
 - explicit ambiguity and cross-domain errors
 - source spans and compiler diagnostics
 - visitor, strategy, registry and dependency-injection patterns
 - tests used as executable language specification
 
-The built-in Web domain uses the same extension contract available to external domains. A new domain can contribute artifact words, element words, properties, property types and domain-IR construction without modifying the lexer or parser.
+Built-in domains use the same extension contract available to external domains. A new domain can contribute artifact words, element words, properties, property types and domain-IR construction without modifying the lexer or parser.
 
 The compiler is developed incrementally so each stage remains understandable, testable and replaceable.
 
@@ -146,9 +147,11 @@ The compiler is developed incrementally so each stage remains understandable, te
 - constant propagation/folding, dead control flow and dead-binding elimination
 - `If / Otherwise / End`
 - extensible semantic-domain registry
-- built-in Web domain with web documents, buttons, images and typed properties
+- Web domain with web documents, buttons, images and typed properties
+- Structured Data domain with schemas, fields and domain-specific validation
+- automatic domain-to-backend selection
+- HTML and JSON Schema backends
 - explicit references and constrained `it` resolution
-- HTML backend
 - source-aware diagnostics
 
 ## Development
@@ -174,7 +177,7 @@ Compiler inspection commands are available through `semauri help`, including `se
 - new language features require tests and documented semantics
 - extension points should be explicit and maintainable
 
-See [docs/LANGUAGE.md](docs/LANGUAGE.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
+See [docs/LANGUAGE.md](docs/LANGUAGE.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DOMAINS.md](docs/DOMAINS.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Contributing
 

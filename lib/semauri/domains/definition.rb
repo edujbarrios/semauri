@@ -6,10 +6,11 @@ require_relative "term"
 module Semauri
   module Domains
     class Definition
-      attr_reader :name
+      attr_reader :name, :default_backend
 
-      def initialize(name:, artifacts: {}, elements: {}, properties: {})
+      def initialize(name:, artifacts: {}, elements: {}, properties: {}, default_backend: nil)
         @name = name.to_sym
+        @default_backend = default_backend&.to_s&.freeze
         @terms = {}
         register_terms(:artifact, artifacts)
         register_terms(:element, elements)
@@ -31,6 +32,7 @@ module Semauri
         grouped = @terms.group_by { |_surface, term| term.category }
         {
           name: name,
+          default_backend: default_backend,
           artifacts: serialize_terms(grouped[:artifact]),
           elements: serialize_terms(grouped[:element]),
           properties: serialize_terms(grouped[:property])

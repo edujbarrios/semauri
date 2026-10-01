@@ -11,7 +11,7 @@ require_relative "backends/registry"
 
 module Semauri
   CompilationResult = Struct.new(
-    :output, :ast, :hir, :optimized_hir, :ir, :explanations, :symbols,
+    :output, :backend, :ast, :hir, :optimized_hir, :ir, :explanations, :symbols,
     keyword_init: true
   )
 
@@ -53,7 +53,7 @@ module Semauri
       [ast, @lowerer.lower(hir_result)]
     end
 
-    def compile(source, backend: "html")
+    def compile(source, backend: nil)
       ast = parse(source)
       hir_result = @hir_builder.build(ast)
       optimized = @optimizer.run(hir_result)
@@ -63,16 +63,30 @@ module Semauri
       # optimization implementation details.
       source_semantic = @lowerer.lower(hir_result)
       semantic = @lowerer.lower(optimized)
-      output = @backends.fetch(backend).render(semantic.program)
+      backend_name = backend&.to_s || default_backend_for(semantic.domain)
+      output = @backends.fetch(backend_name).render(semantic.program)
 
       CompilationResult.new(
         output: output,
+        backend: backend_name,
         ast: ast,
         hir: hir_result.program,
         optimized_hir: optimized.program,
         ir: semantic.program,
         explanations: source_semantic.explanations,
         symbols: semantic.symbols
+      )
+    end
+
+    private
+
+    def default_backend_for(domain_name)
+      backend = domains.fetch(domain_name).default_backend
+      return backend if backend
+
+      raise BackendError.new(
+        "Semantic domain '#{domain_name}' has no default backend",
+        code: "S404"
       )
     end
   end

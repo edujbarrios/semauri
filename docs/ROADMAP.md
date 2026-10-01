@@ -61,13 +61,24 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - `semauri domains` introspection
 - contract tests proving an external domain can compile without lexer/parser changes
 
+### 0.5.3 — Structured Data domain ✅
+
+- second built-in semantic domain implemented through the public extension API
+- `schema` artifacts and `field` entities
+- typed `datatype:string` and `required:boolean` properties
+- independent `SchemaDocument` / `SchemaField` immutable domain IR
+- JSON Schema Draft 2020-12 backend
+- domain-specific datatype validation (`S328`)
+- semantic domains declare default backends
+- `build` infers `html` for Web and `json-schema` for Structured Data
+- executable structured-data example and regression coverage
+
 ### Next
 
 - fixed-point optimization scheduling and optimization verification
-- move artifact metadata such as `title` behind domain contracts
-- add a second built-in domain to exercise the public extension API
-- explore structured-data before filesystem so the domain model is tested without introducing I/O side effects
-- formal plugin/package discovery model
+- make artifact metadata extensible instead of keeping `title` as a core special case
+- formal plugin/package discovery model for external semantic domains and backends
+- begin runtime-value design: inputs, effect model and the boundary between compile-time evaluation and runtime execution
 
 ## Later
 

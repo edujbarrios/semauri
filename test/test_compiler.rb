@@ -8,10 +8,12 @@ class CompilerTest < Minitest::Test
     @compiler = Semauri::Compiler.new
   end
 
-  def test_compiles_deterministic_html
-    output = @compiler.compile("Create a web for a pet store.").output
-    assert_includes output, "<title>Pet Store</title>"
-    assert_includes output, "<h1>Pet Store</h1>"
+  def test_compiles_deterministic_html_using_web_default_backend
+    result = @compiler.compile("Create a web for a pet store.")
+
+    assert_equal "html", result.backend
+    assert_includes result.output, "<title>Pet Store</title>"
+    assert_includes result.output, "<h1>Pet Store</h1>"
   end
 
   def test_escapes_html

@@ -3,6 +3,6 @@
 
 module Semauri
   module Semantics
-    Result = Struct.new(:program, :explanations, :symbols, keyword_init: true)
+    Result = Struct.new(:program, :domain, :explanations, :symbols, keyword_init: true)
   end
 end

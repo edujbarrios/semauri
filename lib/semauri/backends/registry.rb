@@ -3,12 +3,15 @@
 
 require_relative "../errors"
 require_relative "html"
+require_relative "json_schema"
 
 module Semauri
   module Backends
     class Registry
       def self.default
-        new.register("html") { HTML.new }
+        new
+          .register("html") { HTML.new }
+          .register("json-schema") { JSONSchema.new }
       end
 
       def initialize

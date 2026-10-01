@@ -18,15 +18,21 @@ All notable changes to Semauri are documented here.
 - Semantic domain extension API (`Domains::Definition`, `Domains::Registry`, `Domains::Term`).
 - Generic `DOMAIN_ARTIFACT`, `DOMAIN_ELEMENT` and `DOMAIN_PROPERTY` lexical categories.
 - Built-in Web domain implemented through the same extension contract available to external domains.
+- Structured Data domain with `schema`, `field`, `datatype` and `required` semantics.
+- Independent `IR::SchemaDocument` / `IR::SchemaField` representation.
+- JSON Schema Draft 2020-12 backend.
+- Domain-declared default backends and automatic backend inference in `compile` / `build`.
 - Domain surface-term collision detection and cross-domain operation diagnostics.
+- Domain-specific schema datatype validation (`S328`).
 - `semauri domains` for inspecting loaded domain vocabulary.
 - `semauri optimize FILE` for inspecting optimized HIR and per-pass statistics.
 
 ### Changed
-- `Compiler` now dependency-injects one semantic domain registry through vocabulary, parser, HIR construction and HIR lowering.
+- `Compiler` dependency-injects one semantic domain registry through vocabulary, parser, HIR construction and HIR lowering.
 - Web-specific artifact/element/property vocabulary is no longer hardcoded in the lexer/parser.
 - Syntax AST and Typed HIR carry explicit domain identity for artifact, element, named-reference and property operations.
-- Domain implementations own property type contracts and domain-IR construction/mutation hooks.
+- Domain implementations own property type contracts, domain-IR construction/mutation hooks and optional default backend selection.
+- `Compiler#compile` returns the selected backend and infers it from the active domain when none is supplied.
 - `Compiler#analyze` and `explain` lower unoptimized Typed HIR so diagnostics remain source-oriented.
 - `Compiler#compile` / `build` lower optimized Typed HIR before domain IR generation.
 - `CompilationResult` exposes both raw and optimized HIR.
