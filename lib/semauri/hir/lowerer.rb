@@ -5,6 +5,7 @@ require_relative "evaluator"
 require_relative "value_environment"
 require_relative "../errors"
 require_relative "../domains/registry"
+require_relative "../domains/operation_result"
 require_relative "../semantics/entity_table"
 require_relative "../semantics/result"
 require_relative "../semantics/type_system"
@@ -27,7 +28,7 @@ module Semauri
         @explanations = []
 
         lower_statement(hir_result.program)
-        raise SemanticError.new("Program does not create an artifact", code: "S301") unless @artifact
+        raise SemanticError.new("Program does not create or produce an artifact", code: "S301") unless @artifact
 
         Semantics::Result.new(
           program: @artifact,
@@ -49,6 +50,7 @@ module Semauri
         when :if then lower_if(node)
         when :for_each then lower_for_each(node)
         when :create_artifact then lower_create_artifact(node)
+        when :domain_operation then lower_domain_operation(node)
         when :create_web then lower_legacy_create_web(node)
         when :set_title then lower_set_title(node)
         when :add_element then lower_add_element(node)
@@ -120,6 +122,36 @@ module Semauri
                                subject: subject,
                                explicit_title: explicit_title
                              ))
+      end
+
+      def lower_domain_operation(node)
+        domain = @domains.fetch(node.fields.fetch(:domain))
+        activate_domain!(domain, node)
+        operation = domain.operation(node.fields.fetch(:operation))
+        arguments = node.fields.fetch(:arguments).transform_values { |argument| evaluate(argument).value }.freeze
+
+        result = domain.execute_operation(
+          operation: operation.name,
+          artifact: @artifact,
+          arguments: arguments,
+          source_span: node.span
+        )
+        unless result.is_a?(Domains::OperationResult)
+          raise semantic_error(node, "Domain '#{domain.name}' returned an invalid operation result", "S331")
+        end
+
+        @artifact = result.artifact if result.artifact
+        @explanations.concat(result.explanations)
+      end
+
+      def activate_domain!(domain, node)
+        if @active_domain
+          ensure_same_domain!(domain.name, @active_domain.name, node)
+          return
+        end
+
+        @active_domain = domain
+        @artifact = domain.initial_artifact
       end
 
       def lower_legacy_create_web(node)
@@ -213,13 +245,13 @@ module Semauri
         return if requested.to_sym == active.to_sym
 
         raise semantic_error(node,
-                             "Operation belongs to domain '#{requested}', but the active artifact belongs to '#{active}'",
+                             "Operation belongs to domain '#{requested}', but the active program belongs to '#{active}'",
                              "S327")
       end
 
       def require_artifact!(node, message, code)
         return @active_domain if @artifact && @active_domain
-        raise semantic_error(node, message, code, hint: "Create an artifact first.")
+        raise semantic_error(node, message, code, hint: "Create an artifact or start a domain operation first.")
       end
 
       def with_child_environment
