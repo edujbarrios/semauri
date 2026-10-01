@@ -48,6 +48,10 @@ module Semauri
         artifact.replace_element(updated)
       end
 
+      def creation_explanations(artifact:, kind:, subject:, explicit_title:)
+        ["Created #{name} artifact '#{kind}'."]
+      end
+
       private
 
       def register_terms(category, mapping)
