@@ -15,7 +15,7 @@ module Semauri
       end
 
       def runtime_reference? = true
-
+      def describe = "runtime #{type} #{id}"
       def to_s = id
 
       def to_h
