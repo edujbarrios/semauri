@@ -28,6 +28,11 @@ All notable changes to Semauri are documented here.
 - Static effect analysis with per-use domain, operation and source provenance.
 - Immutable capability allow-list policies with denied-capability diagnostic `S334`.
 - `semauri effects FILE` and capability-aware `semauri check` validation.
+- Immutable runtime planning IR through `IR::RuntimePlan`, `IR::RuntimeOperation` and SSA-like `IR::RuntimeValueRef`.
+- Value-returning semantic-domain operations inside expressions such as `Let response be Fetch ...`.
+- Runtime operation results that can flow directly into later domain operations without compile-time execution.
+- `CompilationResult.runtime_plan`, `Compiler#runtime_plan` and `semauri plan FILE` introspection.
+- Runtime-boundary diagnostics `S335` and `S406` for unsupported compile-time evaluation and build-only usage.
 - Generic immutable `IR::OperationPlan` / `IR::Operation` for operation-oriented domains.
 - Immutable multi-domain `IR::Program` / ProgramIR container.
 - `CompilationResult.outputs` with one typed output per semantic domain/backend.
@@ -36,6 +41,9 @@ All notable changes to Semauri are documented here.
 - Built-in Web domain implemented through the same extension contract available to external domains.
 - Structured Data domain with `schema`, `field`, `datatype` and `required` semantics.
 - Filesystem domain with `write`, `copy`, `delete` / `remove` operations.
+- Built-in ML semantic domain with nominal `ml.dataset`, `ml.model`, `ml.device`, `ml.training_run` and `ml.inference_run` types.
+- Typed ML planning operations for dataset access, model loading, device selection, training and inference.
+- ML effect metadata for filesystem access, model loading, compute, training and inference.
 - POSIX shell backend for filesystem plans; compilation generates a script and never performs filesystem effects itself.
 - Independent `IR::SchemaDocument` / `IR::SchemaField` representation.
 - JSON Schema Draft 2020-12 backend.
@@ -62,6 +70,10 @@ All notable changes to Semauri are documented here.
 - Domain implementations own property type contracts, nominal types, operation signatures, effect declarations, domain-IR construction/mutation hooks and optional default backend selection.
 - Effect analysis is conservative over unoptimized Typed HIR so policy does not depend on optimizer behavior.
 - Capability policies are optional during compilation because `build` does not execute effects; future execution runtimes are expected to enforce them.
+- Non-unit domain operations lower to runtime plans rather than being evaluated or executed during compilation.
+- Unit operations that consume runtime values are also retained in the runtime plan to preserve dataflow and effects.
+- Runtime values may flow directly between operations; runtime arithmetic/control flow remains explicit future CFG/SSA work.
+- ML source semantics remain framework-independent; compilation does not import PyTorch, Transformers or execute model workloads.
 - HIR lowering accumulates independent per-domain artifacts/plans instead of enforcing one active semantic domain.
 - Entity tables are isolated per semantic domain during lowering.
 - Procedural domain operations do not steal declarative artifact focus used by domain-neutral metadata syntax.
@@ -70,7 +82,7 @@ All notable changes to Semauri are documented here.
 - Constant propagation rewrites pure operation arguments and values inside nominal promotions while preserving operation effects and nominal boundaries.
 - `Compiler#analyze` and `explain` lower unoptimized Typed HIR so diagnostics remain source-oriented.
 - `Compiler#compile` / `build` lower optimized Typed HIR before domain IR generation.
-- `CompilationResult` exposes both raw and optimized HIR.
+- `CompilationResult` exposes raw HIR, optimized HIR, effect analysis and runtime planning information.
 - Optimized HIR may omit compile-time-only `Let` statements while preserving the full semantic symbol table for tooling.
 - Entity reference resolution exposes a data-oriented API shared by legacy AST resolution and HIR lowering.
 - Name resolution and type checking are structural HIR phases; short-circuiting skips RHS value evaluation, not name/type validation.
