@@ -92,7 +92,7 @@ The reference compiler is written in **Ruby** and intentionally avoids runtime d
 It started from a small handwritten compiler and has grown layer by layer:
 
 ```text
-source
+semantic domains
   ↓
 lexer
   ↓
@@ -108,7 +108,7 @@ typed HIR
   ↓
 optimization passes
   ↓
-semantic IR
+domain IR
   ↓
 backend
 ```
@@ -121,10 +121,14 @@ Important implementation choices:
 - typed expressions and strict comparisons
 - deterministic reference resolution
 - composable HIR optimization passes
-- explicit ambiguity errors
+- semantic domains injected through an explicit registry
+- generic artifact/element/property parser categories rather than hardcoded web nouns
+- explicit ambiguity and cross-domain errors
 - source spans and compiler diagnostics
 - visitor, strategy, registry and dependency-injection patterns
 - tests used as executable language specification
+
+The built-in Web domain uses the same extension contract available to external domains. A new domain can contribute artifact words, element words, properties, property types and domain-IR construction without modifying the lexer or parser.
 
 The compiler is developed incrementally so each stage remains understandable, testable and replaceable.
 
@@ -139,9 +143,10 @@ The compiler is developed incrementally so each stage remains understandable, te
 - lexical scopes and shadowing
 - stable semantic symbols
 - typed HIR
-- constant propagation/folding and dead-branch elimination
+- constant propagation/folding, dead control flow and dead-binding elimination
 - `If / Otherwise / End`
-- web documents, buttons and images
+- extensible semantic-domain registry
+- built-in Web domain with web documents, buttons, images and typed properties
 - explicit references and constrained `it` resolution
 - HTML backend
 - source-aware diagnostics
@@ -158,7 +163,7 @@ ruby -Ilib -e 'Dir["test/test_*.rb"].sort.each { |file| require_relative file }'
 
 CI tests Ruby 3.2, 3.3 and 3.4.
 
-Other compiler inspection commands are available through `semauri help`, including `semauri hir` and `semauri optimize`.
+Compiler inspection commands are available through `semauri help`, including `semauri domains`, `semauri hir` and `semauri optimize`.
 
 ## Project principles
 
