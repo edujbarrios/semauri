@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 require_relative "../errors"
+require_relative "action_candidates"
 require_relative "web"
 require_relative "structured_data"
 require_relative "filesystem"
@@ -16,29 +17,48 @@ module Semauri
       def initialize
         @domains = {}
         @terms = {}
+        @actions = {}
       end
 
       def register(domain)
         key = domain.name.to_sym
         raise ArgumentError, "Domain '#{key}' is already registered" if @domains.key?(key)
 
-        conflicts = domain.words.filter_map do |word|
-          next unless @terms.key?(word)
-          [word, @terms.fetch(word).domain]
+        pending = domain.words.map { |word| [word, domain.classify(word)] }
+        pending.each do |word, term|
+          if term.category == :action
+            if @terms.key?(word)
+              raise ArgumentError, "Domain action '#{word}' conflicts with non-action term owned by '#{@terms.fetch(word).domain}'"
+            end
+          elsif @terms.key?(word) || @actions.key?(word)
+            owner = @terms[word]&.domain || @actions.fetch(word).first.domain
+            raise ArgumentError, "Domain term '#{word}' conflicts between '#{owner}' and '#{key}'"
+          end
         end
 
-        unless conflicts.empty?
-          word, owner = conflicts.first
-          raise ArgumentError, "Domain term '#{word}' conflicts between '#{owner}' and '#{key}'"
+        pending.each do |word, term|
+          if term.category == :action
+            @actions[word] = Array(@actions[word]) + [term]
+            @actions[word].freeze
+          else
+            @terms[word] = term
+          end
         end
 
-        domain.words.each { |word| @terms[word] = domain.classify(word) }
         @domains[key] = domain
         self
       end
 
       def classify(word)
-        @terms[word.to_s.downcase]
+        key = word.to_s.downcase
+        return @terms[key] if @terms.key?(key)
+
+        candidates = @actions[key]
+        candidates && ActionCandidates.new(candidates)
+      end
+
+      def action_candidates(word)
+        Array(@actions[word.to_s.downcase]).freeze
       end
 
       def fetch(name)
@@ -48,7 +68,7 @@ module Semauri
       end
 
       def names = @domains.keys.sort.freeze
-      def words = @terms.keys.sort.freeze
+      def words = (@terms.keys | @actions.keys).sort.freeze
 
       def to_h
         { domains: names.map { |name| fetch(name).to_h } }
