@@ -2,16 +2,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
 require_relative "../ir/program"
+require_relative "../ir/runtime_plan"
 
 module Semauri
   module Semantics
     class Result
-      attr_reader :program_ir, :explanations, :symbols
+      attr_reader :program_ir, :runtime_plan, :explanations, :symbols
 
-      def initialize(program_ir:, explanations:, symbols:)
+      def initialize(program_ir:, explanations:, symbols:, runtime_plan: IR::RuntimePlan.new)
         raise ArgumentError, "program_ir must be an IR::Program" unless program_ir.is_a?(IR::Program)
+        raise ArgumentError, "runtime_plan must be an IR::RuntimePlan" unless runtime_plan.is_a?(IR::RuntimePlan)
 
         @program_ir = program_ir
+        @runtime_plan = runtime_plan
         @explanations = explanations.freeze
         @symbols = symbols.freeze
         freeze
@@ -19,6 +22,7 @@ module Semauri
 
       def domains = program_ir.domains
       def multi_domain? = program_ir.size > 1
+      def runtime? = !runtime_plan.empty?
 
       # Compatibility API: single-domain callers keep receiving the concrete
       # domain IR they received before ProgramIR existed.
