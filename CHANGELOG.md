@@ -5,38 +5,102 @@ All notable changes to Semauri are documented here.
 ## Unreleased
 
 ### Added
-- Stable semantic symbols, typed HIR and composable optimization passes.
+- Stable semantic symbols and typed HIR.
 - Homogeneous `List<T>` collections and static `For every` iteration.
-- Semantic domain extension API with generic artifact/element/property/action categories.
-- Explicit `Within <domain>: ... End.` semantic scopes.
-- Nominal semantic domain types and explicit promotion boundaries.
-- Static effect analysis and immutable capability allow-list policies.
-- `semauri effects FILE`, `semauri optimize FILE` and `semauri domains` introspection.
-- Immutable `IR::Program` for multi-domain programs.
+- HIR value environments that separate semantic symbol identity from current values.
+- HIR expression evaluator with short-circuit behavior and runtime-only checks such as division by zero.
+- HIR-to-domain-IR lowering for the production compiler pipeline.
+- Full-program symbol tables that include declarations in statically unselected branches.
+- Composable HIR optimization `PassManager`.
+- Constant propagation and folding for immutable compile-time values.
+- Dead conditional branch elimination and empty-loop elimination infrastructure.
+- Backwards symbol liveness/use analysis and dead immutable-binding elimination.
+- Semantic domain extension API (`Domains::Definition`, `Domains::Registry`, `Domains::Term`).
+- Generic `DOMAIN_ARTIFACT`, `DOMAIN_ELEMENT`, `DOMAIN_PROPERTY` and `DOMAIN_ACTION` lexical categories.
+- Declarative semantic operations with typed expression slots, return types and effect metadata.
+- Generic `AST::DomainOperation` and typed `HIR::domain_operation` nodes.
+- Explicit `Within <domain>: ... End.` semantic scopes and `AST/HIR::domain_scope` representation.
+- Ambiguous action-candidate diagnostics (`S240`) and lowering scope-consistency diagnostic (`S332`).
+- Nominal semantic domain types through `Semantics::NominalType`.
+- Explicit primitive-to-nominal `HIR::promote` nodes and per-type base-promotion policy.
+- Domain type registration/introspection and structured operation-signature type metadata.
+- `filesystem.path` as the first built-in nominal domain type.
+- Static effect analysis with per-use domain, operation and source provenance.
+- Immutable capability allow-list policies with denied-capability diagnostic `S334`.
+- `semauri effects FILE` and capability-aware `semauri check` validation.
 - Immutable runtime planning IR through `IR::RuntimePlan`, `IR::RuntimeOperation` and SSA-like `IR::RuntimeValueRef`.
-- Value-returning semantic-domain operations and `semauri plan FILE`.
-- Web, Structured Data and Filesystem built-in semantic domains.
-- HTML, JSON Schema and POSIX shell backends.
-- Built-in ML semantic domain with `ml.dataset`, `ml.model`, `ml.device`, `ml.training_config`, `ml.training_run` and `ml.inference_run`.
-- Typed ML dataset/model/device, training and inference planning operations.
-- Typed `Configure training` / `Fit` workflow.
-- ML model construction through `Build cnn`.
-- Immutable model derivation through component freezing and LoRA adaptation.
-- Model lineage preserved through RuntimePlan references.
-- ML training diagnostic `S336` and model-configuration diagnostic `S337`.
-- Versioned Semauri distribution layout with a private Ruby runtime.
-- `install.sh` quick installer for Linux/macOS x86_64 and arm64.
-- SHA-256 verification for downloaded Semauri releases.
+- Value-returning semantic-domain operations inside expressions such as `Let response be Fetch ...`.
+- Runtime operation results that can flow directly into later domain operations without compile-time execution.
+- `CompilationResult.runtime_plan`, `Compiler#runtime_plan` and `semauri plan FILE` introspection.
+- Runtime-boundary diagnostics `S335` and `S406` for unsupported compile-time evaluation and build-only usage.
+- Generic immutable `IR::OperationPlan` / `IR::Operation` for operation-oriented domains.
+- Immutable multi-domain `IR::Program` / ProgramIR container.
+- `CompilationResult.outputs` with one typed output per semantic domain/backend.
+- `CompilationResult.effects` with the conservative source-oriented effect manifest.
+- Operation-only domains that can lazily initialize semantic plans without an explicit artifact statement.
+- Built-in Web domain implemented through the same extension contract available to external domains.
+- Structured Data domain with `schema`, `field`, `datatype` and `required` semantics.
+- Filesystem domain with `write`, `copy`, `delete` / `remove` operations.
+- Built-in ML semantic domain with nominal `ml.dataset`, `ml.model`, `ml.device`, `ml.training_config`, `ml.training_run` and `ml.inference_run` types.
+- Typed ML planning operations for dataset access, model loading, device selection, training and inference.
+- Typed `Configure training` / `Fit` workflow carrying epochs, optimizer, learning rate, batch size and seed.
+- ML model construction through `Build cnn` with typed class/input-channel configuration.
+- Immutable model-derivation operations for component freezing and LoRA adaptation.
+- Explicit model lineage through RuntimePlan references across build, freeze, adapter and training steps.
+- Domain-level operation semantic validation hook reusable by external domains.
+- ML training validation diagnostic `S336` and model-configuration diagnostic `S337`.
+- ML effect metadata for filesystem access, model loading, compute, training and inference.
+- POSIX shell backend for filesystem plans; compilation generates a script and never performs filesystem effects itself.
+- Independent `IR::SchemaDocument` / `IR::SchemaField` representation.
+- JSON Schema Draft 2020-12 backend.
+- Domain-declared default backends and automatic backend inference in `compile` / `build`.
+- Domain surface-term collision detection and cross-domain operation diagnostics.
+- Domain-specific schema datatype validation (`S328`).
+- Operation argument type diagnostics (`S329`), nominal assignment diagnostics (`S333`) and malformed operation-pattern diagnostics (`S238`).
+- Multi-domain backend override diagnostic (`S405`).
+- `semauri domains` for inspecting loaded domain vocabulary, types and operations.
+- `semauri optimize FILE` for inspecting optimized HIR and per-pass statistics.
+- Versioned Semauri distribution layout with a private portable Ruby runtime.
+- `install.sh` quick installer for Linux/macOS on x86_64 and arm64.
+- SHA-256 verification for downloaded Semauri release archives.
 - Automated GitHub Release packaging for all supported distribution targets.
-- Pinned portable Ruby 3.4.11 runtime with upstream archive checksums.
-- Distribution manifest recording Semauri/platform/private-runtime versions.
+- Pinned portable Ruby 3.4.11 runtime archives with upstream SHA-256 verification.
+- Distribution manifest recording Semauri, target platform and private runtime versions.
 
 ### Changed
-- The reference compiler remains implemented in Ruby while official distributions no longer require users to install or invoke Ruby.
-- The public CLI in installation documentation is now `semauri ...`; direct `ruby bin/semauri ...` usage is reserved for compiler development.
-- Primitive-to-nominal promotion is opt-in per nominal type.
-- ML runtime-produced nominal values must be produced by ML semantic operations rather than forged from primitives.
-- Compilation/planning never performs declared external effects.
+- `Compiler` dependency-injects one semantic domain registry through vocabulary, parser, HIR construction and HIR lowering.
+- Web-specific artifact/element/property vocabulary is no longer hardcoded in the lexer/parser.
+- Domain-specific action verbs are classified through the same registry rather than becoming core language keywords.
+- Multiple domains may own the same action verb; unqualified ambiguous actions require explicit semantic scope.
+- Artifact, element and property surface terms remain globally unique for now.
+- Domain scopes are lexical variable scopes and survive optimization rather than being parser-only hints.
+- Syntax AST and Typed HIR carry explicit domain identity for artifacts, elements, references, properties, operations and scopes.
+- Operation argument checking uses explicit assignability rules instead of raw type equality.
+- Primitive-to-nominal promotion is opt-in per nominal type rather than automatic for every matching base representation.
+- ML runtime-produced nominal values are opaque to primitive promotion and must be produced by ML semantic operations.
+- Distinct nominal types are never implicitly reinterpreted as one another, even when they share a primitive base.
+- Filesystem path arguments remain semantically `filesystem.path` with explicit string promotion for source ergonomics.
+- Domain implementations own property type contracts, nominal types, operation signatures, effect declarations, semantic value validation, domain-IR construction/mutation hooks and optional default backend selection.
+- Effect analysis is conservative over unoptimized Typed HIR so policy does not depend on optimizer behavior.
+- Capability policies are optional during compilation because `build` does not execute effects; future execution runtimes are expected to enforce them.
+- Non-unit domain operations lower to runtime plans rather than being evaluated or executed during compilation.
+- Unit operations that consume runtime values are also retained in the runtime plan to preserve dataflow and effects.
+- Runtime values may flow directly between operations; runtime arithmetic/control flow remains explicit future CFG/SSA work.
 - ML model configuration is represented as immutable plan derivation rather than hidden framework mutation.
 - ML source semantics remain framework-independent; compilation does not import PyTorch, Transformers or execute model workloads.
-- Release publication is driven by the version in `lib/semauri/version.rb` reaching `main`; published archives are smoke-tested before release.
+- HIR lowering accumulates independent per-domain artifacts/plans instead of enforcing one active semantic domain.
+- Entity tables are isolated per semantic domain during lowering.
+- Procedural domain operations do not steal declarative artifact focus used by domain-neutral metadata syntax.
+- Single-domain `Semantics::Result#program`, `#domain`, `CompilationResult#output` and `#backend` remain backwards compatible.
+- Multi-domain CLI builds print separate outputs, or write deterministic per-domain files when `-o` names a directory.
+- Constant propagation rewrites pure operation arguments and values inside nominal promotions while preserving operation effects and nominal boundaries.
+- `Compiler#analyze` and `explain` lower unoptimized Typed HIR so diagnostics remain source-oriented.
+- `Compiler#compile` / `build` lower optimized Typed HIR before domain IR generation.
+- `CompilationResult` exposes raw HIR, optimized HIR, effect analysis and runtime planning information.
+- Optimized HIR may omit compile-time-only `Let` statements while preserving the full semantic symbol table for tooling.
+- Entity reference resolution exposes a data-oriented API shared by legacy AST resolution and HIR lowering.
+- Name resolution and type checking are structural HIR phases; short-circuiting skips RHS value evaluation, not name/type validation.
+- The AST-based semantic resolver remains temporarily as a regression/reference implementation only.
+- Official Semauri distributions no longer require users to install or invoke Ruby; the Ruby reference compiler is run through a bundled private runtime.
+- User-facing installation documentation now uses `semauri ...`; direct `ruby bin/semauri ...` remains the contributor/development workflow.
+- New Semauri versions reaching `main` are packaged, smoke-tested and published as versioned GitHub Release archives.
