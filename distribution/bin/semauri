@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+set -eu
+
+BIN_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" >/dev/null 2>&1 && pwd)
+SEMAURI_HOME=$(CDPATH= cd -- "$BIN_DIR/.." >/dev/null 2>&1 && pwd)
+RUBY_BIN="$SEMAURI_HOME/runtime/ruby/bin/ruby"
+APP_ENTRYPOINT="$SEMAURI_HOME/app/bin/semauri"
+
+if [ ! -x "$RUBY_BIN" ]; then
+  echo "Semauri installation is incomplete: private Ruby runtime not found at $RUBY_BIN" >&2
+  exit 70
+fi
+
+if [ ! -f "$APP_ENTRYPOINT" ]; then
+  echo "Semauri installation is incomplete: compiler entrypoint not found at $APP_ENTRYPOINT" >&2
+  exit 70
+fi
+
+export SEMAURI_HOME
+exec "$RUBY_BIN" "$APP_ENTRYPOINT" "$@"
