@@ -13,6 +13,7 @@ permissions:
 env:
   PORTABLE_RUBY_VERSION: "3.4.11"
   PORTABLE_RUBY_REVISION: "1"
+  WINDOWS_RUBYINSTALLER_VERSION: "3.4.11-1"
 
 jobs:
   prepare:
@@ -125,9 +126,72 @@ jobs:
           path: dist/*.tar.gz
           if-no-files-found: error
 
+  package-windows:
+    name: package (${{ matrix.platform }})
+    needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2025
+            platform: windows-x86_64
+            ruby_asset: rubyinstaller-3.4.11-1-x64.7z
+            ruby_sha256: a9aca84326a90422c0905bcb47be629b687a881dcad96149604c2cb074d03154
+          - runner: windows-11-arm
+            platform: windows-arm64
+            ruby_asset: rubyinstaller-3.4.11-1-arm.7z
+            ruby_sha256: 48b43e9aa362c7590475aa2d011ece7c352632c55f71fa0a482d92fc8edbc521
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate source version
+        shell: pwsh
+        env:
+          EXPECTED_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          $content = Get-Content 'lib/semauri/version.rb' -Raw
+          if ($content -notmatch 'VERSION = "([^"]+)"') { throw 'Unable to resolve Semauri version' }
+          if ($Matches[1] -ne $env:EXPECTED_VERSION) { throw "Version mismatch: $($Matches[1]) != $env:EXPECTED_VERSION" }
+
+      - name: Download pinned RubyInstaller runtime
+        shell: pwsh
+        env:
+          RUBY_ASSET: ${{ matrix.ruby_asset }}
+          RUBY_SHA256: ${{ matrix.ruby_sha256 }}
+        run: |
+          $url = "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-$env:WINDOWS_RUBYINSTALLER_VERSION/$env:RUBY_ASSET"
+          Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile 'portable-ruby.7z'
+          $actual = (Get-FileHash -Algorithm SHA256 'portable-ruby.7z').Hash.ToLowerInvariant()
+          if ($actual -ne $env:RUBY_SHA256) { throw "RubyInstaller checksum mismatch: $actual" }
+          New-Item -ItemType Directory -Force -Path 'portable-ruby' | Out-Null
+          & 7z x -y 'portable-ruby.7z' '-oportable-ruby'
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to extract RubyInstaller runtime' }
+
+      - name: Package and smoke-test Semauri
+        shell: pwsh
+        env:
+          SEMAURI_PLATFORM: ${{ matrix.platform }}
+        run: |
+          $rubyExe = Get-ChildItem 'portable-ruby' -Recurse -Filter 'ruby.exe' -File |
+            Where-Object { $_.FullName -match '[\\/]bin[\\/]ruby\.exe$' } |
+            Select-Object -First 1
+          if (-not $rubyExe) { throw 'ruby.exe was not found in the extracted RubyInstaller archive' }
+          $rubyPrefix = Split-Path -Parent (Split-Path -Parent $rubyExe.FullName)
+          ./scripts/package-distribution.ps1 -RubyPrefix $rubyPrefix -SemauriPlatform $env:SEMAURI_PLATFORM
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: semauri-${{ matrix.platform }}
+          path: dist/*.zip
+          if-no-files-found: error
+
   release:
     name: publish release
-    needs: [prepare, package]
+    needs: [prepare, package, package-windows]
     if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-latest
 
@@ -143,9 +207,10 @@ jobs:
         run: |
           set -euo pipefail
           mkdir release
-          find artifacts -type f -name 'semauri-*.tar.gz' -exec cp {} release/ \;
+          find artifacts -type f \( -name 'semauri-*.tar.gz' -o -name 'semauri-*.zip' \) -exec cp {} release/ \;
           test "$(find release -type f -name 'semauri-*.tar.gz' | wc -l)" -eq 4
-          (cd release && sha256sum semauri-*.tar.gz > SHA256SUMS)
+          test "$(find release -type f -name 'semauri-*.zip' | wc -l)" -eq 2
+          (cd release && sha256sum semauri-* > SHA256SUMS)
           cat release/SHA256SUMS
 
       - name: Publish GitHub Release
