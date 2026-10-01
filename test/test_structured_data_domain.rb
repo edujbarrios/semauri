@@ -71,8 +71,9 @@ class StructuredDataDomainTest < Minitest::Test
     assert_equal "S401", error.code
   end
 
-  def test_default_domain_registry_exposes_web_and_structured_data
-    assert_equal %i[structured_data web], @compiler.domains.names
+  def test_default_domain_registry_exposes_builtin_domains
+    assert_equal %i[filesystem structured_data web], @compiler.domains.names
+    assert_equal "posix-sh", @compiler.domains.fetch(:filesystem).default_backend
     assert_equal "json-schema", @compiler.domains.fetch(:structured_data).default_backend
     assert_equal "html", @compiler.domains.fetch(:web).default_backend
   end

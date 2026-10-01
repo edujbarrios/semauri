@@ -6,6 +6,7 @@ require_relative "source_span"
 require_relative "domains/registry"
 require_relative "ast/program"
 require_relative "ast/create_artifact"
+require_relative "ast/domain_operation"
 require_relative "ast/set_title"
 require_relative "ast/add_element"
 require_relative "ast/pronoun_reference"
@@ -45,8 +46,9 @@ module Semauri
       return set_statement(previous) if match?(:SET)
       return if_statement(previous) if match?(:IF)
       return for_statement(previous) if match?(:FOR)
+      return domain_operation_statement(previous) if match?(:DOMAIN_ACTION)
 
-      error!(peek, "Expected a statement beginning with 'Create', 'Make', 'Add', 'Let', 'Set', 'If' or 'For'", "S201")
+      error!(peek, "Expected a core statement or registered domain action", "S201")
     end
 
     def create_statement(start)
@@ -67,6 +69,39 @@ module Semauri
       consume_optional_dot
       AST::CreateArtifact.new(domain: term.fetch(:domain), kind: term.fetch(:kind),
                               subject: normalize_phrase(subject), title: normalize_phrase(title), span: span_from(start))
+    end
+
+    def domain_operation_statement(start)
+      term = domain_term(start)
+      domain = @domains.fetch(term.fetch(:domain))
+      operation = domain.operation(term.fetch(:kind))
+      arguments = {}
+
+      operation.pattern.each do |segment|
+        case segment
+        when Domains::Operation::Literal
+          consume_surface(segment.word, "Expected '#{segment.word}' in '#{operation.name}' operation", "S238")
+        when Domains::Operation::Slot
+          arguments[segment.name] = parse_operation_slot(segment)
+        else
+          error!(peek, "Unsupported operation pattern segment", "S239")
+        end
+      end
+
+      consume_optional_dot
+      AST::DomainOperation.new(
+        domain: term.fetch(:domain),
+        operation: operation.name,
+        arguments: arguments,
+        span: span_from(start)
+      )
+    end
+
+    def parse_operation_slot(slot)
+      case slot.kind
+      when :expression then expression
+      else error!(peek, "Unsupported operation slot kind '#{slot.kind}'", "S239")
+      end
     end
 
     def make_statement(start)
@@ -419,6 +454,11 @@ module Semauri
 
     def consume(type, message, code)
       return advance if check?(type)
+      error!(peek, message, code)
+    end
+
+    def consume_surface(word, message, code)
+      return advance if peek.lexeme.casecmp?(word.to_s)
       error!(peek, message, code)
     end
 

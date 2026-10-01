@@ -16,22 +16,31 @@ All notable changes to Semauri are documented here.
 - Dead conditional branch elimination and empty-loop elimination infrastructure.
 - Backwards symbol liveness/use analysis and dead immutable-binding elimination.
 - Semantic domain extension API (`Domains::Definition`, `Domains::Registry`, `Domains::Term`).
-- Generic `DOMAIN_ARTIFACT`, `DOMAIN_ELEMENT` and `DOMAIN_PROPERTY` lexical categories.
+- Generic `DOMAIN_ARTIFACT`, `DOMAIN_ELEMENT`, `DOMAIN_PROPERTY` and `DOMAIN_ACTION` lexical categories.
+- Declarative semantic operations with typed expression slots, return types and effect metadata.
+- Generic `AST::DomainOperation` and typed `HIR::domain_operation` nodes.
+- Generic immutable `IR::OperationPlan` / `IR::Operation` for operation-oriented domains.
+- Operation-only domains that can lazily initialize semantic plans without an explicit artifact statement.
 - Built-in Web domain implemented through the same extension contract available to external domains.
 - Structured Data domain with `schema`, `field`, `datatype` and `required` semantics.
+- Filesystem domain with `write`, `copy`, `delete` / `remove` operations.
+- POSIX shell backend for filesystem plans; compilation generates a script and never performs filesystem effects itself.
 - Independent `IR::SchemaDocument` / `IR::SchemaField` representation.
 - JSON Schema Draft 2020-12 backend.
 - Domain-declared default backends and automatic backend inference in `compile` / `build`.
 - Domain surface-term collision detection and cross-domain operation diagnostics.
 - Domain-specific schema datatype validation (`S328`).
-- `semauri domains` for inspecting loaded domain vocabulary.
+- Operation argument type diagnostics (`S329`) and malformed operation-pattern diagnostics (`S238`).
+- `semauri domains` for inspecting loaded domain vocabulary and operations.
 - `semauri optimize FILE` for inspecting optimized HIR and per-pass statistics.
 
 ### Changed
 - `Compiler` dependency-injects one semantic domain registry through vocabulary, parser, HIR construction and HIR lowering.
 - Web-specific artifact/element/property vocabulary is no longer hardcoded in the lexer/parser.
-- Syntax AST and Typed HIR carry explicit domain identity for artifact, element, named-reference and property operations.
-- Domain implementations own property type contracts, domain-IR construction/mutation hooks and optional default backend selection.
+- Domain-specific action verbs are classified through the same registry rather than becoming core language keywords.
+- Syntax AST and Typed HIR carry explicit domain identity for artifacts, elements, references, properties and operations.
+- Domain implementations own property type contracts, operation signatures, effect declarations, domain-IR construction/mutation hooks and optional default backend selection.
+- Constant propagation rewrites pure operation arguments but preserves the operation node and its effects.
 - `Compiler#compile` returns the selected backend and infers it from the active domain when none is supplied.
 - `Compiler#analyze` and `explain` lower unoptimized Typed HIR so diagnostics remain source-oriented.
 - `Compiler#compile` / `build` lower optimized Typed HIR before domain IR generation.

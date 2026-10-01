@@ -51,6 +51,8 @@ module Semauri
                       body: transform(node.fields.fetch(:body)))
             when :set_property
               rebuild(node, value: transform(node.fields.fetch(:value)))
+            when :domain_operation
+              rebuild(node, arguments: node.fields.fetch(:arguments).transform_values { |argument| transform(argument) })
             else
               node
             end
