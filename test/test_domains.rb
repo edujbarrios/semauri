@@ -108,6 +108,18 @@ class SemanticDomainsTest < Minitest::Test
     assert_includes tokens.map(&:type), :DOMAIN_PROPERTY
   end
 
+  def test_implicit_property_syntax_is_rejected_when_domains_make_it_ambiguous
+    domains = Semauri::Domains::Registry.default.register(CanvasDomain.new)
+    compiler = Semauri::Compiler.new(domains: domains)
+
+    error = assert_raises(Semauri::ParseError) do
+      compiler.parse("Create a web called Shop. Add a button called Buy. Make it blue.")
+    end
+
+    assert_equal "S236", error.code
+    assert_includes error.message, "Cannot infer a unique property"
+  end
+
   def test_domain_metadata_is_introspectable
     registry = Semauri::Domains::Registry.new.register(CanvasDomain.new)
     metadata = registry.to_h.fetch(:domains).first
