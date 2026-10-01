@@ -11,6 +11,7 @@ module Semauri
       def initialize
         super(
           name: :web,
+          default_backend: "html",
           artifacts: {
             "web" => :web,
             "website" => :web,
