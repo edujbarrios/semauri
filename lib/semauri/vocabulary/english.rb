@@ -55,24 +55,30 @@ module Semauri
       }.freeze
 
       COLORS = %w[black white red green blue yellow orange purple pink gray grey brown].freeze
+      RESERVED_WORDS = (KEYWORDS.keys + COLORS).freeze
 
       def initialize(domains: Domains::Registry.default)
+        conflicts = domains.words & RESERVED_WORDS
+        unless conflicts.empty?
+          raise ArgumentError, "Semantic domain terms conflict with reserved English vocabulary: #{conflicts.join(', ')}"
+        end
+
         @domains = domains
       end
 
       def classify(word)
         normalized = word.to_s.downcase
 
-        if (term = @domains.classify(normalized))
-          return Classification.new(type: term.token_type, literal: term.to_h)
+        if (type = KEYWORDS[normalized])
+          return Classification.new(type: type)
         end
 
         if COLORS.include?(normalized)
           return Classification.new(type: :COLOR, literal: normalized)
         end
 
-        if (type = KEYWORDS[normalized])
-          return Classification.new(type: type)
+        if (term = @domains.classify(normalized))
+          return Classification.new(type: term.token_type, literal: term.to_h)
         end
 
         Classification.new(type: :WORD, literal: word)
