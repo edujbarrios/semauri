@@ -21,6 +21,7 @@ module Semauri
         when :literal then literal(node)
         when :list then list(node)
         when :symbol_ref then symbol_ref(node)
+        when :promote then promote(node)
         when :unary then unary(node)
         when :binary then binary(node)
         else
@@ -45,6 +46,17 @@ module Semauri
         symbol = @symbols_by_id.fetch(symbol_id)
         @on_symbol_resolution&.call(node, value, symbol)
         value
+      end
+
+      def promote(node)
+        value = evaluate(node.fields.fetch(:value))
+        expected = node.type
+        kind = Semantics::TypeSystem.ensure_assignable!(value.type, expected, node: node)
+        unless kind == :promote || kind == :exact
+          raise semantic_error(node, "Invalid nominal promotion", "S333")
+        end
+
+        Semantics::Value.new(type: expected, value: value.value, definition_span: node.span)
       end
 
       def unary(node)
