@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 require_relative "../errors"
+require_relative "../semantics/type_system"
 
 module Semauri
   module Domains
@@ -26,12 +27,12 @@ module Semauri
         def initialize(name:, kind:, type: nil)
           @name = name.to_sym
           @kind = kind.to_sym
-          @type = type&.to_sym
+          @type = Operation.normalize_type(type)
           raise ArgumentError, "Unsupported operation slot kind '#{kind}'" unless KINDS.include?(@kind)
           freeze
         end
 
-        def to_h = { slot: name, kind: kind, type: type }.freeze
+        def to_h = { slot: name, kind: kind, type: Operation.serialize_type(type) }.freeze
       end
 
       attr_reader :name, :verbs, :pattern, :return_type, :effects
@@ -39,11 +40,20 @@ module Semauri
       def self.literal(word) = Literal.new(word)
       def self.expression(name, type: nil) = Slot.new(name: name, kind: :expression, type: type)
 
+      def self.normalize_type(type)
+        return nil if type.nil?
+        type.is_a?(String) ? type.to_sym : type
+      end
+
+      def self.serialize_type(type)
+        type.respond_to?(:to_h) ? type.to_h : type
+      end
+
       def initialize(name:, verbs:, pattern:, returns: :unit, effects: [])
         @name = name.to_sym
         @verbs = Array(verbs).map { |verb| verb.to_s.downcase.freeze }.uniq.freeze
         @pattern = Array(pattern).freeze
-        @return_type = returns.to_sym
+        @return_type = self.class.normalize_type(returns)
         @effects = Array(effects).map(&:to_sym).uniq.freeze
 
         raise ArgumentError, "Operation '#{name}' requires at least one verb" if @verbs.empty?
@@ -68,14 +78,14 @@ module Semauri
         slots.each do |slot|
           value = arguments.fetch(slot.name)
           next unless slot.type
-          next if value.type == slot.type
+          next if Semantics::TypeSystem.assignable?(value.type, slot.type)
 
           raise SemanticError.new(
-            "Operation '#{name}' argument '#{slot.name}' expects #{slot.type}, but received #{value.type}",
+            "Operation '#{name}' argument '#{slot.name}' expects #{Semantics::TypeSystem.type_name(slot.type)}, but received #{Semantics::TypeSystem.type_name(value.type)}",
             code: "S329",
             line: value.line, column: value.column,
             end_line: value.end_line, end_column: value.end_column,
-            hint: "Provide a #{slot.type} expression for '#{slot.name}'."
+            hint: "Provide a #{Semantics::TypeSystem.type_name(slot.type)} expression for '#{slot.name}'."
           )
         end
         arguments
@@ -93,7 +103,7 @@ module Semauri
           name: name,
           verbs: verbs,
           pattern: pattern.map(&:to_h),
-          returns: return_type,
+          returns: self.class.serialize_type(return_type),
           effects: effects
         }.freeze
       end
