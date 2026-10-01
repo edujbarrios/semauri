@@ -3,12 +3,13 @@
 
 require_relative "../errors"
 require_relative "web"
+require_relative "structured_data"
 
 module Semauri
   module Domains
     class Registry
       def self.default
-        new.register(Web.new)
+        new.register(Web.new).register(StructuredData.new)
       end
 
       def initialize
