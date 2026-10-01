@@ -6,26 +6,36 @@ module Semauri
     class NominalType
       attr_reader :domain, :name, :base_type
 
-      def initialize(domain:, name:, base_type:)
+      def initialize(domain:, name:, base_type:, promote_from_base: true)
         @domain = domain.to_sym
         @name = name.to_sym
         @base_type = normalize_base_type(base_type)
+        @promote_from_base = !!promote_from_base
         freeze
       end
+
+      def promote_from_base? = @promote_from_base
 
       def ==(other)
         other.is_a?(self.class) &&
           domain == other.domain &&
           name == other.name &&
-          base_type == other.base_type
+          base_type == other.base_type &&
+          promote_from_base? == other.promote_from_base?
       end
       alias eql? ==
 
-      def hash = [self.class, domain, name, base_type].hash
+      def hash = [self.class, domain, name, base_type, promote_from_base?].hash
       def to_s = "#{domain}.#{name}"
 
       def to_h
-        { kind: :nominal, domain: domain, name: name, base: serialize_type(base_type) }.freeze
+        {
+          kind: :nominal,
+          domain: domain,
+          name: name,
+          base: serialize_type(base_type),
+          promote_from_base: promote_from_base?
+        }.freeze
       end
 
       private
