@@ -67,6 +67,14 @@ module Semauri
         nil
       end
 
+      # Domain-specific semantic validation runs after generic operation argument
+      # type checking and before HIR promotion/lowering. Domains may reject
+      # statically invalid values while leaving runtime-dependent validation to
+      # their future execution runtime.
+      def validate_operation_arguments!(operation:, arguments:, node:)
+        arguments
+      end
+
       def create_artifact(kind:, subject:, title:)
         raise NotImplementedError, "Domain '#{name}' does not implement artifact creation"
       end
