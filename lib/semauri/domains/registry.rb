@@ -6,12 +6,13 @@ require_relative "action_candidates"
 require_relative "web"
 require_relative "structured_data"
 require_relative "filesystem"
+require_relative "ml"
 
 module Semauri
   module Domains
     class Registry
       def self.default
-        new.register(Web.new).register(StructuredData.new).register(Filesystem.new)
+        new.register(Web.new).register(StructuredData.new).register(Filesystem.new).register(ML.new)
       end
 
       def initialize
