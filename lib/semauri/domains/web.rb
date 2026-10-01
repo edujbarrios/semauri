@@ -52,6 +52,20 @@ module Semauri
         end
         [artifact.add_element(element), element]
       end
+
+      def creation_explanations(artifact:, kind:, subject:, explicit_title:)
+        explanations = ["'web' resolved to an HTML web document (default web backend)."]
+        explanations << "Subject resolved to '#{subject}'." if subject
+        explanations << case artifact.title_origin
+                        when :explicit
+                          "Title explicitly set to '#{artifact.title}'."
+                        when :subject_default
+                          "No title was provided, so the web title defaults to its subject: '#{artifact.title}'."
+                        else
+                          "No title or subject was provided, so the web title defaults to 'Untitled'."
+                        end
+        explanations
+      end
     end
   end
 end
