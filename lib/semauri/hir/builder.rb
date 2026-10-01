@@ -141,6 +141,25 @@ module Semauri
                                 subject: node.subject, title: node.title }, span: node.span)
       end
 
+      def visit_domain_operation(node)
+        domain = @domains.fetch(node.domain)
+        operation = domain.operation(node.operation)
+        arguments = node.arguments.transform_values { |value| value.accept(self) }
+        operation.validate_argument_types!(arguments, node: node)
+
+        HIR::Node.new(
+          kind: :domain_operation,
+          type: operation.return_type,
+          fields: {
+            domain: node.domain,
+            operation: node.operation,
+            arguments: arguments.freeze,
+            effects: operation.effects
+          },
+          span: node.span
+        )
+      end
+
       # Compatibility for ASTs produced by Semauri < 0.5.2.
       def visit_create_web(node)
         HIR::Node.new(kind: :create_artifact, type: :unit,
