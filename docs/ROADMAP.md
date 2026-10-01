@@ -160,9 +160,21 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - compilation creates inspectable plans and never imports or runs an ML framework
 - framework-independent contract documented in `ML.md`
 
+### 0.7.1 — typed training configuration ✅
+
+- opaque `ml.training_config` nominal type produced only by ML semantics
+- nominal types explicitly declare whether primitive-to-nominal promotion is allowed
+- ML runtime-produced objects reject forged primitive values
+- `Configure training` captures epochs, optimizer, learning rate, batch size and seed
+- configured `Fit` consumes `ml.model`, `ml.dataset`, `ml.device` and `ml.training_config`
+- simple `Train ... for N epochs` remains available
+- domain-level operation validation hook keeps value constraints outside the parser
+- static validation for optimizer name, positive epochs/learning rate/batch size and non-negative seed
+- invalid ML configuration reports `S336`
+
 ### Next
 
-- structured training configuration: optimizer, learning rate, batch size, precision, seed and checkpoint policy
+- precision, gradient accumulation and checkpoint policy in training configuration
 - model architecture/configuration semantics including CNN construction
 - fine-tuning semantics: frozen components, LoRA/QLoRA and trainable parameter sets
 - dataset transforms, splits and fingerprints

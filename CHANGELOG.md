@@ -22,7 +22,7 @@ All notable changes to Semauri are documented here.
 - Explicit `Within <domain>: ... End.` semantic scopes and `AST/HIR::domain_scope` representation.
 - Ambiguous action-candidate diagnostics (`S240`) and lowering scope-consistency diagnostic (`S332`).
 - Nominal semantic domain types through `Semantics::NominalType`.
-- Explicit primitive-to-nominal `HIR::promote` nodes.
+- Explicit primitive-to-nominal `HIR::promote` nodes and per-type base-promotion policy.
 - Domain type registration/introspection and structured operation-signature type metadata.
 - `filesystem.path` as the first built-in nominal domain type.
 - Static effect analysis with per-use domain, operation and source provenance.
@@ -41,8 +41,11 @@ All notable changes to Semauri are documented here.
 - Built-in Web domain implemented through the same extension contract available to external domains.
 - Structured Data domain with `schema`, `field`, `datatype` and `required` semantics.
 - Filesystem domain with `write`, `copy`, `delete` / `remove` operations.
-- Built-in ML semantic domain with nominal `ml.dataset`, `ml.model`, `ml.device`, `ml.training_run` and `ml.inference_run` types.
+- Built-in ML semantic domain with nominal `ml.dataset`, `ml.model`, `ml.device`, `ml.training_config`, `ml.training_run` and `ml.inference_run` types.
 - Typed ML planning operations for dataset access, model loading, device selection, training and inference.
+- Typed `Configure training` / `Fit` workflow carrying epochs, optimizer, learning rate, batch size and seed.
+- Domain-level operation semantic validation hook reusable by external domains.
+- ML static configuration validation with diagnostic `S336`.
 - ML effect metadata for filesystem access, model loading, compute, training and inference.
 - POSIX shell backend for filesystem plans; compilation generates a script and never performs filesystem effects itself.
 - Independent `IR::SchemaDocument` / `IR::SchemaField` representation.
@@ -64,10 +67,11 @@ All notable changes to Semauri are documented here.
 - Domain scopes are lexical variable scopes and survive optimization rather than being parser-only hints.
 - Syntax AST and Typed HIR carry explicit domain identity for artifacts, elements, references, properties, operations and scopes.
 - Operation argument checking uses explicit assignability rules instead of raw type equality.
-- Primitive values may promote to a nominal type only when they exactly match its declared base representation.
+- Primitive-to-nominal promotion is now opt-in per nominal type rather than automatic for every matching base representation.
+- ML runtime-produced nominal values are opaque to primitive promotion and must be produced by ML semantic operations.
 - Distinct nominal types are never implicitly reinterpreted as one another, even when they share a primitive base.
-- Filesystem path arguments are semantically `filesystem.path` while existing string source syntax remains compatible through explicit HIR promotion.
-- Domain implementations own property type contracts, nominal types, operation signatures, effect declarations, domain-IR construction/mutation hooks and optional default backend selection.
+- Filesystem path arguments remain semantically `filesystem.path` with explicit string promotion for source ergonomics.
+- Domain implementations own property type contracts, nominal types, operation signatures, effect declarations, semantic value validation, domain-IR construction/mutation hooks and optional default backend selection.
 - Effect analysis is conservative over unoptimized Typed HIR so policy does not depend on optimizer behavior.
 - Capability policies are optional during compilation because `build` does not execute effects; future execution runtimes are expected to enforce them.
 - Non-unit domain operations lower to runtime plans rather than being evaluated or executed during compilation.

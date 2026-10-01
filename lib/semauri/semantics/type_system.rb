@@ -73,12 +73,13 @@ module Semauri
       end
 
       # Nominal types are intentionally not aliases. Exact nominal identity is
-      # required once a value is nominal. A primitive may be promoted into a
-      # nominal type only when that nominal type explicitly declares it as its
-      # base representation.
+      # required once a value is nominal. Primitive-to-nominal promotion is an
+      # explicit property of the nominal type rather than an automatic rule.
       def assignment_kind(actual, expected)
         return :exact if actual == expected
-        return :promote if expected.is_a?(NominalType) && actual == expected.base_type
+        if expected.is_a?(NominalType) && expected.promote_from_base? && actual == expected.base_type
+          return :promote
+        end
         nil
       end
 
@@ -151,7 +152,10 @@ module Semauri
 
       def nominal_mismatch_hint(actual, expected)
         return nil unless expected.is_a?(NominalType)
-        return "A #{expected.base_type} value can be promoted to #{expected}." if actual == expected.base_type
+        if expected.promote_from_base? && actual == expected.base_type
+          return "A #{expected.base_type} value can be promoted to #{expected}."
+        end
+        return "#{expected} must be produced by its semantic domain." unless expected.promote_from_base?
         return "#{actual} and #{expected} are distinct nominal types." if actual.is_a?(NominalType)
         "Provide a #{expected} value."
       end

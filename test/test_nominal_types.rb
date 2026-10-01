@@ -13,12 +13,26 @@ class NominalTypesTest < Minitest::Test
     assert_equal path, Semauri::Semantics::NominalType.new(domain: :filesystem, name: :path, base_type: :string)
   end
 
-  def test_primitive_base_type_can_be_promoted_to_nominal_type
+  def test_primitive_base_type_can_be_promoted_when_nominal_type_allows_it
     path = Semauri::Domains::Filesystem::PATH
 
+    assert path.promote_from_base?
     assert_equal :promote, Semauri::Semantics::TypeSystem.assignment_kind(:string, path)
     assert Semauri::Semantics::TypeSystem.assignable?(:string, path)
     assert_equal :exact, Semauri::Semantics::TypeSystem.assignment_kind(path, path)
+  end
+
+  def test_opaque_nominal_type_rejects_base_promotion
+    config = Semauri::Semantics::NominalType.new(
+      domain: :ml,
+      name: :training_config,
+      base_type: :opaque,
+      promote_from_base: false
+    )
+
+    refute config.promote_from_base?
+    refute Semauri::Semantics::TypeSystem.assignable?(:opaque, config)
+    assert_equal :exact, Semauri::Semantics::TypeSystem.assignment_kind(config, config)
   end
 
   def test_one_nominal_type_cannot_be_reinterpreted_as_another_with_same_base
@@ -37,6 +51,7 @@ class NominalTypesTest < Minitest::Test
     assert_equal :filesystem, path.domain
     assert_equal :path, path.name
     assert_equal :string, path.base_type
+    assert path.promote_from_base?
 
     metadata = domain.to_h
     assert_includes metadata.fetch(:types), path.to_h
