@@ -44,6 +44,15 @@ module Semauri
 
       def names = @domains.keys.sort.freeze
 
+      def infer_property_for_type(value_type)
+        candidates = @domains.values.flat_map do |domain|
+          domain.property_kinds.filter_map do |property|
+            [domain.name, property] if domain.property_type(property) == value_type.to_sym
+          end
+        end
+        candidates.one? ? candidates.first : nil
+      end
+
       def validate_property!(domain:, property:, actual_type:, node:)
         expected = fetch(domain).property_type(property)
         return actual_type unless expected
