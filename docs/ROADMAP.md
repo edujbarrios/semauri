@@ -194,6 +194,18 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - automatic GitHub Release/tag creation when a new Semauri version reaches `main`
 - contributor source workflow remains available with Ruby 3.2+
 
+### 0.7.4 — native Windows distribution ✅
+
+- PowerShell `install.ps1` quick installer
+- native Windows x86_64 and ARM64 packages
+- private checksum-pinned RubyInstaller 3.4.11 runtime
+- `semauri.cmd` launcher with no system Ruby dependency
+- user-owned `%USERPROFILE%\.semauri` version store and stable command shim
+- automatic user `PATH` integration without administrator privileges
+- Windows package checksum verification and installation smoke test
+- native x64/ARM64 distribution smoke tests in pull-request CI
+- GitHub Releases now publish four Unix/macOS archives plus two Windows ZIP archives
+
 ### Next
 
 - richer CNN architecture/layer semantics
@@ -213,7 +225,6 @@ See [`ML.md`](ML.md), [`DISTRIBUTION.md`](DISTRIBUTION.md), [`RUNTIME.md`](RUNTI
 - PyTorch/Transformers execution runtime
 - checkpoint/artifact lineage
 - model interpretability operations (Grad-CAM, Integrated Gradients, attention/feature attribution)
-- Windows distribution support
 - Homebrew/Scoop/Winget integration where maintainable
 - project-local Semauri version selection
 - functions and call frames
