@@ -5,6 +5,7 @@ require_relative "../errors"
 require_relative "html"
 require_relative "json_schema"
 require_relative "posix_shell"
+require_relative "ml_plan"
 
 module Semauri
   module Backends
@@ -14,6 +15,7 @@ module Semauri
           .register("html") { HTML.new }
           .register("json-schema") { JSONSchema.new }
           .register("posix-sh") { PosixShell.new }
+          .register("ml-plan") { MLPlan.new }
       end
 
       def initialize
