@@ -108,17 +108,39 @@ class SemanticDomainsTest < Minitest::Test
     assert_includes tokens.map(&:type), :DOMAIN_PROPERTY
   end
 
-  def test_registry_rejects_surface_term_collisions
+  def test_domain_metadata_is_introspectable
+    registry = Semauri::Domains::Registry.new.register(CanvasDomain.new)
+    metadata = registry.to_h.fetch(:domains).first
+
+    assert_equal :canvas, metadata.fetch(:name)
+    assert_equal({ "canvas" => :canvas }, metadata.fetch(:artifacts))
+    assert_equal({ "badge" => :badge }, metadata.fetch(:elements))
+    assert_equal({ "tone" => :tone }, metadata.fetch(:properties))
+  end
+
+  def test_registry_rejects_surface_term_collisions_transactionally
     first = Class.new(Semauri::Domains::Definition) do
       def initialize = super(name: :one, artifacts: { "thing" => :thing })
     end
     second = Class.new(Semauri::Domains::Definition) do
-      def initialize = super(name: :two, elements: { "thing" => :thing })
+      def initialize = super(name: :two, artifacts: { "other" => :other }, elements: { "thing" => :thing })
     end
 
     registry = Semauri::Domains::Registry.new.register(first.new)
     error = assert_raises(ArgumentError) { registry.register(second.new) }
 
     assert_includes error.message, "conflicts"
+    assert_nil registry.classify("other")
+    assert_equal [:one], registry.names
+  end
+
+  def test_english_vocabulary_rejects_domain_overrides_of_core_words
+    invalid = Class.new(Semauri::Domains::Definition) do
+      def initialize = super(name: :invalid, artifacts: { "if" => :artifact })
+    end
+    registry = Semauri::Domains::Registry.new.register(invalid.new)
+
+    error = assert_raises(ArgumentError) { Semauri::Vocabulary::English.new(domains: registry) }
+    assert_includes error.message, "reserved English vocabulary"
   end
 end
