@@ -163,27 +163,26 @@ Semauri keeps application-specific meaning outside the core language through sem
 - **Web** — web documents and elements, lowered to HTML
 - **Structured Data** — schemas and fields, lowered to JSON Schema
 - **Filesystem** — typed filesystem operations, lowered to POSIX shell plans
-- **ML** — typed AI/ML dataset, model, device, training and inference runtime plans
+- **ML** — typed AI/ML dataset, model, device, configuration, training and inference runtime plans
 
 Domains can contribute vocabulary, nominal types, typed operations, effects and semantic IR without adding hardcoded domain branches to the lexer/parser.
 
 ## AI / ML direction
 
-Semauri 0.7 introduces the first built-in `ml` semantic domain.
-
-The compiler can now represent typed concepts such as:
+Semauri 0.7 includes a built-in `ml` semantic domain with typed concepts such as:
 
 - `ml.dataset`
 - `ml.model`
 - `ml.device`
+- `ml.training_config`
 - `ml.training_run`
 - `ml.inference_run`
 
-and lower model loading, dataset access, device selection, training and inference intent into an inspectable `RuntimePlan`.
+The compiler can already lower dataset/model loading, CNN construction, device selection, typed training configuration, model freezing, LoRA adaptation, training and inference intent into an inspectable `RuntimePlan` with explicit model lineage.
 
 **No ML framework is executed during compilation.** PyTorch, Transformers, ONNX Runtime, OpenVINO or other systems belong behind future execution backends/runtimes.
 
-The next AI milestones include structured training configuration, CNN/model construction, fine-tuning strategies such as LoRA/QLoRA, checkpoint lineage, resource planning, evaluation and interpretability operations.
+Next AI milestones include richer architecture definitions, dataset transforms/splits, checkpoint lineage, hardware/resource planning, evaluation metrics, QLoRA and model-interpretability operations.
 
 See [docs/ML.md](docs/ML.md) for the current ML contract.
 
@@ -191,7 +190,7 @@ See [docs/ML.md](docs/ML.md) for the current ML contract.
 
 Semauri treats explainability as a compiler/runtime property rather than generated prose.
 
-The existing semantic trace can be extended to AI workloads to preserve model and dataset provenance, transforms, trainable/frozen components, hyperparameters, effects, runtime selection, checkpoints and execution traces.
+The semantic trace and RuntimePlan can preserve model/data provenance, model derivations, trainable/frozen components, hyperparameters, effects, runtime selection, checkpoints and execution traces.
 
 This provides explainability of the **program and model lifecycle**. Model-internal interpretability techniques such as Grad-CAM, Integrated Gradients, feature attribution or attention inspection should be exposed as explicit typed analysis operations rather than claimed automatically by the compiler.
 
