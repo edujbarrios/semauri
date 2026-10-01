@@ -72,7 +72,7 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - semantic domains declare default backends
 - `build` infers `html` for Web and `json-schema` for Structured Data
 
-## 0.6 — universal semantic operations — in progress
+## 0.6 — universal semantic operations ✅
 
 ### 0.6.0 — declarative domain operations ✅
 
@@ -134,14 +134,37 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - compilation may optionally validate a policy but still never performs external effects
 - future execution runtimes can make capability authorization mandatory before running plans
 
+## 0.7 — AI semantic foundations — in progress
+
+### 0.7.0 — ML semantic planning domain ✅
+
+- built-in `ml` semantic domain implemented through the generic domain-operation API
+- immutable `IR::MLPlan` rather than direct framework calls
+- CNN initialization and pretrained-model planning
+- named dataset/model references with semantic validation
+- component freezing, training, evaluation and checkpoint planning
+- explainability/interpretability plan stages
+- explicit AI effects including `network`, `model_download`, `gpu_compute`, `model_training`, `model_inference`, `checkpoint_write` and `model_explanation`
+- `ml-plan` JSON backend for dry-run inspection
+- compilation performs no dataset reads, downloads, GPU work, training or checkpoint writes
+- `S336` for invalid ML plan references/hyperparameters
+
 ### Next
 
-- operation expressions that can produce runtime values
-- runtime-value design: inputs, SSA/CFG/basic blocks and the compile-time/runtime boundary
+- first-class operation expressions that produce runtime values
+- nominal AI types: `ml.dataset`, `ml.model`, `ml.device`, `ml.tensor`, `ml.checkpoint`, `ml.metrics`
+- runtime-value references and explicit compile-time/runtime boundary
+- Runtime IR, then SSA/CFG/basic blocks for dynamic control flow
+- dataset transforms/splits and typed preprocessing pipelines
+- optimizer/loss/scheduler/metric descriptions
+- LoRA/QLoRA and component-level fine-tuning policies
+- hardware and memory planning
+- PyTorch runtime/backend with mandatory capability authorization
+- execution traces, model/dataset revisions, hashes, checkpoints and metric provenance
+- typed Grad-CAM, Integrated Gradients and VLM token/region attribution operations
 - formal plugin/package discovery for external domains and backends
-- first AI/ML semantic-domain foundations (`ml.dataset`, `ml.model`, `ml.device`, training/inference plans)
 
-See [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) for the architecture target.
+See [`ML.md`](ML.md) for the AI design and [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) for the broader domain architecture.
 
 ## Later
 
