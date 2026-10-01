@@ -9,7 +9,7 @@ class StructuredDataDomainTest < Minitest::Test
     @compiler = Semauri::Compiler.new
   end
 
-  def test_compiles_schema_to_json_schema
+  def test_compiles_schema_to_inferred_json_schema_backend
     source = <<~SEMA
       Create a schema called Pet.
       Add a field called Name.
@@ -19,9 +19,10 @@ class StructuredDataDomainTest < Minitest::Test
       Set the datatype of the field called Age to "integer".
     SEMA
 
-    result = @compiler.compile(source, backend: "json-schema")
+    result = @compiler.compile(source)
     json = JSON.parse(result.output)
 
+    assert_equal "json-schema", result.backend
     assert_equal "https://json-schema.org/draft/2020-12/schema", json.fetch("$schema")
     assert_equal "Pet", json.fetch("title")
     assert_equal "object", json.fetch("type")
@@ -33,6 +34,7 @@ class StructuredDataDomainTest < Minitest::Test
   def test_structured_data_uses_distinct_domain_ir
     _ast, semantic = @compiler.analyze("Create a schema called Pet. Add a field called Name.")
 
+    assert_equal :structured_data, semantic.domain
     assert_instance_of Semauri::IR::SchemaDocument, semantic.program
     assert_instance_of Semauri::IR::SchemaField, semantic.program.fields.first
     refute_instance_of Semauri::IR::WebDocument, semantic.program
@@ -71,5 +73,7 @@ class StructuredDataDomainTest < Minitest::Test
 
   def test_default_domain_registry_exposes_web_and_structured_data
     assert_equal %i[structured_data web], @compiler.domains.names
+    assert_equal "json-schema", @compiler.domains.fetch(:structured_data).default_backend
+    assert_equal "html", @compiler.domains.fetch(:web).default_backend
   end
 end
