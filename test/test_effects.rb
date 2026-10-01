@@ -50,7 +50,7 @@ class EffectsTest < Minitest::Test
 
     error = assert_raises(Semauri::SemanticError) { policy.validate!(analysis) }
 
-    assert_equal "S333", error.code
+    assert_equal "S334", error.code
     assert_includes error.message, "filesystem_write"
   end
 
