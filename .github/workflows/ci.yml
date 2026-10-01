@@ -30,10 +30,24 @@ jobs:
       - name: Tests
         run: ruby -Ilib -e 'Dir["test/test_*.rb"].sort.each { |file| require_relative file }'
 
-  windows-distribution-syntax:
-    runs-on: windows-latest
+  windows-distribution:
+    name: windows distribution (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2025
+            platform: windows-x86_64
+            ruby_asset: rubyinstaller-3.4.11-1-x64.7z
+            ruby_sha256: a9aca84326a90422c0905bcb47be629b687a881dcad96149604c2cb074d03154
+          - runner: windows-11-arm
+            platform: windows-arm64
+            ruby_asset: rubyinstaller-3.4.11-1-arm.7z
+            ruby_sha256: 48b43e9aa362c7590475aa2d011ece7c352632c55f71fa0a482d92fc8edbc521
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
+
       - name: PowerShell syntax
         shell: pwsh
         run: |
@@ -47,3 +61,30 @@ jobs:
               exit 1
             }
           }
+
+      - name: Download pinned RubyInstaller runtime
+        shell: pwsh
+        env:
+          RUBY_ASSET: ${{ matrix.ruby_asset }}
+          RUBY_SHA256: ${{ matrix.ruby_sha256 }}
+        run: |
+          $url = "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-3.4.11-1/$env:RUBY_ASSET"
+          Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile 'portable-ruby.7z'
+          $actual = (Get-FileHash -Algorithm SHA256 'portable-ruby.7z').Hash.ToLowerInvariant()
+          if ($actual -ne $env:RUBY_SHA256) { throw "RubyInstaller checksum mismatch: $actual" }
+          New-Item -ItemType Directory -Force -Path 'portable-ruby' | Out-Null
+          & 7z x -y 'portable-ruby.7z' '-oportable-ruby'
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to extract RubyInstaller runtime' }
+
+      - name: Package and smoke-test Semauri
+        shell: pwsh
+        env:
+          SEMAURI_PLATFORM: ${{ matrix.platform }}
+        run: |
+          $rubyExe = Get-ChildItem 'portable-ruby' -Recurse -Filter 'ruby.exe' -File |
+            Where-Object { $_.FullName -match '[\\/]bin[\\/]ruby\.exe$' } |
+            Select-Object -First 1
+          if (-not $rubyExe) { throw 'ruby.exe was not found in the extracted RubyInstaller archive' }
+          $rubyPrefix = Split-Path -Parent (Split-Path -Parent $rubyExe.FullName)
+          ./scripts/package-distribution.ps1 -RubyPrefix $rubyPrefix -SemauriPlatform $env:SEMAURI_PLATFORM
+          if (-not (Get-ChildItem 'dist' -Filter 'semauri-*.zip' -File)) { throw 'Windows distribution archive was not produced' }
