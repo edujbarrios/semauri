@@ -25,6 +25,7 @@ module Semauri
         @environment = ValueEnvironment.new
         @program = IR::Program.new
         @focus_domain = nil
+        @domain_scope_stack = []
         @entities_by_domain = {}
         @explanations = []
 
@@ -37,7 +38,7 @@ module Semauri
           symbols: @symbols
         )
       ensure
-        @symbols = @symbols_by_id = @environment = @program = @focus_domain = @entities_by_domain = @explanations = nil
+        @symbols = @symbols_by_id = @environment = @program = @focus_domain = @domain_scope_stack = @entities_by_domain = @explanations = nil
       end
 
       private
@@ -46,6 +47,7 @@ module Semauri
         case node.kind
         when :program then lower_statements(node.fields.fetch(:statements))
         when :block then with_child_environment { lower_statements(node.fields.fetch(:statements)) }
+        when :domain_scope then lower_domain_scope(node)
         when :let then lower_let(node)
         when :if then lower_if(node)
         when :for_each then lower_for_each(node)
@@ -61,6 +63,18 @@ module Semauri
 
       def lower_statements(statements)
         statements.each { |statement| lower_statement(statement) }
+      end
+
+      def lower_domain_scope(node)
+        domain_name = node.fields.fetch(:domain).to_sym
+        @domains.fetch(domain_name)
+        @domain_scope_stack << domain_name
+        @explanations << "Entered semantic domain scope '#{domain_name}'."
+        with_child_environment do
+          lower_statements(node.fields.fetch(:body).fields.fetch(:statements))
+        end
+      ensure
+        @domain_scope_stack.pop if @domain_scope_stack&.last == domain_name
       end
 
       def lower_let(node)
@@ -130,6 +144,14 @@ module Semauri
 
       def lower_domain_operation(node)
         domain = @domains.fetch(node.fields.fetch(:domain))
+        if (scope = @domain_scope_stack.last) && scope != domain.name
+          raise semantic_error(
+            node,
+            "Operation '#{node.fields.fetch(:operation)}' belongs to domain '#{domain.name}', but the active semantic scope is '#{scope}'",
+            "S332"
+          )
+        end
+
         operation = domain.operation(node.fields.fetch(:operation))
         arguments = node.fields.fetch(:arguments).transform_values { |argument| evaluate(argument).value }.freeze
         artifact = @program.artifact(domain.name) || domain.initial_artifact
