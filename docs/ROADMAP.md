@@ -127,7 +127,7 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - per-effect provenance records domain, operation and source span
 - conservative manifests include potentially reachable effectful operations before optimization
 - immutable `CapabilityPolicy` with explicit allow-list semantics
-- denied capabilities fail with `S333`
+- denied capabilities fail with `S334`
 - `CompilationResult` exposes its effect analysis
 - `semauri effects FILE` prints the capability/effect manifest as JSON
 - `semauri check FILE --allow EFFECT` validates an explicit capability policy
