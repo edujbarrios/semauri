@@ -4,6 +4,7 @@
 require_relative "node"
 require_relative "result"
 require_relative "../errors"
+require_relative "../domains/registry"
 require_relative "../semantics/symbol_table"
 require_relative "../semantics/type_system"
 
@@ -45,6 +46,10 @@ module Semauri
             hint: "Declare it first with 'Let #{reference.name} be ...'."
           )
         end
+      end
+
+      def initialize(domains: Domains::Registry.default)
+        @domains = domains
       end
 
       def build(ast)
@@ -129,8 +134,17 @@ module Semauri
         end
       end
 
+      def visit_create_artifact(node)
+        @domains.fetch(node.domain)
+        HIR::Node.new(kind: :create_artifact, type: :unit,
+                      fields: { domain: node.domain, artifact_kind: node.kind,
+                                subject: node.subject, title: node.title }, span: node.span)
+      end
+
+      # Compatibility for ASTs produced by Semauri < 0.5.2.
       def visit_create_web(node)
-        HIR::Node.new(kind: :create_web, type: :unit, fields: { subject: node.subject, title: node.title }, span: node.span)
+        HIR::Node.new(kind: :create_artifact, type: :unit,
+                      fields: { domain: :web, artifact_kind: :web, subject: node.subject, title: node.title }, span: node.span)
       end
 
       def visit_set_title(node)
@@ -138,8 +152,9 @@ module Semauri
       end
 
       def visit_add_element(node)
+        @domains.fetch(node.domain)
         HIR::Node.new(kind: :add_element, type: :unit,
-                      fields: { element_kind: node.kind, label: node.label }, span: node.span)
+                      fields: { domain: node.domain, element_kind: node.kind, label: node.label }, span: node.span)
       end
 
       def visit_pronoun_reference(node)
@@ -148,16 +163,17 @@ module Semauri
       end
 
       def visit_named_reference(node)
+        @domains.fetch(node.domain)
         HIR::Node.new(kind: :named_reference, type: :entity_ref,
-                      fields: { entity_kind: node.kind, label: node.label }, span: node.span)
+                      fields: { domain: node.domain, entity_kind: node.kind, label: node.label }, span: node.span)
       end
 
       def visit_set_property(node)
         target = node.target.accept(self)
         value = node.value.accept(self)
-        Semantics::TypeSystem.validate_property!(node.property, value.type, node: node.value)
+        @domains.validate_property!(domain: node.domain, property: node.property, actual_type: value.type, node: node.value)
         HIR::Node.new(kind: :set_property, type: :unit,
-                      fields: { target: target, property: node.property, value: value }, span: node.span)
+                      fields: { domain: node.domain, target: target, property: node.property, value: value }, span: node.span)
       end
 
       private
