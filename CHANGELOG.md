@@ -36,6 +36,12 @@ All notable changes to Semauri are documented here.
 - Built-in Web domain implemented through the same extension contract available to external domains.
 - Structured Data domain with `schema`, `field`, `datatype` and `required` semantics.
 - Filesystem domain with `write`, `copy`, `delete` / `remove` operations.
+- Experimental ML semantic domain for dataset/model/training/evaluation/checkpoint/interpretability planning.
+- Immutable `IR::MLPlan` with semantic validation of named model and dataset references.
+- CNN initialization, pretrained-model selection, component freezing, training, evaluation, save and explainability operations.
+- AI-specific effect declarations including `model_download`, `gpu_compute`, `model_training`, `model_inference`, `checkpoint_write` and `model_explanation`.
+- `ml-plan` JSON backend for inspecting AI workflows without executing them.
+- ML plan validation diagnostic `S336`.
 - POSIX shell backend for filesystem plans; compilation generates a script and never performs filesystem effects itself.
 - Independent `IR::SchemaDocument` / `IR::SchemaField` representation.
 - JSON Schema Draft 2020-12 backend.
@@ -62,6 +68,7 @@ All notable changes to Semauri are documented here.
 - Domain implementations own property type contracts, nominal types, operation signatures, effect declarations, domain-IR construction/mutation hooks and optional default backend selection.
 - Effect analysis is conservative over unoptimized Typed HIR so policy does not depend on optimizer behavior.
 - Capability policies are optional during compilation because `build` does not execute effects; future execution runtimes are expected to enforce them.
+- ML source currently compiles to an inspectable semantic plan only; model downloads, dataset reads, GPU work, training and checkpoint writes remain runtime concerns.
 - HIR lowering accumulates independent per-domain artifacts/plans instead of enforcing one active semantic domain.
 - Entity tables are isolated per semantic domain during lowering.
 - Procedural domain operations do not steal declarative artifact focus used by domain-neutral metadata syntax.
