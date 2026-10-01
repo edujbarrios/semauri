@@ -6,6 +6,7 @@ require_relative "../ast/pronoun_reference"
 require_relative "../ast/named_reference"
 require_relative "../ir/web_document"
 require_relative "../ir/element"
+require_relative "../ir/program"
 require_relative "result"
 require_relative "entity_table"
 require_relative "scope"
@@ -26,7 +27,8 @@ module Semauri
         ast.accept(self)
         raise SemanticError.new("Program does not create an artifact", code: "S301") unless @document
 
-        Result.new(program: @document, explanations: @explanations.freeze, symbols: @scope.symbols)
+        program_ir = IR::Program.new(units: [{ domain: :web, artifact: @document }])
+        Result.new(program_ir: program_ir, explanations: @explanations.freeze, symbols: @scope.symbols)
       ensure
         @document = @explanations = @entities = @scope = nil
       end

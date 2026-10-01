@@ -20,6 +20,8 @@ All notable changes to Semauri are documented here.
 - Declarative semantic operations with typed expression slots, return types and effect metadata.
 - Generic `AST::DomainOperation` and typed `HIR::domain_operation` nodes.
 - Generic immutable `IR::OperationPlan` / `IR::Operation` for operation-oriented domains.
+- Immutable multi-domain `IR::Program` / ProgramIR container.
+- `CompilationResult.outputs` with one typed output per semantic domain/backend.
 - Operation-only domains that can lazily initialize semantic plans without an explicit artifact statement.
 - Built-in Web domain implemented through the same extension contract available to external domains.
 - Structured Data domain with `schema`, `field`, `datatype` and `required` semantics.
@@ -31,6 +33,7 @@ All notable changes to Semauri are documented here.
 - Domain surface-term collision detection and cross-domain operation diagnostics.
 - Domain-specific schema datatype validation (`S328`).
 - Operation argument type diagnostics (`S329`) and malformed operation-pattern diagnostics (`S238`).
+- Multi-domain backend override diagnostic (`S405`).
 - `semauri domains` for inspecting loaded domain vocabulary and operations.
 - `semauri optimize FILE` for inspecting optimized HIR and per-pass statistics.
 
@@ -40,8 +43,12 @@ All notable changes to Semauri are documented here.
 - Domain-specific action verbs are classified through the same registry rather than becoming core language keywords.
 - Syntax AST and Typed HIR carry explicit domain identity for artifacts, elements, references, properties and operations.
 - Domain implementations own property type contracts, operation signatures, effect declarations, domain-IR construction/mutation hooks and optional default backend selection.
+- HIR lowering now accumulates independent per-domain artifacts/plans instead of enforcing one active semantic domain.
+- Entity tables are isolated per semantic domain during lowering.
+- Procedural domain operations do not steal declarative artifact focus used by domain-neutral metadata syntax.
+- Single-domain `Semantics::Result#program`, `#domain`, `CompilationResult#output` and `#backend` remain backwards compatible.
+- Multi-domain CLI builds print separate outputs, or write deterministic per-domain files when `-o` names a directory.
 - Constant propagation rewrites pure operation arguments but preserves the operation node and its effects.
-- `Compiler#compile` returns the selected backend and infers it from the active domain when none is supplied.
 - `Compiler#analyze` and `explain` lower unoptimized Typed HIR so diagnostics remain source-oriented.
 - `Compiler#compile` / `build` lower optimized Typed HIR before domain IR generation.
 - `CompilationResult` exposes both raw and optimized HIR.

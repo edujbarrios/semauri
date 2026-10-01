@@ -3,6 +3,7 @@
 
 require "json"
 require "optparse"
+require "fileutils"
 require_relative "compiler"
 require_relative "ast/serializer"
 require_relative "version"
@@ -108,21 +109,42 @@ module Semauri
     def build(argv)
       options = { backend: nil, output: nil }
       parser = OptionParser.new do |opts|
-        opts.on("-o", "--output PATH", "Write output to PATH") { |value| options[:output] = value }
-        opts.on("--backend NAME", "Override the semantic domain's default backend") { |value| options[:backend] = value }
+        opts.on("-o", "--output PATH", "Write one output file, or a directory for multi-domain programs") { |value| options[:output] = value }
+        opts.on("--backend NAME", "Override the backend for a single-domain program") { |value| options[:backend] = value }
       end
       parser.parse!(argv)
 
       source = read_source!(argv)
       result = @compiler.compile(source, backend: options[:backend])
 
-      if options[:output]
+      if result.multi_domain?
+        write_multi_domain(result, options[:output])
+      elsif options[:output]
         File.write(options[:output], result.output)
         @stdout.puts "Built #{options[:output]} with #{result.backend}"
       else
         @stdout.write result.output
       end
       EXIT_SUCCESS
+    end
+
+    def write_multi_domain(result, output_path)
+      if output_path
+        FileUtils.mkdir_p(output_path)
+        result.outputs.each do |output|
+          path = File.join(output_path, output.filename)
+          File.write(path, output.content)
+          @stdout.puts "Built #{path} for #{output.domain} with #{output.backend}"
+        end
+        return
+      end
+
+      result.outputs.each_with_index do |output, index|
+        @stdout.puts if index.positive?
+        @stdout.puts "=== #{output.domain} [#{output.backend}] ==="
+        @stdout.write output.content
+        @stdout.puts unless output.content.end_with?("\n")
+      end
     end
 
     def read_source!(argv)
@@ -156,7 +178,7 @@ module Semauri
           symbols FILE             Print semantic symbols as JSON
           explain FILE             Explain semantic decisions
           check FILE               Validate source without generating output
-          build FILE [-o PATH]     Compile using the active domain's default backend
+          build FILE [-o PATH]     Compile one or more semantic-domain outputs
           version                  Print version
       TEXT
     end

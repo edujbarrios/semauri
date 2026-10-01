@@ -10,10 +10,23 @@ require_relative "hir/optimization/pass_manager"
 require_relative "backends/registry"
 
 module Semauri
+  DomainOutput = Struct.new(:domain, :backend, :content, keyword_init: true) do
+    def initialize(domain:, backend:, content:)
+      super(domain: domain.to_sym, backend: backend.to_s, content: content.to_s)
+      freeze
+    end
+
+    def filename
+      "#{domain}.#{backend.gsub(/[^a-zA-Z0-9._-]+/, '-')}"
+    end
+  end
+
   CompilationResult = Struct.new(
-    :output, :backend, :ast, :hir, :optimized_hir, :ir, :explanations, :symbols,
+    :output, :backend, :outputs, :ast, :hir, :optimized_hir, :ir, :explanations, :symbols,
     keyword_init: true
-  )
+  ) do
+    def multi_domain? = outputs.length > 1
+  end
 
   class Compiler
     attr_reader :domains
@@ -59,16 +72,17 @@ module Semauri
       optimized = @optimizer.run(hir_result)
 
       # Keep a source-oriented trace while lowering the optimized program for
-      # the generated artifact. This deliberately separates observability from
+      # generated outputs. This deliberately separates observability from
       # optimization implementation details.
       source_semantic = @lowerer.lower(hir_result)
       semantic = @lowerer.lower(optimized)
-      backend_name = backend&.to_s || default_backend_for(semantic.domain)
-      output = @backends.fetch(backend_name).render(semantic.program)
+      outputs = render_program(semantic.program_ir, backend: backend).freeze
+      single = outputs.one? ? outputs.first : nil
 
       CompilationResult.new(
-        output: output,
-        backend: backend_name,
+        output: single&.content,
+        backend: single&.backend,
+        outputs: outputs,
         ast: ast,
         hir: hir_result.program,
         optimized_hir: optimized.program,
@@ -79,6 +93,22 @@ module Semauri
     end
 
     private
+
+    def render_program(program_ir, backend:)
+      if backend && !program_ir.single?
+        raise BackendError.new(
+          "A single backend override cannot render a multi-domain program",
+          code: "S405",
+          hint: "Build without --backend so each semantic domain uses its own default backend."
+        )
+      end
+
+      program_ir.units.map do |unit|
+        backend_name = backend&.to_s || default_backend_for(unit.domain)
+        content = @backends.fetch(backend_name).render(unit.artifact)
+        DomainOutput.new(domain: unit.domain, backend: backend_name, content: content)
+      end
+    end
 
     def default_backend_for(domain_name)
       backend = domains.fetch(domain_name).default_backend

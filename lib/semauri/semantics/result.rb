@@ -1,8 +1,36 @@
 # Copyright 2026 Eduardo J. Barrios
 # SPDX-License-Identifier: Apache-2.0
 
+require_relative "../ir/program"
+
 module Semauri
   module Semantics
-    Result = Struct.new(:program, :domain, :explanations, :symbols, keyword_init: true)
+    class Result
+      attr_reader :program_ir, :explanations, :symbols
+
+      def initialize(program_ir:, explanations:, symbols:)
+        raise ArgumentError, "program_ir must be an IR::Program" unless program_ir.is_a?(IR::Program)
+
+        @program_ir = program_ir
+        @explanations = explanations.freeze
+        @symbols = symbols.freeze
+        freeze
+      end
+
+      def domains = program_ir.domains
+      def multi_domain? = program_ir.size > 1
+
+      # Compatibility API: single-domain callers keep receiving the concrete
+      # domain IR they received before ProgramIR existed.
+      def program
+        program_ir.single? ? program_ir.single_unit.artifact : program_ir
+      end
+
+      # Compatibility API for existing backends/tests. A multi-domain program
+      # intentionally has no single semantic domain.
+      def domain
+        program_ir.single? ? program_ir.single_unit.domain : nil
+      end
+    end
   end
 end
