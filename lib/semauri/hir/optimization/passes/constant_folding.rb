@@ -26,6 +26,8 @@ module Semauri
             case node.kind
             when :program, :block
               rebuild(node, statements: node.fields.fetch(:statements).map { |statement| transform(statement) })
+            when :domain_scope
+              rebuild(node, body: transform(node.fields.fetch(:body)))
             when :let
               value = transform(node.fields.fetch(:value))
               @constants[node.fields.fetch(:symbol_id)] = value if constant?(value)
