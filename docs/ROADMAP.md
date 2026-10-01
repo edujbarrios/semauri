@@ -28,7 +28,7 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - separate symbol identity and compile-time value environments
 - full-program symbol table for tooling, including unselected branches
 
-## 0.5 — optimization and semantic domains — in progress
+## 0.5 — optimization and semantic domains ✅
 
 ### 0.5.0 — HIR optimization pipeline ✅
 
@@ -71,19 +71,36 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - domain-specific datatype validation (`S328`)
 - semantic domains declare default backends
 - `build` infers `html` for Web and `json-schema` for Structured Data
-- executable structured-data example and regression coverage
+
+## 0.6 — universal semantic operations — in progress
+
+### 0.6.0 — declarative domain operations ✅
+
+- domains declare action verbs without adding lexer keywords
+- deterministic operation phrase patterns with typed expression slots
+- generic `AST::DomainOperation` and `HIR::domain_operation`
+- operation result types and effect/capability metadata in HIR
+- operation-only domains can lazily create semantic plans without `Create ...`
+- generic immutable `IR::OperationPlan` / `IR::Operation`
+- optimizers propagate constants into operation arguments while preserving effectful operations
+- Filesystem domain as a non-CRUD proof of the extension model
+- POSIX shell backend generated from filesystem plans; compilation never performs filesystem effects
+- external-domain contract test proving a new verb reaches HIR without parser-specific code
 
 ### Next
 
-- fixed-point optimization scheduling and optimization verification
-- make artifact metadata extensible instead of keeping `title` as a core special case
-- formal plugin/package discovery model for external semantic domains and backends
-- begin runtime-value design: inputs, effect model and the boundary between compile-time evaluation and runtime execution
+- multi-domain `ProgramIR` instead of one active semantic domain
+- lexical domain scopes / explicit qualification to resolve common-verb collisions
+- nominal domain types (`filesystem.path`, `http.url`, `sql.rowset`, `ml.tensor`, ...)
+- operation expressions that can produce runtime values
+- effect-aware validation and capability policies
+- formal plugin/package discovery for external domains and backends
+- runtime-value design: inputs, CFG/basic blocks and the compile-time/runtime boundary
+
+See [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) for the architecture target.
 
 ## Later
 
-- dynamic/external values
-- CFG/basic blocks and runtime branch/loop lowering
 - functions and call frames
 - collection operations
 - formatter
@@ -97,3 +114,4 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - unrestricted English
 - direct LLM-to-target-code generation
 - silently guessing ambiguous programs
+- performing external side effects merely because source code was compiled
