@@ -89,12 +89,24 @@ class SemanticDomainsTest < Minitest::Test
 
     result = compiler.compile(source, backend: "canvas")
 
+    assert_equal "canvas", result.backend
     assert_equal "Status Board|badge|Health|green", result.output
     create = result.ast.statements.first
     property = result.ast.statements.last
     assert_equal :canvas, create.domain
     assert_equal :canvas, property.domain
     assert_equal :tone, property.property
+  end
+
+  def test_domain_without_default_backend_requires_explicit_selection
+    domains = Semauri::Domains::Registry.new.register(CanvasDomain.new)
+    compiler = Semauri::Compiler.new(domains: domains)
+
+    error = assert_raises(Semauri::BackendError) do
+      compiler.compile("Create a canvas called Status Board.")
+    end
+
+    assert_equal "S404", error.code
   end
 
   def test_domain_terms_are_generic_lexer_categories
@@ -125,6 +137,7 @@ class SemanticDomainsTest < Minitest::Test
     metadata = registry.to_h.fetch(:domains).first
 
     assert_equal :canvas, metadata.fetch(:name)
+    assert_nil metadata.fetch(:default_backend)
     assert_equal({ "canvas" => :canvas }, metadata.fetch(:artifacts))
     assert_equal({ "badge" => :badge }, metadata.fetch(:elements))
     assert_equal({ "tone" => :tone }, metadata.fetch(:properties))
