@@ -172,13 +172,23 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - static validation for optimizer name, positive epochs/learning rate/batch size and non-negative seed
 - invalid ML configuration reports `S336`
 
+### 0.7.2 — model construction and fine-tuning transforms ✅
+
+- `Build cnn` creates a typed `ml.model` plan with class count and input channels
+- `Freeze <model> component <name>` produces a new derived model value
+- `Apply lora to <model> rank <r> alpha <a>` produces a new derived model value
+- model lineage is explicit through SSA-like RuntimePlan references rather than hidden mutation
+- model construction/transforms are pure planning operations and do not execute a framework
+- static model-configuration validation reports `S337`
+- downstream `Fit` consumes the exact derived model reference selected by the source program
+
 ### Next
 
+- richer CNN architecture/layer semantics
 - precision, gradient accumulation and checkpoint policy in training configuration
-- model architecture/configuration semantics including CNN construction
-- fine-tuning semantics: frozen components, LoRA/QLoRA and trainable parameter sets
 - dataset transforms, splits and fingerprints
 - evaluation/metric plans
+- additional fine-tuning semantics: QLoRA and explicit adapter targets
 - hardware/resource constraints and memory planning
 - runtime expressions beyond direct operation-to-operation dataflow
 - SSA/CFG/basic blocks for runtime `If`, loops and arithmetic
