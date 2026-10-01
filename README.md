@@ -6,18 +6,46 @@
 
 > Status: **0.7.x / experimental**
 
-Semauri is an experimental open-source programming language for writing deterministic programs with controlled natural language. It is not an LLM wrapper: source code is parsed, typed, lowered and validated by a compiler with explicit semantics.
+Semauri is an experimental open-source programming language for writing deterministic programs with controlled natural language. It is not an LLM wrapper: source is parsed, typed, lowered and validated by a compiler with explicit semantics.
 
 ## Install Semauri
 
-Semauri is still experimental, so the supported installation path is directly from the open-source repository.
+### Quick install — Linux and macOS
 
-### Requirements
+```bash
+curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
+```
 
-- Ruby 3.2 or newer
-- Git
+Then use the language directly:
 
-### Install from source
+```bash
+semauri version
+semauri help
+```
+
+**Ruby does not need to be installed on your system.** Official Semauri distributions include a private portable Ruby runtime used internally by the reference compiler.
+
+Supported installation targets in 0.7.3:
+
+- Linux x86_64
+- Linux arm64
+- macOS x86_64
+- macOS arm64
+
+The installer downloads a versioned GitHub Release, verifies its SHA-256 checksum, installs it under `~/.semauri/versions/` and exposes `~/.local/bin/semauri`.
+
+Install an exact version:
+
+```bash
+SEMAURI_VERSION=0.7.3 \
+  curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
+```
+
+Re-run the installer to update to the latest release. See [Distribution](docs/DISTRIBUTION.md) for the package layout, versioning model and release process.
+
+### Development from source
+
+Only contributors working directly on the compiler need Ruby:
 
 ```bash
 git clone https://github.com/edujbarrios/semauri.git
@@ -25,19 +53,7 @@ cd semauri
 ruby bin/semauri help
 ```
 
-The compiler core has no runtime gem dependencies.
-
-To update an existing checkout:
-
-```bash
-git pull
-```
-
-### Quick installation — planned
-
-A versioned quick installer is planned once the CLI and release process are stable enough. The intended experience is a small `curl`-style or equivalent installer backed by reviewable releases.
-
-Until then, the repository is the canonical installation source.
+The reference compiler currently supports Ruby 3.2+ and has no runtime gem dependencies in its core.
 
 ## Use the language
 
@@ -61,7 +77,7 @@ End.
 ### Build
 
 ```bash
-ruby bin/semauri build shop.sema
+semauri build shop.sema
 ```
 
 Output:
@@ -86,7 +102,7 @@ Output:
 ### Explain the same program
 
 ```bash
-ruby bin/semauri explain shop.sema
+semauri explain shop.sema
 ```
 
 Output:
@@ -110,27 +126,25 @@ Output:
 
 ## Compiler inspection
 
-Useful commands include:
-
 ```bash
-ruby bin/semauri hir shop.sema
-ruby bin/semauri optimize shop.sema
-ruby bin/semauri symbols shop.sema
-ruby bin/semauri effects shop.sema
-ruby bin/semauri domains
+semauri hir shop.sema
+semauri optimize shop.sema
+semauri symbols shop.sema
+semauri effects shop.sema
+semauri domains
 ```
 
-Programs containing runtime operations can also be inspected with:
+Programs containing runtime operations can be inspected with:
 
 ```bash
-ruby bin/semauri plan program.sema
+semauri plan program.sema
 ```
 
 Planning never executes the declared operations.
 
 ## How Semauri is built
 
-The reference compiler is written in **Ruby** and intentionally keeps the core dependency-free.
+The reference compiler is implemented in **Ruby**, but that is an implementation detail of the official distribution rather than an end-user dependency.
 
 ```text
 semantic domains
@@ -152,9 +166,17 @@ ProgramIR / RuntimePlan
 backend / future runtime
 ```
 
-Important implementation choices include stable semantic symbols, nominal domain types, immutable IR where practical, source spans, deterministic ambiguity errors, composable optimization passes, effect analysis, capability policies and explicit compiler extension points.
+Official packages combine this compiler with a pinned private runtime:
 
-The compiler remains in Ruby because compilation speed is not currently the project bottleneck. Rust remains a possible future choice for sandboxed execution, process/resource supervision, standalone distribution or any component where profiling demonstrates a concrete benefit.
+```text
+Semauri distribution
+├── compiler source (Ruby)
+├── private portable Ruby runtime
+├── launcher: semauri
+└── license / manifest metadata
+```
+
+This lets the compiler keep Ruby's development velocity while users interact only with `semauri`. Rust remains a possible future choice for sandboxed execution, resource supervision or other components where profiling/security requirements justify it.
 
 ## Semantic domains
 
@@ -169,40 +191,21 @@ Domains can contribute vocabulary, nominal types, typed operations, effects and 
 
 ## AI / ML direction
 
-Semauri 0.7 includes a built-in `ml` semantic domain with typed concepts such as:
-
-- `ml.dataset`
-- `ml.model`
-- `ml.device`
-- `ml.training_config`
-- `ml.training_run`
-- `ml.inference_run`
+Semauri 0.7 includes a built-in `ml` semantic domain with typed concepts such as `ml.dataset`, `ml.model`, `ml.device`, `ml.training_config`, `ml.training_run` and `ml.inference_run`.
 
 The compiler can already lower dataset/model loading, CNN construction, device selection, typed training configuration, model freezing, LoRA adaptation, training and inference intent into an inspectable `RuntimePlan` with explicit model lineage.
 
-**No ML framework is executed during compilation.** PyTorch, Transformers, ONNX Runtime, OpenVINO or other systems belong behind future execution backends/runtimes.
+**No ML framework is executed during compilation.** PyTorch, Transformers, ONNX Runtime, OpenVINO or other systems belong behind future execution runtimes.
 
 Next AI milestones include richer architecture definitions, dataset transforms/splits, checkpoint lineage, hardware/resource planning, evaluation metrics, QLoRA and model-interpretability operations.
 
-See [docs/ML.md](docs/ML.md) for the current ML contract.
+See [ML semantic domain](docs/ML.md).
 
 ## Explainability
 
-Semauri treats explainability as a compiler/runtime property rather than generated prose.
+Semauri treats explainability as a compiler/runtime property rather than generated prose. The semantic trace and RuntimePlan can preserve model/data provenance, model derivations, trainable/frozen components, hyperparameters, effects, runtime selection, checkpoints and execution traces.
 
-The semantic trace and RuntimePlan can preserve model/data provenance, model derivations, trainable/frozen components, hyperparameters, effects, runtime selection, checkpoints and execution traces.
-
-This provides explainability of the **program and model lifecycle**. Model-internal interpretability techniques such as Grad-CAM, Integrated Gradients, feature attribution or attention inspection should be exposed as explicit typed analysis operations rather than claimed automatically by the compiler.
-
-## Effects and capabilities
-
-Semantic operations declare effects such as filesystem access, model loading, compute or model training. Semauri can inspect these requirements before execution:
-
-```bash
-ruby bin/semauri effects program.sema
-```
-
-Capability policies can validate an explicit allow-list. Compilation itself never grants permissions or silently performs external effects.
+This provides explainability of the **program and model lifecycle**. Model-internal techniques such as Grad-CAM, Integrated Gradients, feature attribution or attention inspection should be explicit typed analysis operations rather than claims generated by the compiler.
 
 ## Current language/compiler features
 
@@ -212,10 +215,9 @@ Capability policies can validate an explicit allow-list. Compilation itself neve
 - lexical scopes and shadowing
 - `If / Otherwise / End`
 - `For every ... in ...`
-- stable semantic symbols
-- typed HIR
+- stable semantic symbols and typed HIR
 - constant propagation/folding and dead-code optimizations
-- explicit semantic-domain scopes with `Within <domain>: ... End.`
+- explicit `Within <domain>: ... End.` semantic scopes
 - nominal semantic types
 - multi-domain ProgramIR
 - runtime operation values with SSA-like references
@@ -243,6 +245,7 @@ CI tests Ruby 3.2, 3.3 and 3.4.
 
 - [Language](docs/LANGUAGE.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Distribution](docs/DISTRIBUTION.md)
 - [Semantic domains](docs/DOMAINS.md)
 - [Nominal types](docs/NOMINAL_TYPES.md)
 - [Effects and capabilities](docs/EFFECTS.md)
