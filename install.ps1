@@ -58,7 +58,7 @@ try {
     Invoke-WebRequest -UseBasicParsing -Uri "$BaseUrl/$Asset" -OutFile $Archive
     Invoke-WebRequest -UseBasicParsing -Uri "$BaseUrl/SHA256SUMS" -OutFile $Checksums
   } catch {
-    Fail "unable to download release assets for Semauri $Version: $($_.Exception.Message)"
+    Fail "unable to download release assets for Semauri ${Version}: $($_.Exception.Message)"
   }
 
   $ChecksumLine = Get-Content $Checksums | Where-Object { $_ -match "^[0-9a-fA-F]{64}\s+$([Regex]::Escape($Asset))$" } | Select-Object -First 1
