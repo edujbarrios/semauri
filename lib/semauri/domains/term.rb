@@ -7,7 +7,8 @@ module Semauri
       TOKEN_TYPES = {
         artifact: :DOMAIN_ARTIFACT,
         element: :DOMAIN_ELEMENT,
-        property: :DOMAIN_PROPERTY
+        property: :DOMAIN_PROPERTY,
+        action: :DOMAIN_ACTION
       }.freeze
 
       attr_reader :domain, :category, :kind
