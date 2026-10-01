@@ -11,7 +11,8 @@ class ContextSemanticsTest < Minitest::Test
   def test_make_remains_a_create_synonym_when_followed_by_an_artifact
     statement = @compiler.parse("Make a web called Hello.").statements.first
 
-    assert_instance_of Semauri::AST::CreateWeb, statement
+    assert_instance_of Semauri::AST::CreateArtifact, statement
+    assert_equal :web, statement.domain
     assert_equal "Hello", statement.title
   end
 

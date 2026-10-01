@@ -8,7 +8,6 @@ require_relative "vocabulary/english"
 module Semauri
   class Lexer
     PUNCTUATION = { "." => :DOT, "," => :COMMA, ":" => :COLON, "(" => :LPAREN, ")" => :RPAREN }.freeze
-    LITERAL_TOKEN_TYPES = %i[WORD COLOR].freeze
 
     def initialize(source, vocabulary: Vocabulary::English.new)
       @source = source
@@ -52,10 +51,9 @@ module Semauri
     def word_token(line, column)
       text = +""
       text << advance while !eof? && word_char?(current)
-      type = @vocabulary.token_type(text)
-      literal = LITERAL_TOKEN_TYPES.include?(type) ? text : nil
-      Token.new(type: type, lexeme: text, literal: literal, line: line, column: column,
-                end_line: @line, end_column: @column)
+      classification = @vocabulary.classify(text)
+      Token.new(type: classification.type, lexeme: text, literal: classification.literal,
+                line: line, column: column, end_line: @line, end_column: @column)
     end
 
     def number_token(line, column)

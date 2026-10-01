@@ -6,9 +6,10 @@ require_relative "node"
 module Semauri
   module AST
     class SetProperty < Node
-      attr_reader :target, :property, :value
+      attr_reader :domain, :target, :property, :value
 
-      def initialize(target:, property:, value:, line: nil, column: nil, end_line: nil, end_column: nil, span: nil)
+      def initialize(domain:, target:, property:, value:, line: nil, column: nil, end_line: nil, end_column: nil, span: nil)
+        @domain = domain.to_sym
         @target = target
         @property = property.to_sym
         @value = value

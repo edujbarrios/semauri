@@ -49,13 +49,25 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - loop-body liveness propagation to enclosing scopes
 - full semantic symbol table retained for tooling even when optimized HIR drops bindings
 
+### 0.5.2 — semantic domain extension API ✅
+
+- generic domain artifact, element and property tokens
+- domain-aware AST and Typed HIR
+- dependency-injected `Domains::Registry`
+- domain-owned vocabulary terms, property typing and domain-IR construction
+- built-in Web domain migrated behind the extension boundary
+- cross-domain mismatch diagnostics
+- domain surface-term collision detection
+- `semauri domains` introspection
+- contract tests proving an external domain can compile without lexer/parser changes
+
 ### Next
 
-- optimization verification and fixed-point pass scheduling where useful
-- formal semantic-domain extension API
-- domain vocabulary + semantic contracts without parser monkey-patching
-- migrate web operations behind the domain-extension boundary
-- explore filesystem and structured-data domains
+- fixed-point optimization scheduling and optimization verification
+- move artifact metadata such as `title` behind domain contracts
+- add a second built-in domain to exercise the public extension API
+- explore structured-data before filesystem so the domain model is tested without introducing I/O side effects
+- formal plugin/package discovery model
 
 ## Later
 

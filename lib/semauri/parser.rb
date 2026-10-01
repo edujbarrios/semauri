@@ -3,8 +3,9 @@
 
 require_relative "errors"
 require_relative "source_span"
+require_relative "domains/registry"
 require_relative "ast/program"
-require_relative "ast/create_web"
+require_relative "ast/create_artifact"
 require_relative "ast/set_title"
 require_relative "ast/add_element"
 require_relative "ast/pronoun_reference"
@@ -22,8 +23,9 @@ require_relative "ast/unary_expression"
 
 module Semauri
   class Parser
-    def initialize(tokens)
+    def initialize(tokens, domains: Domains::Registry.default)
       @tokens = tokens
+      @domains = domains
       @current = 0
     end
 
@@ -49,7 +51,8 @@ module Semauri
 
     def create_statement(start)
       match?(:ARTICLE)
-      consume(:WEB, "Expected 'web', 'website' or 'page' after '#{start.lexeme}'", "S202")
+      artifact = consume(:DOMAIN_ARTIFACT, "Expected a registered artifact after '#{start.lexeme}'", "S202")
+      term = domain_term(artifact)
 
       subject = nil
       title = nil
@@ -62,44 +65,52 @@ module Semauri
       end
 
       consume_optional_dot
-      AST::CreateWeb.new(subject: normalize_phrase(subject), title: normalize_phrase(title), span: span_from(start))
+      AST::CreateArtifact.new(domain: term.fetch(:domain), kind: term.fetch(:kind),
+                              subject: normalize_phrase(subject), title: normalize_phrase(title), span: span_from(start))
     end
 
     def make_statement(start)
       return pronoun_property_statement(start) if check?(:PRONOUN)
       return named_property_statement(start) if named_reference_ahead?
+
       create_statement(start)
     end
 
     def pronoun_property_statement(start)
       pronoun = advance
-      color = consume(:COLOR, "Expected a supported color after '#{pronoun.lexeme}'", "S206")
+      value_token = consume(:COLOR, "Expected a supported value after '#{pronoun.lexeme}'", "S206")
+      domain, property = implicit_property_for(value_token, :color)
       consume_optional_dot
 
       target = AST::PronounReference.new(pronoun: pronoun.lexeme, span: pronoun.span)
-      value = AST::Literal.new(value_type: :color, value: color.lexeme.downcase, span: color.span)
-      AST::SetProperty.new(target: target, property: :color, value: value, span: span_from(start))
+      value = AST::Literal.new(value_type: :color, value: value_token.literal, span: value_token.span)
+      AST::SetProperty.new(domain: domain, target: target, property: property, value: value, span: span_from(start))
     end
 
     def named_property_statement(start)
       match?(:ARTICLE)
-      kind_token = advance
-      kind = kind_token.type == :BUTTON ? :button : :image
+      element = consume(:DOMAIN_ELEMENT, "Expected a registered element", "S207")
+      element_term = domain_term(element)
       consume(:CALLED, "Expected 'called' or 'named' in an explicit reference", "S207")
 
       reference_tokens = tokens_until(:DOT, :EOF)
-      error!(peek, "Expected a name and a color", "S208") if reference_tokens.length < 2
+      error!(peek, "Expected a name and a value", "S208") if reference_tokens.length < 2
 
-      color = reference_tokens.last
-      error!(color, "Expected a supported color after the referenced element", "S208") unless color.type == :COLOR
+      value_token = reference_tokens.last
+      error!(value_token, "Expected a supported value after the referenced element", "S208") unless value_token.type == :COLOR
+      domain, property = implicit_property_for(value_token, :color)
+      unless domain.to_sym == element_term.fetch(:domain).to_sym
+        error!(value_token, "Implicit property belongs to domain '#{domain}', but the target belongs to '#{element_term.fetch(:domain)}'", "S235")
+      end
 
       label_tokens = reference_tokens[0...-1]
       label = phrase_from_tokens(label_tokens)
       consume_optional_dot
 
-      target = AST::NamedReference.new(kind: kind, label: normalize_phrase(label), span: span_between(kind_token, label_tokens.last))
-      value = AST::Literal.new(value_type: :color, value: color.lexeme.downcase, span: color.span)
-      AST::SetProperty.new(target: target, property: :color, value: value, span: span_from(start))
+      target = AST::NamedReference.new(domain: domain, kind: element_term.fetch(:kind),
+                                       label: normalize_phrase(label), span: span_between(element, label_tokens.last))
+      value = AST::Literal.new(value_type: :color, value: value_token.literal, span: value_token.span)
+      AST::SetProperty.new(domain: domain, target: target, property: property, value: value, span: span_from(start))
     end
 
     def let_statement(start)
@@ -112,13 +123,15 @@ module Semauri
 
     def set_statement(start)
       match?(:ARTICLE)
-      consume(:COLOR_PROPERTY, "Semauri currently supports setting the 'color' property", "S211")
+      property_token = consume(:DOMAIN_PROPERTY, "Expected a registered property after 'Set'", "S211")
+      property_term = domain_term(property_token)
       consume(:OF, "Expected 'of' after the property name", "S212")
-      target = canonical_reference
+      target = canonical_reference(expected_domain: property_term.fetch(:domain))
       consume(:TO, "Expected 'to' before the new value", "S213")
       value = expression
       consume_optional_dot
-      AST::SetProperty.new(target: target, property: :color, value: value, span: span_from(start))
+      AST::SetProperty.new(domain: property_term.fetch(:domain), target: target,
+                           property: property_term.fetch(:kind), value: value, span: span_from(start))
     end
 
     def if_statement(start)
@@ -246,7 +259,7 @@ module Semauri
       case token.type
       when :COLOR
         advance
-        AST::Literal.new(value_type: :color, value: token.lexeme.downcase, span: token.span)
+        AST::Literal.new(value_type: :color, value: token.literal, span: token.span)
       when :STRING
         advance
         AST::Literal.new(value_type: :string, value: token.literal, span: token.span)
@@ -302,33 +315,42 @@ module Semauri
       end
     end
 
-    def canonical_reference
+    def canonical_reference(expected_domain:)
       if check?(:PRONOUN)
         token = advance
         return AST::PronounReference.new(pronoun: token.lexeme, span: token.span)
       end
 
       match?(:ARTICLE)
-      kind_token = consume_one_of(%i[BUTTON IMAGE], "Expected 'button', 'image' or 'it' after 'of'", "S214")
-      kind = kind_token.type == :BUTTON ? :button : :image
+      element = consume(:DOMAIN_ELEMENT, "Expected a registered element or 'it' after 'of'", "S214")
+      term = domain_term(element)
+      unless term.fetch(:domain).to_sym == expected_domain.to_sym
+        error!(element, "Element belongs to domain '#{term.fetch(:domain)}', expected '#{expected_domain}'", "S235")
+      end
       consume(:CALLED, "Canonical references must name the target with 'called' or 'named'", "S215")
       label_tokens = tokens_until(:TO, :EOF)
       error!(peek, "Expected the referenced element name", "S216") if label_tokens.empty?
-      AST::NamedReference.new(kind: kind, label: normalize_phrase(phrase_from_tokens(label_tokens)), span: span_between(kind_token, label_tokens.last))
+      AST::NamedReference.new(domain: term.fetch(:domain), kind: term.fetch(:kind),
+                              label: normalize_phrase(phrase_from_tokens(label_tokens)),
+                              span: span_between(element, label_tokens.last))
     end
 
     def named_reference_ahead?
       offset = check?(:ARTICLE) ? 1 : 0
-      %i[BUTTON IMAGE].include?(@tokens[@current + offset]&.type)
+      @tokens[@current + offset]&.type == :DOMAIN_ELEMENT
     end
 
     def add_statement
       start = previous
       match?(:ARTICLE)
       return add_title(start) if match?(:TITLE)
-      return add_element(start, :button) if match?(:BUTTON)
-      return add_element(start, :image) if match?(:IMAGE)
-      error!(peek, "Expected 'title', 'button' or 'image' after 'Add'", "S203")
+
+      if check?(:DOMAIN_ELEMENT)
+        element = advance
+        return add_element(start, domain_term(element))
+      end
+
+      error!(peek, "Expected 'title' or a registered domain element after 'Add'", "S203")
     end
 
     def add_title(start)
@@ -338,11 +360,23 @@ module Semauri
       AST::SetTitle.new(title: normalize_phrase(title), span: span_from(start))
     end
 
-    def add_element(start, kind)
+    def add_element(start, term)
       label = nil
       label = phrase_until(:DOT, :EOF) if match?(:CALLED)
       consume_optional_dot
-      AST::AddElement.new(kind: kind, label: normalize_phrase(label), span: span_from(start))
+      AST::AddElement.new(domain: term.fetch(:domain), kind: term.fetch(:kind),
+                          label: normalize_phrase(label), span: span_from(start))
+    end
+
+    def implicit_property_for(token, value_type)
+      inferred = @domains.infer_property_for_type(value_type)
+      return inferred if inferred
+
+      error!(token, "Cannot infer a unique property for #{value_type}; use 'Set <property> of ... to ...'", "S236")
+    end
+
+    def domain_term(token)
+      token.literal || error!(token, "Domain token is missing semantic metadata", "S237")
     end
 
     def phrase_until(*terminators)
@@ -358,7 +392,7 @@ module Semauri
     end
 
     def phrase_from_tokens(tokens)
-      tokens.map { |token| token.literal || token.lexeme }.join(" ")
+      tokens.map { |token| token.literal.is_a?(String) ? token.literal : token.lexeme }.join(" ")
     end
 
     def normalize_phrase(value)
@@ -385,11 +419,6 @@ module Semauri
 
     def consume(type, message, code)
       return advance if check?(type)
-      error!(peek, message, code)
-    end
-
-    def consume_one_of(types, message, code)
-      return advance if types.include?(peek.type)
       error!(peek, message, code)
     end
 

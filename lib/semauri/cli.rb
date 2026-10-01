@@ -26,6 +26,7 @@ module Semauri
       return version if %w[version --version -v].include?(command)
 
       case command
+      when "domains" then domains(argv)
       when "tokens" then tokens(argv)
       when "ast" then ast(argv)
       when "hir" then hir(argv)
@@ -51,6 +52,12 @@ module Semauri
     end
 
     private
+
+    def domains(argv)
+      raise ArgumentError, "Unexpected arguments: #{argv.join(' ')}" unless argv.empty?
+      @stdout.puts JSON.pretty_generate(@compiler.domains.to_h)
+      EXIT_SUCCESS
+    end
 
     def tokens(argv)
       source = read_source!(argv)
@@ -138,9 +145,10 @@ module Semauri
 
     def usage
       <<~TEXT
-        Usage: semauri <command> [options] FILE
+        Usage: semauri <command> [options] [FILE]
 
         Commands:
+          domains                  Print registered semantic domains as JSON
           tokens FILE              Print lexer tokens as JSON
           ast FILE                 Print the parsed syntax AST as JSON
           hir FILE                 Print typed HIR before optimization

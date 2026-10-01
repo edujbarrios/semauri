@@ -5,18 +5,19 @@ require_relative "node"
 
 module Semauri
   module AST
-    class NamedReference < Node
-      attr_reader :domain, :kind, :label
+    class CreateArtifact < Node
+      attr_reader :domain, :kind, :subject, :title
 
-      def initialize(domain:, kind:, label:, line: nil, column: nil, end_line: nil, end_column: nil, span: nil)
+      def initialize(domain:, kind:, subject: nil, title: nil, line: nil, column: nil, end_line: nil, end_column: nil, span: nil)
         @domain = domain.to_sym
         @kind = kind.to_sym
-        @label = label
+        @subject = subject
+        @title = title
         super(line: line, column: column, end_line: end_line, end_column: end_column, span: span)
       end
 
       def accept(visitor)
-        visitor.visit_named_reference(self)
+        visitor.visit_create_artifact(self)
       end
     end
   end

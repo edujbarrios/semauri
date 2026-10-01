@@ -37,17 +37,31 @@ module Semauri
         { type: "list_literal", items: node.items.map { |item| item.accept(self) } }.merge(location(node))
       end
 
+      def visit_create_artifact(node)
+        { type: "create_artifact", domain: node.domain, kind: node.kind,
+          subject: node.subject, title: node.title }.merge(location(node))
+      end
+
+      # Kept for tooling compatibility with ASTs produced by older Semauri versions.
       def visit_create_web(node) = { type: "create_web", subject: node.subject, title: node.title }.merge(location(node))
       def visit_set_title(node) = { type: "set_title", title: node.title }.merge(location(node))
-      def visit_add_element(node) = { type: "add_element", kind: node.kind, label: node.label }.merge(location(node))
+
+      def visit_add_element(node)
+        { type: "add_element", domain: node.domain, kind: node.kind, label: node.label }.merge(location(node))
+      end
+
       def visit_pronoun_reference(node) = { type: "pronoun_reference", pronoun: node.pronoun }.merge(location(node))
-      def visit_named_reference(node) = { type: "named_reference", kind: node.kind, label: node.label }.merge(location(node))
+
+      def visit_named_reference(node)
+        { type: "named_reference", domain: node.domain, kind: node.kind, label: node.label }.merge(location(node))
+      end
+
       def visit_literal(node) = { type: "literal", value_type: node.value_type, value: node.value }.merge(location(node))
       def visit_variable_reference(node) = { type: "variable_reference", name: node.name }.merge(location(node))
       def visit_let_binding(node) = { type: "let_binding", name: node.name, value: node.value.accept(self) }.merge(location(node))
 
       def visit_set_property(node)
-        { type: "set_property", target: node.target.accept(self), property: node.property,
+        { type: "set_property", domain: node.domain, target: node.target.accept(self), property: node.property,
           value: node.value.accept(self) }.merge(location(node))
       end
 

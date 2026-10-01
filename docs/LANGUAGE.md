@@ -1,4 +1,4 @@
-# Semauri language specification — draft 0.4
+# Semauri language specification — draft 0.5
 
 This document describes implemented language behavior, not aspirational syntax.
 
@@ -10,8 +10,14 @@ Semauri uses **controlled natural language**. Natural-looking syntax does not me
 
 ```ebnf
 program          = statement* EOF ;
-statement        = create_web | add_title | add_element | make_property
+statement        = create_artifact | add_title | add_element | make_property
                  | let_binding | set_property | if_statement | for_each ;
+
+create_artifact  = ( CREATE | MAKE ) [ ARTICLE ] DOMAIN_ARTIFACT
+                   [ CALLED phrase | FOR [ ARTICLE ] phrase ] ["."] ;
+add_element      = ADD [ ARTICLE ] DOMAIN_ELEMENT [ CALLED phrase ] ["."] ;
+set_property     = SET [ ARTICLE ] DOMAIN_PROPERTY OF reference TO expression ["."] ;
+reference        = PRONOUN | [ ARTICLE ] DOMAIN_ELEMENT CALLED phrase ;
 
 let_binding      = LET identifier BE expression ["."] ;
 if_statement     = IF expression ":" block [ OTHERWISE ":" block ] END ["."] ;
@@ -31,6 +37,45 @@ list_literal     = [ ARTICLE ] LIST OF expression { "," expression } ;
 ```
 
 The handwritten recursive-descent parser remains the executable grammar during 0.x.
+
+## Semantic domains
+
+`DOMAIN_ARTIFACT`, `DOMAIN_ELEMENT` and `DOMAIN_PROPERTY` are generic lexical categories. Their vocabulary comes from the compiler's registered semantic domains rather than from hardcoded parser productions.
+
+The built-in Web domain currently contributes:
+
+```text
+artifacts: web, website, webpage, page → web
+elements:  button → button
+           image, picture → image
+property:  color → color : color
+```
+
+A domain term carries explicit semantic metadata through AST and HIR:
+
+```text
+button
+  ↓
+DOMAIN_ELEMENT(domain=web, kind=button)
+```
+
+A domain defines the semantic type accepted by each property. For example, Web's `color` property accepts a `color` value. A mismatch is `S313`.
+
+Operations from different domains cannot be silently mixed. Applying a property/reference from one domain to an artifact from another is `S327`.
+
+Surface terms are globally unambiguous within one compiler instance. Registering two domains that claim the same term is rejected when constructing the domain registry.
+
+### Implicit property syntax
+
+The shorthand:
+
+```text
+Make it blue.
+```
+
+omits the property name. Semauri accepts this only when the loaded domain registry can infer exactly one property compatible with the literal type. With the default Web domain, `blue : color` uniquely implies the `color` property.
+
+If multiple loaded domains could interpret the same value type, the shorthand is rejected and explicit `Set ...` syntax is required.
 
 ## Values and expressions
 
@@ -111,11 +156,11 @@ The iterator is one semantic declaration with one symbol ID. Static execution bi
 
 HIR preserves `for_each` structurally. The current lowerer iterates compile-time-known lists. Runtime/external collections will require a later control-flow IR.
 
-## References and properties
+## References
 
 `it` resolves only when exactly one addressable entity exists. Explicit references such as `the button called Buy` are required when a pronoun is ambiguous. Semauri never chooses a referent probabilistically.
 
-`color` currently expects a `color` value. Property/value type mismatches produce `S313`.
+Named references carry domain identity. The active artifact's domain is checked before entity lookup.
 
 ## Errors
 
@@ -128,7 +173,7 @@ Relevant diagnostics include:
 
 - `S311`: duplicate binding
 - `S312`: unknown variable during name resolution
-- `S313`: property/value type mismatch
+- `S313`: domain property/value type mismatch
 - `S314`: invalid numeric operands
 - `S315`: incompatible equality operands
 - `S316`: non-boolean `If` condition
@@ -141,7 +186,9 @@ Relevant diagnostics include:
 - `S323`: internal symbol/value binding type mismatch
 - `S324`: invalid HIR symbol binding/value environment
 - `S325`: unsupported HIR node/operator
+- `S326`: unknown semantic domain
+- `S327`: cross-domain operation on the active artifact
 
 ## Determinism rule
 
-Given the same Semauri version, source program, selected backend and backend version, valid source must resolve to the same semantic result. No compiler component may randomly choose between ambiguous meanings.
+Given the same Semauri version, source program, loaded semantic domains, selected backend and backend version, valid source must resolve to the same semantic result. No compiler component may randomly choose between ambiguous meanings.

@@ -14,9 +14,10 @@ require_relative "type_system"
 
 module Semauri
   module Semantics
+    # Legacy AST executor kept only as a regression oracle while the production
+    # compiler uses Typed HIR. It intentionally supports only the built-in Web
+    # domain and should not be used as the semantic-domain extension surface.
     class Resolver
-      PROPERTY_TYPES = { color: :color }.freeze
-
       def resolve(ast)
         @document = nil
         @explanations = []
@@ -72,16 +73,13 @@ module Semauri
         end
       end
 
+      def visit_create_artifact(node)
+        ensure_web_domain!(node)
+        create_web_document(node)
+      end
+
       def visit_create_web(node)
-        if @document
-          raise semantic_error("Semauri currently supports one web document per source file", code: "S302", node: node,
-                               hint: "Split independent web documents into separate .sema files.")
-        end
-        title, origin = infer_title(node)
-        @document = IR::WebDocument.new(title: title, subject: node.subject, title_origin: origin)
-        @explanations << "'web' resolved to an HTML web document (default web backend)."
-        @explanations << "Subject resolved to '#{node.subject}'." if node.subject
-        @explanations << title_explanation(title, origin)
+        create_web_document(node)
       end
 
       def visit_set_title(node)
@@ -91,6 +89,7 @@ module Semauri
       end
 
       def visit_add_element(node)
+        ensure_web_domain!(node) if node.respond_to?(:domain)
         require_document!(node, "Cannot add an element before creating a web document", "S306")
         label = node.label || node.kind.to_s.capitalize
         element = @entities.register(kind: node.kind) { |id| IR::Element.new(id: id, kind: node.kind, label: label) }
@@ -105,6 +104,7 @@ module Semauri
       end
 
       def visit_set_property(node)
+        ensure_web_domain!(node) if node.respond_to?(:domain)
         require_document!(node, "Cannot modify an element before creating a web document", "S307")
         target = resolve_reference(node.target)
         value = evaluate(node.value)
@@ -116,6 +116,24 @@ module Semauri
       end
 
       private
+
+      def create_web_document(node)
+        if @document
+          raise semantic_error("Semauri currently supports one web document per source file", code: "S302", node: node,
+                               hint: "Split independent web documents into separate .sema files.")
+        end
+        title, origin = infer_title(node)
+        @document = IR::WebDocument.new(title: title, subject: node.subject, title_origin: origin)
+        @explanations << "'web' resolved to an HTML web document (default web backend)."
+        @explanations << "Subject resolved to '#{node.subject}'." if node.subject
+        @explanations << title_explanation(title, origin)
+      end
+
+      def ensure_web_domain!(node)
+        return if node.domain.to_sym == :web
+
+        raise semantic_error("Legacy resolver only supports the Web domain", code: "S326", node: node)
+      end
 
       def execute_statements(block)
         block.statements.each { |statement| statement.accept(self) }

@@ -1,9 +1,18 @@
 # Copyright 2026 Eduardo J. Barrios
 # SPDX-License-Identifier: Apache-2.0
 
+require_relative "../domains/registry"
+
 module Semauri
   module Vocabulary
     class English
+      Classification = Struct.new(:type, :literal, keyword_init: true) do
+        def initialize(type:, literal: nil)
+          super(type: type.to_sym, literal: literal)
+          freeze
+        end
+      end
+
       KEYWORDS = {
         "create" => :CREATE,
         "make" => :MAKE,
@@ -35,39 +44,48 @@ module Semauri
         "false" => :BOOLEAN,
         "of" => :OF,
         "to" => :TO,
-        "color" => :COLOR_PROPERTY,
         "a" => :ARTICLE,
         "an" => :ARTICLE,
         "the" => :ARTICLE,
-        "web" => :WEB,
-        "website" => :WEB,
-        "webpage" => :WEB,
-        "page" => :WEB,
         "called" => :CALLED,
         "named" => :CALLED,
         "add" => :ADD,
         "title" => :TITLE,
-        "button" => :BUTTON,
-        "image" => :IMAGE,
-        "picture" => :IMAGE,
-        "it" => :PRONOUN,
-        "black" => :COLOR,
-        "white" => :COLOR,
-        "red" => :COLOR,
-        "green" => :COLOR,
-        "blue" => :COLOR,
-        "yellow" => :COLOR,
-        "orange" => :COLOR,
-        "purple" => :COLOR,
-        "pink" => :COLOR,
-        "gray" => :COLOR,
-        "grey" => :COLOR,
-        "brown" => :COLOR
+        "it" => :PRONOUN
       }.freeze
 
-      def token_type(word)
-        KEYWORDS.fetch(word.downcase, :WORD)
+      COLORS = %w[black white red green blue yellow orange purple pink gray grey brown].freeze
+      RESERVED_WORDS = (KEYWORDS.keys + COLORS).freeze
+
+      def initialize(domains: Domains::Registry.default)
+        conflicts = domains.words & RESERVED_WORDS
+        unless conflicts.empty?
+          raise ArgumentError, "Semantic domain terms conflict with reserved English vocabulary: #{conflicts.join(', ')}"
+        end
+
+        @domains = domains
       end
+
+      def classify(word)
+        normalized = word.to_s.downcase
+
+        if (type = KEYWORDS[normalized])
+          return Classification.new(type: type)
+        end
+
+        if COLORS.include?(normalized)
+          return Classification.new(type: :COLOR, literal: normalized)
+        end
+
+        if (term = @domains.classify(normalized))
+          return Classification.new(type: term.token_type, literal: term.to_h)
+        end
+
+        Classification.new(type: :WORD, literal: word)
+      end
+
+      # Compatibility API for callers that only need the lexical category.
+      def token_type(word) = classify(word).type
     end
   end
 end
