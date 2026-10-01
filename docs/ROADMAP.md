@@ -99,9 +99,19 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - one global backend override is rejected for multi-domain programs (`S405`)
 - procedural operations do not steal contextual focus from declarative artifacts
 
+### 0.6.2 — explicit semantic domain scopes ✅
+
+- `Within <domain>: ... End.` lexical semantic scopes
+- action verbs may be shared by multiple semantic domains
+- unqualified ambiguous actions fail deterministically with `S240`
+- scoped action resolution selects exactly the operation owned by the named domain
+- scope identity is preserved through AST, Typed HIR and optimization passes
+- HIR lowering verifies scoped operation/domain consistency (`S332`)
+- domain scopes are also lexical variable scopes
+- non-action vocabulary remains globally collision-free for now
+
 ### Next
 
-- lexical domain scopes / explicit qualification to resolve common-verb collisions
 - nominal domain types (`filesystem.path`, `http.url`, `sql.rowset`, `ml.tensor`, ...)
 - operation expressions that can produce runtime values
 - effect-aware validation and capability policies

@@ -19,6 +19,8 @@ All notable changes to Semauri are documented here.
 - Generic `DOMAIN_ARTIFACT`, `DOMAIN_ELEMENT`, `DOMAIN_PROPERTY` and `DOMAIN_ACTION` lexical categories.
 - Declarative semantic operations with typed expression slots, return types and effect metadata.
 - Generic `AST::DomainOperation` and typed `HIR::domain_operation` nodes.
+- Explicit `Within <domain>: ... End.` semantic scopes and `AST/HIR::domain_scope` representation.
+- Ambiguous action-candidate diagnostics (`S240`) and lowering scope-consistency diagnostic (`S332`).
 - Generic immutable `IR::OperationPlan` / `IR::Operation` for operation-oriented domains.
 - Immutable multi-domain `IR::Program` / ProgramIR container.
 - `CompilationResult.outputs` with one typed output per semantic domain/backend.
@@ -41,9 +43,12 @@ All notable changes to Semauri are documented here.
 - `Compiler` dependency-injects one semantic domain registry through vocabulary, parser, HIR construction and HIR lowering.
 - Web-specific artifact/element/property vocabulary is no longer hardcoded in the lexer/parser.
 - Domain-specific action verbs are classified through the same registry rather than becoming core language keywords.
-- Syntax AST and Typed HIR carry explicit domain identity for artifacts, elements, references, properties and operations.
+- Multiple domains may own the same action verb; unqualified ambiguous actions now require explicit semantic scope.
+- Artifact, element and property surface terms remain globally unique for now.
+- Domain scopes are lexical variable scopes and survive optimization rather than being parser-only hints.
+- Syntax AST and Typed HIR carry explicit domain identity for artifacts, elements, references, properties, operations and scopes.
 - Domain implementations own property type contracts, operation signatures, effect declarations, domain-IR construction/mutation hooks and optional default backend selection.
-- HIR lowering now accumulates independent per-domain artifacts/plans instead of enforcing one active semantic domain.
+- HIR lowering accumulates independent per-domain artifacts/plans instead of enforcing one active semantic domain.
 - Entity tables are isolated per semantic domain during lowering.
 - Procedural domain operations do not steal declarative artifact focus used by domain-neutral metadata syntax.
 - Single-domain `Semantics::Result#program`, `#domain`, `CompilationResult#output` and `#backend` remain backwards compatible.

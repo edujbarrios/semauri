@@ -48,6 +48,8 @@ module Semauri
               optimize_let(node, live_after)
             when :block
               optimize_scope(node, live_after)
+            when :domain_scope
+              optimize_domain_scope(node, live_after)
             when :if
               optimize_if(node, live_after)
             when :for_each
@@ -78,6 +80,13 @@ module Semauri
           def remove_dead_let(live_after)
             @changes += 1
             [nil, live_after]
+          end
+
+          def optimize_domain_scope(node, live_after)
+            # Domain scopes are also lexical variable scopes: declarations inside
+            # do not escape, but references to outer symbols must remain live.
+            body, body_live = optimize_scope(node.fields.fetch(:body), Set.new)
+            [rebuild(node, body: body), live_after | body_live]
           end
 
           def optimize_if(node, live_after)
