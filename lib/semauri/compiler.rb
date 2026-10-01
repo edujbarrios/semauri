@@ -1,6 +1,7 @@
 # Copyright 2026 Eduardo J. Barrios
 # SPDX-License-Identifier: Apache-2.0
 
+require_relative "domains/registry"
 require_relative "lexer"
 require_relative "parser"
 require_relative "hir/builder"
@@ -15,13 +16,16 @@ module Semauri
   )
 
   class Compiler
-    def initialize(vocabulary: Vocabulary::English.new, hir_builder: HIR::Builder.new,
+    attr_reader :domains
+
+    def initialize(domains: Domains::Registry.default, vocabulary: nil, hir_builder: nil,
                    optimizer: HIR::Optimization::PassManager.default,
-                   lowerer: HIR::Lowerer.new, backends: Backends::Registry.default)
-      @vocabulary = vocabulary
-      @hir_builder = hir_builder
+                   lowerer: nil, backends: Backends::Registry.default)
+      @domains = domains
+      @vocabulary = vocabulary || Vocabulary::English.new(domains: domains)
+      @hir_builder = hir_builder || HIR::Builder.new(domains: domains)
       @optimizer = optimizer
-      @lowerer = lowerer
+      @lowerer = lowerer || HIR::Lowerer.new(domains: domains)
       @backends = backends
     end
 
@@ -30,7 +34,7 @@ module Semauri
     end
 
     def parse(source)
-      Parser.new(tokenize(source)).parse
+      Parser.new(tokenize(source), domains: domains).parse
     end
 
     def hir(source)
