@@ -50,6 +50,15 @@ module Semauri
         { type: "add_element", domain: node.domain, kind: node.kind, label: node.label }.merge(location(node))
       end
 
+      def visit_domain_operation(node)
+        {
+          type: "domain_operation",
+          domain: node.domain,
+          operation: node.operation,
+          arguments: node.arguments.transform_values { |value| value.accept(self) }
+        }.merge(location(node))
+      end
+
       def visit_pronoun_reference(node) = { type: "pronoun_reference", pronoun: node.pronoun }.merge(location(node))
 
       def visit_named_reference(node)
