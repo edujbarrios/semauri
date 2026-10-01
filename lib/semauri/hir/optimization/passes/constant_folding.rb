@@ -34,6 +34,8 @@ module Semauri
               rebuild(node, value: value)
             when :symbol_ref
               replace_symbol(node)
+            when :promote
+              rebuild(node, value: transform(node.fields.fetch(:value)))
             when :list
               rebuild(node, items: node.fields.fetch(:items).map { |item| transform(item) })
             when :unary

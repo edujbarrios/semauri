@@ -3,6 +3,7 @@
 
 require_relative "../errors"
 require_relative "list_type"
+require_relative "nominal_type"
 
 module Semauri
   module Semantics
@@ -71,6 +72,32 @@ module Semauri
         raise error(node, "For every requires a list, received #{type_name(type)}", "S322")
       end
 
+      # Nominal types are intentionally not aliases. Exact nominal identity is
+      # required once a value is nominal. A primitive may be promoted into a
+      # nominal type only when that nominal type explicitly declares it as its
+      # base representation.
+      def assignment_kind(actual, expected)
+        return :exact if actual == expected
+        return :promote if expected.is_a?(NominalType) && actual == expected.base_type
+        nil
+      end
+
+      def assignable?(actual, expected)
+        !assignment_kind(actual, expected).nil?
+      end
+
+      def ensure_assignable!(actual, expected, node:, message: nil, code: "S333")
+        kind = assignment_kind(actual, expected)
+        return kind if kind
+
+        raise error(
+          node,
+          message || "Expected #{type_name(expected)}, but received #{type_name(actual)}",
+          code,
+          hint: nominal_mismatch_hint(actual, expected)
+        )
+      end
+
       def property_type(property)
         { color: :color }[property]
       end
@@ -121,6 +148,14 @@ module Semauri
                           end_line: node.end_line, end_column: node.end_column,
                           hint: hint)
       end
+
+      def nominal_mismatch_hint(actual, expected)
+        return nil unless expected.is_a?(NominalType)
+        return "A #{expected.base_type} value can be promoted to #{expected}." if actual == expected.base_type
+        return "#{actual} and #{expected} are distinct nominal types." if actual.is_a?(NominalType)
+        "Provide a #{expected} value."
+      end
+      private_class_method :nominal_mismatch_hint
     end
   end
 end

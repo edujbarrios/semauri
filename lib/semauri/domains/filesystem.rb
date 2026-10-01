@@ -8,10 +8,13 @@ require_relative "../ir/operation_plan"
 module Semauri
   module Domains
     class Filesystem < Definition
+      PATH = Semantics::NominalType.new(domain: :filesystem, name: :path, base_type: :string)
+
       def initialize
         super(
           name: :filesystem,
           default_backend: "posix-sh",
+          types: [PATH],
           operations: [
             Operation.new(
               name: :write,
@@ -19,7 +22,7 @@ module Semauri
               pattern: [
                 Operation.expression(:content, type: :string),
                 Operation.literal("to"),
-                Operation.expression(:path, type: :string)
+                Operation.expression(:path, type: PATH)
               ],
               effects: [:filesystem_write]
             ),
@@ -27,16 +30,16 @@ module Semauri
               name: :copy,
               verbs: %w[copy],
               pattern: [
-                Operation.expression(:source, type: :string),
+                Operation.expression(:source, type: PATH),
                 Operation.literal("to"),
-                Operation.expression(:destination, type: :string)
+                Operation.expression(:destination, type: PATH)
               ],
               effects: [:filesystem_read, :filesystem_write]
             ),
             Operation.new(
               name: :delete,
               verbs: %w[delete remove],
-              pattern: [Operation.expression(:path, type: :string)],
+              pattern: [Operation.expression(:path, type: PATH)],
               effects: [:filesystem_write]
             )
           ]

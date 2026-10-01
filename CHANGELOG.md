@@ -21,6 +21,10 @@ All notable changes to Semauri are documented here.
 - Generic `AST::DomainOperation` and typed `HIR::domain_operation` nodes.
 - Explicit `Within <domain>: ... End.` semantic scopes and `AST/HIR::domain_scope` representation.
 - Ambiguous action-candidate diagnostics (`S240`) and lowering scope-consistency diagnostic (`S332`).
+- Nominal semantic domain types through `Semantics::NominalType`.
+- Explicit primitive-to-nominal `HIR::promote` nodes.
+- Domain type registration/introspection and structured operation-signature type metadata.
+- `filesystem.path` as the first built-in nominal domain type.
 - Generic immutable `IR::OperationPlan` / `IR::Operation` for operation-oriented domains.
 - Immutable multi-domain `IR::Program` / ProgramIR container.
 - `CompilationResult.outputs` with one typed output per semantic domain/backend.
@@ -34,26 +38,30 @@ All notable changes to Semauri are documented here.
 - Domain-declared default backends and automatic backend inference in `compile` / `build`.
 - Domain surface-term collision detection and cross-domain operation diagnostics.
 - Domain-specific schema datatype validation (`S328`).
-- Operation argument type diagnostics (`S329`) and malformed operation-pattern diagnostics (`S238`).
+- Operation argument type diagnostics (`S329`), nominal assignment diagnostics (`S333`) and malformed operation-pattern diagnostics (`S238`).
 - Multi-domain backend override diagnostic (`S405`).
-- `semauri domains` for inspecting loaded domain vocabulary and operations.
+- `semauri domains` for inspecting loaded domain vocabulary, types and operations.
 - `semauri optimize FILE` for inspecting optimized HIR and per-pass statistics.
 
 ### Changed
 - `Compiler` dependency-injects one semantic domain registry through vocabulary, parser, HIR construction and HIR lowering.
 - Web-specific artifact/element/property vocabulary is no longer hardcoded in the lexer/parser.
 - Domain-specific action verbs are classified through the same registry rather than becoming core language keywords.
-- Multiple domains may own the same action verb; unqualified ambiguous actions now require explicit semantic scope.
+- Multiple domains may own the same action verb; unqualified ambiguous actions require explicit semantic scope.
 - Artifact, element and property surface terms remain globally unique for now.
 - Domain scopes are lexical variable scopes and survive optimization rather than being parser-only hints.
 - Syntax AST and Typed HIR carry explicit domain identity for artifacts, elements, references, properties, operations and scopes.
-- Domain implementations own property type contracts, operation signatures, effect declarations, domain-IR construction/mutation hooks and optional default backend selection.
+- Operation argument checking uses explicit assignability rules instead of raw type equality.
+- Primitive values may promote to a nominal type only when they exactly match its declared base representation.
+- Distinct nominal types are never implicitly reinterpreted as one another, even when they share a primitive base.
+- Filesystem path arguments are semantically `filesystem.path` while existing string source syntax remains compatible through explicit HIR promotion.
+- Domain implementations own property type contracts, nominal types, operation signatures, effect declarations, domain-IR construction/mutation hooks and optional default backend selection.
 - HIR lowering accumulates independent per-domain artifacts/plans instead of enforcing one active semantic domain.
 - Entity tables are isolated per semantic domain during lowering.
 - Procedural domain operations do not steal declarative artifact focus used by domain-neutral metadata syntax.
 - Single-domain `Semantics::Result#program`, `#domain`, `CompilationResult#output` and `#backend` remain backwards compatible.
 - Multi-domain CLI builds print separate outputs, or write deterministic per-domain files when `-o` names a directory.
-- Constant propagation rewrites pure operation arguments but preserves the operation node and its effects.
+- Constant propagation rewrites pure operation arguments and values inside nominal promotions while preserving operation effects and nominal boundaries.
 - `Compiler#analyze` and `explain` lower unoptimized Typed HIR so diagnostics remain source-oriented.
 - `Compiler#compile` / `build` lower optimized Typed HIR before domain IR generation.
 - `CompilationResult` exposes both raw and optimized HIR.

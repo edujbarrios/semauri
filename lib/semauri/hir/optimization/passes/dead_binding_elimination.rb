@@ -119,6 +119,8 @@ module Semauri
             case node.kind
             when :literal, :symbol_ref
               true
+            when :promote
+              removable_expression?(node.fields.fetch(:value))
             when :list
               node.fields.fetch(:items).all? { |item| removable_expression?(item) }
             when :unary

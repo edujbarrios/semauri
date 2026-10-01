@@ -27,15 +27,20 @@ class DomainOperationsTest < Minitest::Test
     assert_includes result.output, "rm -f old.tmp"
   end
 
-  def test_domain_operation_hir_preserves_effect_metadata
+  def test_domain_operation_hir_preserves_effect_and_nominal_type_metadata
     hir = @compiler.hir('Write "hello" to "notes.txt".')
     operation = hir.program.fields.fetch(:statements).first
+    path = operation.fields.fetch(:arguments).fetch(:path)
 
     assert_equal :domain_operation, operation.kind
     assert_equal :filesystem, operation.fields.fetch(:domain)
     assert_equal :write, operation.fields.fetch(:operation)
     assert_equal %i[filesystem_write], operation.fields.fetch(:effects)
-    assert_equal :string, operation.fields.fetch(:arguments).fetch(:path).type
+    assert_equal :promote, path.kind
+    assert_equal Semauri::Domains::Filesystem::PATH, path.type
+    assert_equal :string, path.fields.fetch(:from_type)
+    assert_equal :string, path.fields.fetch(:value).type
+    assert_equal "notes.txt", path.fields.fetch(:value).fields.fetch(:value)
   end
 
   def test_operation_argument_types_are_checked_before_lowering
@@ -82,7 +87,7 @@ class DomainOperationsTest < Minitest::Test
     assert_equal "hello", operation.fields.fetch(:arguments).fetch(:message).fields.fetch(:value)
   end
 
-  def test_optimizer_propagates_constants_into_effectful_operation_arguments_without_removing_the_operation
+  def test_optimizer_propagates_constants_inside_nominal_promotion_without_removing_effectful_operation
     source = <<~SEMA
       Let path be "notes.txt".
       Write "hello" to path.
@@ -91,9 +96,12 @@ class DomainOperationsTest < Minitest::Test
     optimized = @compiler.optimized_hir(source)
     statements = optimized.program.fields.fetch(:statements)
     operation = statements.find { |statement| statement.kind == :domain_operation }
+    promoted_path = operation.fields.fetch(:arguments).fetch(:path)
 
     refute_nil operation
-    assert_equal "notes.txt", operation.fields.fetch(:arguments).fetch(:path).fields.fetch(:value)
+    assert_equal :promote, promoted_path.kind
+    assert_equal Semauri::Domains::Filesystem::PATH, promoted_path.type
+    assert_equal "notes.txt", promoted_path.fields.fetch(:value).fields.fetch(:value)
     assert_equal [:filesystem_write], operation.fields.fetch(:effects)
   end
 end

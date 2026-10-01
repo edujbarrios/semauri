@@ -110,9 +110,19 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - domain scopes are also lexical variable scopes
 - non-action vocabulary remains globally collision-free for now
 
+### 0.6.3 — nominal semantic domain types ✅
+
+- immutable `Semantics::NominalType` with domain, name and base representation
+- strict nominal identity: `filesystem.path` is not interchangeable with a future `http.url`
+- explicit primitive-to-nominal promotion represented as `HIR::promote`
+- operation signatures accept nominal types and expose them through domain introspection
+- evaluator preserves nominal identity while carrying the underlying runtime value
+- optimizer rewrites values inside promotions without erasing nominal boundaries
+- Filesystem path parameters migrated from raw `string` to `filesystem.path`
+- backwards-compatible source ergonomics: string expressions may be promoted at a typed operation boundary
+
 ### Next
 
-- nominal domain types (`filesystem.path`, `http.url`, `sql.rowset`, `ml.tensor`, ...)
 - operation expressions that can produce runtime values
 - effect-aware validation and capability policies
 - formal plugin/package discovery for external domains and backends
