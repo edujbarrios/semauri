@@ -182,6 +182,18 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - static model-configuration validation reports `S337`
 - downstream `Fit` consumes the exact derived model reference selected by the source program
 
+### 0.7.3 — standalone Semauri distribution ✅
+
+- official Semauri installation no longer requires system Ruby
+- versioned user-owned installation under `~/.semauri/versions/<version>`
+- private pinned portable Ruby runtime behind the `semauri` launcher
+- checksum-verifying `install.sh` for Linux/macOS x86_64 and arm64
+- automatic `current` version symlink and `~/.local/bin/semauri` command
+- automated release packaging with upstream runtime checksum pinning
+- packaged distribution smoke tests before publication
+- automatic GitHub Release/tag creation when a new Semauri version reaches `main`
+- contributor source workflow remains available with Ruby 3.2+
+
 ### Next
 
 - richer CNN architecture/layer semantics
@@ -194,13 +206,16 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - SSA/CFG/basic blocks for runtime `If`, loops and arithmetic
 - formal plugin/package discovery for external domains and runtimes
 
-See [`ML.md`](ML.md), [`RUNTIME.md`](RUNTIME.md) and [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) for the architecture direction.
+See [`ML.md`](ML.md), [`DISTRIBUTION.md`](DISTRIBUTION.md), [`RUNTIME.md`](RUNTIME.md) and [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) for the architecture direction.
 
 ## Later
 
 - PyTorch/Transformers execution runtime
 - checkpoint/artifact lineage
 - model interpretability operations (Grad-CAM, Integrated Gradients, attention/feature attribution)
+- Windows distribution support
+- Homebrew/Scoop/Winget integration where maintainable
+- project-local Semauri version selection
 - functions and call frames
 - collection operations
 - formatter

@@ -60,6 +60,12 @@ All notable changes to Semauri are documented here.
 - Multi-domain backend override diagnostic (`S405`).
 - `semauri domains` for inspecting loaded domain vocabulary, types and operations.
 - `semauri optimize FILE` for inspecting optimized HIR and per-pass statistics.
+- Versioned Semauri distribution layout with a private portable Ruby runtime.
+- `install.sh` quick installer for Linux/macOS on x86_64 and arm64.
+- SHA-256 verification for downloaded Semauri release archives.
+- Automated GitHub Release packaging for all supported distribution targets.
+- Pinned portable Ruby 3.4.11 runtime archives with upstream SHA-256 verification.
+- Distribution manifest recording Semauri, target platform and private runtime versions.
 
 ### Changed
 - `Compiler` dependency-injects one semantic domain registry through vocabulary, parser, HIR construction and HIR lowering.
@@ -95,3 +101,6 @@ All notable changes to Semauri are documented here.
 - Entity reference resolution exposes a data-oriented API shared by legacy AST resolution and HIR lowering.
 - Name resolution and type checking are structural HIR phases; short-circuiting skips RHS value evaluation, not name/type validation.
 - The AST-based semantic resolver remains temporarily as a regression/reference implementation only.
+- Official Semauri distributions no longer require users to install or invoke Ruby; the Ruby reference compiler is run through a bundled private runtime.
+- User-facing installation documentation now uses `semauri ...`; direct `ruby bin/semauri ...` remains the contributor/development workflow.
+- New Semauri versions reaching `main` are packaged, smoke-tested and published as versioned GitHub Release archives.

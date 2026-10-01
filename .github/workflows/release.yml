@@ -1,0 +1,166 @@
+name: Release Semauri Distribution
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lib/semauri/version.rb"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PORTABLE_RUBY_VERSION: "3.4.11"
+  PORTABLE_RUBY_REVISION: "1"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+      publish: ${{ steps.release.outputs.publish }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: meta
+        name: Resolve Semauri version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/.*VERSION = "\([^"]*\)".*/\1/p' lib/semauri/version.rb)
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - id: release
+        name: Check whether the release already exists
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1 && [[ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ]]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "$TAG is already published; nothing to do."
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  package:
+    name: package (${{ matrix.platform }})
+    needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            platform: linux-x86_64
+            ruby_asset: ruby-3.4.11.x86_64_linux.tar.gz
+            ruby_sha256: f4a0ac310c7150586befb7fc885297be4a96bc4f7ad7b4dd362e427b87822055
+          - runner: ubuntu-22.04-arm
+            platform: linux-arm64
+            ruby_asset: ruby-3.4.11.arm64_linux.tar.gz
+            ruby_sha256: ed51969b29997e96743446dc182f26b0b55b9ffee1fc5c24e4a9e15d1c468c77
+          - runner: macos-15-intel
+            platform: macos-x86_64
+            ruby_asset: ruby-3.4.11.x86_64_darwin.tar.gz
+            ruby_sha256: 7d9e89295332702c9c16f7c2a19112362daea130d422b833ddfdf69067872270
+          - runner: macos-14
+            platform: macos-arm64
+            ruby_asset: ruby-3.4.11.arm64_darwin.tar.gz
+            ruby_sha256: a71d56e05c801eec9f5a330b8d0d096b10d6c527c0bf4485c2be22126460fa05
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate source version
+        shell: bash
+        env:
+          EXPECTED_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/.*VERSION = "\([^"]*\)".*/\1/p' lib/semauri/version.rb)
+          test "$version" = "$EXPECTED_VERSION"
+
+      - name: Download pinned portable Ruby runtime
+        shell: bash
+        env:
+          RUBY_ASSET: ${{ matrix.ruby_asset }}
+          RUBY_SHA256: ${{ matrix.ruby_sha256 }}
+        run: |
+          set -euo pipefail
+          url="https://github.com/bazel-contrib/portable-ruby/releases/download/${PORTABLE_RUBY_VERSION}-${PORTABLE_RUBY_REVISION}/${RUBY_ASSET}"
+          curl -fL --retry 3 -o portable-ruby.tar.gz "$url"
+          if command -v sha256sum >/dev/null 2>&1; then
+            actual=$(sha256sum portable-ruby.tar.gz | awk '{print $1}')
+          else
+            actual=$(shasum -a 256 portable-ruby.tar.gz | awk '{print $1}')
+          fi
+          test "$actual" = "$RUBY_SHA256"
+          mkdir portable-ruby
+          tar -xzf portable-ruby.tar.gz -C portable-ruby
+
+      - name: Package and smoke-test Semauri
+        shell: bash
+        env:
+          SEMAURI_PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          ruby_bin=$(find portable-ruby -type f -path '*/bin/ruby' -perm -111 -print -quit)
+          test -n "$ruby_bin"
+          RUBY_PREFIX=${ruby_bin%/bin/ruby}
+          export RUBY_PREFIX SEMAURI_PLATFORM
+          ./scripts/package-distribution.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: semauri-${{ matrix.platform }}
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  release:
+    name: publish release
+    needs: [prepare, package]
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Assemble release files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir release
+          find artifacts -type f -name 'semauri-*.tar.gz' -exec cp {} release/ \;
+          test "$(find release -type f -name 'semauri-*.tar.gz' | wc -l)" -eq 4
+          (cd release && sha256sum semauri-*.tar.gz > SHA256SUMS)
+          cat release/SHA256SUMS
+
+      - name: Publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" release/* --clobber
+          else
+            gh release create "$TAG" release/* \
+              --target "$GITHUB_SHA" \
+              --generate-notes \
+              --title "Semauri $VERSION"
+          fi

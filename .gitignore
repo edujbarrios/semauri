@@ -1,6 +1,7 @@
 /.bundle/
 /vendor/bundle/
 /pkg/
+/dist/
 *.gem
 .DS_Store
 *.html
