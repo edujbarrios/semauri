@@ -1,0 +1,5 @@
+Let message be "hello from Semauri".
+
+Write message to "notes.txt".
+Copy "notes.txt" to "backup.txt".
+Delete "old.tmp".
