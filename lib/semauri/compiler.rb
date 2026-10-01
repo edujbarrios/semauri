@@ -4,8 +4,10 @@
 require_relative "domains/registry"
 require_relative "lexer"
 require_relative "parser"
+require_relative "parser/domain_operation_expressions"
 require_relative "hir/builder"
 require_relative "hir/lowerer"
+require_relative "hir/runtime_lowering"
 require_relative "hir/optimization/pass_manager"
 require_relative "effects/analyzer"
 require_relative "effects/capability_policy"
@@ -24,10 +26,12 @@ module Semauri
   end
 
   CompilationResult = Struct.new(
-    :output, :backend, :outputs, :ast, :hir, :optimized_hir, :ir, :explanations, :symbols, :effects,
+    :output, :backend, :outputs, :ast, :hir, :optimized_hir, :ir, :runtime_plan,
+    :explanations, :symbols, :effects,
     keyword_init: true
   ) do
     def multi_domain? = outputs.length > 1
+    def runtime? = runtime_plan && !runtime_plan.empty?
   end
 
   class Compiler
@@ -70,6 +74,11 @@ module Semauri
       policy.validate!(effect_analysis(source))
     end
 
+    def runtime_plan(source)
+      hir_result = hir(source)
+      @lowerer.lower(@optimizer.run(hir_result)).runtime_plan
+    end
+
     # Analysis intentionally lowers unoptimized HIR so `explain` describes the
     # source program rather than compiler rewrites.
     def analyze(source)
@@ -101,6 +110,7 @@ module Semauri
         hir: hir_result.program,
         optimized_hir: optimized.program,
         ir: semantic.program,
+        runtime_plan: semantic.runtime_plan,
         explanations: source_semantic.explanations,
         symbols: semantic.symbols,
         effects: effects
