@@ -4,20 +4,23 @@
 require_relative "term"
 require_relative "operation"
 require_relative "operation_result"
+require_relative "../semantics/nominal_type"
 
 module Semauri
   module Domains
     class Definition
       attr_reader :name, :default_backend
 
-      def initialize(name:, artifacts: {}, elements: {}, properties: {}, operations: [], default_backend: nil)
+      def initialize(name:, artifacts: {}, elements: {}, properties: {}, types: [], operations: [], default_backend: nil)
         @name = name.to_sym
         @default_backend = default_backend&.to_s&.freeze
         @terms = {}
+        @types = {}
         @operations = {}
         register_terms(:artifact, artifacts)
         register_terms(:element, elements)
         register_terms(:property, properties)
+        Array(types).each { |type| register_type(type) }
         Array(operations).each { |operation| register_operation(operation) }
         freeze
       end
@@ -27,7 +30,14 @@ module Semauri
       end
 
       def words = @terms.keys.freeze
+      def types = @types.values.freeze
       def operations = @operations.values.freeze
+
+      def type(name)
+        @types.fetch(name.to_sym)
+      rescue KeyError
+        raise ArgumentError, "Domain '#{self.name}' does not define type '#{name}'"
+      end
 
       def operation(name)
         @operations.fetch(name.to_sym)
@@ -48,6 +58,7 @@ module Semauri
           elements: serialize_terms(grouped[:element]),
           properties: serialize_terms(grouped[:property]),
           actions: serialize_terms(grouped[:action]),
+          types: types.map(&:to_h),
           operations: operations.map(&:to_h)
         }
       end
@@ -91,6 +102,18 @@ module Semauri
 
       def serialize_terms(entries)
         Array(entries).to_h { |surface, term| [surface, term.kind] }
+      end
+
+      def register_type(type)
+        unless type.is_a?(Semantics::NominalType)
+          raise ArgumentError, "Domain '#{name}' types must be Semantics::NominalType instances"
+        end
+        unless type.domain == name
+          raise ArgumentError, "Nominal type '#{type}' belongs to '#{type.domain}', expected '#{name}'"
+        end
+        raise ArgumentError, "Duplicate nominal type '#{type.name}' in domain '#{name}'" if @types.key?(type.name)
+
+        @types[type.name] = type
       end
 
       def register_operation(operation)
