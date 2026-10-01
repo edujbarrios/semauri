@@ -12,6 +12,7 @@ module Semauri
       def initialize
         super(
           name: :structured_data,
+          default_backend: "json-schema",
           artifacts: {
             "schema" => :schema
           },
