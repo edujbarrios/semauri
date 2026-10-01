@@ -6,6 +6,7 @@ require_relative "value_environment"
 require_relative "../errors"
 require_relative "../domains/registry"
 require_relative "../domains/operation_result"
+require_relative "../ir/program"
 require_relative "../semantics/entity_table"
 require_relative "../semantics/result"
 require_relative "../semantics/type_system"
@@ -22,22 +23,21 @@ module Semauri
         @symbols = hir_result.symbols
         @symbols_by_id = @symbols.to_h { |symbol| [symbol.id, symbol] }
         @environment = ValueEnvironment.new
-        @artifact = nil
-        @active_domain = nil
-        @entities = Semantics::EntityTable.new
+        @program = IR::Program.new
+        @focus_domain = nil
+        @entities_by_domain = {}
         @explanations = []
 
         lower_statement(hir_result.program)
-        raise SemanticError.new("Program does not create or produce an artifact", code: "S301") unless @artifact
+        raise SemanticError.new("Program does not create or produce semantic output", code: "S301") if @program.empty?
 
         Semantics::Result.new(
-          program: @artifact,
-          domain: @active_domain.name,
+          program_ir: @program,
           explanations: @explanations.freeze,
           symbols: @symbols
         )
       ensure
-        @symbols = @symbols_by_id = @environment = @artifact = @active_domain = @entities = @explanations = nil
+        @symbols = @symbols_by_id = @environment = @program = @focus_domain = @entities_by_domain = @explanations = nil
       end
 
       private
@@ -104,20 +104,24 @@ module Semauri
       end
 
       def lower_create_artifact(node)
-        if @artifact
-          raise semantic_error(node, "Semauri currently supports one artifact per source file", "S302",
-                               hint: "Split independent artifacts into separate .sema files.")
+        domain = @domains.fetch(node.fields.fetch(:domain))
+        if @program.include?(domain.name)
+          raise semantic_error(
+            node,
+            "Semauri currently supports one artifact/plan per semantic domain in a source file",
+            "S302",
+            hint: "Reuse the existing #{domain.name} domain output or split independent #{domain.name} artifacts into separate .sema files."
+          )
         end
 
-        domain = @domains.fetch(node.fields.fetch(:domain))
         kind = node.fields.fetch(:artifact_kind)
         subject = node.fields[:subject]
         explicit_title = node.fields[:title]
+        artifact = domain.create_artifact(kind: kind, subject: subject, title: explicit_title)
 
-        @artifact = domain.create_artifact(kind: kind, subject: subject, title: explicit_title)
-        @active_domain = domain
+        put_artifact(domain, artifact)
         @explanations.concat(domain.creation_explanations(
-                               artifact: @artifact,
+                               artifact: artifact,
                                kind: kind,
                                subject: subject,
                                explicit_title: explicit_title
@@ -126,13 +130,13 @@ module Semauri
 
       def lower_domain_operation(node)
         domain = @domains.fetch(node.fields.fetch(:domain))
-        activate_domain!(domain, node)
         operation = domain.operation(node.fields.fetch(:operation))
         arguments = node.fields.fetch(:arguments).transform_values { |argument| evaluate(argument).value }.freeze
+        artifact = @program.artifact(domain.name) || domain.initial_artifact
 
         result = domain.execute_operation(
           operation: operation.name,
-          artifact: @artifact,
+          artifact: artifact,
           arguments: arguments,
           source_span: node.span
         )
@@ -140,18 +144,8 @@ module Semauri
           raise semantic_error(node, "Domain '#{domain.name}' returned an invalid operation result", "S331")
         end
 
-        @artifact = result.artifact if result.artifact
+        put_artifact(domain, result.artifact) if result.artifact
         @explanations.concat(result.explanations)
-      end
-
-      def activate_domain!(domain, node)
-        if @active_domain
-          ensure_same_domain!(domain.name, @active_domain.name, node)
-          return
-        end
-
-        @active_domain = domain
-        @artifact = domain.initial_artifact
       end
 
       def lower_legacy_create_web(node)
@@ -165,26 +159,29 @@ module Semauri
       end
 
       def lower_set_title(node)
-        domain = require_artifact!(node, "Cannot add a title before creating an artifact", "S303")
-        title = node.fields.fetch(:title)
-        @artifact = domain.set_title(artifact: @artifact, title: title)
-        @explanations << "Title explicitly set to '#{title}'."
+        domain = focused_domain!(node, "Cannot add a title before creating an artifact", "S303")
+        artifact = @program.artifact(domain.name)
+        updated = domain.set_title(artifact: artifact, title: node.fields.fetch(:title))
+        put_artifact(domain, updated)
+        @explanations << "Title explicitly set to '#{node.fields.fetch(:title)}'."
       end
 
       def lower_add_element(node)
         domain = domain_for_node!(node)
-        kind = node.fields.fetch(:element_kind)
-        @artifact, element = domain.add_element(
-          artifact: @artifact,
-          kind: kind,
+        artifact = @program.artifact(domain.name)
+        updated, element = domain.add_element(
+          artifact: artifact,
+          kind: node.fields.fetch(:element_kind),
           label: node.fields[:label],
-          entities: @entities
+          entities: entity_table(domain.name)
         )
-        @explanations << "Added #{kind} '#{element.label}' as #{element.id}."
+        put_artifact(domain, updated)
+        @explanations << "Added #{node.fields.fetch(:element_kind)} '#{element.label}' as #{element.id}."
       end
 
       def lower_set_property(node)
         domain = domain_for_node!(node)
+        artifact = @program.artifact(domain.name)
         target_node = node.fields.fetch(:target)
         target = resolve_reference(target_node, domain: domain)
         value = evaluate(node.fields.fetch(:value))
@@ -192,13 +189,14 @@ module Semauri
         @domains.validate_property!(domain: domain.name, property: property, actual_type: value.type,
                                     node: node.fields.fetch(:value))
 
-        @artifact = domain.set_property(
-          artifact: @artifact,
+        updated = domain.set_property(
+          artifact: artifact,
           target: target,
           property: property,
           value: value.value,
           source_span: node.span
         )
+        put_artifact(domain, updated)
         @explanations << reference_explanation(target_node, target)
         @explanations << "Set #{target.id}.#{property} to #{value.value.inspect}."
       end
@@ -215,13 +213,14 @@ module Semauri
       end
 
       def resolve_reference(node, domain:)
+        entities = entity_table(domain.name)
         case node.kind
         when :pronoun_reference
-          @entities.resolve_pronoun_data(pronoun: node.fields.fetch(:pronoun), node: node)
+          entities.resolve_pronoun_data(pronoun: node.fields.fetch(:pronoun), node: node)
         when :named_reference
           reference_domain = node.fields.fetch(:domain)
           ensure_same_domain!(reference_domain, domain.name, node)
-          @entities.resolve_named_data(kind: node.fields.fetch(:entity_kind), label: node.fields.fetch(:label), node: node)
+          entities.resolve_named_data(kind: node.fields.fetch(:entity_kind), label: node.fields.fetch(:label), node: node)
         else raise semantic_error(node, "Unsupported HIR reference '#{node.kind}'", "S325")
         end
       end
@@ -235,23 +234,39 @@ module Semauri
       end
 
       def domain_for_node!(node)
-        domain = require_artifact!(node, "Cannot use a domain operation before creating an artifact", "S307")
-        requested = node.fields.fetch(:domain)
-        ensure_same_domain!(requested, domain.name, node)
-        domain
+        requested = node.fields.fetch(:domain).to_sym
+        domain = @domains.fetch(requested)
+        return domain if @program.include?(requested)
+
+        raise semantic_error(
+          node,
+          "Cannot use a #{requested} domain operation before that domain has produced an artifact/plan",
+          "S307",
+          hint: "Create a #{requested} artifact or start a #{requested} operation first."
+        )
+      end
+
+      def focused_domain!(node, message, code)
+        return @domains.fetch(@focus_domain) if @focus_domain && @program.include?(@focus_domain)
+        raise semantic_error(node, message, code, hint: "Create an artifact first.")
+      end
+
+      def put_artifact(domain, artifact)
+        @program = @program.put(domain: domain.name, artifact: artifact)
+        @focus_domain = domain.name
+        entity_table(domain.name)
+      end
+
+      def entity_table(domain_name)
+        @entities_by_domain[domain_name.to_sym] ||= Semantics::EntityTable.new
       end
 
       def ensure_same_domain!(requested, active, node)
         return if requested.to_sym == active.to_sym
 
         raise semantic_error(node,
-                             "Operation belongs to domain '#{requested}', but the active program belongs to '#{active}'",
+                             "Reference belongs to domain '#{requested}', expected '#{active}'",
                              "S327")
-      end
-
-      def require_artifact!(node, message, code)
-        return @active_domain if @artifact && @active_domain
-        raise semantic_error(node, message, code, hint: "Create an artifact or start a domain operation first.")
       end
 
       def with_child_environment
