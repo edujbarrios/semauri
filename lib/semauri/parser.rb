@@ -7,6 +7,7 @@ require_relative "domains/registry"
 require_relative "ast/program"
 require_relative "ast/create_artifact"
 require_relative "ast/domain_operation"
+require_relative "ast/domain_scope"
 require_relative "ast/set_title"
 require_relative "ast/add_element"
 require_relative "ast/pronoun_reference"
@@ -28,6 +29,7 @@ module Semauri
       @tokens = tokens
       @domains = domains
       @current = 0
+      @domain_scope_stack = []
     end
 
     def parse
@@ -46,6 +48,7 @@ module Semauri
       return set_statement(previous) if match?(:SET)
       return if_statement(previous) if match?(:IF)
       return for_statement(previous) if match?(:FOR)
+      return domain_scope_statement(previous) if match?(:WITHIN)
       return domain_operation_statement(previous) if match?(:DOMAIN_ACTION)
 
       error!(peek, "Expected a core statement or registered domain action", "S201")
@@ -71,8 +74,27 @@ module Semauri
                               subject: normalize_phrase(subject), title: normalize_phrase(title), span: span_from(start))
     end
 
+    def domain_scope_statement(start)
+      domain_token = peek
+      domain_name = domain_token.lexeme.to_s.downcase.to_sym
+      unless @domains.names.include?(domain_name)
+        error!(domain_token, "Unknown semantic domain '#{domain_token.lexeme}'", "S240",
+               hint: "Available domains: #{@domains.names.join(', ')}.")
+      end
+      advance
+      consume(:COLON, "Expected ':' after the semantic domain name", "S240")
+
+      @domain_scope_stack << domain_name
+      body = block_until(:END)
+      @domain_scope_stack.pop
+
+      consume(:END, "Expected 'End' to close the semantic domain scope", "S240")
+      consume_optional_dot
+      AST::DomainScope.new(domain: domain_name, body: body, span: span_from(start))
+    end
+
     def domain_operation_statement(start)
-      term = domain_term(start)
+      term = action_term(start)
       domain = @domains.fetch(term.fetch(:domain))
       operation = domain.operation(term.fetch(:kind))
       arguments = {}
@@ -95,6 +117,28 @@ module Semauri
         arguments: arguments,
         span: span_from(start)
       )
+    end
+
+    def action_term(token)
+      metadata = domain_term(token)
+      candidates = metadata[:candidates] || metadata["candidates"]
+      candidates = [metadata] unless candidates
+      candidates = candidates.map { |candidate| candidate.transform_keys(&:to_sym) }
+
+      if (scope = @domain_scope_stack.last)
+        selected = candidates.find { |candidate| candidate.fetch(:domain).to_sym == scope }
+        return selected if selected
+
+        available = candidates.map { |candidate| candidate.fetch(:domain) }.uniq
+        error!(token, "Action '#{token.lexeme}' is not available in semantic domain '#{scope}'", "S240",
+               hint: "This action is available in: #{available.join(', ')}.")
+      end
+
+      return candidates.first if candidates.one?
+
+      domains = candidates.map { |candidate| candidate.fetch(:domain) }.uniq
+      error!(token, "Ambiguous domain action '#{token.lexeme}'", "S240",
+             hint: "Qualify it with 'Within <domain>:'; candidates: #{domains.join(', ')}.")
     end
 
     def parse_operation_slot(slot)
@@ -479,9 +523,9 @@ module Semauri
     def peek = @tokens[@current]
     def previous = @tokens[@current - 1]
 
-    def error!(token, message, code)
+    def error!(token, message, code, hint: nil)
       raise ParseError.new(message, code: code, line: token.line, column: token.column,
-                           end_line: token.end_line, end_column: token.end_column)
+                           end_line: token.end_line, end_column: token.end_column, hint: hint)
     end
   end
 end
