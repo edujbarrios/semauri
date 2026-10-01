@@ -24,6 +24,8 @@ module Semauri
             when :program, :block
               statements = node.fields.fetch(:statements).filter_map { |statement| transform(statement) }
               rebuild(node, statements: statements)
+            when :domain_scope
+              rebuild(node, body: transform(node.fields.fetch(:body)))
             when :if
               transform_if(node)
             when :for_each
