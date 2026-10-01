@@ -14,6 +14,10 @@ module Semauri
         { type: "block", statements: node.statements.map { |statement| statement.accept(self) } }.merge(location(node))
       end
 
+      def visit_domain_scope(node)
+        { type: "domain_scope", domain: node.domain, body: node.body.accept(self) }.merge(location(node))
+      end
+
       def visit_if_statement(node)
         { type: "if_statement", condition: node.condition.accept(self), consequence: node.consequence.accept(self),
           alternative: node.alternative&.accept(self) }.merge(location(node))
