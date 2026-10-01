@@ -34,6 +34,7 @@ module Semauri
       when "optimize" then optimize(argv)
       when "symbols" then symbols(argv)
       when "effects" then effects(argv)
+      when "plan" then plan(argv)
       when "explain" then explain(argv)
       when "check" then check(argv)
       when "build" then build(argv)
@@ -99,6 +100,12 @@ module Semauri
       EXIT_SUCCESS
     end
 
+    def plan(argv)
+      source = read_source!(argv)
+      @stdout.puts JSON.pretty_generate(@compiler.runtime_plan(source).to_h)
+      EXIT_SUCCESS
+    end
+
     def explain(argv)
       source = read_source!(argv)
       _ast, semantic = @compiler.analyze(source)
@@ -136,6 +143,13 @@ module Semauri
 
       source = read_source!(argv)
       result = @compiler.compile(source, backend: options[:backend])
+      if result.outputs.empty? && result.runtime?
+        raise BackendError.new(
+          "Program produces a runtime plan but no build-time backend output",
+          code: "S406",
+          hint: "Inspect it with 'semauri plan FILE'. Execution support will be provided by the future runtime."
+        )
+      end
 
       if result.multi_domain?
         write_multi_domain(result, options[:output])
@@ -197,9 +211,10 @@ module Semauri
           optimize FILE            Print optimized HIR and pass statistics
           symbols FILE             Print semantic symbols as JSON
           effects FILE             Print statically required effects/capabilities
+          plan FILE                Print the lowered runtime operation plan as JSON
           explain FILE             Explain semantic decisions
           check FILE [--allow ...] Validate source and optionally enforce capabilities
-          build FILE [-o PATH]     Compile one or more semantic-domain outputs
+          build FILE [-o PATH]     Compile one or more build-time domain outputs
           version                  Print version
       TEXT
     end

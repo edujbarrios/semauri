@@ -134,14 +134,27 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - compilation may optionally validate a policy but still never performs external effects
 - future execution runtimes can make capability authorization mandatory before running plans
 
+### 0.6.5 — runtime operation values ✅
+
+- value-returning domain operations may appear inside expressions such as `Let response be Fetch ...`
+- immutable `IR::RuntimePlan`, `IR::RuntimeOperation` and SSA-like `IR::RuntimeValueRef`
+- runtime results can flow directly into later semantic-domain operations
+- non-unit operations are planned rather than executed at compile time
+- unit operations depending on runtime values are also lowered into the runtime plan
+- `CompilationResult.runtime_plan` and `Compiler#runtime_plan`
+- `semauri plan FILE` runtime-plan introspection
+- runtime-dependent compile-time evaluation fails explicitly with `S335`
+- pure runtime programs direct `build` users to `plan` with `S406`
+- compilation/planning still never performs declared external effects
+
 ### Next
 
-- operation expressions that can produce runtime values
-- runtime-value design: inputs, SSA/CFG/basic blocks and the compile-time/runtime boundary
+- runtime expressions beyond direct operation-to-operation dataflow
+- SSA/CFG/basic blocks for runtime `If`, loops and arithmetic
 - formal plugin/package discovery for external domains and backends
 - first AI/ML semantic-domain foundations (`ml.dataset`, `ml.model`, `ml.device`, training/inference plans)
 
-See [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) for the architecture target.
+See [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) and [`RUNTIME.md`](RUNTIME.md) for the architecture target.
 
 ## Later
 
