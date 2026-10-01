@@ -10,38 +10,56 @@ Semauri is an experimental open-source programming language for writing determin
 
 ## Install Semauri
 
-### Quick install — Linux and macOS
+### Linux and macOS
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
 ```
 
-Then use the language directly:
+### Windows — PowerShell
 
-```bash
+```powershell
+irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
+```
+
+The Windows installer supports native x86_64 and ARM64 packages, verifies the release checksum, installs Semauri under `$HOME\.semauri` and adds `$HOME\.semauri\bin` to your user `PATH`. Open a new terminal if the `semauri` command is not immediately visible.
+
+Then use the language directly on every supported platform:
+
+```text
 semauri version
 semauri help
 ```
 
-**Ruby does not need to be installed on your system.** Official Semauri distributions include a private portable Ruby runtime used internally by the reference compiler.
+**Ruby does not need to be installed on your system.** Official Semauri distributions include a private Ruby runtime used internally by the reference compiler.
 
-Supported installation targets in 0.7.3:
+Supported installation targets in 0.7.4:
 
 - Linux x86_64
 - Linux arm64
 - macOS x86_64
 - macOS arm64
+- Windows x86_64
+- Windows arm64
 
-The installer downloads a versioned GitHub Release, verifies its SHA-256 checksum, installs it under `~/.semauri/versions/` and exposes `~/.local/bin/semauri`.
+On Linux/macOS, the installer keeps versions under `~/.semauri/versions/` and exposes `~/.local/bin/semauri`. On Windows, versions live under `$HOME\.semauri\versions\` and a stable launcher is installed at `$HOME\.semauri\bin\semauri.cmd`.
 
-Install an exact version:
+Install an exact version on Linux/macOS:
 
 ```bash
-SEMAURI_VERSION=0.7.3 \
+SEMAURI_VERSION=0.7.4 \
   curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
 ```
 
-Re-run the installer to update to the latest release. See [Distribution](docs/DISTRIBUTION.md) for the package layout, versioning model and release process.
+Install an exact version on Windows:
+
+```powershell
+$env:SEMAURI_VERSION = '0.7.4'
+irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
+Remove-Item Env:SEMAURI_VERSION
+```
+
+Re-run the installer to update to the latest release. See [Distribution](docs/DISTRIBUTION.md) for package layouts, versioning and the release process.
 
 ### Development from source
 
