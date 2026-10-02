@@ -11,7 +11,7 @@ module Semauri
       module_function
 
       ARITHMETIC = %i[add subtract multiply divide].freeze
-      ORDERING = %i[greater_than less_than].freeze
+      ORDERING = %i[greater_than less_than greater_than_or_equal less_than_or_equal].freeze
       LOGICAL = %i[and or].freeze
 
       def unary_type(operator, operand_type, node:)
@@ -139,7 +139,9 @@ module Semauri
           multiply: "times",
           divide: "divided by",
           greater_than: "is greater than",
-          less_than: "is less than"
+          less_than: "is less than",
+          greater_than_or_equal: "is greater than or equal to",
+          less_than_or_equal: "is less than or equal to"
         }.fetch(operator, operator.to_s)
       end
 

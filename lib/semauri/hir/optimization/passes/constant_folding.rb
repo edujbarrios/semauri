@@ -115,6 +115,8 @@ module Semauri
             when :divide then left.fdiv(right)
             when :greater_than then left > right
             when :less_than then left < right
+            when :greater_than_or_equal then left >= right
+            when :less_than_or_equal then left <= right
             when :equal then left == right
             when :and then left && right
             when :or then left || right

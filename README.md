@@ -4,7 +4,7 @@
 
 **Natural to write. Deterministic to run.**
 
-> Status: **0.7.4 / experimental**
+> Status: **0.8.0 / experimental**
 
 ## What is Semauri?
 
@@ -32,7 +32,7 @@ Let total be price plus tax.
 Create a web called Pet Shop.
 Add a button called Buy.
 
-If total is greater than 20:
+If total is greater than or equal to 22:
   Set the color of the button called Buy to red.
 Otherwise:
   Set the color of the button called Buy to green.
@@ -45,6 +45,7 @@ This is natural-looking syntax, but every construct has explicit semantics:
 - `price plus tax` is a typed numeric expression.
 - `Create a web` and `Add a button` are provided by the Web semantic domain.
 - `If / Otherwise / End` is structured control flow.
+- `is greater than or equal to` is a typed inclusive numeric comparison.
 - `the button called Buy` is an explicit deterministic reference.
 - `color` accepts a typed `color` value rather than arbitrary text.
 
@@ -82,7 +83,7 @@ The current language includes:
 
 - immutable `Let` bindings;
 - `number`, `string`, `boolean`, `color` and homogeneous `List<T>` values;
-- arithmetic, comparisons and boolean logic;
+- arithmetic, strict and inclusive comparisons, and boolean logic;
 - lexical scopes and shadowing;
 - `If / Otherwise / End`;
 - `For every ... in ...`;
