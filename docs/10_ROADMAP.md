@@ -158,7 +158,7 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - ML values flow through `RuntimePlan` using SSA-like runtime references
 - explicit ML effects: `filesystem_read`, `model_load`, `compute`, `model_training`, `model_inference`
 - compilation creates inspectable plans and never imports or runs an ML framework
-- framework-independent contract documented in `ML.md`
+- framework-independent contract documented in `06_ML.md`
 
 ### 0.7.1 — typed training configuration ✅
 
@@ -218,7 +218,7 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - SSA/CFG/basic blocks for runtime `If`, loops and arithmetic
 - formal plugin/package discovery for external domains and runtimes
 
-See [`ML.md`](ML.md), [`DISTRIBUTION.md`](DISTRIBUTION.md), [`RUNTIME.md`](RUNTIME.md) and [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) for the architecture direction.
+See [`06_ML.md`](06_ML.md), [`09_DISTRIBUTION.md`](09_DISTRIBUTION.md), [`05_RUNTIME.md`](05_RUNTIME.md) and [`07_UNIVERSAL_DOMAINS.md`](07_UNIVERSAL_DOMAINS.md) for the architecture direction.
 
 ## Later
 
