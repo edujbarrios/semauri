@@ -277,4 +277,4 @@ A domain PR should include:
 
 Run `semauri domains` to inspect the vocabulary and operations exported by the active compiler configuration.
 
-See [`UNIVERSAL_DOMAINS.md`](UNIVERSAL_DOMAINS.md) for the longer-term multi-domain architecture.
+See [`07_UNIVERSAL_DOMAINS.md`](07_UNIVERSAL_DOMAINS.md) for the longer-term multi-domain architecture.

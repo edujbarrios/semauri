@@ -11,7 +11,7 @@ For a language change, please include:
 1. the motivating program;
 2. the intended AST/HIR/semantic meaning;
 3. ambiguity and error cases;
-4. an update to `docs/LANGUAGE.md` when language behavior changes;
+4. an update to `docs/01_LANGUAGE.md` when language behavior changes;
 5. compiler tests;
 6. backend tests when target generation changes.
 
@@ -37,7 +37,7 @@ A new semantic domain should not require changes to the lexer or parser. A new b
 
 ### Add a semantic domain
 
-Read [`docs/DOMAINS.md`](docs/DOMAINS.md). New domains should extend `Semauri::Domains::Definition`, register their vocabulary through `Domains::Registry`, define property types and produce their own semantic IR where appropriate.
+Read [`docs/03_DOMAINS.md`](docs/03_DOMAINS.md). New domains should extend `Semauri::Domains::Definition`, register their vocabulary through `Domains::Registry`, define property types and produce their own semantic IR where appropriate.
 
 A domain PR must include negative tests for invalid values and ambiguity, not only a happy-path example.
 
