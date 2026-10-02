@@ -1,4 +1,4 @@
-# Semauri language specification — draft 0.5
+# Semauri language specification — draft 0.8
 
 This document describes implemented language behavior, not aspirational syntax.
 
@@ -29,6 +29,9 @@ logical_or       = logical_and { OR logical_and } ;
 logical_and      = logical_not { AND logical_not } ;
 logical_not      = [ NOT ] (logical_not | comparison) ;
 comparison       = additive [ IS comparison_operator additive ] ;
+comparison_operator = GREATER THAN [ OR EQUAL TO ]
+                    | LESS THAN [ OR EQUAL TO ]
+                    | EQUAL TO ;
 additive         = multiplicative { (PLUS | MINUS) multiplicative } ;
 multiplicative   = primary { TIMES primary | DIVIDED BY primary } ;
 primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
@@ -83,6 +86,8 @@ Primitive semantic value types are `color`, `string`, `number`, and `boolean`.
 
 Arithmetic is numeric and strictly typed. Multiplication/division bind more tightly than addition/subtraction. Equality requires both operands to have the same semantic type.
 
+Ordering comparisons are numeric and strictly typed. Semauri supports `is greater than`, `is less than`, `is greater than or equal to`, and `is less than or equal to`. The inclusive forms include the boundary value and lower to distinct typed comparison operators rather than being rewritten as boolean combinations.
+
 ### Logical expressions and short-circuiting
 
 `and`, `or` and `not` operate on booleans. `and` / `or` use runtime/constant-evaluation short-circuiting: the right-hand expression is not **evaluated** when the left-hand value already determines the result.
@@ -129,7 +134,7 @@ Bindings have stable semantic symbol identities independent from source spelling
 ## Conditional control flow
 
 ```text
-If price is greater than 20:
+If price is greater than or equal to 20:
   Add a button called Premium.
 Otherwise:
   Add a button called Standard.
