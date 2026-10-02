@@ -55,6 +55,8 @@ module Semauri
                    left.value.fdiv(right.value)
                  when :greater_than then left.value > right.value
                  when :less_than then left.value < right.value
+                 when :greater_than_or_equal then left.value >= right.value
+                 when :less_than_or_equal then left.value <= right.value
                  when :equal then left.value == right.value
                  else raise semantic_error(node, "Unsupported operator '#{node.operator}'", "S318")
                  end
