@@ -37,8 +37,8 @@ module Semauri
               effects: []
             ),
             Operation.new(
-              name: :configure_training_advanced,
-              verbs: ["configure"],
+              name: :plan_training,
+              verbs: ["plan"],
               pattern: [Operation.literal("training"), Operation.literal("for"), Operation.expression(:epochs, type: :number), Operation.literal("epochs"), Operation.literal("using"), Operation.literal("optimizer"), Operation.expression(:optimizer, type: :string), Operation.literal("learning"), Operation.literal("rate"), Operation.expression(:learning_rate, type: :number), Operation.literal("batch"), Operation.literal("size"), Operation.expression(:batch_size, type: :number), Operation.literal("seed"), Operation.expression(:seed, type: :number), Operation.literal("precision"), Operation.expression(:precision, type: :string), Operation.literal("accumulate"), Operation.expression(:gradient_accumulation, type: :number), Operation.literal("steps"), Operation.literal("checkpoint"), Operation.literal("every"), Operation.expression(:checkpoint_every, type: :number), Operation.literal("steps")],
               returns: TRAINING_CONFIG,
               effects: []
@@ -52,13 +52,13 @@ module Semauri
 
       def validate_operation_arguments!(operation:, arguments:, node:)
         case operation.name
-        when :configure_training, :configure_training_advanced
+        when :configure_training, :plan_training
           validate_positive_integer!(arguments.fetch(:epochs), "epochs", node, code: "S336")
           validate_optimizer!(arguments.fetch(:optimizer), node)
           validate_positive_number!(arguments.fetch(:learning_rate), "learning rate", node, code: "S336")
           validate_positive_integer!(arguments.fetch(:batch_size), "batch size", node, code: "S336")
           validate_non_negative_integer!(arguments.fetch(:seed), "seed", node, code: "S336")
-          if operation.name == :configure_training_advanced
+          if operation.name == :plan_training
             validate_precision!(arguments.fetch(:precision), node)
             validate_positive_integer!(arguments.fetch(:gradient_accumulation), "gradient accumulation", node, code: "S338")
             validate_positive_integer!(arguments.fetch(:checkpoint_every), "checkpoint interval", node, code: "S338")
