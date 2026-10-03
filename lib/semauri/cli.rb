@@ -4,6 +4,7 @@
 require "json"
 require "optparse"
 require "fileutils"
+require "open3"
 require_relative "compiler"
 require_relative "ast/serializer"
 require_relative "version"
@@ -13,6 +14,7 @@ module Semauri
     EXIT_SUCCESS = 0
     EXIT_USAGE = 64
     EXIT_COMPILE_ERROR = 65
+    EXIT_RUNTIME_ERROR = 70
 
     def initialize(stdout: $stdout, stderr: $stderr, compiler: Compiler.new)
       @stdout = stdout
@@ -38,6 +40,7 @@ module Semauri
       when "explain" then explain(argv)
       when "check" then check(argv)
       when "build" then build(argv)
+      when "run" then execute(argv)
       else
         @stderr.puts "Unknown command: #{command}"
         @stderr.puts usage
@@ -147,7 +150,7 @@ module Semauri
         raise BackendError.new(
           "Program produces a runtime plan but no build-time backend output",
           code: "S406",
-          hint: "Inspect it with 'semauri plan FILE'. Execution support will be provided by the future runtime."
+          hint: "Inspect it with 'semauri plan FILE'."
         )
       end
 
@@ -160,6 +163,42 @@ module Semauri
         @stdout.write result.output
       end
       EXIT_SUCCESS
+    end
+
+    def execute(argv)
+      options = { allowed: [], cwd: nil, dry_run: false }
+      parser = OptionParser.new do |opts|
+        opts.on("--allow EFFECT", "Authorize one required effect; repeat as needed") { |value| options[:allowed] << value }
+        opts.on("--cwd PATH", "Execute relative filesystem operations from PATH") { |value| options[:cwd] = value }
+        opts.on("--dry-run", "Compile and print the executable plan without performing effects") { options[:dry_run] = true }
+      end
+      parser.parse!(argv)
+
+      source = read_source!(argv)
+      result = @compiler.compile(source)
+      unless result.outputs.one? && result.outputs.first.domain == :filesystem && result.backend == "posix-sh"
+        raise BackendError.new(
+          "run currently supports one filesystem program rendered by posix-sh",
+          code: "S407",
+          hint: "Use 'semauri build' or 'semauri plan' for other domains until their execution runtimes are available."
+        )
+      end
+
+      if options[:dry_run]
+        @stdout.write result.output
+        return EXIT_SUCCESS
+      end
+
+      policy = Effects::CapabilityPolicy.new(allowed: options[:allowed])
+      @compiler.validate_capabilities(source, policy: policy)
+
+      command = ["sh"]
+      kwargs = { stdin_data: result.output }
+      kwargs[:chdir] = options[:cwd] if options[:cwd]
+      runtime_stdout, runtime_stderr, status = Open3.capture3(*command, **kwargs)
+      @stdout.write runtime_stdout
+      @stderr.write runtime_stderr
+      status.success? ? EXIT_SUCCESS : EXIT_RUNTIME_ERROR
     end
 
     def write_multi_domain(result, output_path)
@@ -215,6 +254,7 @@ module Semauri
           explain FILE             Explain semantic decisions
           check FILE [--allow ...] Validate source and optionally enforce capabilities
           build FILE [-o PATH]     Compile one or more build-time domain outputs
+          run FILE --allow EFFECT  Execute supported effects after explicit authorization
           version                  Print version
       TEXT
     end
