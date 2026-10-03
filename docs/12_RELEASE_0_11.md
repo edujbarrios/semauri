@@ -1,13 +1,13 @@
-# Semauri 0.11.0 — practical workflows
+# Semauri 0.11 — practical workflows
 
-Semauri 0.11.0 focuses on making the existing language useful for coherent automation rather than only isolated demonstrations.
+Semauri 0.11 focuses on making the existing language useful for coherent automation rather than only isolated demonstrations. 0.11.1 corrects the directory-creation vocabulary collision present in 0.11.0.
 
 ## Filesystem workflow vocabulary
 
-The built-in `filesystem` domain now supports:
+The built-in `filesystem` domain supports:
 
 ```text
-Make directory "build".
+Mkdir "build".
 Write "content" to "build/file.txt".
 Append "more" to "build/file.txt".
 Copy "build/file.txt" to "build/copy.txt".
@@ -18,7 +18,11 @@ Delete "build/old.tmp".
 
 All operations remain planning operations during compilation. They declare explicit filesystem effects and the default POSIX backend renders shell commands using escaped arguments.
 
-`Append` writes the supplied string exactly and does not add an implicit newline. `Make directory` uses recursive/idempotent directory creation semantics in the POSIX backend.
+`Append` writes the supplied string exactly and does not add an implicit newline. `Mkdir` uses recursive/idempotent directory creation semantics in the POSIX backend.
+
+## 0.11.1 correction
+
+0.11.0 accidentally registered `make` as a filesystem-domain verb even though `make` is reserved by the core English vocabulary. That prevented the default vocabulary from initializing. 0.11.1 uses the unambiguous domain verb `mkdir` and adds regression coverage against the public compiler API.
 
 ## Why this release matters
 

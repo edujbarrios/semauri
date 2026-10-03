@@ -11,7 +11,7 @@ class FilesystemWorkflowsTest < Minitest::Test
   def source
     <<~SEMA
       Within filesystem:
-        Make directory "build".
+        Mkdir "build".
         Write "hello" to "build/notes.txt".
         Append " world" to "build/notes.txt".
         Copy "build/notes.txt" to "build/backup.txt".
@@ -24,7 +24,7 @@ class FilesystemWorkflowsTest < Minitest::Test
 
   def test_practical_filesystem_operations_lower_in_order
     result = @compiler.compile(source)
-    plan = result.output.program
+    plan = result.ir
 
     assert_equal :filesystem, plan.domain
     assert_equal %i[make_directory write append copy move touch delete], plan.operations.map(&:name)
@@ -36,7 +36,7 @@ class FilesystemWorkflowsTest < Minitest::Test
   end
 
   def test_posix_backend_renders_practical_workflow
-    output = @compiler.build(source)
+    output = @compiler.compile(source).output
 
     assert_includes output, "mkdir -p build"
     assert_includes output, "printf '%s' hello > build/notes.txt"
