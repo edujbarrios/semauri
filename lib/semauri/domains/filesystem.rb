@@ -21,7 +21,7 @@ module Semauri
             Operation.new(name: :append, verbs: %w[append], pattern: [Operation.expression(:content, type: :string), Operation.literal("to"), Operation.expression(:path, type: PATH)], effects: [:filesystem_write]),
             Operation.new(name: :copy, verbs: %w[copy], pattern: [Operation.expression(:source, type: PATH), Operation.literal("to"), Operation.expression(:destination, type: PATH)], effects: [:filesystem_read, :filesystem_write]),
             Operation.new(name: :move, verbs: %w[move], pattern: [Operation.expression(:source, type: PATH), Operation.literal("to"), Operation.expression(:destination, type: PATH)], effects: [:filesystem_read, :filesystem_write]),
-            Operation.new(name: :make_directory, verbs: %w[make], pattern: [Operation.literal("directory"), Operation.expression(:path, type: PATH)], effects: [:filesystem_write]),
+            Operation.new(name: :make_directory, verbs: %w[mkdir], pattern: [Operation.expression(:path, type: PATH)], effects: [:filesystem_write]),
             Operation.new(name: :touch, verbs: %w[touch], pattern: [Operation.expression(:path, type: PATH)], effects: [:filesystem_write]),
             Operation.new(name: :delete, verbs: %w[delete remove], pattern: [Operation.expression(:path, type: PATH)], effects: [:filesystem_write])
           ]
