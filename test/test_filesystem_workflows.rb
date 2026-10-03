@@ -11,7 +11,7 @@ class FilesystemWorkflowsTest < Minitest::Test
   def source
     <<~SEMA
       Within filesystem:
-        Make directory "build".
+        Mkdir "build".
         Write "hello" to "build/notes.txt".
         Append " world" to "build/notes.txt".
         Copy "build/notes.txt" to "build/backup.txt".
