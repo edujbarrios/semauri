@@ -4,7 +4,7 @@
 
 **Natural to write. Deterministic to run.**
 
-> Status: **0.11.0 / experimental**
+> Status: **0.11.1 / experimental**
 
 ## What is Semauri?
 
@@ -29,7 +29,7 @@ Compilation remains effect-free: filesystem and ML effects are described before 
 
 ```text
 Within filesystem:
-  Make directory "build".
+  Mkdir "build".
   Write "hello from Semauri" to "build/notes.txt".
   Append " - deterministic automation" to "build/notes.txt".
   Copy "build/notes.txt" to "build/backup.txt".
