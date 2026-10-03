@@ -14,15 +14,17 @@ module Semauri
       TRAINING_CONFIG = Semantics::NominalType.new(domain: :ml, name: :training_config, base_type: :opaque, promote_from_base: false)
       TRAINING_RUN = Semantics::NominalType.new(domain: :ml, name: :training_run, base_type: :opaque, promote_from_base: false)
       INFERENCE_RUN = Semantics::NominalType.new(domain: :ml, name: :inference_run, base_type: :opaque, promote_from_base: false)
+      EVALUATION_RUN = Semantics::NominalType.new(domain: :ml, name: :evaluation_run, base_type: :opaque, promote_from_base: false)
 
       SUPPORTED_OPTIMIZERS = %w[adam adamw sgd].freeze
       SUPPORTED_PRECISIONS = %w[fp32 fp16 bf16].freeze
       SUPPORTED_QUANTIZATION_BITS = [4, 8].freeze
+      SUPPORTED_METRICS = %w[accuracy precision recall f1 loss perplexity].freeze
 
       def initialize
         super(
           name: :ml,
-          types: [DATASET, MODEL, DEVICE, TRAINING_CONFIG, TRAINING_RUN, INFERENCE_RUN],
+          types: [DATASET, MODEL, DEVICE, TRAINING_CONFIG, TRAINING_RUN, INFERENCE_RUN, EVALUATION_RUN],
           operations: [
             Operation.new(name: :open_dataset, verbs: ["open"], pattern: [Operation.literal("dataset"), Operation.expression(:source, type: :string)], returns: DATASET, effects: [:filesystem_read]),
             Operation.new(name: :transform_dataset, verbs: ["transform"], pattern: [Operation.expression(:dataset, type: DATASET), Operation.literal("using"), Operation.expression(:transform, type: :string)], returns: DATASET, effects: []),
@@ -37,7 +39,8 @@ module Semauri
             Operation.new(name: :plan_training, verbs: ["plan"], pattern: [Operation.literal("training"), Operation.literal("for"), Operation.expression(:epochs, type: :number), Operation.literal("epochs"), Operation.literal("using"), Operation.literal("optimizer"), Operation.expression(:optimizer, type: :string), Operation.literal("learning"), Operation.literal("rate"), Operation.expression(:learning_rate, type: :number), Operation.literal("batch"), Operation.literal("size"), Operation.expression(:batch_size, type: :number), Operation.literal("seed"), Operation.expression(:seed, type: :number), Operation.literal("precision"), Operation.expression(:precision, type: :string), Operation.literal("accumulate"), Operation.expression(:gradient_accumulation, type: :number), Operation.literal("steps"), Operation.literal("checkpoint"), Operation.literal("every"), Operation.expression(:checkpoint_every, type: :number), Operation.literal("steps")], returns: TRAINING_CONFIG, effects: []),
             Operation.new(name: :train, verbs: ["train"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("using"), Operation.expression(:dataset, type: DATASET), Operation.literal("on"), Operation.expression(:device, type: DEVICE), Operation.literal("for"), Operation.expression(:epochs, type: :number), Operation.literal("epochs")], returns: TRAINING_RUN, effects: [:compute, :model_training]),
             Operation.new(name: :fit, verbs: ["fit"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("using"), Operation.expression(:dataset, type: DATASET), Operation.literal("on"), Operation.expression(:device, type: DEVICE), Operation.literal("with"), Operation.expression(:config, type: TRAINING_CONFIG)], returns: TRAINING_RUN, effects: [:compute, :model_training]),
-            Operation.new(name: :infer, verbs: ["infer"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("on"), Operation.expression(:dataset, type: DATASET), Operation.literal("using"), Operation.expression(:device, type: DEVICE)], returns: INFERENCE_RUN, effects: [:compute, :model_inference])
+            Operation.new(name: :infer, verbs: ["infer"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("on"), Operation.expression(:dataset, type: DATASET), Operation.literal("using"), Operation.expression(:device, type: DEVICE)], returns: INFERENCE_RUN, effects: [:compute, :model_inference]),
+            Operation.new(name: :evaluate, verbs: ["evaluate"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("on"), Operation.expression(:dataset, type: DATASET), Operation.literal("using"), Operation.expression(:device, type: DEVICE), Operation.literal("metric"), Operation.expression(:metric, type: :string)], returns: EVALUATION_RUN, effects: [:compute, :model_evaluation])
           ]
         )
       end
@@ -60,6 +63,8 @@ module Semauri
         when :split_dataset
           validate_fraction!(arguments.fetch(:ratio), "dataset split ratio", node, code: "S340")
           validate_non_negative_integer!(arguments.fetch(:seed), "dataset split seed", node, code: "S340")
+        when :evaluate
+          validate_metric!(arguments.fetch(:metric), node)
         when :build_cnn
           validate_positive_integer!(arguments.fetch(:classes), "class count", node, code: "S337")
           validate_positive_integer!(arguments.fetch(:input_channels), "input channel count", node, code: "S337")
@@ -95,6 +100,13 @@ module Semauri
         return unless value
         return if SUPPORTED_PRECISIONS.include?(value.to_s.downcase)
         raise_ml_error(node, "Unsupported training precision '#{value}'", code: "S338", hint: "Supported precisions: #{SUPPORTED_PRECISIONS.join(', ')}.")
+      end
+
+      def validate_metric!(argument, node)
+        value = literal_value(argument)
+        return unless value
+        return if SUPPORTED_METRICS.include?(value.to_s.downcase)
+        raise_ml_error(node, "Unsupported evaluation metric '#{value}'", code: "S341", hint: "Supported metrics: #{SUPPORTED_METRICS.join(', ')}.")
       end
 
       def validate_quantization_bits!(argument, node)
