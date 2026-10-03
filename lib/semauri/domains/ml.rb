@@ -17,6 +17,7 @@ module Semauri
 
       SUPPORTED_OPTIMIZERS = %w[adam adamw sgd].freeze
       SUPPORTED_PRECISIONS = %w[fp32 fp16 bf16].freeze
+      SUPPORTED_QUANTIZATION_BITS = [4, 8].freeze
 
       def initialize
         super(
@@ -28,21 +29,10 @@ module Semauri
             Operation.new(name: :build_cnn, verbs: ["build"], pattern: [Operation.literal("cnn"), Operation.literal("for"), Operation.expression(:classes, type: :number), Operation.literal("classes"), Operation.literal("input"), Operation.literal("channels"), Operation.expression(:input_channels, type: :number)], returns: MODEL, effects: []),
             Operation.new(name: :freeze_component, verbs: ["freeze"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("component"), Operation.expression(:component, type: :string)], returns: MODEL, effects: []),
             Operation.new(name: :apply_lora, verbs: ["apply"], pattern: [Operation.literal("lora"), Operation.literal("to"), Operation.expression(:model, type: MODEL), Operation.literal("rank"), Operation.expression(:rank, type: :number), Operation.literal("alpha"), Operation.expression(:alpha, type: :number)], returns: MODEL, effects: []),
+            Operation.new(name: :apply_qlora, verbs: ["adapt"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("with"), Operation.literal("qlora"), Operation.literal("rank"), Operation.expression(:rank, type: :number), Operation.literal("alpha"), Operation.expression(:alpha, type: :number), Operation.literal("quantization"), Operation.expression(:quantization_bits, type: :number), Operation.literal("bits"), Operation.literal("targets"), Operation.expression(:targets, type: :string)], returns: MODEL, effects: []),
             Operation.new(name: :select_device, verbs: ["select"], pattern: [Operation.literal("device"), Operation.expression(:name, type: :string)], returns: DEVICE, effects: []),
-            Operation.new(
-              name: :configure_training,
-              verbs: ["configure"],
-              pattern: [Operation.literal("training"), Operation.literal("for"), Operation.expression(:epochs, type: :number), Operation.literal("epochs"), Operation.literal("using"), Operation.literal("optimizer"), Operation.expression(:optimizer, type: :string), Operation.literal("learning"), Operation.literal("rate"), Operation.expression(:learning_rate, type: :number), Operation.literal("batch"), Operation.literal("size"), Operation.expression(:batch_size, type: :number), Operation.literal("seed"), Operation.expression(:seed, type: :number)],
-              returns: TRAINING_CONFIG,
-              effects: []
-            ),
-            Operation.new(
-              name: :plan_training,
-              verbs: ["plan"],
-              pattern: [Operation.literal("training"), Operation.literal("for"), Operation.expression(:epochs, type: :number), Operation.literal("epochs"), Operation.literal("using"), Operation.literal("optimizer"), Operation.expression(:optimizer, type: :string), Operation.literal("learning"), Operation.literal("rate"), Operation.expression(:learning_rate, type: :number), Operation.literal("batch"), Operation.literal("size"), Operation.expression(:batch_size, type: :number), Operation.literal("seed"), Operation.expression(:seed, type: :number), Operation.literal("precision"), Operation.expression(:precision, type: :string), Operation.literal("accumulate"), Operation.expression(:gradient_accumulation, type: :number), Operation.literal("steps"), Operation.literal("checkpoint"), Operation.literal("every"), Operation.expression(:checkpoint_every, type: :number), Operation.literal("steps")],
-              returns: TRAINING_CONFIG,
-              effects: []
-            ),
+            Operation.new(name: :configure_training, verbs: ["configure"], pattern: [Operation.literal("training"), Operation.literal("for"), Operation.expression(:epochs, type: :number), Operation.literal("epochs"), Operation.literal("using"), Operation.literal("optimizer"), Operation.expression(:optimizer, type: :string), Operation.literal("learning"), Operation.literal("rate"), Operation.expression(:learning_rate, type: :number), Operation.literal("batch"), Operation.literal("size"), Operation.expression(:batch_size, type: :number), Operation.literal("seed"), Operation.expression(:seed, type: :number)], returns: TRAINING_CONFIG, effects: []),
+            Operation.new(name: :plan_training, verbs: ["plan"], pattern: [Operation.literal("training"), Operation.literal("for"), Operation.expression(:epochs, type: :number), Operation.literal("epochs"), Operation.literal("using"), Operation.literal("optimizer"), Operation.expression(:optimizer, type: :string), Operation.literal("learning"), Operation.literal("rate"), Operation.expression(:learning_rate, type: :number), Operation.literal("batch"), Operation.literal("size"), Operation.expression(:batch_size, type: :number), Operation.literal("seed"), Operation.expression(:seed, type: :number), Operation.literal("precision"), Operation.expression(:precision, type: :string), Operation.literal("accumulate"), Operation.expression(:gradient_accumulation, type: :number), Operation.literal("steps"), Operation.literal("checkpoint"), Operation.literal("every"), Operation.expression(:checkpoint_every, type: :number), Operation.literal("steps")], returns: TRAINING_CONFIG, effects: []),
             Operation.new(name: :train, verbs: ["train"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("using"), Operation.expression(:dataset, type: DATASET), Operation.literal("on"), Operation.expression(:device, type: DEVICE), Operation.literal("for"), Operation.expression(:epochs, type: :number), Operation.literal("epochs")], returns: TRAINING_RUN, effects: [:compute, :model_training]),
             Operation.new(name: :fit, verbs: ["fit"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("using"), Operation.expression(:dataset, type: DATASET), Operation.literal("on"), Operation.expression(:device, type: DEVICE), Operation.literal("with"), Operation.expression(:config, type: TRAINING_CONFIG)], returns: TRAINING_RUN, effects: [:compute, :model_training]),
             Operation.new(name: :infer, verbs: ["infer"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("on"), Operation.expression(:dataset, type: DATASET), Operation.literal("using"), Operation.expression(:device, type: DEVICE)], returns: INFERENCE_RUN, effects: [:compute, :model_inference])
@@ -71,6 +61,11 @@ module Semauri
         when :apply_lora
           validate_positive_integer!(arguments.fetch(:rank), "LoRA rank", node, code: "S337")
           validate_positive_number!(arguments.fetch(:alpha), "LoRA alpha", node, code: "S337")
+        when :apply_qlora
+          validate_positive_integer!(arguments.fetch(:rank), "QLoRA rank", node, code: "S339")
+          validate_positive_number!(arguments.fetch(:alpha), "QLoRA alpha", node, code: "S339")
+          validate_quantization_bits!(arguments.fetch(:quantization_bits), node)
+          validate_non_empty_string!(arguments.fetch(:targets), "QLoRA targets", node, code: "S339")
         end
         arguments
       end
@@ -93,6 +88,13 @@ module Semauri
         return unless value
         return if SUPPORTED_PRECISIONS.include?(value.to_s.downcase)
         raise_ml_error(node, "Unsupported training precision '#{value}'", code: "S338", hint: "Supported precisions: #{SUPPORTED_PRECISIONS.join(', ')}.")
+      end
+
+      def validate_quantization_bits!(argument, node)
+        value = literal_value(argument)
+        return unless value
+        return if SUPPORTED_QUANTIZATION_BITS.include?(value)
+        raise_ml_error(node, "Unsupported QLoRA quantization '#{value}' bits", code: "S339", hint: "Supported quantization widths: #{SUPPORTED_QUANTIZATION_BITS.join(', ')} bits.")
       end
 
       def validate_positive_number!(argument, name, node, code:)
