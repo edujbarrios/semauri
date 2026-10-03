@@ -91,6 +91,39 @@ class MLDomainTest < Minitest::Test
     assert_equal [:compute, :model_training], fit.effects
   end
 
+  def test_dataset_transforms_and_splits_preserve_typed_lineage
+    program = <<~SEMA
+      Within ml:
+        Let dataset be Open dataset "./images".
+        Let normalized be Transform dataset using "normalize".
+        Let training be Split normalized ratio 0.8 seed 42.
+      End.
+    SEMA
+    plan = @compiler.runtime_plan(program)
+    open, transform, split = plan.operations
+    assert_equal %i[open_dataset transform_dataset split_dataset], plan.operations.map(&:name)
+    assert_equal open.result.id, transform.arguments.fetch(:dataset).id
+    assert_equal transform.result.id, split.arguments.fetch(:dataset).id
+    assert_equal "normalize", transform.arguments.fetch(:transform)
+    assert_in_delta 0.8, split.arguments.fetch(:ratio), 0.000001
+    assert_equal 42, split.arguments.fetch(:seed)
+    assert_equal "ml.dataset", split.result.type.to_s
+    assert_empty transform.effects
+    assert_empty split.effects
+  end
+
+  def test_dataset_split_rejects_invalid_ratio
+    invalid = <<~SEMA
+      Within ml:
+        Let dataset be Open dataset "./images".
+        Let training be Split dataset ratio 1.2 seed 42.
+      End.
+    SEMA
+    error = assert_raises(Semauri::SemanticError) { @compiler.hir(invalid) }
+    assert_equal "S340", error.code
+    assert_includes error.message, "split ratio"
+  end
+
   def test_qlora_produces_derived_model_with_explicit_configuration
     source = <<~SEMA
       Within ml:
