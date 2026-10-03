@@ -26,8 +26,16 @@ module Semauri
         case operation.name
         when :write
           "printf '%s' #{escape(arguments.fetch(:content))} > #{escape(arguments.fetch(:path))}"
+        when :append
+          "printf '%s' #{escape(arguments.fetch(:content))} >> #{escape(arguments.fetch(:path))}"
         when :copy
           "cp #{escape(arguments.fetch(:source))} #{escape(arguments.fetch(:destination))}"
+        when :move
+          "mv #{escape(arguments.fetch(:source))} #{escape(arguments.fetch(:destination))}"
+        when :make_directory
+          "mkdir -p #{escape(arguments.fetch(:path))}"
+        when :touch
+          "touch #{escape(arguments.fetch(:path))}"
         when :delete
           "rm -f #{escape(arguments.fetch(:path))}"
         else
