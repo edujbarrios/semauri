@@ -8,6 +8,7 @@ require_relative "vocabulary/english"
 module Semauri
   class Lexer
     PUNCTUATION = { "." => :DOT, "," => :COMMA, ":" => :COLON, "(" => :LPAREN, ")" => :RPAREN }.freeze
+    ESCAPES = { "n" => "\n", "t" => "\t", "r" => "\r", '"' => '"', "\\" => "\\" }.freeze
 
     def initialize(source, vocabulary: Vocabulary::English.new)
       @source = source
@@ -26,25 +27,20 @@ module Semauri
     private
 
     def next_token
-      skip_whitespace
+      skip_ignored
       return token(:EOF, "") if eof?
-
       start_line = @line
       start_column = @column
       char = current
-
       if PUNCTUATION.key?(char)
         advance
         return Token.new(type: PUNCTUATION.fetch(char), lexeme: char, literal: nil,
                          line: start_line, column: start_column, end_line: @line, end_column: @column)
       end
-
       return string_token(start_line, start_column) if char == '"'
       return number_token(start_line, start_column) if digit?(char)
       return word_token(start_line, start_column) if word_start?(char)
-
-      raise LexError.new("Unexpected character #{char.inspect}", code: "S101",
-                         line: start_line, column: start_column,
+      raise LexError.new("Unexpected character #{char.inspect}", code: "S101", line: start_line, column: start_column,
                          end_line: start_line, end_column: start_column + 1)
     end
 
@@ -73,10 +69,25 @@ module Semauri
       value = +""
       until eof? || current == '"'
         if current == "\n"
-          raise LexError.new("Strings cannot span multiple lines yet", code: "S102",
+          raise LexError.new("Literal newlines are not allowed in strings; use an escaped newline", code: "S102",
                              line: line, column: column, end_line: @line, end_column: @column)
         end
-        value << advance
+        if current == "\\"
+          advance
+          if eof?
+            raise LexError.new("Unterminated string escape", code: "S104", line: line, column: column,
+                               end_line: @line, end_column: @column)
+          end
+          escaped = advance
+          replacement = ESCAPES[escaped]
+          unless replacement
+            raise LexError.new("Unsupported string escape \\#{escaped}", code: "S104", line: @line,
+                               column: @column - 2, end_line: @line, end_column: @column)
+          end
+          value << replacement
+        else
+          value << advance
+        end
       end
       if eof?
         raise LexError.new("Unterminated string", code: "S103", line: line, column: column,
@@ -87,13 +98,17 @@ module Semauri
                 end_line: @line, end_column: @column)
     end
 
-    def skip_whitespace
-      advance while !eof? && current.match?(/\s/)
+    def skip_ignored
+      loop do
+        advance while !eof? && current.match?(/\s/)
+        break unless current == "#"
+        advance until eof? || current == "\n"
+      end
     end
 
     def digit?(char) = char && char.match?(/[0-9]/)
-    def word_start?(char) = char.match?(/[[:alpha:]]/)
-    def word_char?(char) = char.match?(/[[:alnum:]_'-]/)
+    def word_start?(char) = char && char.match?(/[[:alpha:]]/)
+    def word_char?(char) = char && char.match?(/[[:alnum:]_'-]/)
     def current = @source[@index]
     def peek_char = @source[@index + 1]
     def eof? = @index >= @source.length
