@@ -4,7 +4,7 @@
 
 **Natural to write. Deterministic to run.**
 
-> Status: **0.12.0 / experimental**
+> Status: **0.13.0 / experimental**
 
 ## What is Semauri?
 
@@ -12,11 +12,9 @@ Semauri is an experimental open-source programming language based on **controlle
 
 ## What can it do today?
 
-Semauri already has a useful deterministic subset:
-
 | Area | Current capability |
 | --- | --- |
-| Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If`, static `For every` |
+| Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If`, static `For every`, `#` comments, escaped strings |
 | Web | build typed web documents and render HTML |
 | Structured data | build typed schemas and render JSON Schema |
 | Filesystem | plan and explicitly execute write/append/copy/move/mkdir/touch/delete workflows |
@@ -24,6 +22,17 @@ Semauri already has a useful deterministic subset:
 | Tooling | inspect HIR, symbols, effects, optimization and runtime plans; capability-gated `run` |
 
 Compilation remains effect-free. Execution is a separate opt-in step and effectful programs must be authorized explicitly.
+
+### Source usability in 0.13
+
+Programs can now contain line comments and escaped text without preprocessing:
+
+```text
+# Strings support newline, tab, quote and backslash escapes.
+Let message be "hello\nfrom Semauri".
+```
+
+Supported escapes are `\n`, `\t`, `\r`, `\"` and `\\`. Unknown escapes are rejected with a source diagnostic instead of being silently accepted.
 
 ## Example: Semauri to HTML
 
@@ -67,8 +76,6 @@ Semauri evaluates the deterministic control flow (`18 + 4 > 20`) and generates t
 </html>
 ```
 
-This is the key idea: the Semauri source is typed and deterministic, while the web backend turns it into ordinary HTML that can be opened by a browser.
-
 ## Example: practical filesystem automation
 
 ```text
@@ -89,7 +96,7 @@ Compile without effects:
 semauri build examples/filesystem.sema
 ```
 
-Or explicitly execute the supported filesystem runtime after authorizing its capabilities:
+Or explicitly execute it after authorizing capabilities:
 
 ```sh
 semauri run --allow filesystem_read --allow filesystem_write examples/filesystem.sema
@@ -99,7 +106,7 @@ Use `--dry-run` to inspect the executable plan without performing effects, and `
 
 ## Direction
 
-Semauri is not yet a complete general-purpose runtime language. With 0.12 it has its first explicit execution path; the next practical milestones are user-defined typed procedures/functions, runtime-dependent control flow, structured record/map values, HTTP/process domains, richer filesystem reads/queries, modules and a small standard library.
+Semauri is not yet a complete general-purpose runtime language. The next major milestones are user-defined typed procedures/functions, runtime-dependent control flow, structured record/map values, HTTP/process domains, richer filesystem reads/queries, modules and a small standard library.
 
 The design rule remains: add useful power without giving up deterministic semantics, inspectable effects or the compiler/runtime boundary.
 
