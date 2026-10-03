@@ -4,54 +4,50 @@
 
 **Natural to write. Deterministic to run.**
 
-> Status: **0.8.0 / experimental**
+> Status: **0.11.0 / experimental**
 
 ## What is Semauri?
 
-Semauri is an experimental open-source programming language based on **controlled natural language**.
+Semauri is an experimental open-source programming language based on **controlled natural language**. It combines an explicit grammar, typed HIR, lexical scopes, deterministic resolution, effects and semantic domains. It is not unrestricted English and it is not an LLM wrapper.
 
-Its source code is designed to read like clear instructions, while still behaving like a real programming language: it has an explicit grammar, semantic types, lexical scopes, deterministic name/reference resolution, compiler diagnostics and well-defined lowering rules.
+## What can it do today?
 
-Semauri is **not unrestricted English** and it is **not an LLM wrapper**. The compiler does not guess what a program means. If a phrase is unsupported or ambiguous, compilation fails instead of choosing an interpretation probabilistically.
+Semauri already has a useful deterministic subset:
 
-## Goal
+| Area | Current capability |
+| --- | --- |
+| Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If`, static `For every` |
+| Web | build typed web documents and render HTML |
+| Structured data | build typed schemas and render JSON Schema |
+| Filesystem | plan practical write/append/copy/move/mkdir/touch/delete workflows and render POSIX shell |
+| ML | plan typed datasets, models, devices, training, inference, LoRA/QLoRA and training configuration |
+| Tooling | inspect HIR, symbols, effects, optimization and runtime plans |
 
-Semauri explores a simple idea:
+Compilation remains effect-free: filesystem and ML effects are described before execution rather than silently performed by the compiler.
 
-> Make programs easier to read and express without giving up deterministic compiler semantics.
-
-The language separates general programming constructs from application-specific meaning. Core syntax handles values, bindings, expressions and control flow; **semantic domains** contribute concepts such as web elements, filesystem operations or ML models without forcing those concepts into the core grammar.
-
-## What does a Semauri program look like?
+## Example: practical filesystem automation
 
 ```text
-Let price be 18.
-Let tax be 4.
-Let total be price plus tax.
-
-Create a web called Pet Shop.
-Add a button called Buy.
-
-If total is greater than or equal to 22:
-  Set the color of the button called Buy to red.
-Otherwise:
-  Set the color of the button called Buy to green.
+Within filesystem:
+  Make directory "build".
+  Write "hello from Semauri" to "build/notes.txt".
+  Append " - deterministic automation" to "build/notes.txt".
+  Copy "build/notes.txt" to "build/backup.txt".
+  Move "build/backup.txt" to "build/archive.txt".
+  Touch "build/complete.marker".
+  Delete "build/old.tmp".
 End.
 ```
 
-This is natural-looking syntax, but every construct has explicit semantics:
+The filesystem domain lowers this program to a typed operation plan with explicit `filesystem_read` / `filesystem_write` effects. Its default backend can render a POSIX shell script without performing the operations during compilation.
 
-- `Let` creates an immutable typed binding.
-- `price plus tax` is a typed numeric expression.
-- `Create a web` and `Add a button` are provided by the Web semantic domain.
-- `If / Otherwise / End` is structured control flow.
-- `is greater than or equal to` is a typed inclusive numeric comparison.
-- `the button called Buy` is an explicit deterministic reference.
-- `color` accepts a typed `color` value rather than arbitrary text.
+## Direction
 
-With the same Semauri version, source, domain registry and backend, the same valid program must resolve to the same semantic result.
+Semauri is not yet a complete general-purpose runtime language. The next practical milestones are explicit `semauri run` execution with capability enforcement, user-defined typed procedures/functions, runtime control flow, structured record/map values, HTTP/process domains, richer filesystem reads/queries, modules and a small standard library.
 
-## How does it work?
+The design rule remains: add useful power without giving up deterministic semantics, inspectable effects or the compiler/runtime boundary.
+
+## Architecture
 
 ```text
 Semauri source
@@ -70,72 +66,19 @@ optimization
     ↓
 semantic/domain IR or RuntimePlan
     ↓
-backend / execution runtime
+backend / explicit execution runtime
 ```
 
-The important boundary is that **meaning is resolved before a backend renders or a runtime executes anything**.
+## Documentation
 
-The compiler can therefore inspect the program at several levels (`hir`, `symbols`, `effects`, `plan`, `explain`) without asking an AI model to interpret the source.
-
-### Core language
-
-The current language includes:
-
-- immutable `Let` bindings;
-- `number`, `string`, `boolean`, `color` and homogeneous `List<T>` values;
-- arithmetic, strict and inclusive comparisons, and boolean logic;
-- lexical scopes and shadowing;
-- `If / Otherwise / End`;
-- `For every ... in ...`;
-- explicit semantic scopes with `Within <domain>: ... End.`;
-- deterministic reference and ambiguity handling;
-- typed HIR, semantic symbols and source-aware diagnostics;
-- static effect analysis and capability policies;
-- runtime operation values represented through inspectable plans.
-
-### Semantic domains
-
-Application-specific concepts are added through semantic domains instead of expanding the core parser with special cases.
-
-Built-in domains currently include:
-
-| Domain | Purpose | Typical output / plan |
-| --- | --- | --- |
-| **Web** | web documents and elements | HTML |
-| **Structured Data** | schemas and fields | JSON Schema |
-| **Filesystem** | typed filesystem operations | POSIX shell plan |
-| **ML** | datasets, models, devices, training and inference intent | RuntimePlan |
-
-A domain can contribute vocabulary, nominal types, typed operations, effects and semantic IR while the core compiler keeps the same deterministic pipeline.
-
-### Effects are planned, not silently executed
-
-Compilation can describe operations such as filesystem access or ML execution and expose their effects, but compiling a Semauri program does not automatically perform those external effects. Runtime-dependent work is lowered into an inspectable `RuntimePlan`.
-
-## Documentation — reading order
-
-The documentation is numbered so the intended reading order stays obvious as the language grows:
-
-1. [`00_INSTALLATION.md`](docs/00_INSTALLATION.md) — install Semauri, update it, or run the compiler from source.
-2. [`01_LANGUAGE.md`](docs/01_LANGUAGE.md) — language grammar and implemented semantics.
-3. [`02_TYPES.md`](docs/02_TYPES.md) — primitive and nominal semantic types.
-4. [`03_DOMAINS.md`](docs/03_DOMAINS.md) — semantic-domain extension model.
-5. [`04_EFFECTS.md`](docs/04_EFFECTS.md) — effects and capability policies.
-6. [`05_RUNTIME.md`](docs/05_RUNTIME.md) — runtime planning and runtime values.
-7. [`06_ML.md`](docs/06_ML.md) — built-in ML semantic domain.
-8. [`07_UNIVERSAL_DOMAINS.md`](docs/07_UNIVERSAL_DOMAINS.md) — longer-term multi-domain architecture.
-9. [`08_ARCHITECTURE.md`](docs/08_ARCHITECTURE.md) — compiler architecture and phase boundaries.
-10. [`09_DISTRIBUTION.md`](docs/09_DISTRIBUTION.md) — release packages, private runtime and distribution model.
-11. [`10_ROADMAP.md`](docs/10_ROADMAP.md) — implemented milestones and future direction.
-
-When a new documentation topic is added, insert it where it belongs conceptually and renumber the sequence so the directory remains readable from top to bottom.
+Start with `docs/00_INSTALLATION.md`, then `docs/01_LANGUAGE.md`, `docs/02_TYPES.md`, `docs/03_DOMAINS.md`, `docs/04_EFFECTS.md`, `docs/05_RUNTIME.md` and `docs/06_ML.md`. Architecture, distribution and roadmap documents continue under `docs/`.
 
 ## Contributing
 
-Contributions are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Contributions are welcome. See `CONTRIBUTING.md`.
 
 ## License
 
 Copyright 2026 Eduardo J. Barrios.
 
-Licensed under the **Apache License 2.0**. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+Licensed under the **Apache License 2.0**. See `LICENSE` and `NOTICE`.
