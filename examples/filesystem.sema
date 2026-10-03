@@ -1,5 +1,5 @@
 Within filesystem:
-  Make directory "build".
+  Mkdir "build".
   Write "hello from Semauri" to "build/notes.txt".
   Append " - deterministic automation" to "build/notes.txt".
   Copy "build/notes.txt" to "build/backup.txt".
