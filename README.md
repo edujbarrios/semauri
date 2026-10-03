@@ -4,7 +4,7 @@
 
 **Natural to write. Deterministic to run.**
 
-> Status: **0.11.1 / experimental**
+> Status: **0.12.0 / experimental**
 
 ## What is Semauri?
 
@@ -19,11 +19,11 @@ Semauri already has a useful deterministic subset:
 | Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If`, static `For every` |
 | Web | build typed web documents and render HTML |
 | Structured data | build typed schemas and render JSON Schema |
-| Filesystem | plan practical write/append/copy/move/mkdir/touch/delete workflows and render POSIX shell |
+| Filesystem | plan and explicitly execute write/append/copy/move/mkdir/touch/delete workflows |
 | ML | plan typed datasets, models, devices, training, inference, LoRA/QLoRA and training configuration |
-| Tooling | inspect HIR, symbols, effects, optimization and runtime plans |
+| Tooling | inspect HIR, symbols, effects, optimization and runtime plans; capability-gated `run` |
 
-Compilation remains effect-free: filesystem and ML effects are described before execution rather than silently performed by the compiler.
+Compilation remains effect-free. Execution is a separate opt-in step and effectful programs must be authorized explicitly.
 
 ## Example: practical filesystem automation
 
@@ -39,11 +39,23 @@ Within filesystem:
 End.
 ```
 
-The filesystem domain lowers this program to a typed operation plan with explicit `filesystem_read` / `filesystem_write` effects. Its default backend can render a POSIX shell script without performing the operations during compilation.
+Compile without effects:
+
+```sh
+semauri build examples/filesystem.sema
+```
+
+Or explicitly execute the supported filesystem runtime after authorizing its capabilities:
+
+```sh
+semauri run --allow filesystem_read --allow filesystem_write examples/filesystem.sema
+```
+
+Use `--dry-run` to inspect the executable plan without performing effects, and `--cwd PATH` to choose the execution directory.
 
 ## Direction
 
-Semauri is not yet a complete general-purpose runtime language. The next practical milestones are explicit `semauri run` execution with capability enforcement, user-defined typed procedures/functions, runtime control flow, structured record/map values, HTTP/process domains, richer filesystem reads/queries, modules and a small standard library.
+Semauri is not yet a complete general-purpose runtime language. With 0.12 it has its first explicit execution path; the next practical milestones are user-defined typed procedures/functions, runtime-dependent control flow, structured record/map values, HTTP/process domains, richer filesystem reads/queries, modules and a small standard library.
 
 The design rule remains: add useful power without giving up deterministic semantics, inspectable effects or the compiler/runtime boundary.
 
@@ -66,7 +78,7 @@ optimization
     ↓
 semantic/domain IR or RuntimePlan
     ↓
-backend / explicit execution runtime
+backend / explicit capability-gated runtime
 ```
 
 ## Documentation
