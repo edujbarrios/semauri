@@ -1,5 +1,9 @@
-Let message be "hello from Semauri".
-
-Write message to "notes.txt".
-Copy "notes.txt" to "backup.txt".
-Delete "old.tmp".
+Within filesystem:
+  Make directory "build".
+  Write "hello from Semauri" to "build/notes.txt".
+  Append " - deterministic automation" to "build/notes.txt".
+  Copy "build/notes.txt" to "build/backup.txt".
+  Move "build/backup.txt" to "build/archive.txt".
+  Touch "build/complete.marker".
+  Delete "build/old.tmp".
+End.
