@@ -25,6 +25,50 @@ Semauri already has a useful deterministic subset:
 
 Compilation remains effect-free. Execution is a separate opt-in step and effectful programs must be authorized explicitly.
 
+## Example: Semauri to HTML
+
+The repository includes this example as `examples/shop.sema`:
+
+```text
+Let price be 18.
+Let tax be 4.
+Let total be price plus tax.
+
+Create a web called Pet Shop.
+Add a button called Buy.
+
+If total is greater than 20:
+  Set the color of the button called Buy to red.
+Otherwise:
+  Set the color of the button called Buy to green.
+End.
+```
+
+Build it with:
+
+```sh
+semauri build examples/shop.sema
+```
+
+Semauri evaluates the deterministic control flow (`18 + 4 > 20`) and generates this HTML:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pet Shop</title>
+</head>
+<body>
+  <h1>Pet Shop</h1>
+    <button style="color: red">Buy</button>
+</body>
+</html>
+```
+
+This is the key idea: the Semauri source is typed and deterministic, while the web backend turns it into ordinary HTML that can be opened by a browser.
+
 ## Example: practical filesystem automation
 
 ```text
