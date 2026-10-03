@@ -24,4 +24,20 @@ class LexerTest < Minitest::Test
     assert_equal %i[LET WORD BE NUMBER DOT EOF], tokens.map(&:type)
     assert_equal 2.5, tokens[3].literal
   end
+
+  def test_ignores_hash_comments
+    source = "# explain the next binding\nLet count be 2. # trailing comment\n"
+    tokens = Semauri::Lexer.new(source).tokens
+    assert_equal %i[LET WORD BE NUMBER DOT EOF], tokens.map(&:type)
+  end
+
+  def test_decodes_common_string_escapes
+    tokens = Semauri::Lexer.new('Let text be "line 1\\nline 2\\t\\"ok\\"\\\\".').tokens
+    assert_equal "line 1\nline 2\t\"ok\"\\", tokens[3].literal
+  end
+
+  def test_rejects_unknown_string_escape
+    error = assert_raises(Semauri::LexError) { Semauri::Lexer.new('Let text be "bad\\q".').tokens }
+    assert_equal "S104", error.code
+  end
 end
