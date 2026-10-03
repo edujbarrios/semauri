@@ -29,23 +29,18 @@ module Semauri
     def next_token
       skip_ignored
       return token(:EOF, "") if eof?
-
       start_line = @line
       start_column = @column
       char = current
-
       if PUNCTUATION.key?(char)
         advance
         return Token.new(type: PUNCTUATION.fetch(char), lexeme: char, literal: nil,
                          line: start_line, column: start_column, end_line: @line, end_column: @column)
       end
-
       return string_token(start_line, start_column) if char == '"'
       return number_token(start_line, start_column) if digit?(char)
       return word_token(start_line, start_column) if word_start?(char)
-
-      raise LexError.new("Unexpected character #{char.inspect}", code: "S101",
-                         line: start_line, column: start_column,
+      raise LexError.new("Unexpected character #{char.inspect}", code: "S101", line: start_line, column: start_column,
                          end_line: start_line, end_column: start_column + 1)
     end
 
@@ -74,7 +69,7 @@ module Semauri
       value = +""
       until eof? || current == '"'
         if current == "\n"
-          raise LexError.new("Literal newlines are not allowed in strings; use \\n", code: "S102",
+          raise LexError.new("Literal newlines are not allowed in strings; use an escaped newline", code: "S102",
                              line: line, column: column, end_line: @line, end_column: @column)
         end
         if current == "\\"
