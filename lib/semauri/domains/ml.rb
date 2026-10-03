@@ -25,6 +25,8 @@ module Semauri
           types: [DATASET, MODEL, DEVICE, TRAINING_CONFIG, TRAINING_RUN, INFERENCE_RUN],
           operations: [
             Operation.new(name: :open_dataset, verbs: ["open"], pattern: [Operation.literal("dataset"), Operation.expression(:source, type: :string)], returns: DATASET, effects: [:filesystem_read]),
+            Operation.new(name: :transform_dataset, verbs: ["transform"], pattern: [Operation.expression(:dataset, type: DATASET), Operation.literal("using"), Operation.expression(:transform, type: :string)], returns: DATASET, effects: []),
+            Operation.new(name: :split_dataset, verbs: ["split"], pattern: [Operation.expression(:dataset, type: DATASET), Operation.literal("ratio"), Operation.expression(:ratio, type: :number), Operation.literal("seed"), Operation.expression(:seed, type: :number)], returns: DATASET, effects: []),
             Operation.new(name: :load_model, verbs: ["load"], pattern: [Operation.literal("model"), Operation.expression(:identifier, type: :string)], returns: MODEL, effects: [:model_load]),
             Operation.new(name: :build_cnn, verbs: ["build"], pattern: [Operation.literal("cnn"), Operation.literal("for"), Operation.expression(:classes, type: :number), Operation.literal("classes"), Operation.literal("input"), Operation.literal("channels"), Operation.expression(:input_channels, type: :number)], returns: MODEL, effects: []),
             Operation.new(name: :freeze_component, verbs: ["freeze"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("component"), Operation.expression(:component, type: :string)], returns: MODEL, effects: []),
@@ -53,6 +55,11 @@ module Semauri
             validate_positive_integer!(arguments.fetch(:gradient_accumulation), "gradient accumulation", node, code: "S338")
             validate_positive_integer!(arguments.fetch(:checkpoint_every), "checkpoint interval", node, code: "S338")
           end
+        when :transform_dataset
+          validate_non_empty_string!(arguments.fetch(:transform), "dataset transform", node, code: "S340")
+        when :split_dataset
+          validate_fraction!(arguments.fetch(:ratio), "dataset split ratio", node, code: "S340")
+          validate_non_negative_integer!(arguments.fetch(:seed), "dataset split seed", node, code: "S340")
         when :build_cnn
           validate_positive_integer!(arguments.fetch(:classes), "class count", node, code: "S337")
           validate_positive_integer!(arguments.fetch(:input_channels), "input channel count", node, code: "S337")
@@ -102,6 +109,13 @@ module Semauri
         return unless value
         return if value.is_a?(Numeric) && value.positive?
         raise_ml_error(node, "#{name} must be greater than zero", code: code)
+      end
+
+      def validate_fraction!(argument, name, node, code:)
+        value = literal_value(argument)
+        return unless value
+        return if value.is_a?(Numeric) && value.positive? && value < 1
+        raise_ml_error(node, "#{name} must be greater than zero and less than one", code: code)
       end
 
       def validate_positive_integer!(argument, name, node, code:)
