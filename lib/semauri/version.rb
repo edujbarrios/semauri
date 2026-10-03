@@ -2,5 +2,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
 module Semauri
-  VERSION = "0.11.0"
+  VERSION = "0.11.1"
 end
