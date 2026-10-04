@@ -96,63 +96,63 @@ module Semauri
 
       def validate_optimizer!(argument, node)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if SUPPORTED_OPTIMIZERS.include?(value.to_s.downcase)
         raise_ml_error(node, "Unsupported optimizer '#{value}'", code: "S336", hint: "Supported optimizers: #{SUPPORTED_OPTIMIZERS.join(', ')}.")
       end
 
       def validate_precision!(argument, node)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if SUPPORTED_PRECISIONS.include?(value.to_s.downcase)
         raise_ml_error(node, "Unsupported training precision '#{value}'", code: "S338", hint: "Supported precisions: #{SUPPORTED_PRECISIONS.join(', ')}.")
       end
 
       def validate_metric!(argument, node)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if SUPPORTED_METRICS.include?(value.to_s.downcase)
         raise_ml_error(node, "Unsupported evaluation metric '#{value}'", code: "S341", hint: "Supported metrics: #{SUPPORTED_METRICS.join(', ')}.")
       end
 
       def validate_quantization_bits!(argument, node)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if SUPPORTED_QUANTIZATION_BITS.include?(value)
         raise_ml_error(node, "Unsupported QLoRA quantization '#{value}' bits", code: "S339", hint: "Supported quantization widths: #{SUPPORTED_QUANTIZATION_BITS.join(', ')} bits.")
       end
 
       def validate_positive_number!(argument, name, node, code:)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if value.is_a?(Numeric) && value.positive?
         raise_ml_error(node, "#{name} must be greater than zero", code: code)
       end
 
       def validate_fraction!(argument, name, node, code:)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if value.is_a?(Numeric) && value.positive? && value < 1
         raise_ml_error(node, "#{name} must be greater than zero and less than one", code: code)
       end
 
       def validate_positive_integer!(argument, name, node, code:)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if value.is_a?(Numeric) && value.positive? && value.to_i == value
         raise_ml_error(node, "#{name} must be a positive integer", code: code)
       end
 
       def validate_non_negative_integer!(argument, name, node, code:)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if value.is_a?(Numeric) && !value.negative? && value.to_i == value
         raise_ml_error(node, "#{name} must be a non-negative integer", code: code)
       end
 
       def validate_non_empty_string!(argument, name, node, code:)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if value.is_a?(String) && !value.strip.empty?
         raise_ml_error(node, "#{name} must be a non-empty string", code: code)
       end
