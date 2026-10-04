@@ -11,6 +11,7 @@ module Semauri
       DATASET = Semantics::NominalType.new(domain: :ml, name: :dataset, base_type: :string, promote_from_base: false)
       MODEL = Semantics::NominalType.new(domain: :ml, name: :model, base_type: :string, promote_from_base: false)
       DEVICE = Semantics::NominalType.new(domain: :ml, name: :device, base_type: :string, promote_from_base: false)
+      RESOURCE_BUDGET = Semantics::NominalType.new(domain: :ml, name: :resource_budget, base_type: :opaque, promote_from_base: false)
       TRAINING_CONFIG = Semantics::NominalType.new(domain: :ml, name: :training_config, base_type: :opaque, promote_from_base: false)
       TRAINING_RUN = Semantics::NominalType.new(domain: :ml, name: :training_run, base_type: :opaque, promote_from_base: false)
       INFERENCE_RUN = Semantics::NominalType.new(domain: :ml, name: :inference_run, base_type: :opaque, promote_from_base: false)
@@ -24,7 +25,7 @@ module Semauri
       def initialize
         super(
           name: :ml,
-          types: [DATASET, MODEL, DEVICE, TRAINING_CONFIG, TRAINING_RUN, INFERENCE_RUN, EVALUATION_RUN],
+          types: [DATASET, MODEL, DEVICE, RESOURCE_BUDGET, TRAINING_CONFIG, TRAINING_RUN, INFERENCE_RUN, EVALUATION_RUN],
           operations: [
             Operation.new(name: :open_dataset, verbs: ["open"], pattern: [Operation.literal("dataset"), Operation.expression(:source, type: :string)], returns: DATASET, effects: [:filesystem_read]),
             Operation.new(name: :transform_dataset, verbs: ["transform"], pattern: [Operation.expression(:dataset, type: DATASET), Operation.literal("using"), Operation.expression(:transform, type: :string)], returns: DATASET, effects: []),
@@ -35,10 +36,12 @@ module Semauri
             Operation.new(name: :apply_lora, verbs: ["apply"], pattern: [Operation.literal("lora"), Operation.literal("to"), Operation.expression(:model, type: MODEL), Operation.literal("rank"), Operation.expression(:rank, type: :number), Operation.literal("alpha"), Operation.expression(:alpha, type: :number)], returns: MODEL, effects: []),
             Operation.new(name: :apply_qlora, verbs: ["adapt"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("with"), Operation.literal("qlora"), Operation.literal("rank"), Operation.expression(:rank, type: :number), Operation.literal("alpha"), Operation.expression(:alpha, type: :number), Operation.literal("quantization"), Operation.expression(:quantization_bits, type: :number), Operation.literal("bits"), Operation.literal("targets"), Operation.expression(:targets, type: :string)], returns: MODEL, effects: []),
             Operation.new(name: :select_device, verbs: ["select"], pattern: [Operation.literal("device"), Operation.expression(:name, type: :string)], returns: DEVICE, effects: []),
+            Operation.new(name: :budget_resources, verbs: ["budget"], pattern: [Operation.literal("resources"), Operation.literal("memory"), Operation.expression(:memory_gb, type: :number), Operation.literal("gb"), Operation.literal("workers"), Operation.expression(:workers, type: :number)], returns: RESOURCE_BUDGET, effects: []),
             Operation.new(name: :configure_training, verbs: ["configure"], pattern: [Operation.literal("training"), Operation.literal("for"), Operation.expression(:epochs, type: :number), Operation.literal("epochs"), Operation.literal("using"), Operation.literal("optimizer"), Operation.expression(:optimizer, type: :string), Operation.literal("learning"), Operation.literal("rate"), Operation.expression(:learning_rate, type: :number), Operation.literal("batch"), Operation.literal("size"), Operation.expression(:batch_size, type: :number), Operation.literal("seed"), Operation.expression(:seed, type: :number)], returns: TRAINING_CONFIG, effects: []),
             Operation.new(name: :plan_training, verbs: ["plan"], pattern: [Operation.literal("training"), Operation.literal("for"), Operation.expression(:epochs, type: :number), Operation.literal("epochs"), Operation.literal("using"), Operation.literal("optimizer"), Operation.expression(:optimizer, type: :string), Operation.literal("learning"), Operation.literal("rate"), Operation.expression(:learning_rate, type: :number), Operation.literal("batch"), Operation.literal("size"), Operation.expression(:batch_size, type: :number), Operation.literal("seed"), Operation.expression(:seed, type: :number), Operation.literal("precision"), Operation.expression(:precision, type: :string), Operation.literal("accumulate"), Operation.expression(:gradient_accumulation, type: :number), Operation.literal("steps"), Operation.literal("checkpoint"), Operation.literal("every"), Operation.expression(:checkpoint_every, type: :number), Operation.literal("steps")], returns: TRAINING_CONFIG, effects: []),
             Operation.new(name: :train, verbs: ["train"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("using"), Operation.expression(:dataset, type: DATASET), Operation.literal("on"), Operation.expression(:device, type: DEVICE), Operation.literal("for"), Operation.expression(:epochs, type: :number), Operation.literal("epochs")], returns: TRAINING_RUN, effects: [:compute, :model_training]),
             Operation.new(name: :fit, verbs: ["fit"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("using"), Operation.expression(:dataset, type: DATASET), Operation.literal("on"), Operation.expression(:device, type: DEVICE), Operation.literal("with"), Operation.expression(:config, type: TRAINING_CONFIG)], returns: TRAINING_RUN, effects: [:compute, :model_training]),
+            Operation.new(name: :fit_budgeted, verbs: ["allocate"], pattern: [Operation.expression(:budget, type: RESOURCE_BUDGET), Operation.literal("to"), Operation.literal("fit"), Operation.expression(:model, type: MODEL), Operation.literal("using"), Operation.expression(:dataset, type: DATASET), Operation.literal("on"), Operation.expression(:device, type: DEVICE), Operation.literal("with"), Operation.expression(:config, type: TRAINING_CONFIG)], returns: TRAINING_RUN, effects: [:compute, :model_training]),
             Operation.new(name: :infer, verbs: ["infer"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("on"), Operation.expression(:dataset, type: DATASET), Operation.literal("using"), Operation.expression(:device, type: DEVICE)], returns: INFERENCE_RUN, effects: [:compute, :model_inference]),
             Operation.new(name: :evaluate, verbs: ["evaluate"], pattern: [Operation.expression(:model, type: MODEL), Operation.literal("on"), Operation.expression(:dataset, type: DATASET), Operation.literal("using"), Operation.expression(:device, type: DEVICE), Operation.literal("metric"), Operation.expression(:metric, type: :string)], returns: EVALUATION_RUN, effects: [:compute, :model_evaluation])
           ]
@@ -58,6 +61,9 @@ module Semauri
             validate_positive_integer!(arguments.fetch(:gradient_accumulation), "gradient accumulation", node, code: "S338")
             validate_positive_integer!(arguments.fetch(:checkpoint_every), "checkpoint interval", node, code: "S338")
           end
+        when :budget_resources
+          validate_positive_number!(arguments.fetch(:memory_gb), "memory budget", node, code: "S342")
+          validate_positive_integer!(arguments.fetch(:workers), "worker count", node, code: "S342")
         when :transform_dataset
           validate_non_empty_string!(arguments.fetch(:transform), "dataset transform", node, code: "S340")
         when :split_dataset
@@ -90,63 +96,63 @@ module Semauri
 
       def validate_optimizer!(argument, node)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if SUPPORTED_OPTIMIZERS.include?(value.to_s.downcase)
         raise_ml_error(node, "Unsupported optimizer '#{value}'", code: "S336", hint: "Supported optimizers: #{SUPPORTED_OPTIMIZERS.join(', ')}.")
       end
 
       def validate_precision!(argument, node)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if SUPPORTED_PRECISIONS.include?(value.to_s.downcase)
         raise_ml_error(node, "Unsupported training precision '#{value}'", code: "S338", hint: "Supported precisions: #{SUPPORTED_PRECISIONS.join(', ')}.")
       end
 
       def validate_metric!(argument, node)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if SUPPORTED_METRICS.include?(value.to_s.downcase)
         raise_ml_error(node, "Unsupported evaluation metric '#{value}'", code: "S341", hint: "Supported metrics: #{SUPPORTED_METRICS.join(', ')}.")
       end
 
       def validate_quantization_bits!(argument, node)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if SUPPORTED_QUANTIZATION_BITS.include?(value)
         raise_ml_error(node, "Unsupported QLoRA quantization '#{value}' bits", code: "S339", hint: "Supported quantization widths: #{SUPPORTED_QUANTIZATION_BITS.join(', ')} bits.")
       end
 
       def validate_positive_number!(argument, name, node, code:)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if value.is_a?(Numeric) && value.positive?
         raise_ml_error(node, "#{name} must be greater than zero", code: code)
       end
 
       def validate_fraction!(argument, name, node, code:)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if value.is_a?(Numeric) && value.positive? && value < 1
         raise_ml_error(node, "#{name} must be greater than zero and less than one", code: code)
       end
 
       def validate_positive_integer!(argument, name, node, code:)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if value.is_a?(Numeric) && value.positive? && value.to_i == value
         raise_ml_error(node, "#{name} must be a positive integer", code: code)
       end
 
       def validate_non_negative_integer!(argument, name, node, code:)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if value.is_a?(Numeric) && !value.negative? && value.to_i == value
         raise_ml_error(node, "#{name} must be a non-negative integer", code: code)
       end
 
       def validate_non_empty_string!(argument, name, node, code:)
         value = literal_value(argument)
-        return unless value
+        return if value.nil?
         return if value.is_a?(String) && !value.strip.empty?
         raise_ml_error(node, "#{name} must be a non-empty string", code: code)
       end
