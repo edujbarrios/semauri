@@ -15,8 +15,8 @@ class MLResourceBudgetsTest < Minitest::Test
         Let model be Load model "resnet18".
         Let device be Select device "cuda".
         Let config be Configure training for 4 epochs using optimizer "adamw" learning rate 0.001 batch size 16 seed 42.
-        Let budget be Budget resources memory 24 gb workers 4.
-        Let run be Allocate budget to fit model using dataset on device with config.
+        Let resources be Budget resources memory 24 gb workers 4.
+        Let run be Allocate resources to fit model using dataset on device with config.
       End.
     SEMA
 
@@ -36,7 +36,7 @@ class MLResourceBudgetsTest < Minitest::Test
   def test_resource_budget_rejects_non_positive_memory
     source = <<~SEMA
       Within ml:
-        Let budget be Budget resources memory 0 gb workers 2.
+        Let resources be Budget resources memory 0 gb workers 2.
       End.
     SEMA
 
@@ -48,7 +48,7 @@ class MLResourceBudgetsTest < Minitest::Test
   def test_resource_budget_rejects_fractional_worker_count
     source = <<~SEMA
       Within ml:
-        Let budget be Budget resources memory 8 gb workers 1.5.
+        Let resources be Budget resources memory 8 gb workers 1.5.
       End.
     SEMA
 
