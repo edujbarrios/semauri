@@ -5,6 +5,8 @@ All notable changes to Semauri are documented here.
 ## Unreleased
 
 ### Added
+- Typed `is not equal to` comparisons across AST/HIR evaluation and constant folding.
+- Explicit typed string concatenation with `joined with`.
 - Stable semantic symbols and typed HIR.
 - Homogeneous `List<T>` collections and static `For every` iteration.
 - HIR value environments that separate semantic symbol identity from current values.

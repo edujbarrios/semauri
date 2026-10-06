@@ -28,10 +28,12 @@ expression       = logical_or ;
 logical_or       = logical_and { OR logical_and } ;
 logical_and      = logical_not { AND logical_not } ;
 logical_not      = [ NOT ] (logical_not | comparison) ;
-comparison       = additive [ IS comparison_operator additive ] ;
+comparison       = concatenative [ IS comparison_operator concatenative ] ;
 comparison_operator = GREATER THAN [ OR EQUAL TO ]
                     | LESS THAN [ OR EQUAL TO ]
-                    | EQUAL TO ;
+                    | EQUAL TO
+                    | NOT EQUAL TO ;
+concatenative    = additive { JOINED "with" additive } ;
 additive         = multiplicative { (PLUS | MINUS) multiplicative } ;
 multiplicative   = primary { TIMES primary | DIVIDED BY primary } ;
 primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
@@ -84,7 +86,9 @@ If multiple loaded domains could interpret the same value type, the shorthand is
 
 Primitive semantic value types are `color`, `string`, `number`, and `boolean`.
 
-Arithmetic is numeric and strictly typed. Multiplication/division bind more tightly than addition/subtraction. Equality requires both operands to have the same semantic type.
+Arithmetic is numeric and strictly typed. Multiplication/division bind more tightly than addition/subtraction. Equality and inequality require both operands to have the same semantic type. Semauri accepts both `is equal to` and `is not equal to`.
+
+Strings concatenate explicitly with `joined with`, for example `"Hello, " joined with name`. Both operands must be strings (`S343`); Semauri does not overload numeric `plus` for text. Concatenation binds more tightly than comparisons and more loosely than numeric arithmetic.
 
 Ordering comparisons are numeric and strictly typed. Semauri supports `is greater than`, `is less than`, `is greater than or equal to`, and `is less than or equal to`. The inclusive forms include the boundary value and lower to distinct typed comparison operators rather than being rewritten as boolean combinations.
 
@@ -193,6 +197,7 @@ Relevant diagnostics include:
 - `S325`: unsupported HIR node/operator
 - `S326`: unknown semantic domain
 - `S327`: cross-domain operation on the active artifact
+- `S343`: non-string operand used with `joined with`
 
 ## Determinism rule
 

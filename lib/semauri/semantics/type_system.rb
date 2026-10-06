@@ -13,6 +13,7 @@ module Semauri
       ARITHMETIC = %i[add subtract multiply divide].freeze
       ORDERING = %i[greater_than less_than greater_than_or_equal less_than_or_equal].freeze
       LOGICAL = %i[and or].freeze
+      CONCATENATION = %i[concat].freeze
 
       def unary_type(operator, operand_type, node:)
         if operator == :not
@@ -35,10 +36,16 @@ module Semauri
           return :boolean
         end
 
-        if operator == :equal
+        if CONCATENATION.include?(operator)
+          ensure_pair!(left_type, right_type, :string, node,
+                       "Operator '#{operator_name(operator)}' requires string operands", "S343")
+          return :string
+        end
+
+        if %i[equal not_equal].include?(operator)
           unless left_type == right_type
             raise error(node,
-                        "Equality requires operands of the same type, got #{type_name(left_type)} and #{type_name(right_type)}",
+                        "Equality comparisons require operands of the same type, got #{type_name(left_type)} and #{type_name(right_type)}",
                         "S315")
           end
           return :boolean
@@ -141,7 +148,10 @@ module Semauri
           greater_than: "is greater than",
           less_than: "is less than",
           greater_than_or_equal: "is greater than or equal to",
-          less_than_or_equal: "is less than or equal to"
+          less_than_or_equal: "is less than or equal to",
+          equal: "is equal to",
+          not_equal: "is not equal to",
+          concat: "joined with"
         }.fetch(operator, operator.to_s)
       end
 
