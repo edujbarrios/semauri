@@ -36,6 +36,7 @@ module Semauri
         "and" => :AND,
         "or" => :OR,
         "not" => :NOT,
+        "joined" => :JOINED,
         "plus" => :PLUS,
         "minus" => :MINUS,
         "times" => :TIMES,

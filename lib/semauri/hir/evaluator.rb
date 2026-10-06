@@ -77,6 +77,7 @@ module Semauri
                 when :add then left.value + right.value
                 when :subtract then left.value - right.value
                 when :multiply then left.value * right.value
+                when :concat then left.value + right.value
                 when :divide
                   raise semantic_error(node.fields.fetch(:right), "Division by zero", "S317") if right.value.zero?
                   left.value.fdiv(right.value)

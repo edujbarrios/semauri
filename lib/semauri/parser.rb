@@ -282,7 +282,7 @@ module Semauri
     end
 
     def comparison
-      left = additive
+      left = concatenative
       return left unless match?(:IS)
 
       operator = if match?(:GREATER)
@@ -298,8 +298,19 @@ module Semauri
                    error!(peek, "Expected 'greater than', 'less than', or 'equal to' after 'is'", "S225")
                  end
 
-      right = additive
+      right = concatenative
       AST::BinaryExpression.new(left: left, operator: operator, right: right, span: span_between(left, right))
+    end
+
+    def concatenative
+      expression = additive
+      while match?(:JOINED)
+        consume_surface("with", "Expected 'with' after 'joined'", "S243")
+        right = additive
+        expression = AST::BinaryExpression.new(left: expression, operator: :concat, right: right,
+                                               span: span_between(expression, right))
+      end
+      expression
     end
 
     def additive

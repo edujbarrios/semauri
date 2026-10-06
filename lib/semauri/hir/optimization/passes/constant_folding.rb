@@ -112,6 +112,7 @@ module Semauri
             when :add then left + right
             when :subtract then left - right
             when :multiply then left * right
+            when :concat then left + right
             when :divide then left.fdiv(right)
             when :greater_than then left > right
             when :less_than then left < right

@@ -6,7 +6,7 @@ module Semauri
     private
 
     def comparison
-      left = additive
+      left = concatenative
       return left unless match?(:IS)
 
       operator = if match?(:GREATER)
@@ -29,7 +29,7 @@ module Semauri
                    )
                  end
 
-      right = additive
+      right = concatenative
       AST::BinaryExpression.new(left: left, operator: operator, right: right, span: span_between(left, right))
     end
 
