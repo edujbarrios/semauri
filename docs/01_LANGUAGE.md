@@ -31,7 +31,8 @@ logical_not      = [ NOT ] (logical_not | comparison) ;
 comparison       = additive [ IS comparison_operator additive ] ;
 comparison_operator = GREATER THAN [ OR EQUAL TO ]
                     | LESS THAN [ OR EQUAL TO ]
-                    | EQUAL TO ;
+                    | EQUAL TO
+                    | NOT EQUAL TO ;
 additive         = multiplicative { (PLUS | MINUS) multiplicative } ;
 multiplicative   = primary { TIMES primary | DIVIDED BY primary } ;
 primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
@@ -84,7 +85,7 @@ If multiple loaded domains could interpret the same value type, the shorthand is
 
 Primitive semantic value types are `color`, `string`, `number`, and `boolean`.
 
-Arithmetic is numeric and strictly typed. Multiplication/division bind more tightly than addition/subtraction. Equality requires both operands to have the same semantic type.
+Arithmetic is numeric and strictly typed. Multiplication/division bind more tightly than addition/subtraction. Equality and inequality require both operands to have the same semantic type. Semauri accepts both `is equal to` and `is not equal to`.
 
 Ordering comparisons are numeric and strictly typed. Semauri supports `is greater than`, `is less than`, `is greater than or equal to`, and `is less than or equal to`. The inclusive forms include the boundary value and lower to distinct typed comparison operators rather than being rewritten as boolean combinations.
 

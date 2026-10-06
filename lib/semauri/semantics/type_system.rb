@@ -35,10 +35,10 @@ module Semauri
           return :boolean
         end
 
-        if operator == :equal
+        if %i[equal not_equal].include?(operator)
           unless left_type == right_type
             raise error(node,
-                        "Equality requires operands of the same type, got #{type_name(left_type)} and #{type_name(right_type)}",
+                        "Equality comparisons require operands of the same type, got #{type_name(left_type)} and #{type_name(right_type)}",
                         "S315")
           end
           return :boolean
@@ -141,7 +141,9 @@ module Semauri
           greater_than: "is greater than",
           less_than: "is less than",
           greater_than_or_equal: "is greater than or equal to",
-          less_than_or_equal: "is less than or equal to"
+          less_than_or_equal: "is less than or equal to",
+          equal: "is equal to",
+          not_equal: "is not equal to"
         }.fetch(operator, operator.to_s)
       end
 

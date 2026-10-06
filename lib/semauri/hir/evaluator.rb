@@ -85,6 +85,7 @@ module Semauri
                 when :greater_than_or_equal then left.value >= right.value
                 when :less_than_or_equal then left.value <= right.value
                 when :equal then left.value == right.value
+                when :not_equal then left.value != right.value
                 else raise semantic_error(node, "Unsupported HIR operator '#{operator}'", "S325")
                 end
 

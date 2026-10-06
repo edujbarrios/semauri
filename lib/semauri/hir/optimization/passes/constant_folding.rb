@@ -118,6 +118,7 @@ module Semauri
             when :greater_than_or_equal then left >= right
             when :less_than_or_equal then left <= right
             when :equal then left == right
+            when :not_equal then left != right
             when :and then left && right
             when :or then left || right
             else :unsupported

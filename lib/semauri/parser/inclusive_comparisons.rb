@@ -13,15 +13,19 @@ module Semauri
                    inclusive_ordering_operator(:greater_than, :greater_than_or_equal, "greater", "S222")
                  elsif match?(:LESS)
                    inclusive_ordering_operator(:less_than, :less_than_or_equal, "less", "S223")
+                 elsif match?(:NOT)
+                   consume(:EQUAL, "Expected 'equal' after 'not'", "S224")
+                   consume(:TO, "Expected 'to' after 'equal'", "S224")
+                   :not_equal
                  elsif match?(:EQUAL)
                    consume(:TO, "Expected 'to' after 'equal'", "S224")
                    :equal
                  else
                    error!(
                      peek,
-                     "Expected 'greater than', 'less than', or 'equal to' after 'is'",
+                     "Expected 'greater than', 'less than', 'equal to', or 'not equal to' after 'is'",
                      "S225",
-                     hint: "Ordering comparisons may add 'or equal to', for example 'is greater than or equal to'."
+                     hint: "Use 'is not equal to' for inequality. Ordering comparisons may add 'or equal to'."
                    )
                  end
 
