@@ -1,0 +1,20 @@
+[package]
+name = "semauri"
+version = "0.13.0"
+edition = "2021"
+rust-version = "1.83"
+description = "Deterministic controlled-natural-language compiler"
+license = "Apache-2.0"
+repository = "https://github.com/edujbarrios/semauri"
+
+[lib]
+name = "semauri"
+path = "src/lib.rs"
+
+[[bin]]
+name = "semauri"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
