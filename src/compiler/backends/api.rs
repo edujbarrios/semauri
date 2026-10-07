@@ -117,4 +117,3 @@ impl BackendRegistry {
     }
 }
 
-#[derive(Clone, Debug)]

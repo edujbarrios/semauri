@@ -229,4 +229,3 @@ impl DomainSpec {
     }
 }
 
-#[derive(Clone, Debug)]

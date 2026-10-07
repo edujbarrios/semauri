@@ -1,3 +1,4 @@
+#[derive(Clone, Debug)]
 pub struct DomainRegistry {
     domains: Vec<DomainSpec>,
 }
