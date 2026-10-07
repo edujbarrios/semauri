@@ -1090,6 +1090,7 @@ impl<'a> Lowerer<'a> {
                 ValueData::Number(b),
             ) => ValueData::Boolean(a.as_f64() <= b.as_f64()),
             (BinaryOperator::Equal, a, b) => ValueData::Boolean(a == b),
+            (BinaryOperator::NotEqual, a, b) => ValueData::Boolean(a != b),
             (BinaryOperator::And, ValueData::Boolean(a), ValueData::Boolean(b)) => {
                 ValueData::Boolean(a && b)
             }

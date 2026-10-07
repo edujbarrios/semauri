@@ -124,3 +124,22 @@ fn ast_keeps_explicit_unary_binary_and_block_nodes() {
     assert!(ast.contains("binary_expression"));
     assert!(ast.contains("\"type\":\"block\""));
 }
+
+#[test]
+fn not_equal_comparisons_are_typed_and_deterministic() {
+    let compiler = Compiler::new();
+    let output = compiler
+        .compile(
+            "Create a web. If 2 plus 2 is not equal to 5: Add a button called Correct. Otherwise: Add a button called Wrong. End.",
+            None,
+        )
+        .unwrap()
+        .output
+        .unwrap();
+    assert!(output.contains(">Correct</button>"));
+
+    let error = compiler
+        .analyze("Create a web. If 1 is not equal to true: Add a button. End.")
+        .unwrap_err();
+    assert_eq!(error.code, "S315");
+}

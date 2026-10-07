@@ -385,6 +385,7 @@ fn eval_constant_binary(
             ValueData::Number(b),
         ) => Some(ValueData::Boolean(a.as_f64() <= b.as_f64())),
         (BinaryOperator::Equal, a, b) => Some(ValueData::Boolean(a == b)),
+        (BinaryOperator::NotEqual, a, b) => Some(ValueData::Boolean(a != b)),
         (BinaryOperator::And, ValueData::Boolean(a), ValueData::Boolean(b)) => {
             Some(ValueData::Boolean(*a && *b))
         }
