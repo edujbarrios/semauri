@@ -4,7 +4,7 @@
 
 **Natural to write. Deterministic to run.**
 
-> Status: **0.13.0 / experimental**
+> Status: **0.14.0 / experimental**
 
 ## What is Semauri?
 
@@ -23,7 +23,7 @@ Semauri is an experimental open-source programming language based on **controlle
 
 Compilation remains effect-free. Execution is a separate opt-in step and effectful programs must be authorized explicitly.
 
-### Source usability in 0.13
+### Source usability
 
 Programs can now contain line comments and escaped text without preprocessing:
 
