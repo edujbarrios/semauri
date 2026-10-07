@@ -9,7 +9,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$RootDir = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$RootDir = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 if (-not $OutDir) {
   $OutDir = Join-Path $RootDir 'dist'
 }
