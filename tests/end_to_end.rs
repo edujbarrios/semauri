@@ -299,7 +299,7 @@ fn cli_run_requires_authorization_and_dry_run_is_safe() {
 #[test]
 fn console_programs_print_typed_values_with_explicit_authorization() {
     let path = temp_file(
-        "Let answer be 6 times 7. Print \"Hello from Semauri\". Print answer. Print true. Print [1, 2, 3].",
+        "Let answer be 6 times 7. Let values be a list of 1, 2, 3. Print \"Hello from Semauri\". Print answer. Print true. Print values.",
     );
 
     let denied = run_cli(&["run".into(), path.display().to_string()]);
