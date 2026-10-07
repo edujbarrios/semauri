@@ -7,6 +7,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -456,6 +457,26 @@ pub enum PatternSegment {
     Slot { name: String, ty: Option<Type> },
 }
 
+impl PatternSegment {
+    pub fn literal(word: impl Into<String>) -> Self {
+        Self::Literal(word.into().to_lowercase())
+    }
+
+    pub fn slot(name: impl Into<String>, ty: Type) -> Self {
+        Self::Slot {
+            name: name.into(),
+            ty: Some(ty),
+        }
+    }
+
+    pub fn untyped_slot(name: impl Into<String>) -> Self {
+        Self::Slot {
+            name: name.into(),
+            ty: None,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct OperationSpec {
     pub name: String,
@@ -466,7 +487,26 @@ pub struct OperationSpec {
 }
 
 impl OperationSpec {
-    fn to_json(&self) -> JsonValue {
+    pub fn new(
+        name: impl Into<String>,
+        verbs: impl IntoIterator<Item = impl Into<String>>,
+        pattern: Vec<PatternSegment>,
+        return_type: Type,
+        effects: impl IntoIterator<Item = impl Into<String>>,
+    ) -> Self {
+        Self {
+            name: name.into(),
+            verbs: verbs
+                .into_iter()
+                .map(|verb| verb.into().to_lowercase())
+                .collect(),
+            pattern,
+            return_type,
+            effects: effects.into_iter().map(Into::into).collect(),
+        }
+    }
+
+    pub fn to_json(&self) -> JsonValue {
         let pattern = self
             .pattern
             .iter()
@@ -501,11 +541,64 @@ pub struct DomainSpec {
 }
 
 impl DomainSpec {
-    fn operation(&self, name: &str) -> Option<&OperationSpec> {
+    pub fn new(name: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            default_backend: None,
+            artifacts: BTreeMap::new(),
+            elements: BTreeMap::new(),
+            properties: BTreeMap::new(),
+            types: Vec::new(),
+            operations: Vec::new(),
+        }
+    }
+
+    pub fn with_default_backend(mut self, backend: impl Into<String>) -> Self {
+        self.default_backend = Some(backend.into());
+        self
+    }
+
+    pub fn with_artifact(
+        mut self,
+        surface: impl Into<String>,
+        kind: impl Into<String>,
+    ) -> Self {
+        self.artifacts
+            .insert(surface.into().to_lowercase(), kind.into());
+        self
+    }
+
+    pub fn with_element(
+        mut self,
+        surface: impl Into<String>,
+        kind: impl Into<String>,
+    ) -> Self {
+        self.elements
+            .insert(surface.into().to_lowercase(), kind.into());
+        self
+    }
+
+    pub fn with_property(
+        mut self,
+        surface: impl Into<String>,
+        kind: impl Into<String>,
+        ty: Type,
+    ) -> Self {
+        self.properties
+            .insert(surface.into().to_lowercase(), (kind.into(), ty));
+        self
+    }
+
+    pub fn with_operation(mut self, operation: OperationSpec) -> Self {
+        self.operations.push(operation);
+        self
+    }
+
+    pub fn operation(&self, name: &str) -> Option<&OperationSpec> {
         self.operations.iter().find(|operation| operation.name == name)
     }
 
-    fn to_json(&self) -> JsonValue {
+    pub fn to_json(&self) -> JsonValue {
         let properties = self
             .properties
             .iter()
@@ -546,15 +639,80 @@ impl Default for DomainRegistry {
 }
 
 impl DomainRegistry {
+    pub fn new() -> Self {
+        Self { domains: Vec::new() }
+    }
+
     pub fn builtins() -> Self {
-        Self {
-            domains: vec![
-                web_domain(),
-                structured_data_domain(),
-                filesystem_domain(),
-                ml_domain(),
-            ],
+        let mut registry = Self::new();
+        for domain in [
+            web_domain(),
+            structured_data_domain(),
+            filesystem_domain(),
+            ml_domain(),
+        ] {
+            registry
+                .register(domain)
+                .expect("built-in semantic domains must be valid");
         }
+        registry
+    }
+
+    pub fn register(
+        &mut self,
+        domain: DomainSpec,
+    ) -> std::result::Result<&mut Self, String> {
+        if self.domains.iter().any(|existing| existing.name == domain.name) {
+            return Err(format!("Domain '{}' is already registered", domain.name));
+        }
+
+        let pending = domain_surface_entries(&domain)?;
+        for (word, is_action) in &pending {
+            if keyword_kind(word).is_some() || is_color(word) {
+                return Err(format!(
+                    "Semantic domain term '{}' conflicts with reserved English vocabulary",
+                    word
+                ));
+            }
+
+            for existing in &self.domains {
+                for (existing_word, existing_is_action) in domain_surface_entries(existing)? {
+                    if existing_word != *word {
+                        continue;
+                    }
+                    if *is_action && existing_is_action {
+                        continue;
+                    }
+                    return Err(format!(
+                        "Domain term '{}' conflicts between '{}' and '{}'",
+                        word, existing.name, domain.name
+                    ));
+                }
+            }
+        }
+
+        self.domains.push(domain);
+        Ok(self)
+    }
+
+    pub fn with_domain(
+        mut self,
+        domain: DomainSpec,
+    ) -> std::result::Result<Self, String> {
+        self.register(domain)?;
+        Ok(self)
+    }
+
+    pub fn words(&self) -> Vec<String> {
+        let mut words = self
+            .domains
+            .iter()
+            .flat_map(|domain| domain_surface_entries(domain).unwrap_or_default())
+            .map(|(word, _)| word)
+            .collect::<Vec<_>>();
+        words.sort();
+        words.dedup();
+        words
     }
 
     pub fn names(&self) -> Vec<String> {
@@ -581,7 +739,7 @@ impl DomainRegistry {
             })
     }
 
-    fn classify(&self, word: &str) -> Option<TokenLiteral> {
+    pub fn classify(&self, word: &str) -> Option<TokenLiteral> {
         let key = word.to_lowercase();
         let mut action_candidates = Vec::new();
 
@@ -664,6 +822,67 @@ impl DomainRegistry {
             "domains": domains.into_iter().map(DomainSpec::to_json).collect::<Vec<_>>()
         })
     }
+}
+
+fn domain_surface_entries(
+    domain: &DomainSpec,
+) -> std::result::Result<Vec<(String, bool)>, String> {
+    let mut entries = Vec::new();
+    let mut seen = BTreeSet::new();
+
+    for surface in domain
+        .artifacts
+        .keys()
+        .chain(domain.elements.keys())
+        .chain(domain.properties.keys())
+    {
+        let word = surface.to_lowercase();
+        if !seen.insert(word.clone()) {
+            return Err(format!(
+                "Duplicate term '{}' in domain '{}'",
+                word, domain.name
+            ));
+        }
+        entries.push((word, false));
+    }
+
+    for operation in &domain.operations {
+        if operation.verbs.is_empty() {
+            return Err(format!(
+                "Operation '{}' requires at least one verb",
+                operation.name
+            ));
+        }
+        let mut slot_names = BTreeSet::new();
+        for segment in &operation.pattern {
+            if let PatternSegment::Slot { name, .. } = segment {
+                if !slot_names.insert(name.clone()) {
+                    return Err(format!(
+                        "Operation '{}' contains duplicate argument slots",
+                        operation.name
+                    ));
+                }
+            }
+        }
+        for verb in &operation.verbs {
+            let word = verb.to_lowercase();
+            if word.is_empty() {
+                return Err(format!(
+                    "Operation '{}' contains an empty verb",
+                    operation.name
+                ));
+            }
+            if !seen.insert(word.clone()) {
+                return Err(format!(
+                    "Duplicate term '{}' in domain '{}'",
+                    word, domain.name
+                ));
+            }
+            entries.push((word, true));
+        }
+    }
+
+    Ok(entries)
 }
 
 fn nominal(domain: &str, name: &str, base: Type, promote_from_base: bool) -> Type {
@@ -5364,18 +5583,63 @@ impl OperationPlan {
 }
 
 #[derive(Clone, Debug)]
+pub struct GenericElement {
+    pub id: String,
+    pub kind: String,
+    pub label: String,
+    pub properties: BTreeMap<String, ValueData>,
+    pub property_provenance: BTreeMap<String, SourceSpan>,
+}
+
+impl GenericElement {
+    fn to_json(&self) -> JsonValue {
+        json!({
+            "id": self.id,
+            "kind": self.kind,
+            "label": self.label,
+            "properties": self.properties.iter().map(|(key, value)| (key.clone(), value.to_json())).collect::<JsonMap<_,_>>(),
+            "property_provenance": self.property_provenance
+        })
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct GenericArtifact {
+    pub domain: String,
+    pub kind: String,
+    pub title: String,
+    pub subject: Option<String>,
+    pub elements: Vec<GenericElement>,
+}
+
+impl GenericArtifact {
+    fn to_json(&self) -> JsonValue {
+        json!({
+            "type": "generic_artifact",
+            "domain": self.domain,
+            "kind": self.kind,
+            "title": self.title,
+            "subject": self.subject,
+            "elements": self.elements.iter().map(GenericElement::to_json).collect::<Vec<_>>()
+        })
+    }
+}
+
+#[derive(Clone, Debug)]
 pub enum Artifact {
     Web(WebDocument),
     Schema(SchemaDocument),
     Filesystem(OperationPlan),
+    Generic(GenericArtifact),
 }
 
 impl Artifact {
-    fn to_json(&self) -> JsonValue {
+    pub fn to_json(&self) -> JsonValue {
         match self {
             Artifact::Web(value) => value.to_json(),
             Artifact::Schema(value) => value.to_json(),
             Artifact::Filesystem(value) => value.to_json(),
+            Artifact::Generic(value) => value.to_json(),
         }
     }
 }
@@ -5829,6 +6093,10 @@ impl<'a> Lowerer<'a> {
                         schema.title = title.clone();
                         Artifact::Schema(schema)
                     }
+                    Artifact::Generic(mut generic) => {
+                        generic.title = title.clone();
+                        Artifact::Generic(generic)
+                    }
                     Artifact::Filesystem(_) => {
                         return Err(SemauriError::semantic(
                             "S303",
@@ -5922,12 +6190,30 @@ impl<'a> Lowerer<'a> {
                 })
             }
             _ => {
-                return Err(SemauriError::semantic(
-                    "S326",
-                    format!("Unsupported artifact '{kind}' in domain '{domain}'"),
-                    Some(span),
-                    None,
-                ))
+                let specification = self.domains.fetch(domain)?;
+                if !specification.artifacts.values().any(|candidate| candidate == kind) {
+                    return Err(SemauriError::semantic(
+                        "S326",
+                        format!("Unsupported artifact '{kind}' in domain '{domain}'"),
+                        Some(span),
+                        None,
+                    ));
+                }
+                let title = explicit_title
+                    .clone()
+                    .or(subject.clone())
+                    .unwrap_or_else(|| format!("Untitled {}", capitalize(kind)));
+                self.explanations.push(format!(
+                    "Created generic '{}' artifact for semantic domain '{}'.",
+                    kind, domain
+                ));
+                Artifact::Generic(GenericArtifact {
+                    domain: domain.to_string(),
+                    kind: kind.to_string(),
+                    title,
+                    subject,
+                    elements: Vec::new(),
+                })
             }
         };
         self.program.put(domain, artifact);
@@ -5983,6 +6269,25 @@ impl<'a> Lowerer<'a> {
                     property_sources: BTreeMap::new(),
                 });
                 Artifact::Schema(schema)
+            }
+            Artifact::Generic(mut generic) => {
+                let specification = self.domains.fetch(domain)?;
+                if !specification.elements.values().any(|candidate| candidate == kind) {
+                    return Err(SemauriError::semantic(
+                        "S307",
+                        format!("Domain '{domain}' does not support element '{kind}'"),
+                        Some(span),
+                        None,
+                    ));
+                }
+                generic.elements.push(GenericElement {
+                    id: id.clone(),
+                    kind: kind.to_string(),
+                    label: label.clone(),
+                    properties: BTreeMap::new(),
+                    property_provenance: BTreeMap::new(),
+                });
+                Artifact::Generic(generic)
             }
             _ => {
                 return Err(SemauriError::semantic(
@@ -6110,6 +6415,27 @@ impl<'a> Lowerer<'a> {
                     .property_sources
                     .insert(property.to_string(), span);
                 Artifact::Schema(schema)
+            }
+            Artifact::Generic(mut generic) => {
+                let element = generic
+                    .elements
+                    .iter_mut()
+                    .find(|element| element.id == target.id)
+                    .ok_or_else(|| {
+                        SemauriError::semantic(
+                            "S309",
+                            format!("No {} called '{}' exists", target.kind, target.label),
+                            Some(reference.span()),
+                            None,
+                        )
+                    })?;
+                element
+                    .properties
+                    .insert(property.to_string(), value_data.clone());
+                element
+                    .property_provenance
+                    .insert(property.to_string(), span);
+                Artifact::Generic(generic)
             }
             Artifact::Filesystem(_) => {
                 return Err(SemauriError::semantic(
@@ -6733,9 +7059,83 @@ impl CompilationResult {
     }
 }
 
+pub trait BackendRenderer: Send + Sync {
+    fn render(&self, artifact: &Artifact) -> Result<String>;
+}
+
+impl<F> BackendRenderer for F
+where
+    F: Fn(&Artifact) -> Result<String> + Send + Sync,
+{
+    fn render(&self, artifact: &Artifact) -> Result<String> {
+        self(artifact)
+    }
+}
+
+#[derive(Clone)]
+pub struct BackendRegistry {
+    renderers: BTreeMap<String, Arc<dyn BackendRenderer>>,
+}
+
+impl fmt::Debug for BackendRegistry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("BackendRegistry")
+            .field("names", &self.names())
+            .finish()
+    }
+}
+
+impl Default for BackendRegistry {
+    fn default() -> Self {
+        Self::builtins()
+    }
+}
+
+impl BackendRegistry {
+    pub fn new() -> Self {
+        Self {
+            renderers: BTreeMap::new(),
+        }
+    }
+
+    pub fn builtins() -> Self {
+        let mut registry = Self::new();
+        registry.register("html", render_html);
+        registry.register("json-schema", render_json_schema);
+        registry.register("posix-sh", render_posix_shell);
+        registry
+    }
+
+    pub fn register<R>(&mut self, name: impl Into<String>, renderer: R) -> &mut Self
+    where
+        R: BackendRenderer + 'static,
+    {
+        self.renderers.insert(name.into(), Arc::new(renderer));
+        self
+    }
+
+    pub fn names(&self) -> Vec<String> {
+        self.renderers.keys().cloned().collect()
+    }
+
+    pub fn render(&self, name: &str, artifact: &Artifact) -> Result<String> {
+        self.renderers
+            .get(name)
+            .ok_or_else(|| {
+                SemauriError::backend(
+                    "S402",
+                    format!("Unknown backend '{name}'"),
+                    None,
+                )
+            })?
+            .render(artifact)
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Compiler {
     domains: DomainRegistry,
+    backends: BackendRegistry,
 }
 
 impl Default for Compiler {
@@ -6748,6 +7148,18 @@ impl Compiler {
     pub fn new() -> Self {
         Self {
             domains: DomainRegistry::builtins(),
+            backends: BackendRegistry::builtins(),
+        }
+    }
+
+    pub fn with_registries(domains: DomainRegistry, backends: BackendRegistry) -> Self {
+        Self { domains, backends }
+    }
+
+    pub fn with_domains(domains: DomainRegistry) -> Self {
+        Self {
+            domains,
+            backends: BackendRegistry::builtins(),
         }
     }
 
@@ -6874,7 +7286,7 @@ impl Compiler {
                         )
                     })?
             };
-            let content = render_backend(&backend_name, &unit.artifact)?;
+            let content = self.backends.render(&backend_name, &unit.artifact)?;
             outputs.push(DomainOutput {
                 domain: unit.domain.clone(),
                 backend: backend_name,
@@ -6882,19 +7294,6 @@ impl Compiler {
             });
         }
         Ok(outputs)
-    }
-}
-
-fn render_backend(name: &str, artifact: &Artifact) -> Result<String> {
-    match name {
-        "html" => render_html(artifact),
-        "json-schema" => render_json_schema(artifact),
-        "posix-sh" => render_posix_shell(artifact),
-        other => Err(SemauriError::backend(
-            "S402",
-            format!("Unknown backend '{other}'"),
-            None,
-        )),
     }
 }
 
