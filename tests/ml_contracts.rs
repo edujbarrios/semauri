@@ -9,7 +9,7 @@ fn ml_dataset_split_and_training_validation_codes_are_preserved() {
     let compiler = Compiler::new();
 
     let split = format!(
-        "{}Let split be Split dataset ratio 1.0 seed 1. End.",
+        "{}Let partition be Split dataset ratio 1.0 seed 1. End.",
         ml_prefix()
     );
     assert_eq!(compiler.hir(&split).unwrap_err().code, "S340");
@@ -57,10 +57,10 @@ fn ml_model_transform_validation_codes_are_preserved() {
 fn ml_resource_training_plan_and_metric_validation_are_preserved() {
     let compiler = Compiler::new();
 
-    let budget = "Within ml: Let budget be Budget resources memory 0 gb workers 2. End.";
+    let budget = "Within ml: Let resources be Budget resources memory 0 gb workers 2. End.";
     assert_eq!(compiler.hir(budget).unwrap_err().code, "S342");
 
-    let workers = "Within ml: Let budget be Budget resources memory 8 gb workers 1.5. End.";
+    let workers = "Within ml: Let resources be Budget resources memory 8 gb workers 1.5. End.";
     assert_eq!(compiler.hir(workers).unwrap_err().code, "S342");
 
     let precision = "Within ml: Let config be Plan training for 2 epochs using optimizer \"adam\" learning rate 0.001 batch size 8 seed 1 precision \"fp8\" accumulate 1 steps checkpoint every 10 steps. End.";
@@ -99,5 +99,6 @@ fn advanced_ml_plan_preserves_configuration_and_lineage() {
     assert!(json.contains("gradient_accumulation"));
     assert!(json.contains("checkpoint_every"));
     assert!(json.contains("bf16"));
-    assert!(json.contains("ml.training_run"));
+    assert!(json.contains("\\\"domain\\\":\\\"ml\\\""));
+    assert!(json.contains("\\\"name\\\":\\\"training_run\\\""));
 }
