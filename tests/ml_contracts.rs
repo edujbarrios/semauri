@@ -99,6 +99,6 @@ fn advanced_ml_plan_preserves_configuration_and_lineage() {
     assert!(json.contains("gradient_accumulation"));
     assert!(json.contains("checkpoint_every"));
     assert!(json.contains("bf16"));
-    assert!(json.contains("\\\"domain\\\":\\\"ml\\\""));
-    assert!(json.contains("\\\"name\\\":\\\"training_run\\\""));
+    assert!(json.contains("\"domain\":\"ml\""));
+    assert!(json.contains("\"name\":\"training_run\""));
 }
