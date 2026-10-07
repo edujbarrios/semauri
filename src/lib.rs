@@ -4379,7 +4379,7 @@ fn validate_domain_operation(
             positive_integer("rank", "QLoRA rank", "S339")?;
             positive_number("alpha", "QLoRA alpha", "S339")?;
             if let Some(bits) = number("quantization_bits") {
-                if !matches!(bits, NumberValue::Int(4) | NumberValue::Int(8)) {
+                if bits != NumberValue::Int(4) && bits != NumberValue::Int(8) {
                     return Err(SemauriError::semantic(
                         "S339",
                         format!("Unsupported QLoRA quantization '{}' bits", bits),
@@ -5674,6 +5674,7 @@ impl<'a> Lowerer<'a> {
                 alternative,
                 ..
             } => {
+                let condition_span = condition.span();
                 let condition = self.evaluate(condition)?;
                 let BoundValue::Compile {
                     ty: Type::Boolean,
@@ -5683,7 +5684,7 @@ impl<'a> Lowerer<'a> {
                     return Err(SemauriError::semantic(
                         "S316",
                         "If condition must evaluate to boolean",
-                        Some(condition_span(condition_ref_placeholder())),
+                        Some(condition_span),
                         None,
                     ));
                 };
@@ -6666,15 +6667,6 @@ impl<'a> Lowerer<'a> {
             ),
         )
     }
-}
-
-// These two helpers keep the impossible fallback branch in lower_statement small.
-fn condition_ref_placeholder() -> SourceSpan {
-    SourceSpan::point(1, 1)
-}
-
-fn condition_span(span: SourceSpan) -> SourceSpan {
-    span
 }
 
 fn capitalize(value: &str) -> String {
