@@ -25,7 +25,8 @@ fn nominal_promotion_and_effect_metadata_survive_hir() {
         .to_string();
 
     assert!(hir.contains("\"kind\":\"promote\""));
-    assert!(hir.contains("filesystem.path"));
+    assert!(hir.contains("\"domain\":\"filesystem\""));
+    assert!(hir.contains("\"name\":\"path\""));
     assert!(hir.contains("filesystem_write"));
 }
 
@@ -54,7 +55,7 @@ fn optimizer_does_not_remove_a_trapping_initializer() {
 fn optimizer_keeps_full_symbol_table_but_removes_dead_static_structure() {
     let optimized = Compiler::new()
         .optimized_hir(
-            "Let a be 1. Let b be a plus 1. Create a web. If true: Add a button called Yes. Otherwise: Add a button called No. End.",
+            "Let alpha be 1. Let beta be alpha plus 1. Create a web. If true: Add a button called Yes. Otherwise: Add a button called No. End.",
         )
         .unwrap();
     assert!(optimized.result.symbols.len() >= 2);
