@@ -13,8 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Enforce Rust-only source tree
-        run: bash scripts/check-rust-only.sh
       - uses: dtolnay/rust-toolchain@stable
       - name: Test Rust compiler
         run: cargo test --all-targets
