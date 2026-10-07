@@ -1,4 +1,4 @@
-use semauri::{Artifact, CapabilityPolicy, Compiler};
+use semauri::{Artifact, CapabilityPolicy, Compiler, ValueData};
 
 #[test]
 fn hir_symbols_shadowing_and_unselected_branches_are_preserved() {
@@ -96,7 +96,7 @@ fn multi_domain_program_ir_preserves_declarative_focus() {
     let Artifact::Web(web) = &result.semantic.program_ir.units[0].artifact else {
         panic!("expected web artifact first");
     };
-    assert_eq!(web.elements[0].properties.get("color").unwrap().to_json(), serde_json::json!("red"));
+    assert!(matches!(web.elements[0].properties.get("color"), Some(ValueData::Color(value)) if value == "red"));
 }
 
 #[test]
