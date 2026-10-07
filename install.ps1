@@ -94,7 +94,7 @@ if not defined SEMAURI_VERSION (
   echo Semauri installation is incomplete: current.txt is missing or empty. 1>&2
   exit /b 70
 )
-call "%SEMAURI_INSTALL_ROOT%\versions\%SEMAURI_VERSION%\bin\semauri.cmd" %*
+"%SEMAURI_INSTALL_ROOT%\versions\%SEMAURI_VERSION%\bin\semauri.exe" %*
 exit /b %ERRORLEVEL%
 '@ | Set-Content -Path $ShimPath -Encoding ascii
 

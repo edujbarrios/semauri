@@ -11,43 +11,57 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        ruby: ["3.2", "3.3", "3.4"]
     steps:
       - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: ${{ matrix.ruby }}
-      - name: Syntax check
-        run: |
-          find lib test -name '*.rb' -print0 | xargs -0 -n1 ruby -c
-          ruby -c bin/semauri
-      - name: Distribution shell syntax
-        run: |
-          sh -n install.sh distribution/bin/semauri
-          bash -n scripts/package-distribution.sh
-      - name: Tests
-        run: ruby -Ilib -e 'Dir["test/test_*.rb"].sort.each { |file| require_relative file }'
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test Rust compiler
+        run: cargo test --all-targets
 
-  windows-distribution:
-    name: windows distribution (${{ matrix.platform }})
+  distribution-unix:
+    name: distribution (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            platform: linux-x86_64
+          - runner: ubuntu-22.04-arm
+            platform: linux-arm64
+          - runner: macos-15-intel
+            platform: macos-x86_64
+          - runner: macos-14
+            platform: macos-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build native binary
+        run: cargo build --release
+      - name: Package and smoke-test
+        shell: bash
+        env:
+          SEMAURI_PLATFORM: ${{ matrix.platform }}
+          SEMAURI_BINARY: ${{ github.workspace }}/target/release/semauri
+        run: |
+          set -euo pipefail
+          bash -n scripts/package-distribution.sh install.sh
+          ./scripts/package-distribution.sh
+          test -n "$(find dist -type f -name 'semauri-*.tar.gz' -print -quit)"
+
+  distribution-windows:
+    name: distribution (${{ matrix.platform }})
     strategy:
       fail-fast: false
       matrix:
         include:
           - runner: windows-2025
             platform: windows-x86_64
-            ruby_asset: rubyinstaller-3.4.11-1-x64.7z
-            ruby_sha256: a9aca84326a90422c0905bcb47be629b687a881dcad96149604c2cb074d03154
           - runner: windows-11-arm
             platform: windows-arm64
-            ruby_asset: rubyinstaller-3.4.11-1-arm.7z
-            ruby_sha256: 48b43e9aa362c7590475aa2d011ece7c352632c55f71fa0a482d92fc8edbc521
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
-
+      - uses: dtolnay/rust-toolchain@stable
       - name: PowerShell syntax
         shell: pwsh
         run: |
@@ -57,34 +71,16 @@ jobs:
             $errors = $null
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors) | Out-Null
             if ($errors.Count -gt 0) {
-              $errors | ForEach-Object { Write-Error "$file`: $($_.Message)" }
+              $errors | ForEach-Object { Write-Error "$file\: $($_.Message)" }
               exit 1
             }
           }
-
-      - name: Download pinned RubyInstaller runtime
+      - name: Build native binary
+        run: cargo build --release
+      - name: Package and smoke-test
         shell: pwsh
-        env:
-          RUBY_ASSET: ${{ matrix.ruby_asset }}
-          RUBY_SHA256: ${{ matrix.ruby_sha256 }}
         run: |
-          $url = "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-3.4.11-1/$env:RUBY_ASSET"
-          Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile 'portable-ruby.7z'
-          $actual = (Get-FileHash -Algorithm SHA256 'portable-ruby.7z').Hash.ToLowerInvariant()
-          if ($actual -ne $env:RUBY_SHA256) { throw "RubyInstaller checksum mismatch: $actual" }
-          New-Item -ItemType Directory -Force -Path 'portable-ruby' | Out-Null
-          & 7z x -y 'portable-ruby.7z' '-oportable-ruby'
-          if ($LASTEXITCODE -ne 0) { throw 'Unable to extract RubyInstaller runtime' }
-
-      - name: Package and smoke-test Semauri
-        shell: pwsh
-        env:
-          SEMAURI_PLATFORM: ${{ matrix.platform }}
-        run: |
-          $rubyExe = Get-ChildItem 'portable-ruby' -Recurse -Filter 'ruby.exe' -File |
-            Where-Object { $_.FullName -match '[\\/]bin[\\/]ruby\.exe$' } |
-            Select-Object -First 1
-          if (-not $rubyExe) { throw 'ruby.exe was not found in the extracted RubyInstaller archive' }
-          $rubyPrefix = Split-Path -Parent (Split-Path -Parent $rubyExe.FullName)
-          ./scripts/package-distribution.ps1 -RubyPrefix $rubyPrefix -SemauriPlatform $env:SEMAURI_PLATFORM
-          if (-not (Get-ChildItem 'dist' -Filter 'semauri-*.zip' -File)) { throw 'Windows distribution archive was not produced' }
+          ./scripts/package-distribution.ps1 -BinaryPath 'target\release\semauri.exe' -SemauriPlatform '${{ matrix.platform }}'
+          if (-not (Get-ChildItem 'dist' -Filter 'semauri-*.zip' -File)) {
+            throw 'Windows distribution archive was not produced'
+          }
