@@ -4,7 +4,7 @@
 
 **Natural to write. Deterministic to run.**
 
-> Status: **0.13.0 / experimental**
+> Status: **0.14.0 / experimental**
 
 ## What is Semauri?
 
@@ -86,7 +86,7 @@ semauri run --allow filesystem_read --allow filesystem_write examples/filesystem
 
 Use <code>--dry-run</code> to inspect the executable plan without performing effects. See [Installation](docs/00_INSTALLATION.md) for platform details and manual downloads.
 
-### Source usability in 0.13
+### Source usability
 
 Programs can now contain line comments and escaped text without preprocessing:
 

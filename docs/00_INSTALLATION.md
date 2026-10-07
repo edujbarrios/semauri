@@ -2,7 +2,7 @@
 
 This guide covers binary installation, manual downloads, running <code>.sema</code> programs and installing an exact version.
 
-> Current published release: **0.13.0**
+> Current release documented here: **0.14.0**
 
 Official Semauri distributions contain a native executable. **Rust and Cargo are not required to use a published Semauri binary.**
 
@@ -76,14 +76,14 @@ On Windows PowerShell:
 Linux/macOS:
 
 ~~~bash
-SEMAURI_VERSION=0.13.0 \
+SEMAURI_VERSION=0.14.0 \
   curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
 ~~~
 
 Windows PowerShell:
 
 ~~~powershell
-$env:SEMAURI_VERSION = '0.13.0'
+$env:SEMAURI_VERSION = '0.14.0'
 irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
 Remove-Item Env:SEMAURI_VERSION
 ~~~
