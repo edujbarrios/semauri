@@ -563,10 +563,10 @@ impl<'a> Parser<'a> {
     }
 
     fn multiplicative(&mut self) -> Result<Expr> {
-        let mut expression = self.primary()?;
+        let mut expression = self.numeric_unary()?;
         loop {
             if self.matches(&[TokenKind::Times]) {
-                let right = self.primary()?;
+                let right = self.numeric_unary()?;
                 let span = span_between_spans(expression.span(), right.span());
                 expression = Expr::Binary {
                     left: Box::new(expression),
@@ -580,7 +580,7 @@ impl<'a> Parser<'a> {
                     "Expected 'by' after 'divided'",
                     "S226",
                 )?;
-                let right = self.primary()?;
+                let right = self.numeric_unary()?;
                 let span = span_between_spans(expression.span(), right.span());
                 expression = Expr::Binary {
                     left: Box::new(expression),
@@ -593,6 +593,20 @@ impl<'a> Parser<'a> {
             }
         }
         Ok(expression)
+    }
+
+    fn numeric_unary(&mut self) -> Result<Expr> {
+        if self.matches(&[TokenKind::Minus]) {
+            let operator = self.previous().clone();
+            let operand = self.numeric_unary()?;
+            let span = span_between_spans(operator.span, operand.span());
+            return Ok(Expr::Unary {
+                operator: UnaryOperator::Negate,
+                operand: Box::new(operand),
+                span,
+            });
+        }
+        self.primary()
     }
 
     fn primary(&mut self) -> Result<Expr> {

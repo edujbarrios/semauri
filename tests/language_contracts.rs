@@ -143,3 +143,26 @@ fn not_equal_comparisons_are_typed_and_deterministic() {
         .unwrap_err();
     assert_eq!(error.code, "S315");
 }
+
+#[test]
+fn unary_minus_is_numeric_and_binds_tighter_than_multiplication() {
+    let compiler = Compiler::new();
+
+    let output = compiler
+        .compile(
+            "Create a web. If 2 times minus 3 plus 11 is equal to 5: Add a button called Negative. End.",
+            None,
+        )
+        .unwrap()
+        .output
+        .unwrap();
+    assert!(output.contains(">Negative</button>"));
+
+    let ast = compiler.parse("Let debt be minus 5. Create a web.").unwrap().to_json();
+    assert_eq!(ast["statements"][0]["value"]["operator"], "negate");
+
+    let error = compiler
+        .analyze("Let invalid be minus true. Create a web.")
+        .unwrap_err();
+    assert_eq!(error.code, "S314");
+}
