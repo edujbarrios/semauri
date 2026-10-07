@@ -40,6 +40,21 @@ First validate it without executing effects:
 semauri check hello.sema
 ```
 
+Ask the compiler to explain how it resolved and lowered the program:
+
+```sh
+semauri explain hello.sema
+```
+
+`explain` does not execute the program. For this example it reports:
+
+```text
+1. Bound 'answer' as symbol #1 to number 42.
+2. Planned runtime operation 'console.print' as operation #1.
+3. Variable 'answer' resolved to symbol #1 (number 42).
+4. Planned runtime operation 'console.print' as operation #2.
+```
+
 Inspect what the runtime would execute:
 
 ```sh
@@ -93,6 +108,7 @@ Use the following commands when working with a program:
 | Command | Purpose |
 | --- | --- |
 | `semauri check FILE` | Parse, resolve and type-check without producing output or performing effects |
+| `semauri explain FILE` | Explain symbol binding, reference resolution and lowering decisions without executing |
 | `semauri run --dry-run FILE` | Inspect the executable runtime plan without performing effects |
 | `semauri run --allow EFFECT FILE` | Execute a supported program with explicit capabilities |
 | `semauri build FILE` | Compile build-time domains to HTML, JSON Schema or a shell plan |
@@ -104,6 +120,7 @@ Representative commands:
 
 ~~~bash
 semauri check examples/hello_console.sema
+semauri explain examples/hello_console.sema
 semauri run --dry-run examples/hello_console.sema
 semauri run --allow console_write examples/hello_console.sema
 semauri build examples/shop.sema
