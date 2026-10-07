@@ -16,18 +16,19 @@ fn external_declarative_domain_and_backend_compile() {
     domains.register(canvas_domain()).unwrap();
 
     let mut backends = BackendRegistry::new();
-    backends.register("canvas", |artifact: &Artifact| {
-        match artifact {
-            Artifact::Generic(canvas) => {
-                let badge = &canvas.elements[0];
-                let tone = match badge.properties.get("tone") {
-                    Some(ValueData::Color(value)) => value.clone(),
-                    _ => String::new(),
-                };
-                Ok(format!("{}|{}|{}|{}", canvas.title, badge.kind, badge.label, tone))
-            }
-            _ => Ok("wrong artifact".to_string()),
+    backends.register("canvas", |artifact: &Artifact| match artifact {
+        Artifact::Generic(canvas) => {
+            let badge = &canvas.elements[0];
+            let tone = match badge.properties.get("tone") {
+                Some(ValueData::Color(value)) => value.clone(),
+                _ => String::new(),
+            };
+            Ok(format!(
+                "{}|{}|{}|{}",
+                canvas.title, badge.kind, badge.label, tone
+            ))
         }
+        _ => Ok("wrong artifact".to_string()),
     });
 
     let compiler = Compiler::with_registries(domains, backends);
@@ -36,7 +37,10 @@ fn external_declarative_domain_and_backend_compile() {
         Some("canvas"),
     ).unwrap();
 
-    assert_eq!(result.output.as_deref(), Some("Status Board|badge|Health|green"));
+    assert_eq!(
+        result.output.as_deref(),
+        Some("Status Board|badge|Health|green")
+    );
 }
 
 #[test]
@@ -48,9 +52,15 @@ fn external_domain_terms_are_generic_tokens_and_metadata() {
     let tokens = compiler
         .tokenize("Create a canvas. Add a badge. Set the tone of it to red.")
         .unwrap();
-    assert!(tokens.iter().any(|token| token.kind == TokenKind::DomainArtifact));
-    assert!(tokens.iter().any(|token| token.kind == TokenKind::DomainElement));
-    assert!(tokens.iter().any(|token| token.kind == TokenKind::DomainProperty));
+    assert!(tokens
+        .iter()
+        .any(|token| token.kind == TokenKind::DomainArtifact));
+    assert!(tokens
+        .iter()
+        .any(|token| token.kind == TokenKind::DomainElement));
+    assert!(tokens
+        .iter()
+        .any(|token| token.kind == TokenKind::DomainProperty));
 
     let metadata = domains.to_json();
     assert_eq!(metadata["domains"][0]["name"], "canvas");
@@ -73,9 +83,7 @@ fn registry_collision_checks_are_transactional_and_reserved_words_fail() {
     assert_eq!(domains.names(), vec!["one".to_string()]);
     assert!(!domains.words().contains(&"other".to_string()));
 
-    let reserved = domains.register(
-        DomainSpec::new("invalid").with_artifact("if", "artifact"),
-    );
+    let reserved = domains.register(DomainSpec::new("invalid").with_artifact("if", "artifact"));
     assert!(reserved
         .unwrap_err()
         .contains("reserved English vocabulary"));

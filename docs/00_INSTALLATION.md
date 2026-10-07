@@ -1,88 +1,139 @@
-# Installation
+# Installing and running Semauri
 
-This document covers installing and updating Semauri for normal use, plus the source-based workflow for compiler contributors.
+This guide covers binary installation, manual downloads, running <code>.sema</code> programs and installing an exact version.
 
 > Current release documented here: **0.14.0**
 
-Official Semauri distributions contain a native executable. **You do not need Rust, Cargo, or another language runtime installed to use Semauri.**
+Official Semauri distributions contain a native executable. **Rust and Cargo are not required to use a published Semauri binary.**
 
-## Linux and macOS
+## Quick install
 
-```bash
+### Linux and macOS
+
+~~~bash
 curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
-```
+~~~
 
-Verify the installation:
+The installer detects Linux/macOS and x86_64/arm64, downloads the matching GitHub Release asset, verifies its SHA-256 checksum and exposes <code>semauri</code> through <code>~/.local/bin</code> by default.
 
-```text
+Verify:
+
+~~~bash
 semauri version
 semauri help
-```
+~~~
 
-The installer stores versioned distributions under `~/.semauri/versions/`, switches `~/.semauri/current`, and exposes the command through `~/.local/bin/semauri`.
+If <code>~/.local/bin</code> is not in <code>PATH</code>, add it to your shell configuration.
 
-### Install an exact version
+### Windows PowerShell
 
-```bash
+~~~powershell
+irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
+~~~
+
+The installer selects Windows x86_64 or arm64, verifies the release checksum, stores versioned binaries under <code>$HOME\.semauri\versions\</code> and adds <code>$HOME\.semauri\bin</code> to the user <code>PATH</code>.
+
+Open a new terminal if necessary, then verify:
+
+~~~powershell
+semauri version
+semauri help
+~~~
+
+## Manual download
+
+All native archives are published at:
+
+https://github.com/edujbarrios/semauri/releases/latest
+
+Choose the asset matching your machine:
+
+| Platform | Asset pattern |
+| --- | --- |
+| Linux x86_64 | <code>semauri-&lt;VERSION&gt;-linux-x86_64.tar.gz</code> |
+| Linux arm64 | <code>semauri-&lt;VERSION&gt;-linux-arm64.tar.gz</code> |
+| macOS Intel | <code>semauri-&lt;VERSION&gt;-macos-x86_64.tar.gz</code> |
+| macOS Apple Silicon | <code>semauri-&lt;VERSION&gt;-macos-arm64.tar.gz</code> |
+| Windows x86_64 | <code>semauri-&lt;VERSION&gt;-windows-x86_64.zip</code> |
+| Windows arm64 | <code>semauri-&lt;VERSION&gt;-windows-arm64.zip</code> |
+
+Download <code>SHA256SUMS</code> from the same release and verify the archive before extracting it. The executable is inside <code>bin/</code> in the extracted directory.
+
+On Linux/macOS:
+
+~~~bash
+./semauri-<VERSION>-<PLATFORM>/bin/semauri version
+~~~
+
+On Windows PowerShell:
+
+~~~powershell
+.\semauri-<VERSION>-windows-x86_64\bin\semauri.exe version
+~~~
+
+## Install an exact version
+
+Linux/macOS:
+
+~~~bash
 SEMAURI_VERSION=0.14.0 \
   curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
-```
+~~~
 
-Custom install locations can be selected with `SEMAURI_INSTALL_ROOT` and `SEMAURI_BIN_DIR`.
+Windows PowerShell:
 
-## Windows — PowerShell
-
-```powershell
-irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
-```
-
-Verify the installation in a new terminal if necessary:
-
-```text
-semauri version
-semauri help
-```
-
-The installer stores versions under `$HOME\.semauri\versions\`, maintains the active version through `$HOME\.semauri\current.txt`, installs a stable command shim at `$HOME\.semauri\bin\semauri.cmd`, and launches the versioned native `semauri.exe`.
-
-### Install an exact version
-
-```powershell
+~~~powershell
 $env:SEMAURI_VERSION = '0.14.0'
 irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
 Remove-Item Env:SEMAURI_VERSION
-```
+~~~
 
-The install root can be changed with `SEMAURI_INSTALL_ROOT` or the `-InstallRoot` PowerShell parameter.
+## Running Semauri source files
 
-## Supported official targets
+Semauri source files use the <code>.sema</code> extension.
 
-Semauri publishes native packages for Linux x86_64/arm64, macOS x86_64/arm64, and Windows x86_64/arm64. Linux/macOS packages use `.tar.gz`; Windows packages use `.zip`.
+Validate a file without producing an output:
 
-## Updating Semauri
+~~~bash
+semauri check examples/hello.sema
+~~~
 
-Re-run the installer to resolve and activate the latest release. Older version directories are kept locally so the distribution layout still supports manual rollback.
+Compile a file to its domain-specific output:
 
-## Development from source
+~~~bash
+semauri build examples/shop.sema
+~~~
 
-Compiler contributors need a Rust toolchain (Rust 1.83+):
+Inspect tokens, AST, HIR, effects or runtime planning:
 
-```bash
-git clone https://github.com/edujbarrios/semauri.git
-cd semauri
-cargo run -- help
-cargo test --all-targets
-```
+~~~bash
+semauri tokens examples/shop.sema
+semauri ast examples/shop.sema
+semauri hir examples/shop.sema
+semauri effects examples/filesystem.sema
+semauri plan examples/filesystem.sema
+~~~
 
-A release build is produced with:
+Effectful execution is explicit. The current execution path supports authorized filesystem workflows:
 
-```bash
-cargo build --release
-./target/release/semauri version
-```
+~~~bash
+semauri run --allow filesystem_read --allow filesystem_write examples/filesystem.sema
+~~~
 
-For package layouts, checksums and the release process, continue with [`09_DISTRIBUTION.md`](09_DISTRIBUTION.md).
+Inspect the plan without performing effects:
 
-## Next
+~~~bash
+semauri run --dry-run examples/filesystem.sema
+~~~
 
-Continue with [`01_LANGUAGE.md`](01_LANGUAGE.md) for the language grammar and implemented semantics.
+Use <code>--cwd PATH</code> to choose the working directory for relative filesystem paths.
+
+## Updating
+
+Re-run the installer without <code>SEMAURI_VERSION</code> to resolve and activate the latest GitHub Release.
+
+## Building from source
+
+If you want to **change the language**, do not use the binary installation as your development environment. Clone the source repository and follow [DEVELOPMENT.md](DEVELOPMENT.md).
+
+For package layout, checksums and release automation, see [09_DISTRIBUTION.md](09_DISTRIBUTION.md).

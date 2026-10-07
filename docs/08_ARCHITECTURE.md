@@ -20,6 +20,28 @@ Source → Lexer → Tokens → Parser → AST → Typed HIR
                        Target Artifact
 ```
 
+
+## Source layout
+
+The Rust implementation uses a **Facade + staged pipeline** layout. `src/lib.rs` only exposes the public crate API; implementation details live under `src/compiler/` and are grouped by compiler responsibility:
+
+```text
+src/
+├── lib.rs                     public facade
+├── main.rs                    CLI entry point
+└── compiler/
+    ├── core/                  diagnostics, values and shared types
+    ├── domains/               domain model, registry and built-ins
+    ├── frontend/              lexer, AST and parser
+    ├── semantic/              HIR, optimization and effect analysis
+    ├── runtime/               semantic IR, lowering and runtime plans
+    ├── backends/              compiler facade, renderers and executors
+    ├── cli.rs                 command dispatch
+    └── tests.rs               internal regression tests
+```
+
+The compiler source slices are deliberately included into one internal Rust module. This preserves the existing private-helper contracts and public API during the migration away from the former monolithic `lib.rs`, while making ownership boundaries explicit and allowing later extraction into independent Rust modules without a large behavior-changing rewrite.
+
 ## Domain registry
 
 `DomainSpec` contributes artifact, element, property and action vocabulary plus type/effect contracts. The lexer emits generic domain token categories, so external vocabulary does not require lexer/parser edits.
