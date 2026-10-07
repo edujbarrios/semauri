@@ -4,16 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - "lib/semauri/version.rb"
+      - "Cargo.toml"
   workflow_dispatch:
 
 permissions:
   contents: write
-
-env:
-  PORTABLE_RUBY_VERSION: "3.4.11"
-  PORTABLE_RUBY_REVISION: "1"
-  WINDOWS_RUBYINSTALLER_VERSION: "3.4.11-1"
 
 jobs:
   prepare:
@@ -22,20 +17,17 @@ jobs:
       version: ${{ steps.meta.outputs.version }}
       tag: ${{ steps.meta.outputs.tag }}
       publish: ${{ steps.release.outputs.publish }}
-
     steps:
       - uses: actions/checkout@v4
-
       - id: meta
         name: Resolve Semauri version
         shell: bash
         run: |
           set -euo pipefail
-          version=$(sed -n 's/.*VERSION = "\([^"]*\)".*/\1/p' lib/semauri/version.rb)
+          version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n 1)
           test -n "$version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
-
       - id: release
         name: Check whether the release already exists
         shell: bash
@@ -51,7 +43,7 @@ jobs:
             echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
 
-  package:
+  package-unix:
     name: package (${{ matrix.platform }})
     needs: prepare
     if: needs.prepare.outputs.publish == 'true'
@@ -61,65 +53,24 @@ jobs:
         include:
           - runner: ubuntu-22.04
             platform: linux-x86_64
-            ruby_asset: ruby-3.4.11.x86_64_linux.tar.gz
-            ruby_sha256: f4a0ac310c7150586befb7fc885297be4a96bc4f7ad7b4dd362e427b87822055
           - runner: ubuntu-22.04-arm
             platform: linux-arm64
-            ruby_asset: ruby-3.4.11.arm64_linux.tar.gz
-            ruby_sha256: ed51969b29997e96743446dc182f26b0b55b9ffee1fc5c24e4a9e15d1c468c77
           - runner: macos-15-intel
             platform: macos-x86_64
-            ruby_asset: ruby-3.4.11.x86_64_darwin.tar.gz
-            ruby_sha256: 7d9e89295332702c9c16f7c2a19112362daea130d422b833ddfdf69067872270
           - runner: macos-14
             platform: macos-arm64
-            ruby_asset: ruby-3.4.11.arm64_darwin.tar.gz
-            ruby_sha256: a71d56e05c801eec9f5a330b8d0d096b10d6c527c0bf4485c2be22126460fa05
-
     runs-on: ${{ matrix.runner }}
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Validate source version
-        shell: bash
-        env:
-          EXPECTED_VERSION: ${{ needs.prepare.outputs.version }}
-        run: |
-          set -euo pipefail
-          version=$(sed -n 's/.*VERSION = "\([^"]*\)".*/\1/p' lib/semauri/version.rb)
-          test "$version" = "$EXPECTED_VERSION"
-
-      - name: Download pinned portable Ruby runtime
-        shell: bash
-        env:
-          RUBY_ASSET: ${{ matrix.ruby_asset }}
-          RUBY_SHA256: ${{ matrix.ruby_sha256 }}
-        run: |
-          set -euo pipefail
-          url="https://github.com/bazel-contrib/portable-ruby/releases/download/${PORTABLE_RUBY_VERSION}-${PORTABLE_RUBY_REVISION}/${RUBY_ASSET}"
-          curl -fL --retry 3 -o portable-ruby.tar.gz "$url"
-          if command -v sha256sum >/dev/null 2>&1; then
-            actual=$(sha256sum portable-ruby.tar.gz | awk '{print $1}')
-          else
-            actual=$(shasum -a 256 portable-ruby.tar.gz | awk '{print $1}')
-          fi
-          test "$actual" = "$RUBY_SHA256"
-          mkdir portable-ruby
-          tar -xzf portable-ruby.tar.gz -C portable-ruby
-
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build native Semauri
+        run: cargo build --release
       - name: Package and smoke-test Semauri
         shell: bash
         env:
           SEMAURI_PLATFORM: ${{ matrix.platform }}
-        run: |
-          set -euo pipefail
-          ruby_bin=$(find portable-ruby -type f -path '*/bin/ruby' -perm -111 -print -quit)
-          test -n "$ruby_bin"
-          RUBY_PREFIX=${ruby_bin%/bin/ruby}
-          export RUBY_PREFIX SEMAURI_PLATFORM
-          ./scripts/package-distribution.sh
-
+          SEMAURI_BINARY: ${{ github.workspace }}/target/release/semauri
+        run: ./scripts/package-distribution.sh
       - uses: actions/upload-artifact@v4
         with:
           name: semauri-${{ matrix.platform }}
@@ -136,53 +87,17 @@ jobs:
         include:
           - runner: windows-2025
             platform: windows-x86_64
-            ruby_asset: rubyinstaller-3.4.11-1-x64.7z
-            ruby_sha256: a9aca84326a90422c0905bcb47be629b687a881dcad96149604c2cb074d03154
           - runner: windows-11-arm
             platform: windows-arm64
-            ruby_asset: rubyinstaller-3.4.11-1-arm.7z
-            ruby_sha256: 48b43e9aa362c7590475aa2d011ece7c352632c55f71fa0a482d92fc8edbc521
-
     runs-on: ${{ matrix.runner }}
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Validate source version
-        shell: pwsh
-        env:
-          EXPECTED_VERSION: ${{ needs.prepare.outputs.version }}
-        run: |
-          $content = Get-Content 'lib/semauri/version.rb' -Raw
-          if ($content -notmatch 'VERSION = "([^"]+)"') { throw 'Unable to resolve Semauri version' }
-          if ($Matches[1] -ne $env:EXPECTED_VERSION) { throw "Version mismatch: $($Matches[1]) != $env:EXPECTED_VERSION" }
-
-      - name: Download pinned RubyInstaller runtime
-        shell: pwsh
-        env:
-          RUBY_ASSET: ${{ matrix.ruby_asset }}
-          RUBY_SHA256: ${{ matrix.ruby_sha256 }}
-        run: |
-          $url = "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-$env:WINDOWS_RUBYINSTALLER_VERSION/$env:RUBY_ASSET"
-          Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile 'portable-ruby.7z'
-          $actual = (Get-FileHash -Algorithm SHA256 'portable-ruby.7z').Hash.ToLowerInvariant()
-          if ($actual -ne $env:RUBY_SHA256) { throw "RubyInstaller checksum mismatch: $actual" }
-          New-Item -ItemType Directory -Force -Path 'portable-ruby' | Out-Null
-          & 7z x -y 'portable-ruby.7z' '-oportable-ruby'
-          if ($LASTEXITCODE -ne 0) { throw 'Unable to extract RubyInstaller runtime' }
-
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build native Semauri
+        run: cargo build --release
       - name: Package and smoke-test Semauri
         shell: pwsh
-        env:
-          SEMAURI_PLATFORM: ${{ matrix.platform }}
-        run: |
-          $rubyExe = Get-ChildItem 'portable-ruby' -Recurse -Filter 'ruby.exe' -File |
-            Where-Object { $_.FullName -match '[\\/]bin[\\/]ruby\.exe$' } |
-            Select-Object -First 1
-          if (-not $rubyExe) { throw 'ruby.exe was not found in the extracted RubyInstaller archive' }
-          $rubyPrefix = Split-Path -Parent (Split-Path -Parent $rubyExe.FullName)
-          ./scripts/package-distribution.ps1 -RubyPrefix $rubyPrefix -SemauriPlatform $env:SEMAURI_PLATFORM
-
+        run: ./scripts/package-distribution.ps1 -BinaryPath 'target\release\semauri.exe' -SemauriPlatform '${{ matrix.platform }}'
       - uses: actions/upload-artifact@v4
         with:
           name: semauri-${{ matrix.platform }}
@@ -191,17 +106,14 @@ jobs:
 
   release:
     name: publish release
-    needs: [prepare, package, package-windows]
+    needs: [prepare, package-unix, package-windows]
     if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-
       - name: Assemble release files
         shell: bash
         run: |
@@ -212,7 +124,6 @@ jobs:
           test "$(find release -type f -name 'semauri-*.zip' | wc -l)" -eq 2
           (cd release && sha256sum semauri-* > SHA256SUMS)
           cat release/SHA256SUMS
-
       - name: Publish GitHub Release
         shell: bash
         env:
