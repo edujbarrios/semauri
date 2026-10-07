@@ -1,10 +1,8 @@
 # Semantic domains
 
-Semantic domains are Semauri's extension boundary for application-specific meaning. A domain can contribute vocabulary, typed properties, deterministic operation patterns, nominal types, effects and a recommended backend without adding domain-specific branches to the lexer or parser.
+Semantic domains are Semauri's extension boundary for application-specific meaning. Domains add vocabulary, type contracts, operation patterns, effects and backend recommendations without adding domain-specific parser branches.
 
-## Declaring an artifact domain
-
-Use `DomainSpec` to describe surface vocabulary and type contracts:
+## Declarative artifact domains
 
 ```rust
 use semauri::{DomainSpec, Type};
@@ -16,19 +14,9 @@ let canvas = DomainSpec::new("canvas")
     .with_property("tone", "tone", Type::Color);
 ```
 
-The lexer sees generic categories:
-
-```text
-canvas → DOMAIN_ARTIFACT(domain=canvas, kind=canvas)
-badge  → DOMAIN_ELEMENT(domain=canvas, kind=badge)
-tone   → DOMAIN_PROPERTY(domain=canvas, kind=tone)
-```
-
-External declarative artifact domains lower to `GenericArtifact` / `GenericElement`. Built-in domains may use specialized IR where their target semantics require it.
+These terms become generic `DOMAIN_ARTIFACT`, `DOMAIN_ELEMENT` and `DOMAIN_PROPERTY` tokens. External declarative artifacts lower to `GenericArtifact` / `GenericElement`.
 
 ## Declarative operations
-
-Operations contribute one or more verbs and a deterministic phrase pattern:
 
 ```rust
 use semauri::{OperationSpec, PatternSegment, Type};
@@ -49,13 +37,13 @@ let domain = DomainSpec::new("example")
     .with_operation(write);
 ```
 
-The generic parser can then recognize the registered verb without a dedicated parser branch. Typed HIR validates slot types and preserves declared effects. A slot mismatch is `S329`.
+Registered verbs become generic `DOMAIN_ACTION` tokens. Typed HIR validates slot types and preserves effects. A slot type mismatch reports `S329`.
 
-Value-returning operations lower to typed runtime references. External operation domains use the generic runtime-plan lowering path; specialized built-in domains may additionally provide compile-time backend IR.
+Value-returning operations produce typed runtime references. External operation domains use the generic runtime-plan lowering path.
 
-## Explicit semantic-domain scopes
+## Domain scopes
 
-Action verbs may overlap across domains. Ambiguous actions require explicit qualification:
+Action verbs may overlap across domains. Ambiguous actions must be qualified:
 
 ```text
 Within filesystem:
@@ -63,30 +51,11 @@ Within filesystem:
 End.
 ```
 
-Outside a scope, multiple candidates fail with `S240`. Inside a scope, an action not owned by the selected domain also fails with `S240`. Domain scopes are lexical variable scopes.
+Multiple unqualified candidates fail with `S240`. Domain scopes are lexical variable scopes.
 
-Artifact, element and property surface terms remain globally unique. Action/action overlap is intentionally permitted.
-
-## Effects
-
-Operations declare stable semantic effect identifiers such as `filesystem_read`, `filesystem_write`, `compute` or `model_training`. Effects are preserved in Typed HIR and analyzed before optimization.
-
-Declaring an effect never authorizes or performs it.
-
-## Property typing
-
-Property type contracts are part of the domain declaration:
-
-```rust
-let canvas = DomainSpec::new("canvas")
-    .with_property("enabled", "enabled", Type::Boolean);
-```
-
-The HIR builder validates property values before lowering. Mismatches fail with `S313`.
+Artifact, element and property surface terms remain globally unique; action/action overlap is allowed.
 
 ## Registration
-
-Registration is explicit and transactional:
 
 ```rust
 use semauri::{Compiler, DomainRegistry};
@@ -97,19 +66,9 @@ domains.register(canvas)?;
 let compiler = Compiler::with_domains(domains);
 ```
 
-A failed registration does not partially modify the registry.
-
-The vocabulary rules are deterministic:
-
-- artifact, element and property surface terms are globally unique;
-- action/action collisions are allowed and become candidate sets;
-- actions may not collide with non-action terms;
-- core grammar words and primitive color literals are reserved;
-- ambiguous actions require `Within <domain>:` qualification.
+Registration is transactional. Reserved grammar words and primitive color names cannot be overridden. A failed registration leaves the registry unchanged.
 
 ## Custom backends
-
-Backends are independent of semantic domains:
 
 ```rust
 use semauri::{Artifact, BackendRegistry, Compiler};
@@ -122,37 +81,23 @@ backends.register("summary", |artifact: &Artifact| {
 let compiler = Compiler::with_registries(domains, backends);
 ```
 
-A domain without a default backend requires an explicit backend selection (`S404`). A single backend override is rejected for multi-domain output (`S405`).
+A domain without a default backend requires explicit backend selection (`S404`). A single backend override is rejected for multi-domain output (`S405`).
 
-## Implicit properties
+## Property typing and shorthand
 
-Shorthand such as:
+Properties declare accepted semantic types with `with_property`. HIR validates them before lowering and reports `S313` on mismatch.
 
-```text
-Make it blue.
-```
+Shorthand such as `Make it blue.` is accepted only when exactly one loaded property can accept the value. Ambiguity reports `S236`.
 
-is accepted only when exactly one loaded property can accept the value type. Ambiguity fails with `S236`.
+## Multi-domain IR
 
-## Multi-domain Program IR
-
-One source file may produce multiple independent domain units:
-
-```text
-Create a web called Shop.
-Write "build metadata" to "build.txt".
-```
-
-Each unit keeps explicit domain identity and is rendered with its own backend. `CompilationResult.outputs` exposes all generated outputs.
+One source file may produce independent units from multiple domains. `CompilationResult.outputs` exposes each rendered output while domain identity remains explicit throughout AST, HIR and IR.
 
 ## Built-in domains
 
-**Web** provides web artifacts, buttons/images, `color : color`, specialized Web IR and the `html` backend.
+- **Web:** web artifacts, buttons/images, color property, HTML backend.
+- **Structured Data:** schemas, fields, datatype/required properties, JSON Schema backend.
+- **Filesystem:** typed paths, file operations, explicit effects, POSIX-shell backend.
+- **ML:** typed datasets/models/devices/configuration and runtime-plan operations.
 
-**Structured Data** provides schemas, fields, `datatype : string`, `required : boolean`, specialized schema IR and the `json-schema` backend.
-
-**Filesystem** provides write/append/copy/move/mkdir/touch/delete operations, nominal paths, explicit filesystem effects, operation-plan IR and the `posix-sh` backend.
-
-**ML** provides typed datasets, models, devices, resource/training configuration and runtime-plan operations with explicit compute/training/inference/evaluation effects.
-
-Run `semauri domains` to inspect the active domain metadata.
+Run `semauri domains` to inspect loaded metadata.
