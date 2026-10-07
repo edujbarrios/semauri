@@ -85,7 +85,7 @@ Make it blue.
     let Artifact::Web(web) = &semantic.program_ir.units[0].artifact else {
         panic!("expected web IR");
     };
-    assert_eq!(web.elements[0].properties["color"].to_json(), Value::String("blue".into()));
+    assert!(matches!(web.elements[0].properties.get("color"), Some(semauri::ValueData::Color(value)) if value == "blue"));
 
     let ambiguous = r#"
 Create a web called Shop.
