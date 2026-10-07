@@ -42,4 +42,15 @@ execution runtime
 
 `plan` shows what would execute, `effects` shows required capabilities, and `explain` shows compiler interpretation.
 
-The CLI currently executes authorized filesystem plans. ML and other runtime-value domains remain planning-only.
+The CLI executes authorized console and filesystem plans. ML and other runtime-value domains remain planning-only.
+
+Console output is an explicit effect:
+
+```text
+Let answer be 6 times 7.
+Print answer.
+```
+
+```sh
+semauri run --allow console_write program.sema
+```

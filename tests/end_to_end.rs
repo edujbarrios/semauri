@@ -8,7 +8,10 @@ static NEXT_TEMP: AtomicU64 = AtomicU64::new(1);
 
 fn temp_file(contents: &str) -> PathBuf {
     let id = NEXT_TEMP.fetch_add(1, Ordering::Relaxed);
-    let path = std::env::temp_dir().join(format!("semauri-rust-parity-{}-{id}.sema", std::process::id()));
+    let path = std::env::temp_dir().join(format!(
+        "semauri-rust-parity-{}-{id}.sema",
+        std::process::id()
+    ));
     fs::write(&path, contents).unwrap();
     path
 }
@@ -85,7 +88,9 @@ Make it blue.
     let Artifact::Web(web) = &semantic.program_ir.units[0].artifact else {
         panic!("expected web IR");
     };
-    assert!(matches!(web.elements[0].properties.get("color"), Some(semauri::ValueData::Color(value)) if value == "blue"));
+    assert!(
+        matches!(web.elements[0].properties.get("color"), Some(semauri::ValueData::Color(value)) if value == "blue")
+    );
 
     let ambiguous = r#"
 Create a web called Shop.
@@ -117,7 +122,9 @@ End.
     assert!(output.contains(">Safe</button>"));
 
     let error = Compiler::new()
-        .analyze("Create a web. If true or missing is equal to true: Add a button called Invalid. End.")
+        .analyze(
+            "Create a web. If true or missing is equal to true: Add a button called Invalid. End.",
+        )
         .unwrap_err();
     assert_eq!(error.code, "S312");
 }
@@ -147,7 +154,10 @@ End.
     assert!(output.contains("rm -f build/old.tmp"));
     assert_eq!(
         result.effects.effects(),
-        vec!["filesystem_read".to_string(), "filesystem_write".to_string()]
+        vec![
+            "filesystem_read".to_string(),
+            "filesystem_write".to_string()
+        ]
     );
 }
 
@@ -198,7 +208,11 @@ Set the color of the button called Buy to red.
     assert!(result.backend.is_none());
     assert_eq!(result.outputs.len(), 2);
     assert_eq!(
-        result.outputs.iter().map(|output| output.backend.as_str()).collect::<Vec<_>>(),
+        result
+            .outputs
+            .iter()
+            .map(|output| output.backend.as_str())
+            .collect::<Vec<_>>(),
         vec!["html", "posix-sh"]
     );
 
@@ -220,11 +234,27 @@ End.
 
     let plan = Compiler::new().runtime_plan(source).unwrap();
     assert_eq!(
-        plan.operations.iter().map(|operation| operation.name.as_str()).collect::<Vec<_>>(),
-        vec!["open_dataset", "load_model", "select_device", "configure_training", "fit"]
+        plan.operations
+            .iter()
+            .map(|operation| operation.name.as_str())
+            .collect::<Vec<_>>(),
+        vec![
+            "open_dataset",
+            "load_model",
+            "select_device",
+            "configure_training",
+            "fit"
+        ]
     );
     assert_eq!(
-        plan.operations.last().unwrap().result.as_ref().unwrap().ty.to_string(),
+        plan.operations
+            .last()
+            .unwrap()
+            .result
+            .as_ref()
+            .unwrap()
+            .ty
+            .to_string(),
         "ml.training_run"
     );
 }
@@ -257,17 +287,41 @@ fn cli_run_requires_authorization_and_dry_run_is_safe() {
 
     let denied = run_cli(&["run".into(), path.display().to_string()]);
     assert_eq!(denied.status, 65);
-    assert!(denied.stderr.contains("S334"));
+    assert!(denied.stderr.contains("S334"), "{}", denied.stderr);
 
-    let dry = run_cli(&[
-        "run".into(),
-        "--dry-run".into(),
-        path.display().to_string(),
-    ]);
+    let dry = run_cli(&["run".into(), "--dry-run".into(), path.display().to_string()]);
     assert_eq!(dry.status, 0);
     assert!(dry.stdout.contains("printf"));
 
     let _ = fs::remove_file(path);
+}
+
+#[test]
+fn console_programs_print_typed_values_with_explicit_authorization() {
+    let path = temp_file(
+        "Let answer be 6 times 7. Let values be a list of 1, 2, 3. Print \"Hello from Semauri\". Print answer. Print true. Print values.",
+    );
+
+    let denied = run_cli(&["run".into(), path.display().to_string()]);
+    assert_eq!(denied.status, 65);
+    assert!(denied.stderr.contains("S334"), "{}", denied.stderr);
+    assert!(denied.stderr.contains("console_write"));
+
+    let dry = run_cli(&["run".into(), "--dry-run".into(), path.display().to_string()]);
+    assert_eq!(dry.status, 0);
+    assert!(dry.stdout.contains("\"domain\": \"console\""));
+    assert!(dry.stdout.contains("\"name\": \"print\""));
+
+    let executed = run_cli(&[
+        "run".into(),
+        "--allow".into(),
+        "console_write".into(),
+        path.display().to_string(),
+    ]);
+    assert_eq!(executed.status, 0);
+    assert_eq!(executed.stdout, "Hello from Semauri\n42\ntrue\n[1, 2, 3]\n");
+
+    fs::remove_file(path).unwrap();
 }
 
 #[test]
@@ -290,7 +344,11 @@ End.
     assert!(!json.contains("\"kind\":\"if\""));
     assert!(!json.contains("\"kind\":\"let\""));
 
-    let output = Compiler::new().compile(source, None).unwrap().output.unwrap();
+    let output = Compiler::new()
+        .compile(source, None)
+        .unwrap()
+        .output
+        .unwrap();
     assert!(output.contains(">Buy</button>"));
 }
 

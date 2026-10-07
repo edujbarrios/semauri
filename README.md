@@ -15,6 +15,7 @@ Semauri is an experimental open-source programming language based on **controlle
 | Area | Current capability |
 | --- | --- |
 | Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If`, static `For every`, `#` comments, escaped strings |
+| Console | print typed values from executable programs with explicit authorization |
 | Web | build typed web documents and render HTML |
 | Structured data | build typed schemas and render JSON Schema |
 | Filesystem | plan and explicitly execute write/append/copy/move/mkdir/touch/delete workflows |
@@ -22,6 +23,27 @@ Semauri is an experimental open-source programming language based on **controlle
 | Tooling | inspect HIR, symbols, effects, optimization and runtime plans; capability-gated `run` |
 
 Compilation remains effect-free. Execution is a separate opt-in step and effectful programs must be authorized explicitly.
+
+## Example: execute a Semauri program
+
+```text
+Let answer be 6 times 7.
+Print "Hello from Semauri".
+Print answer.
+```
+
+Run it after authorizing console output:
+
+```sh
+semauri run --allow console_write examples/hello_console.sema
+```
+
+The program prints:
+
+```text
+Hello from Semauri
+42
+```
 
 ## Install, download and run Semauri
 

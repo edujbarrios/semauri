@@ -93,7 +93,11 @@ fn advanced_ml_plan_preserves_configuration_and_lineage() {
         "{}Let config be Plan training for 3 epochs using optimizer \"adamw\" learning rate 0.0003 batch size 16 seed 42 precision \"bf16\" accumulate 4 steps checkpoint every 100 steps. Let run be Fit model using dataset on device with config. End.",
         ml_prefix()
     );
-    let json = compiler.runtime_plan(&source).unwrap().to_json().to_string();
+    let json = compiler
+        .runtime_plan(&source)
+        .unwrap()
+        .to_json()
+        .to_string();
 
     assert!(json.contains("plan_training"));
     assert!(json.contains("gradient_accumulation"));

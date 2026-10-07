@@ -12,7 +12,10 @@ fn lexer_comments_escapes_and_invalid_escapes_match_contract() {
         .parse("Let message be \"tab\\tquote\\\"slash\\\\\". Create a web.")
         .unwrap()
         .to_json();
-    assert_eq!(ast["statements"][0]["value"]["value"], "tab\tquote\"slash\\");
+    assert_eq!(
+        ast["statements"][0]["value"]["value"],
+        "tab\tquote\"slash\\"
+    );
 
     let error = compiler.parse("Let message be \"bad\\q\".").unwrap_err();
     assert_eq!(error.code, "S104");
@@ -37,9 +40,7 @@ fn make_artifact_synonym_and_explicit_reference_work() {
 fn reference_errors_keep_diagnostic_codes() {
     let compiler = Compiler::new();
 
-    let no_referent = compiler
-        .analyze("Create a web. Make it red.")
-        .unwrap_err();
+    let no_referent = compiler.analyze("Create a web. Make it red.").unwrap_err();
     assert_eq!(no_referent.code, "S304");
 
     let missing = compiler
@@ -82,7 +83,10 @@ fn scope_and_type_errors_remain_stable() {
         ("Let x be 1 is equal to true. Create a web.", "S315"),
         ("Let x be 1 divided by 0. Create a web.", "S317"),
         ("Let x be 1. Let x be 2. Create a web.", "S311"),
-        ("Create a web. If true: Let local be 1. End. Let x be local.", "S312"),
+        (
+            "Create a web. If true: Let local be 1. End. Let x be local.",
+            "S312",
+        ),
     ];
     for (source, code) in cases {
         let error = compiler.analyze(source).unwrap_err();

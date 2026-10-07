@@ -1,0 +1,6 @@
+Let name be "Semauri".
+Let answer be 6 times 7.
+
+Print "Hello from Semauri".
+Print name.
+Print answer.
