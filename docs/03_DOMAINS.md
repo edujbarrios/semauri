@@ -1,95 +1,61 @@
 # Semantic domains
 
-Semantic domains are Semauri's extension boundary for application-specific meaning.
+Semantic domains are Semauri's extension boundary for application-specific meaning. A domain can contribute vocabulary, typed properties, deterministic operation patterns, nominal types, effects and a recommended backend without adding domain-specific branches to the lexer or parser.
 
-A domain may contribute vocabulary, property type contracts, declarative operations, effect metadata, semantic IR construction, mutation rules, explanations and a default backend. The lexer and parser consume generic domain categories and must not be modified just to add new nouns or verbs.
+## Declaring an artifact domain
 
-## Contract
+Use `DomainSpec` to describe surface vocabulary and type contracts:
 
-A domain subclasses `Semauri::Domains::Definition` and may declare artifact-oriented vocabulary:
+```rust
+use semauri::{DomainSpec, Type};
 
-```ruby
-class ExampleDomain < Semauri::Domains::Definition
-  def initialize
-    super(
-      name: :example,
-      default_backend: "example",
-      artifacts: { "board" => :board },
-      elements: { "item" => :item },
-      properties: { "enabled" => :enabled }
-    )
-  end
-end
+let canvas = DomainSpec::new("canvas")
+    .with_default_backend("canvas")
+    .with_artifact("canvas", "canvas")
+    .with_element("badge", "badge")
+    .with_property("tone", "tone", Type::Color);
 ```
 
-The declaration produces generic lexer categories:
+The lexer sees generic categories:
 
 ```text
-board   → DOMAIN_ARTIFACT(domain=example, kind=board)
-item    → DOMAIN_ELEMENT(domain=example, kind=item)
-enabled → DOMAIN_PROPERTY(domain=example, kind=enabled)
+canvas → DOMAIN_ARTIFACT(domain=canvas, kind=canvas)
+badge  → DOMAIN_ELEMENT(domain=canvas, kind=badge)
+tone   → DOMAIN_PROPERTY(domain=canvas, kind=tone)
 ```
 
-Artifact/element/property is a convenience model, not a requirement. Operation-oriented domains can expose actions instead.
+External declarative artifact domains lower to `GenericArtifact` / `GenericElement`. Built-in domains may use specialized IR where their target semantics require it.
 
 ## Declarative operations
 
-A domain operation contributes a verb and a deterministic phrase pattern. Domain verbs become `DOMAIN_ACTION` tokens; they do not become core Semauri keywords.
+Operations contribute one or more verbs and a deterministic phrase pattern:
 
-```ruby
-write = Semauri::Domains::Operation.new(
-  name: :write,
-  verbs: ["write"],
-  pattern: [
-    Semauri::Domains::Operation.expression(:content, type: :string),
-    Semauri::Domains::Operation.literal("to"),
-    Semauri::Domains::Operation.expression(:path, type: :string)
-  ],
-  returns: :unit,
-  effects: [:filesystem_write]
-)
+```rust
+use semauri::{OperationSpec, PatternSegment, Type};
+
+let write = OperationSpec::new(
+    "write",
+    ["write"],
+    vec![
+        PatternSegment::slot("content", Type::String),
+        PatternSegment::literal("to"),
+        PatternSegment::slot("path", Type::String),
+    ],
+    Type::Unit,
+    ["filesystem_write"],
+);
+
+let domain = DomainSpec::new("example")
+    .with_operation(write);
 ```
 
-The generic parser can then parse:
+The generic parser can then recognize the registered verb without a dedicated parser branch. Typed HIR validates slot types and preserves declared effects. A slot mismatch is `S329`.
 
-```text
-Write "hello" to "notes.txt".
-```
+Value-returning operations lower to typed runtime references. External operation domains use the generic runtime-plan lowering path; specialized built-in domains may additionally provide compile-time backend IR.
 
-without a `write` branch in `Parser`.
+## Explicit semantic-domain scopes
 
-Typed HIR preserves the operation contract:
-
-```text
-domain_operation filesystem.write : unit
-├── content : string
-├── path    : string
-└── effects = [filesystem_write]
-```
-
-Expression slot types are validated while building HIR. A mismatch is `S329`.
-
-### Operation lowering
-
-Operation domains implement:
-
-```ruby
-def execute_operation(operation:, artifact:, arguments:, source_span:)
-  ...
-  Semauri::Domains::OperationResult.new(
-    artifact: updated_plan,
-    explanations: ["..."]
-  )
-end
-```
-
-An operation-only domain may also implement `initial_artifact` to lazily create a semantic plan when its first operation is encountered. This allows source programs that do not need a synthetic `Create ...` statement.
-
-The compiler records operation effects but does not perform those effects merely because source code is compiled.
-
-## Explicit semantic domain scopes
-
-Action verbs are allowed to overlap across domains. Ambiguous verbs must be resolved explicitly rather than guessed from surrounding prose.
+Action verbs may overlap across domains. Ambiguous actions require explicit qualification:
 
 ```text
 Within filesystem:
@@ -97,184 +63,96 @@ Within filesystem:
 End.
 ```
 
-A second domain may also own `delete`:
+Outside a scope, multiple candidates fail with `S240`. Inside a scope, an action not owned by the selected domain also fails with `S240`. Domain scopes are lexical variable scopes.
 
-```text
-Within database:
-  Delete "expired sessions".
-End.
-```
-
-The surface word is the same, but AST and Typed HIR contain different semantic domain identities.
-
-Outside a scope, an action with more than one registered candidate fails with `S240` and reports the candidate domains. Inside a scope, an action that the selected domain does not own also fails with `S240`.
-
-Domain scopes are lexical variable scopes too. A binding declared inside `Within ... End.` cannot be referenced after the scope ends. Scope identity is preserved in Typed HIR and through optimizer passes, rather than being discarded after parsing.
-
-For now this collision model applies only to **actions**. Artifact, element and property surface terms remain globally unique. That conservative rule can be relaxed later when domain-qualified values/types make their semantics equally explicit.
+Artifact, element and property surface terms remain globally unique. Action/action overlap is intentionally permitted.
 
 ## Effects
 
-Effects are semantic metadata used to distinguish observable operations from pure expressions. Current domains may declare arbitrary stable effect identifiers such as:
+Operations declare stable semantic effect identifiers such as `filesystem_read`, `filesystem_write`, `compute` or `model_training`. Effects are preserved in Typed HIR and analyzed before optimization.
 
-```text
-filesystem_read
-filesystem_write
-network
-storage_read
-storage_write
-model_inference
-```
-
-Effects are preserved in Typed HIR. Optimizers may rewrite operation arguments, but must not silently remove or reorder observable operations as though they were pure arithmetic.
-
-A future capability/runtime layer will use this information for execution policy and effect validation.
+Declaring an effect never authorizes or performs it.
 
 ## Property typing
 
-Domains define the semantic type accepted by each property:
+Property type contracts are part of the domain declaration:
 
-```ruby
-def property_type(property)
-  :boolean if property.to_sym == :enabled
-end
+```rust
+let canvas = DomainSpec::new("canvas")
+    .with_property("enabled", "enabled", Type::Boolean);
 ```
 
-The Typed HIR builder validates this contract before lowering. A mismatched value is `S313`.
+The HIR builder validates property values before lowering. Mismatches fail with `S313`.
 
-Domains may additionally validate values during lowering when type information alone is insufficient. The built-in Structured Data domain does this for JSON Schema datatype names.
+## Registration
 
-## Domain IR
+Registration is explicit and transactional:
 
-A domain owns the semantic structures produced by its operations. It does not have to reuse Web IR.
+```rust
+use semauri::{Compiler, DomainRegistry};
 
-Artifact-oriented domains may implement:
+let mut domains = DomainRegistry::new();
+domains.register(canvas)?;
 
-```ruby
-def create_artifact(kind:, subject:, title:)
-  MyArtifact.new(...)
-end
+let compiler = Compiler::with_domains(domains);
 ```
 
-Element domains implement:
+A failed registration does not partially modify the registry.
 
-```ruby
-def add_element(artifact:, kind:, label:, entities:)
-  entity = entities.register(kind: kind) { |id| MyEntity.new(id: id, ...) }
-  [artifact.add(entity), entity]
-end
+The vocabulary rules are deterministic:
+
+- artifact, element and property surface terms are globally unique;
+- action/action collisions are allowed and become candidate sets;
+- actions may not collide with non-action terms;
+- core grammar words and primitive color literals are reserved;
+- ambiguous actions require `Within <domain>:` qualification.
+
+## Custom backends
+
+Backends are independent of semantic domains:
+
+```rust
+use semauri::{Artifact, BackendRegistry, Compiler};
+
+let mut backends = BackendRegistry::builtins();
+backends.register("summary", |artifact: &Artifact| {
+    Ok(format!("{:?}", artifact))
+});
+
+let compiler = Compiler::with_registries(domains, backends);
 ```
 
-If the domain supports properties, either implement compatible immutable methods (`with_property`, `replace_element`) and use the default hook, or override `set_property`.
+A domain without a default backend requires an explicit backend selection (`S404`). A single backend override is rejected for multi-domain output (`S405`).
 
-Operation-oriented domains may reuse `IR::OperationPlan` / `IR::Operation` or provide a more specialized immutable IR.
+## Implicit properties
 
-Domain IR should be immutable where practical. Source provenance should be retained when a mutation or operation originates from source code.
+Shorthand such as:
 
-## Multi-domain ProgramIR
+```text
+Make it blue.
+```
 
-A source file may now produce semantic output in more than one domain. HIR lowering stores each domain artifact/plan as an independent unit in `IR::Program`.
+is accepted only when exactly one loaded property can accept the value type. Ambiguity fails with `S236`.
+
+## Multi-domain Program IR
+
+One source file may produce multiple independent domain units:
 
 ```text
 Create a web called Shop.
 Write "build metadata" to "build.txt".
 ```
 
-produces Web and Filesystem units independently. Each unit has its own entity table and is rendered through its domain's backend. `CompilationResult.outputs` exposes these outputs explicitly.
-
-A single-domain program keeps the historical `result.output`, `result.backend`, `semantic.program` and `semantic.domain` convenience APIs.
-
-## Default backend
-
-A domain may declare a default backend. `Compiler#compile` and `semauri build` infer it automatically. A domain without a default backend requires explicit backend selection (`S404`). A single global backend override is rejected for a multi-domain program (`S405`).
-
-## Registration
-
-Create a registry and inject it into the compiler:
-
-```ruby
-registry = Semauri::Domains::Registry.new
-  .register(MyDomain.new)
-
-compiler = Semauri::Compiler.new(domains: registry)
-```
-
-One registry instance is propagated through vocabulary classification, parsing, Typed HIR construction and HIR lowering.
-
-Registration is transactional. A failed registration does not leave partially registered words behind.
-
-## Vocabulary rules
-
-Within one compiler instance:
-
-- artifact, element and property surface terms are globally unique;
-- action/action collisions are allowed and represented as candidate sets;
-- an action may not collide with a non-action term;
-- domains may not override core English grammar words such as `if`, `within`, `let`, `true`, or primitive color literals;
-- domain operations carry explicit domain identity through AST and HIR;
-- ambiguous action candidates require explicit `Within <domain>:` qualification.
-
-These rules intentionally prefer deterministic errors over contextual guessing.
-
-## Implicit properties
-
-Natural shorthand such as:
-
-```text
-Make it blue.
-```
-
-has no explicit property word. The registry accepts shorthand only when exactly one loaded domain property is compatible with the value type.
-
-If multiple properties could accept the value, parsing fails with `S236` and the program must use explicit `Set ...` syntax.
-
-## Backend contract
-
-Backends are separate from semantic domains. A domain produces semantic IR; a backend renders that IR. This separation allows one domain to support multiple target formats without changing language semantics.
+Each unit keeps explicit domain identity and is rendered with its own backend. `CompilationResult.outputs` exposes all generated outputs.
 
 ## Built-in domains
 
-### Web
+**Web** provides web artifacts, buttons/images, `color : color`, specialized Web IR and the `html` backend.
 
-- artifact: `web` (`website`, `webpage`, `page`)
-- elements: `button`, `image` (`picture`)
-- property: `color : color`
-- domain IR: `IR::WebDocument`, `IR::Element`
-- default backend: `html`
+**Structured Data** provides schemas, fields, `datatype : string`, `required : boolean`, specialized schema IR and the `json-schema` backend.
 
-### Structured Data
+**Filesystem** provides write/append/copy/move/mkdir/touch/delete operations, nominal paths, explicit filesystem effects, operation-plan IR and the `posix-sh` backend.
 
-- artifact: `schema`
-- element: `field`
-- properties: `datatype : string`, `required : boolean`
-- domain IR: `IR::SchemaDocument`, `IR::SchemaField`
-- default backend: `json-schema`
+**ML** provides typed datasets, models, devices, resource/training configuration and runtime-plan operations with explicit compute/training/inference/evaluation effects.
 
-### Filesystem
-
-- operations: `write`, `copy`, `delete` / `remove`
-- typed string arguments for content and paths
-- effects: `filesystem_read`, `filesystem_write`
-- domain IR: generic `IR::OperationPlan`
-- default backend: `posix-sh`
-- compilation generates a script; it never mutates the compiler host filesystem
-
-## Contributor checklist
-
-A domain PR should include:
-
-1. a domain definition with deterministic vocabulary ownership;
-2. declarative operation signatures when procedural behavior is needed;
-3. typed arguments/properties and explicit effect metadata;
-4. immutable domain IR or an explicit rationale otherwise;
-5. domain-specific semantic validation where needed;
-6. at least one backend or an explicit reason why none is supplied;
-7. parser-free/lexer-free extension tests proving concrete domain words/verbs do not require core cases;
-8. scope/ambiguity tests when reusing an action verb owned by another domain;
-9. negative tests for invalid types/values and malformed patterns;
-10. language/architecture documentation updates;
-11. no direct target-markup or external-effect execution in parser, AST or HIR.
-
-Run `semauri domains` to inspect the vocabulary and operations exported by the active compiler configuration.
-
-See [`07_UNIVERSAL_DOMAINS.md`](07_UNIVERSAL_DOMAINS.md) for the longer-term multi-domain architecture.
+Run `semauri domains` to inspect the active domain metadata.
