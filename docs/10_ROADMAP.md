@@ -184,22 +184,17 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 
 ### 0.7.3 — standalone Semauri distribution ✅
 
-- official Semauri installation no longer requires system Ruby
 - versioned user-owned installation under `~/.semauri/versions/<version>`
-- private pinned portable Ruby runtime behind the `semauri` launcher
 - checksum-verifying `install.sh` for Linux/macOS x86_64 and arm64
 - automatic `current` version symlink and `~/.local/bin/semauri` command
 - automated release packaging with upstream runtime checksum pinning
 - packaged distribution smoke tests before publication
 - automatic GitHub Release/tag creation when a new Semauri version reaches `main`
-- contributor source workflow remains available with Ruby 3.2+
 
 ### 0.7.4 — native Windows distribution ✅
 
 - PowerShell `install.ps1` quick installer
 - native Windows x86_64 and ARM64 packages
-- private checksum-pinned RubyInstaller 3.4.11 runtime
-- `semauri.cmd` launcher with no system Ruby dependency
 - user-owned `%USERPROFILE%\.semauri` version store and stable command shim
 - automatic user `PATH` integration without administrator privileges
 - Windows package checksum verification and installation smoke test
