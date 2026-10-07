@@ -1,93 +1,61 @@
 # Runtime planning
 
-Semauri separates **compilation**, **planning** and future **execution**.
+Semauri separates **compilation**, **planning** and **execution**.
 
-The compiler may encounter semantic-domain operations whose result cannot exist at compile time, such as a future HTTP request, model load, dataset open or training job. Those operations are not executed by the compiler. They lower into an immutable `IR::RuntimePlan`.
+Operations whose result cannot exist at compile time lower into an immutable `RuntimePlan`; the compiler does not execute them merely because it compiled the source.
 
-## Operation values
+## Runtime values
 
-A domain operation may declare a non-`unit` return type. Such an operation can appear inside an expression:
-
-```text
-Within remote:
-  Let response be Fetch "https://example.test".
-  Consume response.
-End.
-```
-
-The compiler lowers the program conceptually to:
+A non-`unit` domain operation can produce a typed value consumed by a later operation:
 
 ```text
-%1 : remote.response = remote.fetch("https://example.test")
-remote.consume(%1)
+%1 : ml.dataset = ml.open_dataset("./images")
+%2 : ml.model = ml.load_model("resnet18")
+%3 : ml.training_run = ml.train(%2, %1, ...)
 ```
 
-`%1` is an `IR::RuntimeValueRef`. It has a stable producer ID and semantic type, but no concrete value during compilation.
+Each result is represented by `RuntimeValueRef` with a stable producer ID, semantic type and source span.
 
 Inspect the plan with:
 
 ```bash
-ruby bin/semauri plan program.sema
+semauri plan program.sema
 ```
 
 ## Compile-time/runtime boundary
 
-Compile-time expressions continue to use the existing evaluator. Runtime values may currently flow directly between semantic-domain operations.
+Compile-time-known expressions are evaluated during lowering. Runtime references may flow directly between semantic-domain operations.
 
-Runtime-dependent arithmetic, comparisons, `If` conditions and iteration are intentionally rejected with `S335` in 0.6.5. Supporting them correctly requires a runtime control-flow representation rather than pretending the compiler already knows the value.
+Runtime-dependent arithmetic, comparisons, `If` conditions and iteration are currently rejected with `S335`. Supporting those constructs correctly requires runtime control-flow representation rather than pretending the value is already known.
 
-The planned progression is:
+The intended progression is:
 
 ```text
 Typed HIR
   ↓
-runtime operation/value discovery
+optimization
   ↓
-SSA-like values
+runtime operations + typed references
   ↓
-CFG / basic blocks
-  ↓
-runtime optimization
+future CFG / basic blocks
   ↓
 capability validation
   ↓
-execution backend/runtime
+execution runtime
 ```
 
 ## Relationship to effects
 
 `plan` answers **what would execute**.
 
-`effects` answers **what capabilities that program may require**.
+`effects` answers **what capabilities the source may require**.
 
-`explain` answers **how the compiler interpreted the source and why it produced that semantic plan**.
+`explain` answers **how the compiler interpreted the source**.
 
-These views are generated from compiler-owned semantic structures. Planning never grants capabilities and never performs the declared effects.
+Planning grants no capabilities and performs no declared effects.
 
-## AI direction
+## Current execution boundary
 
-The runtime boundary is required before Semauri can model useful AI programs. Operations such as model loading, dataset access, inference, training and checkpointing naturally produce values that do not exist at compile time.
+The CLI can execute filesystem operation plans through `semauri run` after explicit capability authorization. ML operations are planning-only: they produce typed runtime graphs but are not executed by the reference compiler.
 
-A future ML program may lower to a plan resembling:
-
-```text
-%1 : ml.dataset = ml.load_dataset("./images")
-%2 : ml.model = ml.load_model("resnet18")
-%3 : ml.training_run = ml.train(%2, %1)
-ml.save_checkpoint(%3, "./checkpoints/best")
-```
-
-The compiler can type-check, inspect, explain and capability-check this graph before a PyTorch or other execution runtime performs expensive work.
-
-## Current non-goals
-
-0.6.5 does not yet provide:
-
-- runtime `If`/loops
-- runtime arithmetic on operation values
-- a process executor
-- HTTP or ML built-in domains
-- mandatory execution capabilities
-- scheduling/distributed execution
-
-Those features should build on the runtime plan rather than bypass it.
+Future execution support should consume the runtime plan rather than bypassing it.
