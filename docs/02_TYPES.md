@@ -2,61 +2,45 @@
 
 Semauri uses semantic types to keep controlled natural-language programs deterministic across domains.
 
-## Primitive types
+## Primitive and parametric types
 
-The current primitive types include:
+The compiler currently exposes `unit`, `number`, `boolean`, `string`, `color`, `entity_ref`, `opaque`, and `list<T>`.
 
-- `number`
-- `string`
-- `boolean`
-- `color`
-- `List<T>`
-
-Primitive types are structural: two `string` values have the same type regardless of where they came from.
+Primitive types are structural. Lists are homogeneous and carry their element type.
 
 ## Nominal domain types
 
 Domains may define values that share a primitive representation but have different semantic meaning.
 
-```ruby
-PATH = Semauri::Semantics::NominalType.new(
-  domain: :filesystem,
-  name: :path,
-  base_type: :string
-)
+```rust
+use semauri::{NominalType, Type};
+
+let path = NominalType::new(
+    "filesystem",
+    "path",
+    Type::String,
+    true,
+);
+let path_type = Type::Nominal(path);
 ```
 
-This produces the type:
+This produces the semantic type:
 
 ```text
 filesystem.path
 ```
 
-A future HTTP domain may define:
-
-```text
-http.url
-```
-
-with the same `string` base representation. The two types remain incompatible:
-
-```text
-filesystem.path != http.url
-```
-
-Nominal identity is based on the domain, type name and base representation. Semauri does not use the base representation as an implicit equivalence relation between nominal types.
+A different domain can define a string-backed type such as `http.url`. The two nominal types remain distinct even when their underlying data representation is the same.
 
 ## Explicit promotion
 
-For source ergonomics, an operation may accept a primitive expression at a nominally typed boundary when the primitive exactly matches the nominal type's declared base representation.
-
-Source:
+A nominal type may opt into promotion from its exact base type. Filesystem paths use this for ergonomic string literals:
 
 ```text
 Write "hello" to "notes.txt".
 ```
 
-Filesystem declares the `path` argument as `filesystem.path`, whose base representation is `string`. Typed HIR therefore makes the conversion explicit:
+Typed HIR makes the boundary explicit:
 
 ```text
 domain_operation filesystem.write : unit
@@ -66,17 +50,15 @@ domain_operation filesystem.write : unit
         └── "notes.txt"
 ```
 
-The promotion is a compiler node, not an invisible coercion. Tooling and optimization passes can observe the semantic boundary.
-
-A nominal value is never automatically reinterpreted as another nominal type, even when both types have the same primitive base.
+The promotion is a compiler node, not an invisible coercion. Nominal values are never reinterpreted as another nominal type merely because their bases match.
 
 ## Assignment rules
 
-`TypeSystem.assignment_kind(actual, expected)` currently returns:
+The current assignment relation is:
 
-- `:exact` when the types are identical;
-- `:promote` when `expected` is nominal and `actual` exactly equals its base type;
-- `nil` otherwise.
+- exact type equality → exact assignment;
+- primitive base → nominal type with `promote_from_base = true` → promotion;
+- everything else → invalid.
 
 Examples:
 
@@ -88,61 +70,47 @@ http.url        -> filesystem.path   invalid
 number          -> filesystem.path   invalid
 ```
 
-These rules deliberately avoid transitive or best-effort coercion.
-
 ## Runtime representation
 
-Promotion changes semantic type identity without changing the underlying value representation. A `filesystem.path` currently carries a Ruby string at compile/lowering time, but its `Semantics::Value#type` remains `filesystem.path`.
+Promotion changes semantic type identity without changing the underlying data. A `filesystem.path` carries string data during compilation/lowering while its semantic `Type` remains `filesystem.path`.
 
-This distinction is important for future runtime IR. Backends may choose a native representation appropriate to the target while the compiler retains the nominal contract.
+Runtime values preserve the same semantic type in `RuntimeValueRef`, so later operations can consume typed results without knowing a concrete value at compile time.
 
 ## Domain declaration
 
-Domains register nominal types explicitly:
+External domains can publish nominal types through `DomainSpec`:
 
-```ruby
-super(
-  name: :filesystem,
-  types: [PATH],
-  operations: [...]
-)
+```rust
+use semauri::{DomainSpec, NominalType, Type};
+
+let path = NominalType::new("storage", "path", Type::String, true);
+
+let domain = DomainSpec::new("storage")
+    .with_type(path);
 ```
 
-Registered types are exposed by `semauri domains` and by `Domains::Definition#type` / `#types`.
+Operation patterns reference semantic types directly:
 
-Operation signatures may reference the type object directly:
+```rust
+use semauri::{PatternSegment, Type};
 
-```ruby
-Operation.expression(:path, type: PATH)
+let path_slot = PatternSegment::slot(
+    "path",
+    Type::Nominal(NominalType::new(
+        "storage",
+        "path",
+        Type::String,
+        true,
+    )),
+);
 ```
 
-The domain registry and operation metadata serialize nominal types structurally, so IDEs and external tooling do not need to parse a display string such as `filesystem.path`.
+`semauri domains` serializes nominal type metadata structurally for tooling.
 
 ## Optimizer contract
 
-Nominal promotion is pure, but it is semantically meaningful.
-
-Optimization passes may:
-
-- propagate constants into a `promote` node;
-- remove an unused promotion when its entire pure expression is dead;
-
-but they must not erase a live nominal boundary and silently replace it with the primitive value.
+Nominal promotion is pure but semantically meaningful. Optimizers may propagate constants through it or remove an entirely dead pure expression, but must preserve a live nominal boundary.
 
 ## Design direction
 
-Nominal domain types are intended to support values such as:
-
-```text
-filesystem.path
-http.url
-http.response
-sql.connection
-sql.rowset
-vision.image
-ml.model
-ml.tensor
-cloud.resource
-```
-
-The purpose is not to create a large inheritance hierarchy. The purpose is to make cross-domain contracts explicit enough that Semauri can compose many programming domains without treating every external value as `string` or `object`.
+Nominal types make cross-domain contracts explicit for concepts such as filesystem paths, URLs, responses, queries, rowsets, models, tensors and cloud resources without collapsing every external value into `string` or `opaque`.
