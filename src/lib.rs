@@ -6093,6 +6093,10 @@ impl<'a> Lowerer<'a> {
                         schema.title = title.clone();
                         Artifact::Schema(schema)
                     }
+                    Artifact::Generic(mut generic) => {
+                        generic.title = title.clone();
+                        Artifact::Generic(generic)
+                    }
                     Artifact::Filesystem(_) => {
                         return Err(SemauriError::semantic(
                             "S303",
@@ -6186,12 +6190,30 @@ impl<'a> Lowerer<'a> {
                 })
             }
             _ => {
-                return Err(SemauriError::semantic(
-                    "S326",
-                    format!("Unsupported artifact '{kind}' in domain '{domain}'"),
-                    Some(span),
-                    None,
-                ))
+                let specification = self.domains.fetch(domain)?;
+                if !specification.artifacts.values().any(|candidate| candidate == kind) {
+                    return Err(SemauriError::semantic(
+                        "S326",
+                        format!("Unsupported artifact '{kind}' in domain '{domain}'"),
+                        Some(span),
+                        None,
+                    ));
+                }
+                let title = explicit_title
+                    .clone()
+                    .or(subject.clone())
+                    .unwrap_or_else(|| format!("Untitled {}", capitalize(kind)));
+                self.explanations.push(format!(
+                    "Created generic '{}' artifact for semantic domain '{}'.",
+                    kind, domain
+                ));
+                Artifact::Generic(GenericArtifact {
+                    domain: domain.to_string(),
+                    kind: kind.to_string(),
+                    title,
+                    subject,
+                    elements: Vec::new(),
+                })
             }
         };
         self.program.put(domain, artifact);
@@ -6247,6 +6269,25 @@ impl<'a> Lowerer<'a> {
                     property_sources: BTreeMap::new(),
                 });
                 Artifact::Schema(schema)
+            }
+            Artifact::Generic(mut generic) => {
+                let specification = self.domains.fetch(domain)?;
+                if !specification.elements.values().any(|candidate| candidate == kind) {
+                    return Err(SemauriError::semantic(
+                        "S307",
+                        format!("Domain '{domain}' does not support element '{kind}'"),
+                        Some(span),
+                        None,
+                    ));
+                }
+                generic.elements.push(GenericElement {
+                    id: id.clone(),
+                    kind: kind.to_string(),
+                    label: label.clone(),
+                    properties: BTreeMap::new(),
+                    property_provenance: BTreeMap::new(),
+                });
+                Artifact::Generic(generic)
             }
             _ => {
                 return Err(SemauriError::semantic(
@@ -6374,6 +6415,27 @@ impl<'a> Lowerer<'a> {
                     .property_sources
                     .insert(property.to_string(), span);
                 Artifact::Schema(schema)
+            }
+            Artifact::Generic(mut generic) => {
+                let element = generic
+                    .elements
+                    .iter_mut()
+                    .find(|element| element.id == target.id)
+                    .ok_or_else(|| {
+                        SemauriError::semantic(
+                            "S309",
+                            format!("No {} called '{}' exists", target.kind, target.label),
+                            Some(reference.span()),
+                            None,
+                        )
+                    })?;
+                element
+                    .properties
+                    .insert(property.to_string(), value_data.clone());
+                element
+                    .property_provenance
+                    .insert(property.to_string(), span);
+                Artifact::Generic(generic)
             }
             Artifact::Filesystem(_) => {
                 return Err(SemauriError::semantic(
