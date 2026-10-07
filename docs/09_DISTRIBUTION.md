@@ -1,6 +1,6 @@
 # Semauri distribution
 
-Semauri's reference compiler is implemented in Rust. Official distributions ship one native Semauri executable per platform, with no embedded Ruby runtime and no dependency on a system language runtime.
+Semauri's reference compiler is implemented in Rust. Official distributions ship one native Semauri executable per platform with no dependency on a system language runtime.
 
 ## Distribution model
 
@@ -28,7 +28,7 @@ semauri-0.13.0-windows-x86_64/
 └── README.md
 ```
 
-The public command remains `semauri ...`. The package is self-contained at the application level: it does not carry a private Ruby runtime and does not invoke `ruby` from `PATH`.
+The public command remains `semauri ...`. The package is self-contained at the application level and launches the native compiler directly.
 
 ## Quick install
 
@@ -73,7 +73,7 @@ native platform executable
 versioned Semauri distribution
 ```
 
-This removes the previous ~35–90 MB private Ruby runtime from each package and makes compiler startup/runtime dependencies explicit.
+The native package layout keeps compiler startup and runtime dependencies explicit and compact.
 
 ## Release lifecycle
 

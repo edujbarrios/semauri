@@ -4,7 +4,7 @@ This document covers installing and updating Semauri for normal use, plus the so
 
 > Current release documented here: **0.13.0**
 
-Official Semauri distributions contain a native Rust executable. **You do not need Ruby, Rust, Cargo, or another language runtime installed to use Semauri.**
+Official Semauri distributions contain a native executable. **You do not need Rust, Cargo, or another language runtime installed to use Semauri.**
 
 ## Linux and macOS
 

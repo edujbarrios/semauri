@@ -1,148 +1,80 @@
 # Semauri type system
 
-Semauri uses semantic types to keep controlled natural-language programs deterministic across domains.
+Semauri uses explicit semantic types so programs remain deterministic across domains.
 
-## Primitive types
+## Core types
 
-The current primitive types include:
-
-- `number`
-- `string`
-- `boolean`
-- `color`
-- `List<T>`
-
-Primitive types are structural: two `string` values have the same type regardless of where they came from.
+The compiler supports `unit`, `number`, `boolean`, `string`, `color`, `entity_ref`, `opaque`, and homogeneous `list<T>` values.
 
 ## Nominal domain types
 
-Domains may define values that share a primitive representation but have different semantic meaning.
+Domains can define a semantic identity on top of a primitive representation.
 
-```ruby
-PATH = Semauri::Semantics::NominalType.new(
-  domain: :filesystem,
-  name: :path,
-  base_type: :string
-)
+```rust
+use semauri::{NominalType, Type};
+
+let path = NominalType::new(
+    "filesystem",
+    "path",
+    Type::String,
+    true,
+);
+let path_type = Type::Nominal(path);
 ```
 
-This produces the type:
+The resulting type is `filesystem.path`. Another string-backed nominal type remains incompatible unless an explicit conversion exists.
 
-```text
-filesystem.path
-```
+## Promotion
 
-A future HTTP domain may define:
-
-```text
-http.url
-```
-
-with the same `string` base representation. The two types remain incompatible:
-
-```text
-filesystem.path != http.url
-```
-
-Nominal identity is based on the domain, type name and base representation. Semauri does not use the base representation as an implicit equivalence relation between nominal types.
-
-## Explicit promotion
-
-For source ergonomics, an operation may accept a primitive expression at a nominally typed boundary when the primitive exactly matches the nominal type's declared base representation.
-
-Source:
+A nominal type may opt into promotion from its exact base type. Filesystem paths use this so:
 
 ```text
 Write "hello" to "notes.txt".
 ```
 
-Filesystem declares the `path` argument as `filesystem.path`, whose base representation is `string`. Typed HIR therefore makes the conversion explicit:
+can lower to:
 
 ```text
-domain_operation filesystem.write : unit
-├── content : string = "hello"
-└── path : filesystem.path
-    └── promote string -> filesystem.path
-        └── "notes.txt"
+path : filesystem.path
+└── promote string -> filesystem.path
+    └── "notes.txt"
 ```
 
-The promotion is a compiler node, not an invisible coercion. Tooling and optimization passes can observe the semantic boundary.
-
-A nominal value is never automatically reinterpreted as another nominal type, even when both types have the same primitive base.
+Promotion is an explicit HIR node, not an invisible coercion.
 
 ## Assignment rules
 
-`TypeSystem.assignment_kind(actual, expected)` currently returns:
+- identical types: exact assignment;
+- primitive base to an opted-in nominal type: promotion;
+- unrelated nominal types: invalid;
+- all other mismatches: invalid.
 
-- `:exact` when the types are identical;
-- `:promote` when `expected` is nominal and `actual` exactly equals its base type;
-- `nil` otherwise.
-
-Examples:
-
-```text
-string          -> filesystem.path   promote
-filesystem.path -> filesystem.path   exact
-filesystem.path -> http.url          invalid
-http.url        -> filesystem.path   invalid
-number          -> filesystem.path   invalid
-```
-
-These rules deliberately avoid transitive or best-effort coercion.
+The compiler deliberately avoids transitive or best-effort coercion.
 
 ## Runtime representation
 
-Promotion changes semantic type identity without changing the underlying value representation. A `filesystem.path` currently carries a Ruby string at compile/lowering time, but its `Semantics::Value#type` remains `filesystem.path`.
-
-This distinction is important for future runtime IR. Backends may choose a native representation appropriate to the target while the compiler retains the nominal contract.
+Promotion changes semantic identity without changing the underlying data. A `filesystem.path` carries string data during lowering while its semantic `Type` remains `filesystem.path`. Runtime references preserve the same type.
 
 ## Domain declaration
 
-Domains register nominal types explicitly:
+External domains can expose nominal types:
 
-```ruby
-super(
-  name: :filesystem,
-  types: [PATH],
-  operations: [...]
-)
+```rust
+use semauri::{DomainSpec, NominalType, Type};
+
+let storage_path = NominalType::new(
+    "storage",
+    "path",
+    Type::String,
+    true,
+);
+
+let storage = DomainSpec::new("storage")
+    .with_type(storage_path);
 ```
 
-Registered types are exposed by `semauri domains` and by `Domains::Definition#type` / `#types`.
-
-Operation signatures may reference the type object directly:
-
-```ruby
-Operation.expression(:path, type: PATH)
-```
-
-The domain registry and operation metadata serialize nominal types structurally, so IDEs and external tooling do not need to parse a display string such as `filesystem.path`.
+Operation signatures reference semantic types through `PatternSegment::slot`. `semauri domains` serializes domain type metadata structurally for tooling.
 
 ## Optimizer contract
 
-Nominal promotion is pure, but it is semantically meaningful.
-
-Optimization passes may:
-
-- propagate constants into a `promote` node;
-- remove an unused promotion when its entire pure expression is dead;
-
-but they must not erase a live nominal boundary and silently replace it with the primitive value.
-
-## Design direction
-
-Nominal domain types are intended to support values such as:
-
-```text
-filesystem.path
-http.url
-http.response
-sql.connection
-sql.rowset
-vision.image
-ml.model
-ml.tensor
-cloud.resource
-```
-
-The purpose is not to create a large inheritance hierarchy. The purpose is to make cross-domain contracts explicit enough that Semauri can compose many programming domains without treating every external value as `string` or `object`.
+Nominal promotion is pure but semantically meaningful. Optimization may propagate constants through it or remove an entirely dead pure expression, but it must preserve a live nominal boundary.

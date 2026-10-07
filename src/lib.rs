@@ -262,7 +262,7 @@ pub struct NominalType {
 }
 
 impl NominalType {
-    fn new(domain: &str, name: &str, base_type: Type, promote_from_base: bool) -> Self {
+    pub fn new(domain: &str, name: &str, base_type: Type, promote_from_base: bool) -> Self {
         Self {
             domain: domain.to_string(),
             name: name.to_string(),
@@ -586,6 +586,16 @@ impl DomainSpec {
     ) -> Self {
         self.properties
             .insert(surface.into().to_lowercase(), (kind.into(), ty));
+        self
+    }
+
+    pub fn with_type(mut self, ty: NominalType) -> Self {
+        assert_eq!(
+            ty.domain, self.name,
+            "nominal type '{}' belongs to '{}', expected '{}'",
+            ty.name, ty.domain, self.name
+        );
+        self.types.push(ty);
         self
     }
 
