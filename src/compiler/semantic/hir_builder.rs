@@ -524,7 +524,8 @@ fn binary_type(
         BinaryOperator::Add
         | BinaryOperator::Subtract
         | BinaryOperator::Multiply
-        | BinaryOperator::Divide => {
+        | BinaryOperator::Divide
+        | BinaryOperator::Modulo => {
             if left == &Type::Number && right == &Type::Number {
                 Ok(Type::Number)
             } else {

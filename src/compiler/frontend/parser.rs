@@ -588,6 +588,15 @@ impl<'a> Parser<'a> {
                     right: Box::new(right),
                     span,
                 };
+            } else if self.matches(&[TokenKind::Modulo]) {
+                let right = self.numeric_unary()?;
+                let span = span_between_spans(expression.span(), right.span());
+                expression = Expr::Binary {
+                    left: Box::new(expression),
+                    operator: BinaryOperator::Modulo,
+                    right: Box::new(right),
+                    span,
+                };
             } else {
                 break;
             }

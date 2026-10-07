@@ -166,3 +166,33 @@ fn unary_minus_is_numeric_and_binds_tighter_than_multiplication() {
         .unwrap_err();
     assert_eq!(error.code, "S314");
 }
+
+#[test]
+fn modulo_is_a_typed_multiplicative_operator() {
+    let compiler = Compiler::new();
+
+    let output = compiler
+        .compile(
+            "Create a web. If 10 modulo 3 is equal to 1: Add a button called Remainder. End.",
+            None,
+        )
+        .unwrap()
+        .output
+        .unwrap();
+    assert!(output.contains(">Remainder</button>"));
+
+    let output = compiler
+        .compile(
+            "Create a web. If 2 plus 10 modulo 4 times 3 is equal to 8: Add a button called Precedence. End.",
+            None,
+        )
+        .unwrap()
+        .output
+        .unwrap();
+    assert!(output.contains(">Precedence</button>"));
+
+    let error = compiler
+        .analyze("Let invalid be 10 modulo 0. Create a web.")
+        .unwrap_err();
+    assert_eq!(error.code, "S317");
+}
