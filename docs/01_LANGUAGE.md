@@ -85,7 +85,7 @@ If multiple loaded domains could interpret the same value type, the shorthand is
 
 Primitive semantic value types are `color`, `string`, `number`, and `boolean`.
 
-Arithmetic is numeric and strictly typed. Prefix `minus` negates a number and binds more tightly than multiplication/division/modulo, which bind more tightly than addition/subtraction. `modulo` returns the numeric remainder and, like division, rejects a zero divisor with `S317`. Equality and inequality (`is equal to` / `is not equal to`) require both operands to have the same semantic type.
+`plus` is overloaded deliberately: it adds two numbers or concatenates two strings. It never coerces between strings and numbers. The remaining arithmetic operators are numeric and strictly typed. Prefix `minus` negates a number and binds more tightly than multiplication/division/modulo, which bind more tightly than addition/subtraction. `modulo` returns the numeric remainder and, like division, rejects a zero divisor with `S317`. Equality and inequality (`is equal to` / `is not equal to`) require both operands to have the same semantic type.
 
 Ordering comparisons are numeric and strictly typed. Semauri supports `is greater than`, `is less than`, `is greater than or equal to`, and `is less than or equal to`. The inclusive forms include the boundary value and lower to distinct typed comparison operators rather than being rewritten as boolean combinations.
 

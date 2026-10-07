@@ -521,8 +521,26 @@ fn binary_type(
     span: SourceSpan,
 ) -> Result<Type> {
     match operator {
-        BinaryOperator::Add
-        | BinaryOperator::Subtract
+        BinaryOperator::Add => {
+            if left == &Type::Number && right == &Type::Number {
+                Ok(Type::Number)
+            } else if left == &Type::String && right == &Type::String {
+                Ok(Type::String)
+            } else {
+                Err(SemauriError::semantic(
+                    "S314",
+                    format!(
+                        "Operator '{}' requires two numbers or two strings, got {} and {}",
+                        operator.as_str(),
+                        left,
+                        right
+                    ),
+                    Some(span),
+                    None,
+                ))
+            }
+        }
+        BinaryOperator::Subtract
         | BinaryOperator::Multiply
         | BinaryOperator::Divide
         | BinaryOperator::Modulo => {
