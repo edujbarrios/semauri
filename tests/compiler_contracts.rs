@@ -97,7 +97,9 @@ fn multi_domain_program_ir_preserves_declarative_focus() {
     let Artifact::Web(web) = &result.semantic.program_ir.units[0].artifact else {
         panic!("expected web artifact first");
     };
-    assert!(matches!(web.elements[0].properties.get("color"), Some(ValueData::Color(value)) if value == "red"));
+    assert!(
+        matches!(web.elements[0].properties.get("color"), Some(ValueData::Color(value)) if value == "red")
+    );
 }
 
 #[test]

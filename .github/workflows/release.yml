@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Build native Semauri
-        run: cargo build --release
+        run: cargo build --release --locked
       - name: Package and smoke-test Semauri
         shell: bash
         env:
@@ -94,7 +94,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Build native Semauri
-        run: cargo build --release
+        run: cargo build --release --locked
       - name: Package and smoke-test Semauri
         shell: pwsh
         run: ./scripts/release/package.ps1 -BinaryPath 'target\release\semauri.exe' -SemauriPlatform '${{ matrix.platform }}'

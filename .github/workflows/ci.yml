@@ -14,8 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Check Rust formatting
+        run: cargo fmt --check
       - name: Test Rust compiler
-        run: cargo test --all-targets
+        run: cargo test --all-targets --locked
 
   distribution-unix:
     name: distribution (${{ matrix.platform }})
@@ -36,7 +40,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Build native binary
-        run: cargo build --release
+        run: cargo build --release --locked
       - name: Package and smoke-test
         shell: bash
         env:
@@ -76,7 +80,7 @@ jobs:
             }
           }
       - name: Build native binary
-        run: cargo build --release
+        run: cargo build --release --locked
       - name: Package and smoke-test
         shell: pwsh
         run: |

@@ -7,7 +7,7 @@ Semauri's reference compiler is implemented in Rust. Official distributions ship
 Unix packages use this shape:
 
 ```text
-semauri-0.13.0-linux-x86_64/
+semauri-0.13.1-linux-x86_64/
 ├── bin/
 │   └── semauri
 ├── manifest.json
@@ -19,7 +19,7 @@ semauri-0.13.0-linux-x86_64/
 Windows packages use:
 
 ```text
-semauri-0.13.0-windows-x86_64/
+semauri-0.13.1-windows-x86_64/
 ├── bin/
 │   └── semauri.exe
 ├── manifest.json

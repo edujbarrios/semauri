@@ -4,6 +4,13 @@ All notable changes to Semauri are documented here.
 
 ## Unreleased
 
+## 0.13.1
+
+### Fixed
+- Publish the migrated Rust compiler under a fresh release version so installers no longer resolve the legacy Ruby-based 0.13.0 artifacts.
+- Commit the Cargo lockfile and use locked dependency resolution in CI and release builds.
+- Enforce Rust formatting in CI.
+
 ### Added
 - Stable semantic symbols and typed HIR.
 - Homogeneous `List<T>` collections and static `For every` iteration.
