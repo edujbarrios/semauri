@@ -2,91 +2,60 @@
 
 Semauri separates **what a program may do** from **what an execution environment authorizes it to do**.
 
-Semantic-domain operations declare stable effect identifiers in Typed HIR. Examples include:
-
-```text
-filesystem_read
-filesystem_write
-network
-model_download
-gpu_compute
-model_training
-checkpoint_write
-```
-
-Effects are descriptive compiler metadata. Merely compiling a source file does not execute them.
+Semantic-domain operations declare stable effect identifiers in Typed HIR. Merely compiling a source file does not execute those effects.
 
 ## Static effect analysis
 
-`Compiler#effect_analysis` walks the unoptimized Typed HIR and produces a conservative manifest containing every declared effect plus its semantic provenance:
-
-```text
-effect
-├── domain
-├── operation
-└── source span
-```
-
-The analysis intentionally runs before optimization. An effectful operation inside a branch that is currently constant-foldable still appears in the manifest. Capability policy should describe what the source program can request, not depend on a particular optimizer rewrite.
+`Compiler::effect_analysis` walks unoptimized Typed HIR and produces a conservative manifest with each effect, domain, operation and source span. Analysis intentionally happens before optimization, so a currently dead branch cannot hide a capability requirement.
 
 Inspect a program with:
 
 ```bash
-ruby bin/semauri effects program.sema
+semauri effects program.sema
 ```
 
 ## Capability policies
 
-`Effects::CapabilityPolicy` is an immutable allow-list policy.
+`CapabilityPolicy` is an explicit allow-list:
 
-```ruby
-policy = Semauri::Effects::CapabilityPolicy.allow(
-  :filesystem_read,
-  :filesystem_write
-)
+```rust
+use semauri::{CapabilityPolicy, Compiler};
 
-compiler.compile(source, capability_policy: policy)
+let compiler = Compiler::new();
+let policy = CapabilityPolicy::new([
+    "filesystem_read",
+    "filesystem_write",
+]);
+
+compiler.compile_with_policy(source, None, Some(&policy))?;
 ```
 
-A required effect that is not explicitly allowed fails with `S334`.
+A required effect that is not allowed fails with `S334`.
 
 For CLI validation:
 
 ```bash
-ruby bin/semauri check program.sema \
+semauri check program.sema \
   --allow filesystem_read \
   --allow filesystem_write
 ```
 
-To assert that a program is pure with respect to declared domain effects:
+To require a program to have no declared effects:
 
 ```bash
-ruby bin/semauri check program.sema --allow-none
+semauri check program.sema --allow-none
 ```
 
 ## Compilation versus execution
 
-`build` does not require capabilities by default because compilation only produces semantic plans or backend output. It does not perform the declared external effects.
+`build` produces plans or backend output and does not perform declared external effects.
 
-A future `run` command/runtime should enforce a capability policy before executing effectful operations. Runtime capabilities should be least-privilege and explicit.
+`run` currently executes supported filesystem plans only after explicit capability authorization. `--dry-run` renders the plan without performing effects.
 
-This distinction is particularly important for future AI workloads. A training program may eventually declare capabilities such as:
+Runtime capabilities should remain least-privilege and explicit as more execution runtimes are added.
 
-```text
-filesystem_read
-network
-model_download
-gpu_compute
-model_training
-checkpoint_write
-```
+## Domain-author contract
 
-The compiler can explain and validate those requirements before an expensive or privileged workload starts.
+A domain operation must declare every externally observable effect category it may require. Effect identifiers should describe semantic behavior rather than framework-specific implementation details.
 
-## Domain author contract
-
-A domain operation must declare every externally observable category of effect it may require. Effects should be stable semantic identifiers rather than backend-specific implementation details.
-
-For example, a model training operation should declare `model_training` and `gpu_compute` when appropriate rather than something like `pytorch_cuda_call`.
-
-Optimizers may transform pure expressions feeding an operation, but must preserve observable effectful operations unless a future effect-aware proof explicitly permits a transformation.
+Optimizers may transform pure expressions feeding an operation, but must preserve observable operations unless a future effect-aware proof permits a transformation.
