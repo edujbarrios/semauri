@@ -2,7 +2,7 @@
 
 This document covers installing and updating Semauri for normal use, plus the source-based workflow for compiler contributors.
 
-> Current release documented here: **0.13.0**
+> Current release documented here: **0.14.0**
 
 Official Semauri distributions contain a native executable. **You do not need Rust, Cargo, or another language runtime installed to use Semauri.**
 
@@ -24,7 +24,7 @@ The installer stores versioned distributions under `~/.semauri/versions/`, switc
 ### Install an exact version
 
 ```bash
-SEMAURI_VERSION=0.13.0 \
+SEMAURI_VERSION=0.14.0 \
   curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
 ```
 
@@ -48,7 +48,7 @@ The installer stores versions under `$HOME\.semauri\versions\`, maintains the ac
 ### Install an exact version
 
 ```powershell
-$env:SEMAURI_VERSION = '0.13.0'
+$env:SEMAURI_VERSION = '0.14.0'
 irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
 Remove-Item Env:SEMAURI_VERSION
 ```
