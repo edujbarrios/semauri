@@ -196,3 +196,30 @@ fn modulo_is_a_typed_multiplicative_operator() {
         .unwrap_err();
     assert_eq!(error.code, "S317");
 }
+
+#[test]
+fn plus_concatenates_strings_without_cross_type_coercion() {
+    let compiler = Compiler::new();
+
+    let output = compiler
+        .compile(
+            "Create a web. If \"Hello, \" plus \"Semauri\" is equal to \"Hello, Semauri\": Add a button called Greeting. End.",
+            None,
+        )
+        .unwrap()
+        .output
+        .unwrap();
+    assert!(output.contains(">Greeting</button>"));
+
+    let optimized = compiler
+        .optimized_hir("Let message be \"Hello\" plus \" world\". Print message.")
+        .unwrap()
+        .to_json()
+        .to_string();
+    assert!(optimized.contains("Hello world"));
+
+    let error = compiler
+        .analyze("Let invalid be 1 plus \"item\". Create a web.")
+        .unwrap_err();
+    assert_eq!(error.code, "S314");
+}
