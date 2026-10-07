@@ -24,6 +24,7 @@ include!("domains/builtins/common.rs");
 include!("domains/builtins/web.rs");
 include!("domains/builtins/structured_data.rs");
 include!("domains/builtins/filesystem.rs");
+include!("domains/builtins/console.rs");
 include!("domains/builtins/ml.rs");
 
 include!("frontend/lexer.rs");
@@ -44,6 +45,7 @@ include!("backends/html.rs");
 include!("backends/json_schema.rs");
 include!("backends/shell.rs");
 include!("backends/filesystem_executor.rs");
+include!("backends/console_executor.rs");
 
 include!("cli.rs");
 include!("tests.rs");

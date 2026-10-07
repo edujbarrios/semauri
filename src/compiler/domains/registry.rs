@@ -20,6 +20,7 @@ impl DomainRegistry {
             web_domain(),
             structured_data_domain(),
             filesystem_domain(),
+            console_domain(),
             ml_domain(),
         ] {
             registry

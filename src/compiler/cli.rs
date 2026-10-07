@@ -262,13 +262,28 @@ pub fn run_cli(args: &[String]) -> CliResult {
                     .map_err(|error| usage_error(format!("S001: {error}")))?;
                 current_source = Some(source.clone());
                 let result = compiler.compile(&source, None)?;
+                let console_only = !result.runtime_plan.operations.is_empty()
+                    && result
+                        .runtime_plan
+                        .operations
+                        .iter()
+                        .all(|operation| operation.domain == "console");
+                if console_only {
+                    if dry_run {
+                        stdout.push_str(&pretty_json(&result.runtime_plan.to_json()));
+                        return Ok(0);
+                    }
+                    CapabilityPolicy::new(allowed).validate(&result.effects)?;
+                    stdout.push_str(&execute_console_plan(&result.runtime_plan)?);
+                    return Ok(0);
+                }
                 if result.outputs.len() != 1
                     || result.outputs[0].domain != "filesystem"
                     || result.outputs[0].backend != "posix-sh"
                 {
                     return Err(SemauriError::backend(
                         "S407",
-                        "run currently supports one filesystem program rendered by posix-sh",
+                        "run currently supports a console program or one filesystem program rendered by posix-sh",
                         Some(
                             "Use 'semauri build' or 'semauri plan' for other domains until their execution runtimes are available."
                                 .to_string(),
@@ -347,7 +362,7 @@ fn usage_error(message: impl Into<String>) -> SemauriError {
 }
 
 pub fn usage() -> String {
-    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  explain FILE             Explain semantic decisions\n  check FILE [--allow ...] Validate source and optionally enforce capabilities\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute supported effects after explicit authorization\n  version                  Print version\n"
+    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  explain FILE             Explain semantic decisions\n  check FILE [--allow ...] Validate source and optionally enforce capabilities\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
         .to_string()
 }
 
