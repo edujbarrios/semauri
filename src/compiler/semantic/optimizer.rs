@@ -213,17 +213,24 @@ fn fold_expr(
             span,
         } => {
             let operand = fold_expr(operand, constants, changes);
-            if let (
-                UnaryOperator::Not,
-                Some(ValueData::Boolean(value)),
-            ) = (operator, literal_data(&operand))
-            {
-                *changes += 1;
-                return HirExpr::Literal {
-                    ty: Type::Boolean,
-                    value: LiteralValue::Boolean(!value),
-                    span: *span,
-                };
+            match (operator, literal_data(&operand)) {
+                (UnaryOperator::Not, Some(ValueData::Boolean(value))) => {
+                    *changes += 1;
+                    return HirExpr::Literal {
+                        ty: Type::Boolean,
+                        value: LiteralValue::Boolean(!value),
+                        span: *span,
+                    };
+                }
+                (UnaryOperator::Negate, Some(ValueData::Number(value))) => {
+                    *changes += 1;
+                    return HirExpr::Literal {
+                        ty: Type::Number,
+                        value: LiteralValue::Number(NumberValue::from_f64(-value.as_f64())),
+                        span: *span,
+                    };
+                }
+                _ => {}
             }
             HirExpr::Unary {
                 ty: ty.clone(),

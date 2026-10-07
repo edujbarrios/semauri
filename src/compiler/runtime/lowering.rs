@@ -1004,6 +1004,26 @@ impl<'a> Lowerer<'a> {
                 )),
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
+            HirExpr::Unary {
+                operator: UnaryOperator::Negate,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(value),
+                } => Ok(BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(NumberValue::from_f64(-value.as_f64())),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S314",
+                    format!("Unary 'minus' requires a number operand, received {ty}"),
+                    Some(expression.span()),
+                    None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
             HirExpr::Binary {
                 left,
                 operator,

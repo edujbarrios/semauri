@@ -1,11 +1,15 @@
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum UnaryOperator {
     Not,
+    Negate,
 }
 
 impl UnaryOperator {
     fn as_str(&self) -> &'static str {
-        "not"
+        match self {
+            UnaryOperator::Not => "not",
+            UnaryOperator::Negate => "negate",
+        }
     }
 }
 

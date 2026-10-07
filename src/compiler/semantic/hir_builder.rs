@@ -303,19 +303,38 @@ impl<'a> HirBuilder<'a> {
                 span,
             } => {
                 let operand = self.build_expr(operand)?;
-                if operand.ty() != Type::Boolean {
-                    return Err(SemauriError::semantic(
-                        "S319",
-                        format!(
-                            "Logical 'not' requires a boolean operand, received {}",
-                            operand.ty()
-                        ),
-                        Some(*span),
-                        None,
-                    ));
-                }
+                let ty = match operator {
+                    UnaryOperator::Not => {
+                        if operand.ty() != Type::Boolean {
+                            return Err(SemauriError::semantic(
+                                "S319",
+                                format!(
+                                    "Logical 'not' requires a boolean operand, received {}",
+                                    operand.ty()
+                                ),
+                                Some(*span),
+                                None,
+                            ));
+                        }
+                        Type::Boolean
+                    }
+                    UnaryOperator::Negate => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S314",
+                                format!(
+                                    "Unary 'minus' requires a number operand, received {}",
+                                    operand.ty()
+                                ),
+                                Some(*span),
+                                None,
+                            ));
+                        }
+                        Type::Number
+                    }
+                };
                 Ok(HirExpr::Unary {
-                    ty: Type::Boolean,
+                    ty,
                     operator: operator.clone(),
                     operand: Box::new(operand),
                     span: *span,
