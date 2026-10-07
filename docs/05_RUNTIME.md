@@ -1,12 +1,12 @@
 # Runtime planning
 
-Semauri separates **compilation**, **planning** and **execution**.
+Semauri separates compilation, planning and execution.
 
-Operations whose result cannot exist at compile time lower into an immutable `RuntimePlan`; the compiler does not execute them merely because it compiled the source.
+Operations whose result cannot exist at compile time lower into an immutable `RuntimePlan`. The compiler does not execute them merely because source code was compiled.
 
 ## Runtime values
 
-A non-`unit` domain operation can produce a typed value consumed by a later operation:
+A non-`unit` operation can produce a typed value consumed by later operations:
 
 ```text
 %1 : ml.dataset = ml.open_dataset("./images")
@@ -16,8 +16,6 @@ A non-`unit` domain operation can produce a typed value consumed by a later oper
 
 Each result is represented by `RuntimeValueRef` with a stable producer ID, semantic type and source span.
 
-Inspect the plan with:
-
 ```bash
 semauri plan program.sema
 ```
@@ -26,9 +24,7 @@ semauri plan program.sema
 
 Compile-time-known expressions are evaluated during lowering. Runtime references may flow directly between semantic-domain operations.
 
-Runtime-dependent arithmetic, comparisons, `If` conditions and iteration are currently rejected with `S335`. Supporting those constructs correctly requires runtime control-flow representation rather than pretending the value is already known.
-
-The intended progression is:
+Runtime-dependent arithmetic, comparisons, `If` conditions and iteration are currently rejected with `S335`; those constructs require a future runtime control-flow representation.
 
 ```text
 Typed HIR
@@ -44,18 +40,6 @@ capability validation
 execution runtime
 ```
 
-## Relationship to effects
+`plan` shows what would execute, `effects` shows required capabilities, and `explain` shows compiler interpretation.
 
-`plan` answers **what would execute**.
-
-`effects` answers **what capabilities the source may require**.
-
-`explain` answers **how the compiler interpreted the source**.
-
-Planning grants no capabilities and performs no declared effects.
-
-## Current execution boundary
-
-The CLI can execute filesystem operation plans through `semauri run` after explicit capability authorization. ML operations are planning-only: they produce typed runtime graphs but are not executed by the reference compiler.
-
-Future execution support should consume the runtime plan rather than bypassing it.
+The CLI currently executes authorized filesystem plans. ML and other runtime-value domains remain planning-only.
