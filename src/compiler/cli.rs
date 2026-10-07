@@ -262,19 +262,20 @@ pub fn run_cli(args: &[String]) -> CliResult {
                     .map_err(|error| usage_error(format!("S001: {error}")))?;
                 current_source = Some(source.clone());
                 let result = compiler.compile(&source, None)?;
-                let console_only = !result.runtime_plan.operations.is_empty()
+                let console_only = !result.semantic.runtime_plan.operations.is_empty()
                     && result
+                        .semantic
                         .runtime_plan
                         .operations
                         .iter()
                         .all(|operation| operation.domain == "console");
                 if console_only {
                     if dry_run {
-                        stdout.push_str(&pretty_json(&result.runtime_plan.to_json()));
+                        stdout.push_str(&pretty_json(&result.semantic.runtime_plan.to_json()));
                         return Ok(0);
                     }
                     CapabilityPolicy::new(allowed).validate(&result.effects)?;
-                    stdout.push_str(&execute_console_plan(&result.runtime_plan)?);
+                    stdout.push_str(&execute_console_plan(&result.semantic.runtime_plan)?);
                     return Ok(0);
                 }
                 if result.outputs.len() != 1
