@@ -542,7 +542,7 @@ fn binary_type(
                 ))
             }
         }
-        BinaryOperator::Equal => {
+        BinaryOperator::Equal | BinaryOperator::NotEqual => {
             if left == right {
                 Ok(Type::Boolean)
             } else {

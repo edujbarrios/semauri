@@ -508,10 +508,22 @@ impl<'a> Parser<'a> {
                 "S224",
             )?;
             BinaryOperator::Equal
+        } else if self.matches(&[TokenKind::Not]) {
+            self.consume(
+                TokenKind::Equal,
+                "Expected 'equal' after 'not'",
+                "S224",
+            )?;
+            self.consume(
+                TokenKind::To,
+                "Expected 'to' after 'not equal'",
+                "S224",
+            )?;
+            BinaryOperator::NotEqual
         } else {
             return Err(self.parse_error(
                 self.peek(),
-                "Expected 'greater than', 'less than', or 'equal to' after 'is'",
+                "Expected 'greater than', 'less than', 'equal to', or 'not equal to' after 'is'",
                 "S225",
                 Some(
                     "Ordering comparisons may add 'or equal to', for example 'is greater than or equal to'."
