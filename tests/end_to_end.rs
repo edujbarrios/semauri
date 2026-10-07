@@ -287,7 +287,7 @@ fn cli_run_requires_authorization_and_dry_run_is_safe() {
 
     let denied = run_cli(&["run".into(), path.display().to_string()]);
     assert_eq!(denied.status, 65);
-    assert!(denied.stderr.contains("S334"));
+    assert!(denied.stderr.contains("S334"), "{}", denied.stderr);
 
     let dry = run_cli(&["run".into(), "--dry-run".into(), path.display().to_string()]);
     assert_eq!(dry.status, 0);
@@ -304,7 +304,7 @@ fn console_programs_print_typed_values_with_explicit_authorization() {
 
     let denied = run_cli(&["run".into(), path.display().to_string()]);
     assert_eq!(denied.status, 65);
-    assert!(denied.stderr.contains("S334"));
+    assert!(denied.stderr.contains("S334"), "{}", denied.stderr);
     assert!(denied.stderr.contains("console_write"));
 
     let dry = run_cli(&["run".into(), "--dry-run".into(), path.display().to_string()]);
