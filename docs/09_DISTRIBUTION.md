@@ -88,9 +88,11 @@ When a new version reaches `main`, `.github/workflows/release.yml`:
 5. generates one `SHA256SUMS` covering every package;
 6. creates or updates the versioned GitHub Release.
 
-Pull requests run the same native package smoke tests through CI before changes can reach `main`.
+Pull requests run the same native package smoke tests through CI before changes can reach `main`. Packaging helpers live under `scripts/release/` (`package.sh` and `package.ps1`).
 
 ## Development from source
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the complete contributor setup and compiler source map. The short version is:
 
 ```bash
 git clone https://github.com/edujbarrios/semauri.git

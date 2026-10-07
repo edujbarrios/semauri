@@ -23,6 +23,47 @@ Semauri is an experimental open-source programming language based on **controlle
 
 Compilation remains effect-free. Execution is a separate opt-in step and effectful programs must be authorized explicitly.
 
+## Install, download and run Semauri
+
+The easiest way to use Semauri is to install the native binary published in GitHub Releases. End users do **not** need Rust.
+
+Linux or macOS:
+
+~~~bash
+curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
+~~~
+
+Windows PowerShell:
+
+~~~powershell
+irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
+~~~
+
+Verify the installation:
+
+~~~text
+semauri version
+semauri help
+~~~
+
+To download without the installer, open the [latest GitHub Release](https://github.com/edujbarrios/semauri/releases/latest), choose the archive for your platform, verify it with <code>SHA256SUMS</code>, extract it and run the executable under <code>bin/</code>.
+
+A Semauri source file uses the <code>.sema</code> extension. Common commands are:
+
+~~~bash
+semauri check examples/hello.sema
+semauri build examples/shop.sema
+semauri plan examples/filesystem.sema
+~~~
+
+<code>build</code> compiles source into the domain output (for example HTML, JSON Schema or a shell plan). <code>run</code> is reserved for explicitly supported effectful execution. Filesystem programs require the capabilities they use:
+
+~~~bash
+semauri run --allow filesystem_read --allow filesystem_write examples/filesystem.sema
+~~~
+
+Use <code>--dry-run</code> to inspect the executable plan without performing effects. See [Installation](docs/00_INSTALLATION.md) for platform details and manual downloads.
+
 ### Source usability in 0.13
 
 Programs can now contain line comments and escaped text without preprocessing:
@@ -134,11 +175,20 @@ backend / explicit capability-gated runtime
 
 ## Documentation
 
-Start with `docs/00_INSTALLATION.md`, then `docs/01_LANGUAGE.md`, `docs/02_TYPES.md`, `docs/03_DOMAINS.md`, `docs/04_EFFECTS.md`, `docs/05_RUNTIME.md` and `docs/06_ML.md`. Architecture, distribution and roadmap documents continue under `docs/`.
+Start with [docs/README.md](docs/README.md) for the documentation map. Installation and execution are covered in [docs/00_INSTALLATION.md](docs/00_INSTALLATION.md); language semantics start in [docs/01_LANGUAGE.md](docs/01_LANGUAGE.md).
 
-## Contributing
+## Developing the language
 
-Contributions are welcome. See `CONTRIBUTING.md`.
+To modify Semauri itself, clone the repository and build it with Rust:
+
+~~~bash
+git clone https://github.com/edujbarrios/semauri.git
+cd semauri
+cargo test --all-targets
+cargo run -- check examples/hello.sema
+~~~
+
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the compiler layout and a step-by-step guide to changing syntax, semantics, domains, optimizations, runtimes or backends. Contribution requirements live in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
