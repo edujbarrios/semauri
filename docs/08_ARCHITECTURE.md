@@ -23,24 +23,24 @@ Source → Lexer → Tokens → Parser → AST → Typed HIR
 
 ## Source layout
 
-The Rust implementation uses a **Facade + staged pipeline** layout. `src/lib.rs` only exposes the public crate API; implementation details live under `src/engine/` and are grouped by compiler responsibility:
+The Rust implementation uses a **Facade + staged pipeline** layout. `src/lib.rs` only exposes the public crate API; implementation details live under `src/compiler/` and are grouped by compiler responsibility:
 
 ```text
 src/
 ├── lib.rs                     public facade
 ├── main.rs                    CLI entry point
-└── engine/
-    ├── core.rs                diagnostics, values and shared types
-    ├── domain/                domain model, registry and built-ins
+└── compiler/
+    ├── core/                  diagnostics, values and shared types
+    ├── domains/               domain model, registry and built-ins
     ├── frontend/              lexer, AST and parser
-    ├── compiler/              HIR, optimization and effect analysis
+    ├── semantic/              HIR, optimization and effect analysis
     ├── runtime/               semantic IR, lowering and runtime plans
-    ├── backend/               renderer registry and built-in backends
+    ├── backends/              compiler facade, renderers and executors
     ├── cli.rs                 command dispatch
     └── tests.rs               internal regression tests
 ```
 
-The engine source slices are deliberately included into one internal Rust module. This preserves the existing private-helper contracts and public API during the migration away from the former monolithic `lib.rs`, while making ownership boundaries explicit and allowing later extraction into independent Rust modules without a large behavior-changing rewrite.
+The compiler source slices are deliberately included into one internal Rust module. This preserves the existing private-helper contracts and public API during the migration away from the former monolithic `lib.rs`, while making ownership boundaries explicit and allowing later extraction into independent Rust modules without a large behavior-changing rewrite.
 
 ## Domain registry
 

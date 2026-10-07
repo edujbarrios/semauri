@@ -24,6 +24,8 @@ A new semantic domain should avoid special-casing the lexer/parser where possibl
 
 ## Rust development
 
+For cloning the source tree, building locally and locating the compiler subsystem to edit, start with [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
 The reference compiler is a Rust crate. Rust 1.83+ is required for development:
 
 ```bash
