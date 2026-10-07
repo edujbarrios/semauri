@@ -70,7 +70,7 @@ jobs:
         env:
           SEMAURI_PLATFORM: ${{ matrix.platform }}
           SEMAURI_BINARY: ${{ github.workspace }}/target/release/semauri
-        run: ./scripts/package-distribution.sh
+        run: ./scripts/release/package.sh
       - uses: actions/upload-artifact@v4
         with:
           name: semauri-${{ matrix.platform }}
@@ -97,7 +97,7 @@ jobs:
         run: cargo build --release
       - name: Package and smoke-test Semauri
         shell: pwsh
-        run: ./scripts/package-distribution.ps1 -BinaryPath 'target\release\semauri.exe' -SemauriPlatform '${{ matrix.platform }}'
+        run: ./scripts/release/package.ps1 -BinaryPath 'target\release\semauri.exe' -SemauriPlatform '${{ matrix.platform }}'
       - uses: actions/upload-artifact@v4
         with:
           name: semauri-${{ matrix.platform }}
