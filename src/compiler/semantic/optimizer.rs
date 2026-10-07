@@ -268,7 +268,7 @@ fn fold_expr(
                 }
             }
             let right = fold_expr(right, constants, changes);
-            if matches!(operator, BinaryOperator::Divide)
+            if matches!(operator, BinaryOperator::Divide | BinaryOperator::Modulo)
                 && literal_data(&right)
                     .is_some_and(|value| matches!(value, ValueData::Number(number) if number.is_zero()))
             {
@@ -373,6 +373,13 @@ fn eval_constant_binary(
         {
             Some(ValueData::Number(NumberValue::Float(
                 a.as_f64() / b.as_f64(),
+            )))
+        }
+        (BinaryOperator::Modulo, ValueData::Number(a), ValueData::Number(b))
+            if !b.is_zero() =>
+        {
+            Some(ValueData::Number(NumberValue::from_f64(
+                a.as_f64() % b.as_f64(),
             )))
         }
         (BinaryOperator::GreaterThan, ValueData::Number(a), ValueData::Number(b)) => {
@@ -589,7 +596,7 @@ fn removable_expression(expr: &HirExpr) -> bool {
             if !removable_expression(left) || !removable_expression(right) {
                 return false;
             }
-            if matches!(operator, BinaryOperator::Divide) {
+            if matches!(operator, BinaryOperator::Divide | BinaryOperator::Modulo) {
                 return literal_data(right).is_some_and(
                     |value| matches!(value, ValueData::Number(number) if !number.is_zero()),
                 );

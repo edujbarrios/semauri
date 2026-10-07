@@ -1093,6 +1093,17 @@ impl<'a> Lowerer<'a> {
                 }
                 ValueData::Number(NumberValue::Float(a.as_f64() / b.as_f64()))
             }
+            (BinaryOperator::Modulo, ValueData::Number(a), ValueData::Number(b)) => {
+                if b.is_zero() {
+                    return Err(SemauriError::semantic(
+                        "S317",
+                        "Modulo by zero",
+                        Some(right.span()),
+                        None,
+                    ));
+                }
+                ValueData::Number(NumberValue::from_f64(a.as_f64() % b.as_f64()))
+            }
             (BinaryOperator::GreaterThan, ValueData::Number(a), ValueData::Number(b)) => {
                 ValueData::Boolean(a.as_f64() > b.as_f64())
             }
