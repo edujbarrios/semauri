@@ -240,3 +240,42 @@ fn hash_slash_and_nested_block_comments_are_ignored() {
     let error = compiler.tokenize("Let count be 2. /* unclosed").unwrap_err();
     assert_eq!(error.code, "S105");
 }
+
+#[test]
+fn numeric_literals_support_separators_and_scientific_notation() {
+    let compiler = Compiler::new();
+    let tokens = compiler
+        .tokenize("Let budget be 1_000.25e-2. Let large be 2E+3.")
+        .unwrap();
+    let numbers: Vec<_> = tokens
+        .iter()
+        .filter(|token| token.to_json()["type"] == "NUMBER")
+        .collect();
+    assert_eq!(numbers.len(), 2);
+    assert_eq!(numbers[0].lexeme, "1_000.25e-2");
+    assert_eq!(numbers[1].lexeme, "2E+3");
+
+    let output = compiler
+        .compile(
+            "Create a web. If 1_000 modulo 3 is equal to 1 and 2.5e1 is greater than 20: Add a button called Numeric. End.",
+            None,
+        )
+        .unwrap()
+        .output
+        .unwrap();
+    assert!(output.contains(">Numeric</button>"));
+}
+
+#[test]
+fn malformed_or_out_of_range_numbers_are_lexical_errors() {
+    let compiler = Compiler::new();
+    for literal in [
+        "1_", "1__2", "1e", "1e+", "1e-",
+        "1.5e9999", "9223372036854775808",
+    ] {
+        let error = compiler
+            .tokenize(&format!("Let value be {literal}."))
+            .unwrap_err();
+        assert_eq!(error.code, "S106", "{literal}");
+    }
+}
