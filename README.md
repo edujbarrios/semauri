@@ -4,7 +4,7 @@
 
 **Natural to write. Deterministic to run.**
 
-> Status: **0.14.0 / experimental**
+> Status: **0.15.0 / experimental**
 
 ## What is Semauri?
 
