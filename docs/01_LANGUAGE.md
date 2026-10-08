@@ -100,6 +100,18 @@ If multiple loaded domains could interpret the same value type, the shorthand is
 
 Primitive semantic value types are `color`, `string`, `number`, and `boolean`.
 
+### Numeric literals
+
+Numbers may use a decimal fraction, a scientific exponent (`e` or `E` with an optional `+` or `-` sign) and underscores between digits for readability:
+
+```text
+Let population be 1_000_000.
+Let rate be 2.5e-3.
+Let distance be 1_200.5E+2.
+```
+
+Integers must fit into signed 64-bit range; decimal and scientific literals must parse to finite floating-point values. Invalid separators, incomplete exponents and out-of-range literals are lexical errors (`S106`), never compiler panics. A trailing period still terminates a statement unless followed by a fractional digit.
+
 `plus` is overloaded deliberately: it adds two numbers or concatenates two strings. It never coerces between strings and numbers. The remaining arithmetic operators are numeric and strictly typed. Prefix `minus` negates a number and binds more tightly than multiplication/division/modulo, which bind more tightly than addition/subtraction. `modulo` returns the numeric remainder and, like division, rejects a zero divisor with `S317`. Equality and inequality (`is equal to` / `is not equal to`) require both operands to have the same semantic type.
 
 Ordering comparisons are numeric and strictly typed. Semauri supports `is greater than`, `is less than`, `is greater than or equal to`, and `is less than or equal to`. The inclusive forms include the boundary value and lower to distinct typed comparison operators rather than being rewritten as boolean combinations.
