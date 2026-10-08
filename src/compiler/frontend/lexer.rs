@@ -276,21 +276,51 @@ impl<'a> Lexer<'a> {
 
     fn number_token(&mut self, line: usize, column: usize) -> Result<Token> {
         let mut text = String::new();
-        while self.current().is_some_and(|ch| ch.is_ascii_digit()) {
-            text.push(self.advance().unwrap());
-        }
+        self.number_digits(&mut text, line, column)?;
+
+        let mut is_float = false;
         if self.current() == Some('.')
             && self.peek_char().is_some_and(|ch| ch.is_ascii_digit())
         {
+            is_float = true;
             text.push(self.advance().unwrap());
-            while self.current().is_some_and(|ch| ch.is_ascii_digit()) {
+            self.number_digits(&mut text, line, column)?;
+        }
+
+        if matches!(self.current(), Some('e' | 'E')) {
+            is_float = true;
+            text.push(self.advance().unwrap());
+            if matches!(self.current(), Some('+' | '-')) {
                 text.push(self.advance().unwrap());
             }
+            if !self.current().is_some_and(|ch| ch.is_ascii_digit()) {
+                return Err(self.invalid_number(
+                    line,
+                    column,
+                    "Scientific notation requires exponent digits",
+                ));
+            }
+            self.number_digits(&mut text, line, column)?;
         }
-        let value = if text.contains('.') {
-            NumberValue::Float(text.parse::<f64>().unwrap())
+
+        let normalized = text.replace('_', "");
+        let value = if is_float {
+            let number = normalized
+                .parse::<f64>()
+                .map_err(|_| self.invalid_number(line, column, "Invalid number literal"))?;
+            if !number.is_finite() {
+                return Err(self.invalid_number(
+                    line,
+                    column,
+                    "Number literal is outside the finite range",
+                ));
+            }
+            NumberValue::Float(number)
         } else {
-            NumberValue::Int(text.parse::<i64>().unwrap())
+            let number = normalized
+                .parse::<i64>()
+                .map_err(|_| self.invalid_number(line, column, "Integer literal is out of range"))?;
+            NumberValue::Int(number)
         };
         Ok(Token {
             kind: TokenKind::Number,
@@ -298,6 +328,34 @@ impl<'a> Lexer<'a> {
             literal: TokenLiteral::Number(value),
             span: SourceSpan::new(line, column, self.line, self.column),
         })
+    }
+
+    fn number_digits(&mut self, text: &mut String, line: usize, column: usize) -> Result<()> {
+        while let Some(ch) = self.current() {
+            if ch.is_ascii_digit() {
+                text.push(self.advance().unwrap());
+            } else if ch == '_' {
+                if !self.peek_char().is_some_and(|next| next.is_ascii_digit()) {
+                    return Err(self.invalid_number(
+                        line,
+                        column,
+                        "Digit separators must appear between digits",
+                    ));
+                }
+                text.push(self.advance().unwrap());
+            } else {
+                break;
+            }
+        }
+        Ok(())
+    }
+
+    fn invalid_number(&self, line: usize, column: usize, message: &str) -> SemauriError {
+        SemauriError::lex(
+            "S106",
+            message,
+            SourceSpan::new(line, column, self.line, self.column),
+        )
     }
 
     fn string_token(&mut self, line: usize, column: usize) -> Result<Token> {
