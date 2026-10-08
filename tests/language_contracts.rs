@@ -223,3 +223,20 @@ fn plus_concatenates_strings_without_cross_type_coercion() {
         .unwrap_err();
     assert_eq!(error.code, "S314");
 }
+
+#[test]
+fn hash_slash_and_nested_block_comments_are_ignored() {
+    let compiler = Compiler::new();
+    let source = "// file heading\nLet count be 2. /* outer\n /* inner */ still outer */\n# another comment\nPrint count.";
+    let tokens = compiler.tokenize(source).unwrap();
+    assert_eq!(tokens[0].lexeme.to_lowercase(), "let");
+    assert_eq!(tokens[0].to_json()["line"], 2);
+    assert!(tokens.iter().any(|token| token.lexeme.to_lowercase() == "print"));
+
+    compiler
+        .analyze("Let text be \"// not a comment; /* also text */\". Print text.")
+        .unwrap();
+
+    let error = compiler.tokenize("Let count be 2. /* unclosed").unwrap_err();
+    assert_eq!(error.code, "S105");
+}

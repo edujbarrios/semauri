@@ -42,6 +42,21 @@ list_literal     = [ ARTICLE ] LIST OF expression { "," expression } ;
 
 The handwritten recursive-descent parser remains the executable grammar during 0.x.
 
+## Comments
+
+Comments are ignored outside string literals:
+
+```text
+# Original line comments remain supported.
+// A second line-comment style is available.
+Let amount be 10. /* A block comment
+   /* may contain nested comments */
+   and continue across lines. */
+Print amount.
+```
+
+Block comments can nest. An unclosed block comment is a lexical error (`S105`) at the opening comment location. Comment markers inside quoted strings remain literal text.
+
 ## Semantic domains
 
 `DOMAIN_ARTIFACT`, `DOMAIN_ELEMENT` and `DOMAIN_PROPERTY` are generic lexical categories. Their vocabulary comes from the compiler's registered semantic domains rather than from hardcoded parser productions.
