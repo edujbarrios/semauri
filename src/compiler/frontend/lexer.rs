@@ -191,7 +191,7 @@ impl<'a> Lexer<'a> {
     }
 
     fn next_token(&mut self) -> Result<Token> {
-        self.skip_ignored();
+        self.skip_ignored()?;
         if self.eof() {
             return Ok(Token {
                 kind: TokenKind::Eof,
@@ -363,18 +363,50 @@ impl<'a> Lexer<'a> {
         })
     }
 
-    fn skip_ignored(&mut self) {
+    fn skip_ignored(&mut self) -> Result<()> {
         loop {
             while self.current().is_some_and(char::is_whitespace) {
                 self.advance();
             }
-            if self.current() != Some('#') {
-                break;
+            if self.current() == Some('#')
+                || (self.current() == Some('/') && self.peek_char() == Some('/'))
+            {
+                while !self.eof() && self.current() != Some('\n') {
+                    self.advance();
+                }
+                continue;
             }
-            while !self.eof() && self.current() != Some('\n') {
+            if self.current() == Some('/') && self.peek_char() == Some('*') {
+                let start_line = self.line;
+                let start_column = self.column;
                 self.advance();
+                self.advance();
+                let mut depth = 1usize;
+                while depth > 0 {
+                    if self.eof() {
+                        return Err(SemauriError::lex(
+                            "S105",
+                            "Unterminated block comment",
+                            SourceSpan::new(start_line, start_column, self.line, self.column),
+                        ));
+                    }
+                    if self.current() == Some('/') && self.peek_char() == Some('*') {
+                        self.advance();
+                        self.advance();
+                        depth += 1;
+                    } else if self.current() == Some('*') && self.peek_char() == Some('/') {
+                        self.advance();
+                        self.advance();
+                        depth -= 1;
+                    } else {
+                        self.advance();
+                    }
+                }
+                continue;
             }
+            break;
         }
+        Ok(())
     }
 
     fn current(&self) -> Option<char> {
