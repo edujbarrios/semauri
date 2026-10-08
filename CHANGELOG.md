@@ -2,6 +2,24 @@
 
 All notable changes to Semauri are documented here.
 
+## 0.15.0 — 2026-10-08
+
+### Added
+
+- `//` single-line comments and nestable `/* ... */` multi-line comments.
+- Readable numeric literals with `_` digit separators and scientific `e` / `E` notation.
+
+### Fixed
+
+- Unterminated block comments produce a lexical diagnostic (`S105`).
+- Invalid numeric separators, malformed exponents, integers outside the signed 64-bit range, and non-finite numeric literals produce `S106` rather than crashing the compiler.
+- Comment delimiters inside strings remain ordinary text.
+
+### Validation
+
+- Language contract regressions added for both features.
+- GitHub Actions checks Rust tests and builds/smoke-tests six native distribution packages.
+
 ## 0.14.0 — 2026-10-07
 
 ### Changed
@@ -23,7 +41,7 @@ All notable changes to Semauri are documented here.
 
 Detailed release notes for earlier language milestones remain under `docs/`:
 
-- [0.13](docs/14_RELEASE_0_13.md)
-- [0.12](docs/13_RELEASE_0_12.md)
-- [0.11](docs/12_RELEASE_0_11.md)
-- [0.9](docs/11_RELEASE_0_9.md)
+- [0.13](docs/releases/0.13.md)
+- [0.12](docs/releases/0.12.md)
+- [0.11](docs/releases/0.11.md)
+- [0.9](docs/releases/0.9.md)
