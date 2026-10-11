@@ -10,7 +10,9 @@ Unix packages use this shape:
 semauri-0.16.0-linux-x86_64/
 ├── bin/
 │   └── semauri
-├── learn_to_code/         # Curso de iniciación y programas .sema
+├── learn_to_code/         # Lecciones para principiantes
+├── docs/                  # Referencia del lenguaje
+├── examples/              # Programas de muestra
 ├── manifest.json
 ├── LICENSE
 ├── NOTICE
@@ -23,7 +25,9 @@ Windows packages use:
 semauri-0.16.0-windows-x86_64/
 ├── bin/
 │   └── semauri.exe
-├── learn_to_code/         # Curso de iniciación y programas .sema
+├── learn_to_code/         # Lecciones para principiantes
+├── docs/                  # Referencia del lenguaje
+├── examples/              # Programas de muestra
 ├── manifest.json
 ├── LICENSE
 ├── NOTICE
