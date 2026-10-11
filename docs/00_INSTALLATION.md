@@ -2,7 +2,7 @@
 
 This guide covers binary installation, manual downloads, running <code>.sema</code> programs and installing an exact version.
 
-> Current release documented here: **0.16.0**
+> Current release documented here: **0.16.1**
 
 Official Semauri distributions contain a native executable. **Rust and Cargo are not required to use a published Semauri binary.**
 
@@ -76,20 +76,29 @@ On Windows PowerShell:
 Linux/macOS:
 
 ~~~bash
-curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | SEMAURI_VERSION=0.16.0 sh
+curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | SEMAURI_VERSION=0.16.1 sh
 ~~~
 
 Windows PowerShell:
 
 ~~~powershell
-$env:SEMAURI_VERSION = '0.16.0'
+$env:SEMAURI_VERSION = '0.16.1'
 irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
 Remove-Item Env:SEMAURI_VERSION
 ~~~
 
 ## Learn programming with the bundled course
 
-The six official native archives ship [`learn_to_code/`](../learn_to_code/README.md), with 11 lessons in Spanish and runnable `.sema` files. From the extracted archive, run `semauri check learn_to_code/01_hola_mundo/main.sema` and then `semauri run --allow console_write learn_to_code/01_hola_mundo/main.sema` (use the executable under `bin/` if it is not in your PATH).
+All six official native archives include the full [bilingual Learn to Code curriculum](../learn_to_code/README.md): **11 lessons in English** ([`en/`](../learn_to_code/en/README.md)) and **11 in Spanish** ([`es/`](../learn_to_code/es/README.md)), each with a runnable `.sema` example. From the extracted archive root, try:
+
+```sh
+semauri check learn_to_code/en/01_hello_world/main.sema
+semauri run --allow console_write learn_to_code/en/01_hello_world/main.sema
+semauri check learn_to_code/es/01_hola_mundo/main.sema
+semauri run --allow console_write learn_to_code/es/01_hola_mundo/main.sema
+```
+
+Use the executable under `bin/` if `semauri` is not yet on your PATH.
 
 ## Running Semauri source files
 

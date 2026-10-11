@@ -1,0 +1,7 @@
+Let grade be 7.
+
+If grade is greater than or equal to 5:
+  Print "Passed".
+Otherwise:
+  Print "Keep practicing".
+End.

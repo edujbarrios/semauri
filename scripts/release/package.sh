@@ -41,7 +41,8 @@ JSON
 
 "$STAGE_DIR/bin/semauri" version
 "$STAGE_DIR/bin/semauri" check "$ROOT_DIR/examples/hello.sema"
-"$STAGE_DIR/bin/semauri" check "$STAGE_DIR/learn_to_code/01_hola_mundo/main.sema"
+"$STAGE_DIR/bin/semauri" check "$STAGE_DIR/learn_to_code/es/01_hola_mundo/main.sema"
+"$STAGE_DIR/bin/semauri" check "$STAGE_DIR/learn_to_code/en/01_hello_world/main.sema"
 
 ARCHIVE_PATH="$OUT_DIR/$ARCHIVE_BASENAME.tar.gz"
 tar -czf "$ARCHIVE_PATH" -C "$WORK_DIR" "$ARCHIVE_BASENAME"
