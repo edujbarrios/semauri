@@ -20,7 +20,8 @@ set_property     = SET [ ARTICLE ] DOMAIN_PROPERTY OF reference TO expression ["
 reference        = PRONOUN | [ ARTICLE ] DOMAIN_ELEMENT CALLED phrase ;
 
 let_binding      = LET identifier BE expression ["."] ;
-if_statement     = IF expression ":" block [ OTHERWISE ":" block ] END ["."] ;
+if_statement     = IF expression ":" block { OTHERWISE IF expression ":" block }
+                 [ OTHERWISE ":" block ] END ["."] ;
 for_each         = FOR EVERY identifier IN expression ":" block END ["."] ;
 block            = statement+ ;
 
@@ -170,6 +171,22 @@ End.
 ```
 
 The condition must be boolean (`S316`). Typed HIR preserves both branches. The current HIR lowerer selects a branch statically because all current values are compile-time-known.
+
+### Chained conditionals
+
+Use `Otherwise if` (or `Else if`) to test multiple conditions in order. The first true branch wins, `Otherwise:` is optional and must be last, and **the whole chain uses a single `End.`**:
+
+```text
+If score is greater than or equal to 90:
+  Add a button called Excellent.
+Otherwise if score is greater than or equal to 70:
+  Add a button called Passed.
+Otherwise:
+  Add a button called Retry.
+End.
+```
+
+The parser represents subsequent clauses as nested `if_statement` nodes inside the prior branch's alternative block. Each branch preserves its source span and lexical scope. Conditions in *all* clauses are type-checked, including unreachable clauses, and invalid conditions still report `S316`. Missing colons and empty clauses retain `S218` and `S221`, respectively. See [`examples/otherwise_if.sema`](../examples/otherwise_if.sema).
 
 The symbol table describes the complete typed program, including declarations inside a statically unselected branch. Branch elimination belongs to a later optimization/lowering phase, not name resolution.
 

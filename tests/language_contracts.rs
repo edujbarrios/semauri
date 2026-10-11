@@ -279,3 +279,106 @@ fn malformed_or_out_of_range_numbers_are_lexical_errors() {
         assert_eq!(error.code, "S106", "{literal}");
     }
 }
+
+#[test]
+fn otherwise_if_chains_select_the_first_matching_branch() {
+    let compiler = Compiler::new();
+    for (score, expected) in [
+        (95, "Excellent"),
+        (75, "Passed"),
+        (55, "Nearly"),
+        (25, "Retry"),
+    ] {
+        let source = format!(
+            r#"Create a web.
+Let score be {score}.
+If score is greater than or equal to 90:
+  Add a button called Excellent.
+Otherwise if score is greater than or equal to 70:
+  Add a button called Passed.
+Else if score is greater than or equal to 50:
+  Add a button called Nearly.
+Otherwise:
+  Add a button called Retry.
+End.
+"#
+        );
+        let output = compiler.compile(&source, None).unwrap().output.unwrap();
+        for label in ["Excellent", "Passed", "Nearly", "Retry"] {
+            assert_eq!(
+                output.contains(&format!(">{label}</button>")),
+                label == expected,
+                "score={score}, branch={label}"
+            );
+        }
+    }
+
+    let no_fallback = compiler
+        .compile(
+            "Create a web. If false: Add a button called Skip. Otherwise if true: Add a button called Match. End.",
+            None,
+        )
+        .unwrap()
+        .output
+        .unwrap();
+    assert!(no_fallback.contains(">Match</button>"));
+    assert!(!no_fallback.contains(">Skip</button>"));
+}
+
+#[test]
+fn otherwise_if_chains_preserve_ast_scopes_and_type_errors() {
+    let compiler = Compiler::new();
+    let ast = compiler
+        .parse(
+            "Create a web. If false: Add a button called A. Otherwise if true: Add a button called B. Otherwise: Add a button called C. End.",
+        )
+        .unwrap()
+        .to_json();
+    let outer = &ast["statements"][1];
+    assert_eq!(outer["type"], "if_statement");
+    assert_eq!(outer["alternative"]["statements"][0]["type"], "if_statement");
+    assert_eq!(
+        outer["alternative"]["statements"][0]["alternative"]["statements"][0]["type"],
+        "add_element"
+    );
+
+    let unselected_type_error = compiler
+        .analyze(
+            "Create a web. If true: Add a button called A. Otherwise if 1: Add a button called B. End.",
+        )
+        .unwrap_err();
+    assert_eq!(unselected_type_error.code, "S316");
+
+    let leaked_binding = compiler
+        .analyze(
+            "Create a web. If false: Let local be 1. Otherwise if true: Let branch_only be 2. End. Let invalid be branch_only.",
+        )
+        .unwrap_err();
+    assert_eq!(leaked_binding.code, "S312");
+}
+
+#[test]
+fn otherwise_if_chains_reject_malformed_clauses() {
+    let compiler = Compiler::new();
+    for (source, expected_code) in [
+        (
+            "Create a web. If true: Add a button called A. Otherwise if false Add a button called B. End.",
+            "S218",
+        ),
+        (
+            "Create a web. If true: Add a button called A. Otherwise if false: End.",
+            "S221",
+        ),
+        (
+            "Create a web. If true: Add a button called A. Otherwise if false: Add a button called B.",
+            "S220",
+        ),
+        (
+            "Create a web. If true: Add a button called A. Otherwise: Add a button called B. Otherwise if false: Add a button called C. End.",
+            "S201",
+        ),
+    ] {
+        let error = compiler.analyze(source).unwrap_err();
+        assert_eq!(error.code, expected_code, "{source}");
+    }
+}
