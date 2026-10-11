@@ -45,7 +45,7 @@ impl<'a> Parser<'a> {
             let start = self.previous().clone();
             return self.set_statement(&start);
         }
-        if self.matches(&[TokenKind::If]) {
+        if self.matches(&[TokenKind::If, TokenKind::Unless]) {
             let start = self.previous().clone();
             return self.if_statement(&start);
         }
@@ -320,6 +320,17 @@ impl<'a> Parser<'a> {
 
     fn if_statement(&mut self, start: &Token) -> Result<Stmt> {
         let condition = self.expression()?;
+        // "Unless X" is "If not X"; keep a single typed HIR and runtime path.
+        let condition = if start.kind == TokenKind::Unless {
+            let span = span_between_spans(start.span, condition.span());
+            Expr::Unary {
+                operator: UnaryOperator::Not,
+                operand: Box::new(condition),
+                span,
+            }
+        } else {
+            condition
+        };
         self.consume(
             TokenKind::Colon,
             "Expected ':' after the if condition",
