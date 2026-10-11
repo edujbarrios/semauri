@@ -76,8 +76,7 @@ On Windows PowerShell:
 Linux/macOS:
 
 ~~~bash
-SEMAURI_VERSION=0.16.0 \
-  curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | SEMAURI_VERSION=0.16.0 sh
 ~~~
 
 Windows PowerShell:
