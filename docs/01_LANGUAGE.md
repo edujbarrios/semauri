@@ -145,10 +145,10 @@ End.
 
 ### Unicode string escapes
 
-Double-quoted strings support `\\n`, `\\t`, `\\r`, `\\"` and `\\\\`, plus a Unicode scalar escape `\\u{HEX}` where `HEX` contains 1 to 6 hexadecimal digits. For example:
+Double-quoted strings support `\n`, `\t`, `\r`, `\"` (escaped as `\\"` in source) and `\\`, plus a Unicode scalar escape `\u{HEX}` where `HEX` contains 1 to 6 hexadecimal digits. For example:
 
 ```text
-Let greeting be "Bonjour \\u{1F30D}".
+Let greeting be "Bonjour \u{1F30D}".
 ```
 
 The lexer decodes the escape before type checking. Invalid syntax, out-of-range values (above U+10FFFF) and surrogate code points (U+D800–U+DFFF) are rejected with `S104`. Unescaped carriage returns and line feeds are rejected with `S102`. This keeps source parsing deterministic on all platforms.
