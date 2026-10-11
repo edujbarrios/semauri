@@ -4,7 +4,7 @@
 
 **Natural to write. Deterministic to run.**
 
-> Status: **0.16.0 / experimental**
+> Status: **0.16.1 / experimental**
 
 ## What is Semauri?
 
@@ -12,7 +12,7 @@ Semauri is an experimental open-source programming language based on **controlle
 
 ## Start here
 
-- **New to programming?** Follow the free, Spanish-language [**Learn to Code with Semauri**](learn_to_code/README.md) course: 11 small lessons with editable, tested `.sema` examples. The course is also included in the official downloadable packages.
+- **New to programming?** [**Learn to Code with Semauri**](learn_to_code/README.md) is available in [**English**](learn_to_code/en/README.md) and [**Español**](learn_to_code/es/README.md), with 11 fully translated lessons per language, tested `.sema` examples and challenges. Both editions ship in the official release packages.
 - **Want to run a program now?** Jump to [your first Semauri program](#write-and-run-a-sema-program) or [installation](#install-semauri).
 - **Already program?** See the [language specification](docs/01_LANGUAGE.md), [examples](examples/) and [compiler development guide](docs/DEVELOPMENT.md).
 
@@ -20,7 +20,7 @@ Semauri is an experimental open-source programming language based on **controlle
 
 | Directory | Purpose |
 | --- | --- |
-| [`learn_to_code/`](learn_to_code/) | Beginner-friendly lessons in Spanish and runnable exercises |
+| [`learn_to_code/`](learn_to_code/) | Eleven tested beginner lessons in both English (`en/`) and Spanish (`es/`) |
 | [`examples/`](examples/) | Short reference programs showing language and domain features |
 | [`docs/`](docs/) | Complete language manual, architecture, tooling and release notes |
 | [`src/compiler/`](src/compiler/) | Lexer, parser, semantics, IR, domains, backends and CLI |

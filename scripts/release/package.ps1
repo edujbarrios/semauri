@@ -53,8 +53,11 @@ try {
   & (Join-Path $StageDir 'bin\semauri.exe') check (Join-Path $RootDir 'examples\hello.sema')
   if ($LASTEXITCODE -ne 0) { throw 'semauri check smoke test failed' }
 
-  & (Join-Path $StageDir 'bin\semauri.exe') check (Join-Path $StageDir 'learn_to_code\01_hola_mundo\main.sema')
-  if ($LASTEXITCODE -ne 0) { throw 'Bundled learning example check failed' }
+  & (Join-Path $StageDir 'bin\semauri.exe') check (Join-Path $StageDir 'learn_to_code\es\01_hola_mundo\main.sema')
+  if ($LASTEXITCODE -ne 0) { throw 'Bundled Spanish learning example check failed' }
+
+  & (Join-Path $StageDir 'bin\semauri.exe') check (Join-Path $StageDir 'learn_to_code\en\01_hello_world\main.sema')
+  if ($LASTEXITCODE -ne 0) { throw 'Bundled English learning example check failed' }
 
   if (Test-Path $ArchivePath) { Remove-Item $ArchivePath -Force }
   Compress-Archive -Path $StageDir -DestinationPath $ArchivePath -CompressionLevel Optimal

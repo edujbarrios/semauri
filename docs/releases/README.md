@@ -9,3 +9,4 @@ These documents preserve release-specific design and migration context. The cano
 - [0.14.0](0.14.md)
 - [0.15.0](0.15.md)
 - [0.16.0](0.16.0.md)
+- [0.16.1](0.16.1.md)

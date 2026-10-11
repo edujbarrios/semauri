@@ -7,10 +7,10 @@ Semauri's reference compiler is implemented in Rust. Official distributions ship
 Unix packages use this shape:
 
 ```text
-semauri-0.16.0-linux-x86_64/
+semauri-0.16.1-linux-x86_64/
 ├── bin/
 │   └── semauri
-├── learn_to_code/         # Lecciones para principiantes
+├── learn_to_code/         # es/ y en/, 11 lecciones por idioma
 ├── docs/                  # Referencia del lenguaje
 ├── examples/              # Programas de muestra
 ├── manifest.json
@@ -25,7 +25,7 @@ Windows packages use:
 semauri-0.16.0-windows-x86_64/
 ├── bin/
 │   └── semauri.exe
-├── learn_to_code/         # Lecciones para principiantes
+├── learn_to_code/         # es/ y en/, 11 lecciones por idioma
 ├── docs/                  # Referencia del lenguaje
 ├── examples/              # Programas de muestra
 ├── manifest.json
@@ -89,7 +89,7 @@ When a new version reaches `main`, `.github/workflows/release.yml`:
 
 1. resolves the version from `Cargo.toml`;
 2. builds the Rust compiler natively on each of the six supported runners;
-3. bundles `learn_to_code/` in all six native packages and smoke-tests the relocated executable and its bundled first lesson with `semauri version` and `semauri check`;
+3. bundles the complete bilingual `learn_to_code/es/` and `learn_to_code/en/` trees in all six native packages and smoke-tests the relocated executable plus the first lesson in **both languages** with `semauri version` and `semauri check`;
 4. uploads all six packages as workflow artifacts;
 5. generates one `SHA256SUMS` covering every package;
 6. creates or updates the versioned GitHub Release.

@@ -2,6 +2,24 @@
 
 All notable changes to Semauri are documented here.
 
+## 0.16.1 — 2026-10-12
+
+### Changed
+
+- **Learn to Code is now bilingual:** opening `learn_to_code/` displays a language selector linking to complete `es/` and `en/` courses.
+- Moved all 11 original Spanish lessons to `learn_to_code/es/` while keeping their programs and exercises.
+- Added 11 equivalent English lessons under `learn_to_code/en/`, each with a translated guide, challenge and working Semauri program.
+- Updated documentation, installation instructions, packaging smoke tests and learning-course regression tests for both languages.
+- Release packages now include both language trees on Linux, macOS and Windows.
+
+## 0.16.0 — 2026-10-12
+
+### Added
+
+- An 11-lesson beginner course in Spanish, with runnable `.sema` programs and challenges.
+- `Unless`, `Otherwise if` / `Else if`, and Unicode scalar string escapes.
+- Beginner course packaged with native compiler distributions.
+
 ## 0.15.0 — 2026-10-08
 
 ### Added
