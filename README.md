@@ -14,7 +14,7 @@ Semauri is an experimental open-source programming language based on **controlle
 
 | Area | Current capability |
 | --- | --- |
-| Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If` / `Otherwise if` / `Otherwise`, static `For every`, comments, escaped strings |
+| Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If` / `Unless` / `Otherwise if` / `Otherwise`, static `For every`, comments, escaped strings |
 | Console | print typed values from executable programs with explicit authorization |
 | Web | build typed web documents and render HTML |
 | Structured data | build typed schemas and render JSON Schema |
@@ -144,7 +144,7 @@ Programs can now contain line comments and escaped text without preprocessing:
 Let message be "hello\nfrom Semauri".
 ```
 
-Supported escapes are `\n`, `\t`, `\r`, `\"` and `\\`. Unknown escapes are rejected with a source diagnostic instead of being silently accepted.
+Supported escapes are `\n`, `\t`, `\r`, `\"`, `\\` and Unicode scalar escapes such as `\u{1F680}`. Invalid escapes and Unicode code points are rejected with a source diagnostic instead of being silently accepted.
 
 ## Example: Semauri to HTML
 

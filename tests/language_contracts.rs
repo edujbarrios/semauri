@@ -382,3 +382,93 @@ fn otherwise_if_chains_reject_malformed_clauses() {
         assert_eq!(error.code, expected_code, "{source}");
     }
 }
+
+#[test]
+fn unless_uses_boolean_negation_and_preserves_else_branches() {
+    let compiler = Compiler::new();
+    let output = compiler
+        .compile(
+            "Create a web. Let score be 35. Unless score is greater than or equal to 70: Add a button called Below. Otherwise: Add a button called Above. End.",
+            None,
+        )
+        .unwrap()
+        .output
+        .unwrap();
+    assert!(output.contains(">Below</button>"));
+    assert!(!output.contains(">Above</button>"));
+
+    let output = compiler
+        .compile(
+            "Create a web. Unless true: Add a button called Skipped. Otherwise: Add a button called Fallback. End.",
+            None,
+        )
+        .unwrap()
+        .output
+        .unwrap();
+    assert!(output.contains(">Fallback</button>"));
+    assert!(!output.contains(">Skipped</button>"));
+
+    let chained = compiler
+        .compile(
+            "Create a web. Unless true: Add a button called Skipped. Otherwise if true: Add a button called Chained. End.",
+            None,
+        )
+        .unwrap()
+        .output
+        .unwrap();
+    assert!(chained.contains(">Chained</button>"));
+
+    let tokens = compiler.tokenize("Unless false: Print \"ok\". End.").unwrap();
+    assert_eq!(tokens[0].to_json()["type"], "UNLESS");
+
+    let ast = compiler
+        .parse("Create a web. Unless false: Add a button called Yes. End.")
+        .unwrap()
+        .to_json();
+    assert_eq!(ast["statements"][1]["condition"]["type"], "unary_expression");
+    assert_eq!(ast["statements"][1]["condition"]["operator"], "not");
+
+    let invalid = compiler
+        .analyze("Create a web. Unless 1: Add a button called Invalid. End.")
+        .unwrap_err();
+    assert_eq!(invalid.code, "S319");
+}
+
+#[test]
+fn string_unicode_scalar_escapes_are_decoded_and_invalid_forms_rejected() {
+    let compiler = Compiler::new();
+    let ast = compiler
+        .parse(r#"Let symbols be "\u{1F680}\u{00E9}\u{41}". Create a web."#)
+        .unwrap()
+        .to_json();
+    assert_eq!(ast["statements"][0]["value"]["value"], "🚀éA");
+
+    let ast = compiler
+        .parse(r#"Let text be "\u{0}\u{10FFFF}". Create a web."#)
+        .unwrap()
+        .to_json();
+    assert_eq!(
+        ast["statements"][0]["value"]["value"],
+        format!("\0{}", char::from_u32(0x10FFFF).unwrap())
+    );
+
+    for escape in [
+        r"\u",
+        r"\u1234",
+        r"\u{}",
+        r"\u{GG}",
+        r"\u{D800}",
+        r"\u{110000}",
+        r"\u{1234567}",
+        r"\u{41",
+    ] {
+        let source = format!("Let text be \"{escape}\". Create a web.");
+        let error = compiler.tokenize(&source).unwrap_err();
+        assert_eq!(error.code, "S104", "{escape}");
+        assert!(error.span.is_some(), "{escape}");
+    }
+
+    let cr = compiler.tokenize("Let message be \"line\rbreak\".").unwrap_err();
+    assert_eq!(cr.code, "S102");
+}
+

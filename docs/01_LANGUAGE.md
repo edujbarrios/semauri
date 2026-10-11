@@ -20,7 +20,7 @@ set_property     = SET [ ARTICLE ] DOMAIN_PROPERTY OF reference TO expression ["
 reference        = PRONOUN | [ ARTICLE ] DOMAIN_ELEMENT CALLED phrase ;
 
 let_binding      = LET identifier BE expression ["."] ;
-if_statement     = IF expression ":" block { OTHERWISE IF expression ":" block }
+if_statement     = ( IF | UNLESS ) expression ":" block { OTHERWISE IF expression ":" block }
                  [ OTHERWISE ":" block ] END ["."] ;
 for_each         = FOR EVERY identifier IN expression ":" block END ["."] ;
 block            = statement+ ;
@@ -143,6 +143,16 @@ End.
 
 `missingVariable` fails name resolution with `S312` before evaluation begins.
 
+### Unicode string escapes
+
+Double-quoted strings support `\\n`, `\\t`, `\\r`, `\\"` and `\\\\`, plus a Unicode scalar escape `\\u{HEX}` where `HEX` contains 1 to 6 hexadecimal digits. For example:
+
+```text
+Let greeting be "Bonjour \\u{1F30D}".
+```
+
+The lexer decodes the escape before type checking. Invalid syntax, out-of-range values (above U+10FFFF) and surrogate code points (U+D800–U+DFFF) are rejected with `S104`. Unescaped carriage returns and line feeds are rejected with `S102`. This keeps source parsing deterministic on all platforms.
+
 ## Collections
 
 Semauri supports homogeneous list literals:
@@ -171,6 +181,20 @@ End.
 ```
 
 The condition must be boolean (`S316`). Typed HIR preserves both branches. The current HIR lowerer selects a branch statically because all current values are compile-time-known.
+
+### Unless
+
+`Unless condition:` is shorthand for `If not condition:`. Its condition is type-checked as a boolean and lowered into the existing unary `not` expression, so it works with the same `Otherwise` / `Otherwise if` clauses and closes with one `End.`:
+
+```text
+Unless score is greater than or equal to 70:
+  Add a button called Below.
+Otherwise:
+  Add a button called Passed.
+End.
+```
+
+A non-boolean operand to `Unless` reports `S319`, the same diagnostic as `not` on a non-boolean value.
 
 ### Chained conditionals
 

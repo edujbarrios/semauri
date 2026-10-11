@@ -6,6 +6,7 @@ pub enum TokenKind {
     Be,
     Set,
     If,
+    Unless,
     Otherwise,
     End,
     For,
@@ -60,6 +61,7 @@ impl TokenKind {
             TokenKind::Be => "BE",
             TokenKind::Set => "SET",
             TokenKind::If => "IF",
+            TokenKind::Unless => "UNLESS",
             TokenKind::Otherwise => "OTHERWISE",
             TokenKind::End => "END",
             TokenKind::For => "FOR",
@@ -362,7 +364,7 @@ impl<'a> Lexer<'a> {
         self.advance();
         let mut value = String::new();
         while !self.eof() && self.current() != Some('"') {
-            if self.current() == Some('\n') {
+            if matches!(self.current(), Some('\n' | '\r')) {
                 return Err(SemauriError::lex(
                     "S102",
                     "Literal newlines are not allowed in strings; use an escaped newline",
@@ -386,6 +388,51 @@ impl<'a> Lexer<'a> {
                     'r' => '\r',
                     '"' => '"',
                     '\\' => '\\',
+                    'u' => {
+                        // Unicode scalar escapes require braces and 1-6 hex digits.
+                        if self.current() != Some('{') {
+                            return Err(SemauriError::lex(
+                                "S104",
+                                "Expected '{' after '\\u' in Unicode escape",
+                                SourceSpan::new(escape_line, escape_column, self.line, self.column),
+                            ));
+                        }
+                        self.advance();
+                        let mut hex = String::new();
+                        while self.current().is_some_and(|ch| ch.is_ascii_hexdigit()) {
+                            if hex.len() == 6 {
+                                return Err(SemauriError::lex(
+                                    "S104",
+                                    "Unicode escape supports at most six hex digits",
+                                    SourceSpan::new(escape_line, escape_column, self.line, self.column),
+                                ));
+                            }
+                            hex.push(self.advance().unwrap());
+                        }
+                        if hex.is_empty() || self.current() != Some('}') {
+                            return Err(SemauriError::lex(
+                                "S104",
+                                "Expected 1-6 hexadecimal digits followed by '}' in Unicode escape",
+                                SourceSpan::new(escape_line, escape_column, self.line, self.column),
+                            ));
+                        }
+                        self.advance();
+                        u32::from_str_radix(&hex, 16)
+                            .ok()
+                            .and_then(char::from_u32)
+                            .ok_or_else(|| {
+                                SemauriError::lex(
+                                    "S104",
+                                    "Unicode escape must be a valid Unicode scalar value",
+                                    SourceSpan::new(
+                                        escape_line,
+                                        escape_column,
+                                        self.line,
+                                        self.column,
+                                    ),
+                                )
+                            })?
+                    }
                     other => {
                         return Err(SemauriError::lex(
                             "S104",
@@ -500,6 +547,7 @@ fn keyword_kind(word: &str) -> Option<TokenKind> {
         "be" => TokenKind::Be,
         "set" => TokenKind::Set,
         "if" => TokenKind::If,
+        "unless" => TokenKind::Unless,
         "otherwise" | "else" => TokenKind::Otherwise,
         "end" => TokenKind::End,
         "for" => TokenKind::For,
