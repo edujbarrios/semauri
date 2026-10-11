@@ -26,8 +26,8 @@ Print mensaje.
 Desde la raíz del repositorio:
 
 ```sh
-semauri check learn_to_code/09_ambitos/main.sema
-semauri run --allow console_write learn_to_code/09_ambitos/main.sema
+semauri check learn_to_code/es/09_ambitos/main.sema
+semauri run --allow console_write learn_to_code/es/09_ambitos/main.sema
 ```
 
 **Salida esperada en la consola:**

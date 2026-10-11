@@ -24,8 +24,8 @@ Set the datatype of the field called Edad to "integer".
 Desde la raíz del repositorio:
 
 ```sh
-semauri check learn_to_code/11_esquemas/main.sema
-semauri build learn_to_code/11_esquemas/main.sema
+semauri check learn_to_code/es/11_esquemas/main.sema
+semauri build learn_to_code/es/11_esquemas/main.sema
 ```
 
 **Resultado esperado:** Genera JSON Schema con Nombre obligatorio y Edad entero. El contenido generado aparece en la salida de `build`.

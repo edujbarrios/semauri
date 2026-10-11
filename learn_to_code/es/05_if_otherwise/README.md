@@ -25,8 +25,8 @@ End.
 Desde la raíz del repositorio:
 
 ```sh
-semauri check learn_to_code/05_if_otherwise/main.sema
-semauri run --allow console_write learn_to_code/05_if_otherwise/main.sema
+semauri check learn_to_code/es/05_if_otherwise/main.sema
+semauri run --allow console_write learn_to_code/es/05_if_otherwise/main.sema
 ```
 
 **Salida esperada en la consola:**
