@@ -326,28 +326,69 @@ impl<'a> Parser<'a> {
             "S218",
         )?;
         let consequence = self.block_until(&[TokenKind::Otherwise, TokenKind::End])?;
-        let alternative = if self.matches(&[TokenKind::Otherwise]) {
-            self.consume(
-                TokenKind::Colon,
-                "Expected ':' after 'Otherwise'",
-                "S219",
-            )?;
-            Some(self.block_until(&[TokenKind::End])?)
-        } else {
-            None
-        };
+        let mut branches = vec![(start.span, condition, consequence)];
+        let mut otherwise = None;
+
+        // Chained conditionals share one End. Lower the chain into nested
+        // If nodes so existing type checks, scopes and optimizer rules apply.
+        while self.matches(&[TokenKind::Otherwise]) {
+            if self.matches(&[TokenKind::If]) {
+                let branch_start = self.previous().span;
+                let condition = self.expression()?;
+                self.consume(
+                    TokenKind::Colon,
+                    "Expected ':' after the if condition",
+                    "S218",
+                )?;
+                let consequence = self.block_until(&[TokenKind::Otherwise, TokenKind::End])?;
+                branches.push((branch_start, condition, consequence));
+            } else {
+                self.consume(
+                    TokenKind::Colon,
+                    "Expected ':' after 'Otherwise'",
+                    "S219",
+                )?;
+                otherwise = Some(self.block_until(&[TokenKind::End])?);
+                break;
+            }
+        }
+
         self.consume(
             TokenKind::End,
             "Expected 'End' to close the If block",
             "S220",
         )?;
         self.consume_optional_dot();
-        Ok(Stmt::If {
-            condition,
-            consequence,
-            alternative,
-            span: self.span_from(start),
-        })
+
+        let end = self.previous().span;
+        let mut nested: Option<(Stmt, SourceSpan)> = None;
+        for (start_span, condition, consequence) in branches.into_iter().rev() {
+            let span = SourceSpan::new(
+                start_span.line(),
+                start_span.column(),
+                end.end_line(),
+                end.end_column(),
+            );
+            let alternative = if let Some((statement, nested_span)) = nested.take() {
+                Some(Block {
+                    statements: vec![statement],
+                    span: nested_span,
+                })
+            } else {
+                otherwise.take()
+            };
+            nested = Some((
+                Stmt::If {
+                    condition,
+                    consequence,
+                    alternative,
+                    span,
+                },
+                span,
+            ));
+        }
+        // The initial If guarantees at least one branch.
+        Ok(nested.expect("an If has at least one branch").0)
     }
 
     fn for_statement(&mut self, start: &Token) -> Result<Stmt> {

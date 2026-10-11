@@ -14,7 +14,7 @@ Semauri is an experimental open-source programming language based on **controlle
 
 | Area | Current capability |
 | --- | --- |
-| Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If`, static `For every`, `#` comments, escaped strings |
+| Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If` / `Otherwise if` / `Otherwise`, static `For every`, comments, escaped strings |
 | Console | print typed values from executable programs with explicit authorization |
 | Web | build typed web documents and render HTML |
 | Structured data | build typed schemas and render JSON Schema |
