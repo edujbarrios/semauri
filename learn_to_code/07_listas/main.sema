@@ -1,0 +1,5 @@
+Let puntuaciones be a list of 10, 20, 30.
+Let colores be a list of red, green, blue.
+
+Print puntuaciones.
+Print colores.

@@ -4,11 +4,29 @@
 
 **Natural to write. Deterministic to run.**
 
-> Status: **0.15.0 / experimental**
+> Status: **0.16.0 / experimental**
 
 ## What is Semauri?
 
 Semauri is an experimental open-source programming language based on **controlled natural language**. It combines an explicit grammar, typed HIR, lexical scopes, deterministic resolution, effects and semantic domains. It is not unrestricted English and it is not an LLM wrapper.
+
+## Start here
+
+- **New to programming?** Follow the free, Spanish-language [**Learn to Code with Semauri**](learn_to_code/README.md) course: 11 small lessons with editable, tested `.sema` examples. The course is also included in the official downloadable packages.
+- **Want to run a program now?** Jump to [your first Semauri program](#write-and-run-a-sema-program) or [installation](#install-semauri).
+- **Already program?** See the [language specification](docs/01_LANGUAGE.md), [examples](examples/) and [compiler development guide](docs/DEVELOPMENT.md).
+
+## Repository layout
+
+| Directory | Purpose |
+| --- | --- |
+| [`learn_to_code/`](learn_to_code/) | Beginner-friendly lessons in Spanish and runnable exercises |
+| [`examples/`](examples/) | Short reference programs showing language and domain features |
+| [`docs/`](docs/) | Complete language manual, architecture, tooling and release notes |
+| [`src/compiler/`](src/compiler/) | Lexer, parser, semantics, IR, domains, backends and CLI |
+| [`tests/`](tests/) | Compiler contracts and checked learning examples |
+| [`scripts/release/`](scripts/release/) | Native package assembly and smoke tests |
+| [`.github/workflows/`](.github/workflows/) | CI and GitHub Releases automation |
 
 ## What can it do today?
 
@@ -246,7 +264,7 @@ backend / explicit capability-gated runtime
 
 ## Documentation
 
-Start with [docs/README.md](docs/README.md) for the documentation map. Installation and execution are covered in [docs/00_INSTALLATION.md](docs/00_INSTALLATION.md); language semantics start in [docs/01_LANGUAGE.md](docs/01_LANGUAGE.md).
+For first-time learners, start with [learn_to_code/README.md](learn_to_code/README.md). For reference material, start with [docs/README.md](docs/README.md) for the documentation map. Installation and execution are covered in [docs/00_INSTALLATION.md](docs/00_INSTALLATION.md); language semantics start in [docs/01_LANGUAGE.md](docs/01_LANGUAGE.md).
 
 ## Develop and contribute to the language
 

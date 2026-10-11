@@ -1,0 +1,6 @@
+Create a schema called Alumno.
+Add a field called Nombre.
+Set the datatype of the field called Nombre to "string".
+Set the required of the field called Nombre to true.
+Add a field called Edad.
+Set the datatype of the field called Edad to "integer".

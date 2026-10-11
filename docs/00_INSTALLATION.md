@@ -2,7 +2,7 @@
 
 This guide covers binary installation, manual downloads, running <code>.sema</code> programs and installing an exact version.
 
-> Current release documented here: **0.15.0**
+> Current release documented here: **0.16.0**
 
 Official Semauri distributions contain a native executable. **Rust and Cargo are not required to use a published Semauri binary.**
 
@@ -76,17 +76,20 @@ On Windows PowerShell:
 Linux/macOS:
 
 ~~~bash
-SEMAURI_VERSION=0.15.0 \
-  curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | SEMAURI_VERSION=0.16.0 sh
 ~~~
 
 Windows PowerShell:
 
 ~~~powershell
-$env:SEMAURI_VERSION = '0.15.0'
+$env:SEMAURI_VERSION = '0.16.0'
 irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
 Remove-Item Env:SEMAURI_VERSION
 ~~~
+
+## Learn programming with the bundled course
+
+The six official native archives ship [`learn_to_code/`](../learn_to_code/README.md), with 11 lessons in Spanish and runnable `.sema` files. From the extracted archive, run `semauri check learn_to_code/01_hola_mundo/main.sema` and then `semauri run --allow console_write learn_to_code/01_hola_mundo/main.sema` (use the executable under `bin/` if it is not in your PATH).
 
 ## Running Semauri source files
 
