@@ -135,8 +135,12 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" release/* --clobber
           else
+            notes_args=(--generate-notes)
+            if [[ -f "docs/releases/$VERSION.md" ]]; then
+              notes_args=(--notes-file "docs/releases/$VERSION.md")
+            fi
             gh release create "$TAG" release/* \
               --target "$GITHUB_SHA" \
-              --generate-notes \
+              "${notes_args[@]}" \
               --title "Semauri $VERSION"
           fi

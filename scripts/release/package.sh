@@ -26,6 +26,7 @@ mkdir -p "$STAGE_DIR/bin" "$OUT_DIR"
 cp "$SEMAURI_BINARY" "$STAGE_DIR/bin/semauri"
 chmod +x "$STAGE_DIR/bin/semauri"
 cp "$ROOT_DIR/LICENSE" "$ROOT_DIR/NOTICE" "$ROOT_DIR/README.md" "$STAGE_DIR/"
+cp -R "$ROOT_DIR/learn_to_code" "$STAGE_DIR/learn_to_code"
 
 cat > "$STAGE_DIR/manifest.json" <<JSON
 {
@@ -38,6 +39,7 @@ JSON
 
 "$STAGE_DIR/bin/semauri" version
 "$STAGE_DIR/bin/semauri" check "$ROOT_DIR/examples/hello.sema"
+"$STAGE_DIR/bin/semauri" check "$STAGE_DIR/learn_to_code/01_hola_mundo/main.sema"
 
 ARCHIVE_PATH="$OUT_DIR/$ARCHIVE_BASENAME.tar.gz"
 tar -czf "$ARCHIVE_PATH" -C "$WORK_DIR" "$ARCHIVE_BASENAME"

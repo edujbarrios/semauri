@@ -4,6 +4,8 @@ Use this page as the documentation map.
 
 ## Getting started
 
+- [Learn to Code: step-by-step course in Spanish](../learn_to_code/README.md)
+
 - [Installation, manual download and running programs](00_INSTALLATION.md)
 - [Language syntax and semantics](01_LANGUAGE.md)
 - [Type system](02_TYPES.md)

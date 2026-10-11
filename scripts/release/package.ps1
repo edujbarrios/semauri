@@ -35,6 +35,8 @@ try {
   Copy-Item $ResolvedBinary (Join-Path $StageDir 'bin\semauri.exe')
   Copy-Item (Join-Path $RootDir 'LICENSE'), (Join-Path $RootDir 'NOTICE'), (Join-Path $RootDir 'README.md') $StageDir
 
+  Copy-Item -Path (Join-Path $RootDir 'learn_to_code') -Destination (Join-Path $StageDir 'learn_to_code') -Recurse
+
   $Manifest = [ordered]@{
     name = 'semauri'
     version = $Version
@@ -48,6 +50,9 @@ try {
 
   & (Join-Path $StageDir 'bin\semauri.exe') check (Join-Path $RootDir 'examples\hello.sema')
   if ($LASTEXITCODE -ne 0) { throw 'semauri check smoke test failed' }
+
+  & (Join-Path $StageDir 'bin\semauri.exe') check (Join-Path $StageDir 'learn_to_code\01_hola_mundo\main.sema')
+  if ($LASTEXITCODE -ne 0) { throw 'Bundled learning example check failed' }
 
   if (Test-Path $ArchivePath) { Remove-Item $ArchivePath -Force }
   Compress-Archive -Path $StageDir -DestinationPath $ArchivePath -CompressionLevel Optimal

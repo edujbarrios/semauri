@@ -1,0 +1,6 @@
+Let edad be 20.
+Let mayor be edad is greater than or equal to 18.
+Let permiso be mayor and not false.
+
+Print mayor.
+Print permiso.
