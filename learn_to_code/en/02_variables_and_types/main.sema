@@ -1,0 +1,7 @@
+Let name be "Alex".
+Let age be 18.
+Let learning be true.
+
+Print name.
+Print age.
+Print learning.
