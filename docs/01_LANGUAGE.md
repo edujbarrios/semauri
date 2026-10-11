@@ -145,7 +145,7 @@ End.
 
 ### Unicode string escapes
 
-Double-quoted strings support `\n`, `\t`, `\r`, `\"` (escaped as `\\"` in source) and `\\`, plus a Unicode scalar escape `\u{HEX}` where `HEX` contains 1 to 6 hexadecimal digits. For example:
+Double-quoted strings support `\n`, `\t`, `\r`, `\"` and `\\`, plus a Unicode scalar escape `\u{HEX}` where `HEX` contains 1 to 6 hexadecimal digits. For example:
 
 ```text
 Let greeting be "Bonjour \u{1F30D}".
