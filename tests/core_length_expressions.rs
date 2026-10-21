@@ -52,15 +52,10 @@ fn length_counts_typed_list_items_without_changing_list_values() {
 }
 
 #[test]
-fn length_supports_parenthesized_expressions_and_nested_lists() {
-    let source = r#"Print Length of ("Hi" plus " there").
-Print Length of a list of a list of 1, 2, a list of 3, 4."#;
-    // List parser intentionally requires homogeneous elements, and nested-list
-    // comma boundaries are ambiguous; test parenthesized text separately.
+fn length_supports_parenthesized_expressions() {
     let result = run("Print Length of (\"Hi\" plus \" there\").");
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert_eq!(result.stdout, "8\n");
-    assert!(!source.is_empty());
 }
 
 #[test]
