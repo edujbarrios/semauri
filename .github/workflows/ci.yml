@@ -14,6 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - name: Check example conformance
+        run: cargo test --test example_conformance
       - name: Test Rust compiler
         run: cargo test --all-targets
 
