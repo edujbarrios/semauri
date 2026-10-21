@@ -2,6 +2,7 @@
 pub enum UnaryOperator {
     Not,
     Negate,
+    Length,
 }
 
 impl UnaryOperator {
@@ -9,6 +10,7 @@ impl UnaryOperator {
         match self {
             UnaryOperator::Not => "not",
             UnaryOperator::Negate => "negate",
+            UnaryOperator::Length => "length",
         }
     }
 }
