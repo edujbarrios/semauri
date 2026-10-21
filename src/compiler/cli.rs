@@ -10,6 +10,7 @@ pub fn run_cli(args: &[String]) -> CliResult {
     let mut stdout = String::new();
     let mut stderr = String::new();
     let mut current_source: Option<String> = None;
+    let mut json_diagnostics = false;
 
     let outcome = (|| -> Result<i32> {
         let command = args.first().map(String::as_str);
@@ -40,7 +41,17 @@ pub fn run_cli(args: &[String]) -> CliResult {
             | Some("effects")
             | Some("plan")
             | Some("explain") => {
-                let source = read_single_source(&args[1..])?;
+                // Inspection commands already print JSON on success. The flag
+                // opts in to JSON diagnostics without wrapping their results.
+                let mut source_args = Vec::new();
+                for arg in &args[1..] {
+                    if arg == "--json" && command != Some("explain") {
+                        json_diagnostics = true;
+                    } else {
+                        source_args.push(arg.clone());
+                    }
+                }
+                let source = read_single_source(&source_args)?;
                 current_source = Some(source.clone());
                 match command.unwrap() {
                     "tokens" => {
@@ -82,6 +93,10 @@ pub fn run_cli(args: &[String]) -> CliResult {
                 let mut index = 1;
                 while index < args.len() {
                     match args[index].as_str() {
+                        "--json" => {
+                            json_diagnostics = true;
+                            index += 1;
+                        }
                         "--allow" => {
                             let effect = args.get(index + 1).ok_or_else(|| {
                                 usage_error("--allow requires an effect")
@@ -116,7 +131,15 @@ pub fn run_cli(args: &[String]) -> CliResult {
                 if let Some(allowed) = allowed {
                     compiler.validate_capabilities(&source, &CapabilityPolicy::new(allowed))?;
                 }
-                stdout.push_str("OK\n");
+                if json_diagnostics {
+                    stdout.push_str(&pretty_json(&json!({
+                        "ok": true,
+                        "status": 0,
+                        "diagnostics": [],
+                    })));
+                } else {
+                    stdout.push_str("OK\n");
+                }
                 Ok(0)
             }
             Some("build") => {
@@ -336,8 +359,23 @@ pub fn run_cli(args: &[String]) -> CliResult {
                 ErrorKind::Runtime => 70,
                 _ => 65,
             };
-            stderr.push_str(&error.diagnostic(current_source.as_deref()));
-            stderr.push('\n');
+            if json_diagnostics {
+                stdout.clear();
+                stdout.push_str(&pretty_json(&json!({
+                    "ok": false,
+                    "status": status,
+                    "diagnostics": [{
+                        "code": error.code,
+                        "kind": format!("{:?}", error.kind).to_lowercase(),
+                        "message": error.message,
+                        "span": error.span,
+                        "hint": error.hint,
+                    }],
+                })));
+            } else {
+                stderr.push_str(&error.diagnostic(current_source.as_deref()));
+                stderr.push('\n');
+            }
             CliResult {
                 status,
                 stdout,
@@ -363,7 +401,7 @@ fn usage_error(message: impl Into<String>) -> SemauriError {
 }
 
 pub fn usage() -> String {
-    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  explain FILE             Explain semantic decisions\n  check FILE [--allow ...] Validate source and optionally enforce capabilities\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
+    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  explain FILE             Explain semantic decisions\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
         .to_string()
 }
 
