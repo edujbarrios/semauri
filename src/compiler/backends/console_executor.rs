@@ -1,7 +1,7 @@
 fn execute_console_plan(plan: &RuntimePlan) -> Result<String> {
     let mut output = String::new();
     for operation in &plan.operations {
-        if operation.domain != "console" || operation.name != "print" {
+        if operation.domain != "console" {
             return Err(SemauriError::new(
                 ErrorKind::Runtime,
                 "S501",
@@ -13,29 +13,62 @@ fn execute_console_plan(plan: &RuntimePlan) -> Result<String> {
                 None,
             ));
         }
-        let value = operation.arguments.get("value").ok_or_else(|| {
+        let (argument_name, action) = match operation.name.as_str() {
+            "print" => ("value", "print"),
+            "assert" => ("condition", "assert"),
+            _ => {
+                return Err(SemauriError::new(
+                    ErrorKind::Runtime,
+                    "S501",
+                    format!("Unsupported console runtime operation 'console.{}'", operation.name),
+                    Some(operation.source_span),
+                    None,
+                ));
+            }
+        };
+        let value = operation.arguments.get(argument_name).ok_or_else(|| {
             SemauriError::new(
                 ErrorKind::Runtime,
                 "S501",
-                "Console print operation is missing its value",
+                format!("Console {action} operation is missing its {argument_name}"),
                 Some(operation.source_span),
                 None,
             )
         })?;
-        match value {
-            RuntimeArgument::Value(value) => {
+        match (action, value) {
+            ("print", RuntimeArgument::Value(value)) => {
                 output.push_str(&display_console_value(value));
                 output.push('\n');
             }
-            RuntimeArgument::Ref(_) => {
+            ("assert", RuntimeArgument::Value(ValueData::Boolean(true))) => {}
+            ("assert", RuntimeArgument::Value(ValueData::Boolean(false))) => {
+                return Err(SemauriError::new(
+                    ErrorKind::Runtime,
+                    "S502",
+                    "Assertion failed",
+                    Some(operation.source_span),
+                    Some("Inspect the condition or its input values.".to_string()),
+                ));
+            }
+            ("assert", RuntimeArgument::Value(_)) => {
                 return Err(SemauriError::new(
                     ErrorKind::Runtime,
                     "S501",
-                    "Printing runtime-produced values is not supported yet",
+                    "Assertion condition must be boolean",
                     Some(operation.source_span),
-                    Some("Print compile-time values such as literals, arithmetic results, or immutable bindings.".to_string()),
-                ))
+                    None,
+                ));
             }
+            (_, RuntimeArgument::Ref(_)) => {
+                return Err(SemauriError::new(
+                    ErrorKind::Runtime,
+                    "S501",
+                    "Using runtime-produced values in console operations is not supported yet",
+                    Some(operation.source_span),
+                    None,
+                ));
+            }
+            _ => unreachable!("validated above"),
         }
     }
     Ok(output)
