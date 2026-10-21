@@ -230,7 +230,32 @@ fn fold_expr(
                         span: *span,
                     };
                 }
+                (UnaryOperator::Length, Some(ValueData::String(value))) => {
+                    if let Ok(length) = i64::try_from(value.chars().count()) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(NumberValue::Int(length)),
+                            span: *span,
+                        };
+                    }
+                }
                 _ => {}
+            }
+            if *operator == UnaryOperator::Length {
+                if let HirExpr::List { items, .. } = &operand {
+                    // Do not erase an effectful list element just to count it.
+                    if items.iter().all(is_constant_expr) {
+                        if let Ok(length) = i64::try_from(items.len()) {
+                            *changes += 1;
+                            return HirExpr::Literal {
+                                ty: Type::Number,
+                                value: LiteralValue::Number(NumberValue::Int(length)),
+                                span: *span,
+                            };
+                        }
+                    }
+                }
             }
             HirExpr::Unary {
                 ty: ty.clone(),
