@@ -1005,6 +1005,51 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::Length,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::String,
+                    data: ValueData::String(value),
+                } => Ok(BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(NumberValue::Int(
+                        i64::try_from(value.chars().count()).map_err(|_| {
+                            SemauriError::semantic(
+                                "S343",
+                                "String length exceeds the supported integer range",
+                                Some(expression.span()),
+                                None,
+                            )
+                        })?,
+                    )),
+                }),
+                BoundValue::Compile {
+                    ty: Type::List(_),
+                    data: ValueData::List(values),
+                } => Ok(BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(NumberValue::Int(
+                        i64::try_from(values.len()).map_err(|_| {
+                            SemauriError::semantic(
+                                "S343",
+                                "List length exceeds the supported integer range",
+                                Some(expression.span()),
+                                None,
+                            )
+                        })?,
+                    )),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S343",
+                    format!("'Length of' requires a string or list, received {ty}"),
+                    Some(expression.span()),
+                    None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Negate,
                 operand,
                 ..

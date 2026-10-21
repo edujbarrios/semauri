@@ -318,6 +318,20 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Boolean
                     }
+                    UnaryOperator::Length => {
+                        if !matches!(operand.ty(), Type::String | Type::List(_)) {
+                            return Err(SemauriError::semantic(
+                                "S343",
+                                format!(
+                                    "'Length of' requires a string or list, received {}",
+                                    operand.ty()
+                                ),
+                                Some(*span),
+                                None,
+                            ));
+                        }
+                        Type::Number
+                    }
                     UnaryOperator::Negate => {
                         if operand.ty() != Type::Number {
                             return Err(SemauriError::semantic(

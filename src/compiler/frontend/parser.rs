@@ -717,6 +717,23 @@ impl<'a> Parser<'a> {
                 let start = self.advance().clone();
                 self.list_literal(&start, true)
             }
+            TokenKind::Length => {
+                let start = self.advance().clone();
+                self.consume(
+                    TokenKind::Of,
+                    "Expected 'of' after 'Length'",
+                    "S242",
+                )?;
+                // A primary operand keeps prefix precedence unambiguous.
+                // Use parentheses to measure a larger expression.
+                let operand = self.primary()?;
+                let span = span_between_spans(start.span, operand.span());
+                Ok(Expr::Unary {
+                    operator: UnaryOperator::Length,
+                    operand: Box::new(operand),
+                    span,
+                })
+            }
             TokenKind::Word => {
                 self.advance();
                 Ok(Expr::Variable {
