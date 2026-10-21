@@ -54,3 +54,11 @@ Print answer.
 ```sh
 semauri run --allow console_write program.sema
 ```
+
+## Filesystem deletion semantics
+
+The native Rust filesystem executor interprets `Delete "path".` as **file-only** deletion, matching the generated POSIX shell backend's `rm -f` behavior. It refuses directories rather than deleting directory trees implicitly. Deleting a missing file remains a no-op. Use `Mkdir` to create directories; recursive directory deletion is not part of the current language contract.
+
+All filesystem operation names and required argument types are validated before the executor begins applying a plan. As with ordinary scripts, earlier successful effects cannot be rolled back if an OS error occurs during later execution.
+
+`--cwd` resolves relative paths but is **not a security sandbox**: absolute paths and parent-directory traversal are not confined. Only run explicitly authorized programs from trusted sources.
