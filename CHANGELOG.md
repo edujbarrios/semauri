@@ -1,3 +1,38 @@
+## 0.17.0 — 2026-10-22
+
+### Added: lowercase language workflow
+
+- The canonical spelling of all Semauri source commands and registered domain actions is lowercase; parsing remains case-insensitive for backward compatibility.
+- `semauri fmt FILE` prints canonical lowercase source, `--write` rewrites it, and `--check` returns a nonzero exit status for formatting drift.
+- Converted all 19 official examples and 22 beginner-course programs to lowercase language syntax, with automated conformance checks; documented code samples in both course languages now follow the style.
+
+### Added: typed language features
+
+- Pure Boolean `assert` statements, source-aware runtime assertion failures (`S502`), and the `semauri test PATH` command with strict effect controls.
+- `length of` expressions for Unicode strings and typed lists, typed `contains` substring/list-membership comparisons, zero-based `list at index` access, and immutable same-type list concatenation with `plus`.
+- Machine-readable `check --json` diagnostics while retaining human-readable defaults and existing inspector JSON outputs.
+
+### Added: ML compiler and analysis infrastructure
+
+- Validated typed SSA dataflow graphs via `semauri graph FILE` and `Compiler::runtime_graph`; graphs describe ML dependencies and reject invalid producer references.
+- Version-qualified dataset/model input declarations: `source dataset ... revision ...` and `resolve model ... revision ...`.
+- `semauri audit FILE [--strict]` for advisory ML provenance/seed checks; strict mode can reject incomplete declarations in CI.
+
+### Fixed and improved
+
+- File-only deletion semantics in native filesystem execution; recursive deletion of directories is refused.
+- Preflight validation of filesystem operation arguments and names.
+- Regression tests and CI gates for shipped examples, learning programs, language operations, ML graph integrity and reproducibility declarations.
+
+### Compatibility and limitations
+
+- Previously valid capitalized `.sema` programs still compile. The canonical lowercase convention is a source-style change, not a breaking grammar migration.
+- Quoted strings, user-defined names and labels, comments, Rust APIs, generated output case and JSON keys are not blanket-lowercased.
+- ML revisions are *declared*, not artifact-verified. Semauri still produces ML workflow plans rather than executing model training.
+- User-defined functions and general dynamic runtime control flow are not part of this release.
+
+See [v0.17.0 release notes](docs/releases/0.17.0.md).
+
 # Changelog
 
 All notable changes to Semauri are documented here.
