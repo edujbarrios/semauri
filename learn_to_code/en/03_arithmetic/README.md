@@ -11,13 +11,13 @@ Semauri supports `plus`, `minus`, `times`, `divided by` and `modulo` (remainder)
 Open [`main.sema`](./main.sema):
 
 ```text
-Let subtotal be 10 plus 5 times 2.
-Let grouped be (10 plus 5) times 2.
-Let remainder be 17 modulo 3.
+let subtotal be 10 plus 5 times 2.
+let grouped be (10 plus 5) times 2.
+let remainder be 17 modulo 3.
 
-Print subtotal.
-Print grouped.
-Print remainder.
+print subtotal.
+print grouped.
+print remainder.
 ```
 
 ## Try it
