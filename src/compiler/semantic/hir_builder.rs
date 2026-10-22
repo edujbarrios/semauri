@@ -594,6 +594,21 @@ fn binary_type(
                 ))
             }
         }
+        BinaryOperator::Contains => {
+            match left {
+                Type::String if right == &Type::String => Ok(Type::Boolean),
+                Type::List(element) if element.as_ref() == right => Ok(Type::Boolean),
+                _ => Err(SemauriError::semantic(
+                    "S344",
+                    format!(
+                        "'contains' requires a string and a string or list<T> and T, got {} and {}",
+                        left, right
+                    ),
+                    Some(span),
+                    None,
+                )),
+            }
+        }
         BinaryOperator::Equal | BinaryOperator::NotEqual => {
             if left == right {
                 Ok(Type::Boolean)

@@ -428,6 +428,12 @@ fn eval_constant_binary(
         ) => Some(ValueData::Boolean(a.as_f64() <= b.as_f64())),
         (BinaryOperator::Equal, a, b) => Some(ValueData::Boolean(a == b)),
         (BinaryOperator::NotEqual, a, b) => Some(ValueData::Boolean(a != b)),
+        (BinaryOperator::Contains, ValueData::String(text), ValueData::String(needle)) => {
+            Some(ValueData::Boolean(text.contains(needle)))
+        }
+        (BinaryOperator::Contains, ValueData::List(items), needle) => {
+            Some(ValueData::Boolean(items.contains(needle)))
+        },
         (BinaryOperator::And, ValueData::Boolean(a), ValueData::Boolean(b)) => {
             Some(ValueData::Boolean(*a && *b))
         }

@@ -1170,6 +1170,12 @@ impl<'a> Lowerer<'a> {
             ) => ValueData::Boolean(a.as_f64() <= b.as_f64()),
             (BinaryOperator::Equal, a, b) => ValueData::Boolean(a == b),
             (BinaryOperator::NotEqual, a, b) => ValueData::Boolean(a != b),
+            (BinaryOperator::Contains, ValueData::String(text), ValueData::String(needle)) => {
+                ValueData::Boolean(text.contains(&needle))
+            }
+            (BinaryOperator::Contains, ValueData::List(items), needle) => {
+                ValueData::Boolean(items.contains(&needle))
+            }
             (BinaryOperator::And, ValueData::Boolean(a), ValueData::Boolean(b)) => {
                 ValueData::Boolean(a && b)
             }

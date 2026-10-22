@@ -507,6 +507,16 @@ impl<'a> Parser<'a> {
 
     fn comparison(&mut self) -> Result<Expr> {
         let left = self.additive()?;
+        if self.matches(&[TokenKind::Contains]) {
+            let right = self.additive()?;
+            let span = span_between_spans(left.span(), right.span());
+            return Ok(Expr::Binary {
+                left: Box::new(left),
+                operator: BinaryOperator::Contains,
+                right: Box::new(right),
+                span,
+            });
+        }
         if !self.matches(&[TokenKind::Is]) {
             return Ok(left);
         }
