@@ -50,10 +50,10 @@ Comments are ignored outside string literals:
 ```text
 # Original line comments remain supported.
 // A second line-comment style is available.
-Let amount be 10. /* A block comment
+let amount be 10. /* a block comment
    /* may contain nested comments */
    and continue across lines. */
-Print amount.
+print amount.
 ```
 
 Block comments can nest. An unclosed block comment is a lexical error (`S105`) at the opening comment location. Comment markers inside quoted strings remain literal text.
@@ -90,12 +90,12 @@ Surface terms are globally unambiguous within one compiler instance. Registering
 The shorthand:
 
 ```text
-Make it blue.
+make it blue.
 ```
 
 omits the property name. Semauri accepts this only when the loaded domain registry can infer exactly one property compatible with the literal type. With the default Web domain, `blue : color` uniquely implies the `color` property.
 
-If multiple loaded domains could interpret the same value type, the shorthand is rejected and explicit `Set ...` syntax is required.
+If multiple loaded domains could interpret the same value type, the shorthand is rejected and explicit `set ...` syntax is required.
 
 ## Values and expressions
 
@@ -106,9 +106,9 @@ Primitive semantic value types are `color`, `string`, `number`, and `boolean`.
 Numbers may use a decimal fraction, a scientific exponent (`e` or `E` with an optional `+` or `-` sign) and underscores between digits for readability:
 
 ```text
-Let population be 1_000_000.
-Let rate be 2.5e-3.
-Let distance be 1_200.5E+2.
+let population be 1_000_000.
+let rate be 2.5e-3.
+let distance be 1_200.5E+2.
 ```
 
 Integers must fit into signed 64-bit range; decimal and scientific literals must parse to finite floating-point values. Invalid separators, incomplete exponents and out-of-range literals are lexical errors (`S106`), never compiler panics. A trailing period still terminates a statement unless followed by a fractional digit.
@@ -126,9 +126,9 @@ However, name resolution and type checking happen earlier while building Typed H
 Valid short-circuit example:
 
 ```text
-If true or 1 divided by 0 is equal to 1:
-  Add a button called Safe.
-End.
+if true or 1 divided by 0 is equal to 1:
+  add a button called Safe.
+end.
 ```
 
 The division expression is well-formed and typed, but it is never evaluated, so no division-by-zero error occurs.
@@ -136,9 +136,9 @@ The division expression is well-formed and typed, but it is never evaluated, so 
 This is still invalid:
 
 ```text
-If true or missingVariable is equal to true:
-  Add a button called Invalid.
-End.
+if true or missingVariable is equal to true:
+  add a button called Invalid.
+end.
 ```
 
 `missingVariable` fails name resolution with `S312` before evaluation begins.
@@ -148,7 +148,7 @@ End.
 Double-quoted strings support `\n`, `\t`, `\r`, `\"` and `\\`, plus a Unicode scalar escape `\u{HEX}` where `HEX` contains 1 to 6 hexadecimal digits. For example:
 
 ```text
-Let greeting be "Bonjour \u{1F30D}".
+let greeting be "Bonjour \u{1F30D}".
 ```
 
 The lexer decodes the escape before type checking. Invalid syntax, out-of-range values (above U+10FFFF) and surrogate code points (U+D800–U+DFFF) are rejected with `S104`. Unescaped carriage returns and line feeds are rejected with `S102`. This keeps source parsing deterministic on all platforms.
@@ -158,8 +158,8 @@ The lexer decodes the escape before type checking. Invalid syntax, out-of-range 
 Semauri supports homogeneous list literals:
 
 ```text
-Let prices be a list of 10, 20, 30.
-Let colors be a list of red, green, blue.
+let prices be a list of 10, 20, 30.
+let colors be a list of red, green, blue.
 ```
 
 Their types are `list<number>` and `list<color>`. Mixed lists are rejected with `S321`. There is no implicit union/coercion rule.
@@ -173,41 +173,41 @@ Bindings have stable semantic symbol identities independent from source spelling
 ## Conditional control flow
 
 ```text
-If price is greater than or equal to 20:
-  Add a button called Premium.
-Otherwise:
-  Add a button called Standard.
-End.
+if price is greater than or equal to 20:
+  add a button called Premium.
+otherwise:
+  add a button called Standard.
+end.
 ```
 
 The condition must be boolean (`S316`). Typed HIR preserves both branches. The current HIR lowerer selects a branch statically because all current values are compile-time-known.
 
 ### Unless
 
-`Unless condition:` is shorthand for `If not condition:`. Its condition is type-checked as a boolean and lowered into the existing unary `not` expression, so it works with the same `Otherwise` / `Otherwise if` clauses and closes with one `End.`:
+`unless condition:` is shorthand for `if not condition:`. Its condition is type-checked as a boolean and lowered into the existing unary `not` expression, so it works with the same `Otherwise` / `otherwise if` clauses and closes with one `End.`:
 
 ```text
-Unless score is greater than or equal to 70:
-  Add a button called Below.
-Otherwise:
-  Add a button called Passed.
-End.
+unless score is greater than or equal to 70:
+  add a button called Below.
+otherwise:
+  add a button called Passed.
+end.
 ```
 
 A non-boolean operand to `Unless` reports `S319`, the same diagnostic as `not` on a non-boolean value.
 
 ### Chained conditionals
 
-Use `Otherwise if` (or `Else if`) to test multiple conditions in order. The first true branch wins, `Otherwise:` is optional and must be last, and **the whole chain uses a single `End.`**:
+Use `otherwise if` (or `Else if`) to test multiple conditions in order. The first true branch wins, `Otherwise:` is optional and must be last, and **the whole chain uses a single `End.`**:
 
 ```text
-If score is greater than or equal to 90:
-  Add a button called Excellent.
-Otherwise if score is greater than or equal to 70:
-  Add a button called Passed.
-Otherwise:
-  Add a button called Retry.
-End.
+if score is greater than or equal to 90:
+  add a button called Excellent.
+otherwise if score is greater than or equal to 70:
+  add a button called Passed.
+otherwise:
+  add a button called Retry.
+end.
 ```
 
 The parser represents subsequent clauses as nested `if_statement` nodes inside the prior branch's alternative block. Each branch preserves its source span and lexical scope. Conditions in *all* clauses are type-checked, including unreachable clauses, and invalid conditions still report `S316`. Missing colons and empty clauses retain `S218` and `S221`, respectively. See [`examples/otherwise_if.sema`](../examples/otherwise_if.sema).
@@ -217,14 +217,14 @@ The symbol table describes the complete typed program, including declarations in
 ## Static iteration
 
 ```text
-Let colors be a list of red, green, blue.
+let colors be a list of red, green, blue.
 
-For every accent in colors:
-  Set the color of the button called Buy to accent.
-End.
+for every accent in colors:
+  set the color of the button called Buy to accent.
+end.
 ```
 
-`For every` requires a list (`S322`). The iteration variable has the list's element type and is visible only inside the loop body.
+`for every` requires a list (`S322`). The iteration variable has the list's element type and is visible only inside the loop body.
 
 The iterator is one semantic declaration with one symbol ID. Static execution binds different values to that same symbol across iterations; it does not create a new declaration for each item.
 

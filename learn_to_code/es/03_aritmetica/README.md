@@ -11,13 +11,13 @@ Se admiten `plus`, `minus`, `times`, `divided by` y `modulo` (resto). La multipl
 Abre [`main.sema`](./main.sema):
 
 ```text
-Let subtotal be 10 plus 5 times 2.
-Let agrupado be (10 plus 5) times 2.
-Let resto be 17 modulo 3.
+let subtotal be 10 plus 5 times 2.
+let agrupado be (10 plus 5) times 2.
+let resto be 17 modulo 3.
 
-Print subtotal.
-Print agrupado.
-Print resto.
+print subtotal.
+print agrupado.
+print resto.
 ```
 
 ## Compruébalo

@@ -3,11 +3,11 @@
 Use `contains` to test whether a string includes a substring, or whether a typed list includes an item:
 
 ```sema
-Let names be a list of "Ada", "Grace".
-Assert names contains "Ada".
-If "Semauri" contains "mau":
-  Print "found".
-End.
+let names be a list of "Ada", "Grace".
+assert names contains "Ada".
+if "Semauri" contains "mau":
+  print "found".
+end.
 ```
 
 `contains` is a binary comparison operator, binds more tightly than `and` and `or`, and returns `boolean`. For `string contains string`, matches are case-sensitive literal Unicode substrings (empty needle matches). For `list<T> contains T`, the element type must match exactly and membership uses value equality. No implicit string-to-number coercion takes place. Invalid type combinations fail with `S344` during type checking.

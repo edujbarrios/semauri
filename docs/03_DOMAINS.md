@@ -46,9 +46,9 @@ Value-returning operations produce typed runtime references. External operation 
 Action verbs may overlap across domains. Ambiguous actions must be qualified:
 
 ```text
-Within filesystem:
-  Delete "tmp.log".
-End.
+within filesystem:
+  delete "tmp.log".
+end.
 ```
 
 Multiple unqualified candidates fail with `S240`. Domain scopes are lexical variable scopes.
@@ -87,7 +87,7 @@ A domain without a default backend requires explicit backend selection (`S404`).
 
 Properties declare accepted semantic types with `with_property`. HIR validates them before lowering and reports `S313` on mismatch.
 
-Shorthand such as `Make it blue.` is accepted only when exactly one loaded property can accept the value. Ambiguity reports `S236`.
+Shorthand such as `make it blue.` is accepted only when exactly one loaded property can accept the value. Ambiguity reports `S236`.
 
 ## Multi-domain IR
 

@@ -4,16 +4,16 @@
 
 ## Concept
 
-`semauri build` compiles Web-domain statements into HTML. `Create a web`, `Add a button` and `Set the color ...` describe the document. Use **`build` instead of `run`**: generating the output has no external effects.
+`semauri build` compiles Web-domain statements into HTML. `create a web`, `add a button` and `set the color ...` describe the document. Use **`build` instead of `run`**: generating the output has no external effects.
 
 ## Example program
 
 Open [`main.sema`](./main.sema):
 
 ```text
-Create a web called My First Page.
-Add a button called Start.
-Set the color of the button called Start to blue.
+create a web called My First page.
+add a button called Start.
+set the color of the button called Start to blue.
 ```
 
 ## Try it

@@ -13,11 +13,11 @@ Current warning codes:
 
 | Code | Condition |
 | --- | --- |
-| `ML001` | Legacy `Open dataset` without an explicit revision |
-| `ML002` | Legacy `Load model` without an explicit revision |
-| `ML003` | Direct `Train ... for N epochs` form without a seeded training configuration |
+| `ML001` | Legacy `open dataset` without an explicit revision |
+| `ML002` | Legacy `load model` without an explicit revision |
+| `ML003` | Direct `train ... for N epochs` form without a seeded training configuration |
 
-Declare datasets using `Source dataset ... revision ...`, models using `Resolve model ... revision ...`, and use the seeded `Configure training ...` / `Fit ... with config` forms to satisfy this declaration policy.
+Declare datasets using `Source dataset ... revision ...`, models using `Resolve model ... revision ...`, and use the seeded `Configure training ...` / `fit ... with config` forms to satisfy this declaration policy.
 
 **Critical distinction:** `declarations_complete` and `verification: declarations_only` mean the compiler found these declarations. They do NOT establish verified artifacts, bitwise reproducibility, stable third-party implementations, deterministic accelerator kernels, fixed dependencies, or successful model training. The audit does not read external files, resolve model hubs or execute any planned effects.
 

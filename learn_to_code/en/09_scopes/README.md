@@ -11,14 +11,14 @@ Blocks create lexical scopes. A `Let` inside `If` exists only inside that block.
 Open [`main.sema`](./main.sema):
 
 ```text
-Let message be "outside".
+let message be "outside".
 
-If true:
-  Let message be "inside".
-  Print message.
-End.
+if true:
+  let message be "inside".
+  print message.
+end.
 
-Print message.
+print message.
 ```
 
 ## Try it
@@ -39,7 +39,7 @@ outside
 
 ## Your challenge
 
-Declare `Let secret be 7.` inside the block, try printing it after `End.` and fix the scope error.
+Declare `let secret be 7.` inside the block, try printing it after `End.` and fix the scope error.
 
 Run `check` again after making changes. If you get a diagnostic, use its source location to investigate one change at a time.
 

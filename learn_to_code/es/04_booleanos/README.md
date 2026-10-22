@@ -11,12 +11,12 @@
 Abre [`main.sema`](./main.sema):
 
 ```text
-Let edad be 20.
-Let mayor be edad is greater than or equal to 18.
-Let permiso be mayor and not false.
+let edad be 20.
+let mayor be edad is greater than or equal to 18.
+let permiso be mayor and not false.
 
-Print mayor.
-Print permiso.
+print mayor.
+print permiso.
 ```
 
 ## Compruébalo

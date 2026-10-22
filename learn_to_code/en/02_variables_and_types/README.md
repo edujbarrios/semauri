@@ -4,20 +4,20 @@
 
 ## Concept
 
-`Let name be value.` creates an immutable binding. Strings are enclosed in quotes, numbers are not, and `true` / `false` are booleans. Reassigning an immutable binding is not allowed.
+`let name be value.` creates an immutable binding. Strings are enclosed in quotes, numbers are not, and `true` / `false` are booleans. Reassigning an immutable binding is not allowed.
 
 ## Example program
 
 Open [`main.sema`](./main.sema):
 
 ```text
-Let name be "Alex".
-Let age be 18.
-Let learning be true.
+let name be "Alex".
+let age be 18.
+let learning be true.
 
-Print name.
-Print age.
-Print learning.
+print name.
+print age.
+print learning.
 ```
 
 ## Try it
@@ -39,7 +39,7 @@ true
 
 ## Your challenge
 
-Add `Let city be "London".` and print the value. What is the difference between `18` and `"18"`?
+Add `let city be "London".` and print the value. What is the difference between `18` and `"18"`?
 
 Run `check` again after making changes. If you get a diagnostic, use its source location to investigate one change at a time.
 

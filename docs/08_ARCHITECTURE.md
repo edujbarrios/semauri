@@ -7,7 +7,7 @@ Semauri follows a deterministic compiler pipeline with explicit extension bounda
 ```text
 DomainRegistry
   ↓
-Source → Lexer → Tokens → Parser → AST → Typed HIR
+source → Lexer → Tokens → Parser → AST → Typed HIR
                                       ↓
                                 Optimization
                                       ↓

@@ -32,7 +32,7 @@ Semauri is an experimental open-source programming language based on **controlle
 
 | Area | Current capability |
 | --- | --- |
-| Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If` / `Unless` / `Otherwise if` / `Otherwise`, static `For every`, comments, escaped strings |
+| Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If` / `Unless` / `otherwise if` / `Otherwise`, static `for every`, comments, escaped strings |
 | Console | print typed values from executable programs with explicit authorization |
 | Web | build typed web documents and render HTML |
 | Structured data | build typed schemas and render JSON Schema |
@@ -47,9 +47,9 @@ Compilation remains effect-free. Execution is a separate opt-in step and effectf
 Semauri source files use the `.sema` extension. Create a file such as `hello.sema`:
 
 ```text
-Let answer be 6 times 7.
-Print "Hello from Semauri".
-Print answer.
+let answer be 6 times 7.
+print "Hello from Semauri".
+print answer.
 ```
 
 First validate it without executing effects:
@@ -159,7 +159,7 @@ Programs can now contain line comments and escaped text without preprocessing:
 
 ```text
 # Strings support newline, tab, quote and backslash escapes.
-Let message be "hello\nfrom Semauri".
+let message be "hello\nfrom Semauri".
 ```
 
 Supported escapes are `\n`, `\t`, `\r`, `\"`, `\\` and Unicode scalar escapes such as `\u{1F680}`. Invalid escapes and Unicode code points are rejected with a source diagnostic instead of being silently accepted.
@@ -169,18 +169,18 @@ Supported escapes are `\n`, `\t`, `\r`, `\"`, `\\` and Unicode scalar escapes su
 The repository includes this example as `examples/shop.sema`:
 
 ```text
-Let price be 18.
-Let tax be 4.
-Let total be price plus tax.
+let price be 18.
+let tax be 4.
+let total be price plus tax.
 
-Create a web called Pet Shop.
-Add a button called Buy.
+create a web called Pet Shop.
+add a button called Buy.
 
-If total is greater than 20:
-  Set the color of the button called Buy to red.
-Otherwise:
-  Set the color of the button called Buy to green.
-End.
+if total is greater than 20:
+  set the color of the button called Buy to red.
+otherwise:
+  set the color of the button called Buy to green.
+end.
 ```
 
 Build it with:
@@ -209,15 +209,15 @@ Semauri evaluates the deterministic control flow (`18 + 4 > 20`) and generates t
 ## Example: practical filesystem automation
 
 ```text
-Within filesystem:
-  Mkdir "build".
-  Write "hello from Semauri" to "build/notes.txt".
-  Append " - deterministic automation" to "build/notes.txt".
-  Copy "build/notes.txt" to "build/backup.txt".
-  Move "build/backup.txt" to "build/archive.txt".
-  Touch "build/complete.marker".
-  Delete "build/old.tmp".
-End.
+within filesystem:
+  mkdir "build".
+  write "hello from Semauri" to "build/notes.txt".
+  append " - deterministic automation" to "build/notes.txt".
+  copy "build/notes.txt" to "build/backup.txt".
+  move "build/backup.txt" to "build/archive.txt".
+  touch "build/complete.marker".
+  delete "build/old.tmp".
+end.
 ```
 
 Compile without effects:

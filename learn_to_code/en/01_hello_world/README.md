@@ -12,8 +12,8 @@ Open [`main.sema`](./main.sema):
 
 ```text
 # A comment explains the program.
-Print "Hello from Semauri".
-Print 2026.
+print "Hello from Semauri".
+print 2026.
 ```
 
 ## Try it

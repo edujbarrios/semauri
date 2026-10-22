@@ -12,8 +12,8 @@ Abre [`main.sema`](./main.sema):
 
 ```text
 # Un programa puede tener comentarios.
-Print "Hola desde Semauri".
-Print 2026.
+print "Hola desde Semauri".
+print 2026.
 ```
 
 ## Compruébalo

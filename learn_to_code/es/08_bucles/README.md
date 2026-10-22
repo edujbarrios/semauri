@@ -4,20 +4,20 @@
 
 ## Concepto
 
-`For every elemento in lista:` recorre una lista y usa `elemento` dentro del bloque. Por ahora los bucles son **estáticos**, evaluados a partir de colecciones conocidas durante la compilación, no un bucle general sobre datos de entrada dinámicos.
+`for every elemento in lista:` recorre una lista y usa `elemento` dentro del bloque. Por ahora los bucles son **estáticos**, evaluados a partir de colecciones conocidas durante la compilación, no un bucle general sobre datos de entrada dinámicos.
 
 ## Programa de ejemplo
 
 Abre [`main.sema`](./main.sema):
 
 ```text
-Let niveles be a list of 1, 2, 3.
+let niveles be a list of 1, 2, 3.
 
-For every nivel in niveles:
-  Print nivel.
-End.
+for every nivel in niveles:
+  print nivel.
+end.
 
-Print "Fin".
+print "Fin".
 ```
 
 ## Compruébalo
