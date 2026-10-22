@@ -4,20 +4,20 @@
 
 ## Concept
 
-`If condition:` starts a block; `Otherwise:` provides an alternative; `End.` closes the conditional. The condition must be boolean. In these examples, the compiler can determine the result from values known at compile time.
+`if condition:` starts a block; `Otherwise:` provides an alternative; `End.` closes the conditional. The condition must be boolean. In these examples, the compiler can determine the result from values known at compile time.
 
 ## Example program
 
 Open [`main.sema`](./main.sema):
 
 ```text
-Let grade be 7.
+let grade be 7.
 
-If grade is greater than or equal to 5:
-  Print "Passed".
-Otherwise:
-  Print "Keep practicing".
-End.
+if grade is greater than or equal to 5:
+  print "Passed".
+otherwise:
+  print "Keep practicing".
+end.
 ```
 
 ## Try it
