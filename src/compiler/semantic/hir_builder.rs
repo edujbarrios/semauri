@@ -755,6 +755,31 @@ fn validate_domain_operation(
     };
 
     match operation.name.as_str() {
+        "source_dataset_revision" | "resolve_model_revision" => {
+            let id_arg = if operation.name == "source_dataset_revision" {
+                "source"
+            } else {
+                "identifier"
+            };
+            for name in [id_arg, "revision"] {
+                if let Some(value) = string(name) {
+                    if value.trim().is_empty() {
+                        return Err(SemauriError::semantic(
+                            "S348",
+                            format!(
+                                "Versioned ML input '{}' must be a non-empty string",
+                                name
+                            ),
+                            arguments.get(name).map(HirExpr::span).or(Some(span)),
+                            Some(
+                                "Provide an explicit non-empty source and revision identifier."
+                                    .to_string(),
+                            ),
+                        ));
+                    }
+                }
+            }
+        }
         "configure_training" | "plan_training" => {
             positive_integer("epochs", "epochs", "S336")?;
             if let Some(optimizer) = string("optimizer") {
