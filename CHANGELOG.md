@@ -1,3 +1,20 @@
+## 0.19.0 — 2026-10-22
+
+### Typed sequence and data processing
+
+- Add `reverse of` for concrete strings and immutable homogeneous lists, maintaining list element types and leaving original inputs unchanged. Literal strings can be reversed during constant folding; string reversal operates on Unicode scalar values.
+- Add `sum of` and `average of` for `list<number>`, with static type checking (`S353`), exact checked integer sums, decimal arithmetic for averages, and located numeric overflow/non-finite errors (`S354`).
+- Introduce explicit reverse type diagnostic `S352`, integrate new keywords into the canonical lowercase formatter, and add integration tests and runnable examples for both features.
+- Refresh the README, language grammar and documentation navigation to include new collection operations and their precision limits.
+
+### Compatibility and limitations
+
+- Existing uppercase/mixed-case Semauri programs remain accepted. `reverse`, `sum` and `average` are newly reserved language keywords; use different names for user identifiers that previously used those words.
+- Numeric aggregation operates on concrete typed lists; the reference compiler does not compute over runtime-produced ML tensors or datasets.
+- No new effects, external dependencies or framework execution capabilities are introduced.
+
+See [v0.19.0 release notes](docs/releases/0.19.0.md).
+
 ## 0.18.0 — 2026-10-22
 
 ### Language
