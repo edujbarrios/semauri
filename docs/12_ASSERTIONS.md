@@ -3,10 +3,10 @@
 Semauri supports a typed runtime assertion statement:
 
 ```sema
-Let expected be 6 times 7.
-Assert expected is equal to 42.
-Assert not false.
-Print "All checks passed".
+let expected be 6 times 7.
+assert expected is equal to 42.
+assert not false.
+print "All checks passed".
 ```
 
 Run it with permission for the **print** operation:
