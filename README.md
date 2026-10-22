@@ -1,181 +1,146 @@
 # Semauri
 
-**SEMAURI — Semantic Expression Mapping and Unified Runtime Interpretation**
+**Semantic Expression Mapping and Unified Runtime Interpretation**
 
-**Natural to write. Deterministic to run.**
+**Natural to write. Deterministic to compile. Explicit about effects.**
 
-> Status: **0.16.1 / experimental**
+> **Version: 0.17.0 · Experimental.** Semauri is a Rust-based controlled-natural-language compiler, not a natural-language chatbot, a Python replacement, or a production ML trainer.
 
-## What is Semauri?
+Semauri combines lowercase-friendly English-like syntax with a real lexer, parser, typed AST/HIR, lexical scopes, an optimizer, domain-specific operations, a source-aware diagnostic system, and inspectable effect-gated runtime plans. Its primary focus is **deterministic code generation and typed workflow planning**.
 
-Semauri is an experimental open-source programming language based on **controlled natural language**. It combines an explicit grammar, typed HIR, lexical scopes, deterministic resolution, effects and semantic domains. It is not unrestricted English and it is not an LLM wrapper.
+## Quick start
 
-## Start here
+Source code uses the `.sema` extension. **Lowercase commands are the canonical style**; earlier uppercase or mixed-case programs remain supported.
 
-- **New to programming?** [**Learn to Code with Semauri**](learn_to_code/README.md) is available in [**English**](learn_to_code/en/README.md) and [**Español**](learn_to_code/es/README.md), with 11 fully translated lessons per language, tested `.sema` examples and challenges. Both editions ship in the official release packages.
-- **Want to run a program now?** Jump to [your first Semauri program](#write-and-run-a-sema-program) or [installation](#install-semauri).
-- **Already program?** See the [language specification](docs/01_LANGUAGE.md), [examples](examples/) and [compiler development guide](docs/DEVELOPMENT.md).
-
-## Repository layout
-
-| Directory | Purpose |
-| --- | --- |
-| [`learn_to_code/`](learn_to_code/) | Eleven tested beginner lessons in both English (`en/`) and Spanish (`es/`) |
-| [`examples/`](examples/) | Short reference programs showing language and domain features |
-| [`docs/`](docs/) | Complete language manual, architecture, tooling and release notes |
-| [`src/compiler/`](src/compiler/) | Lexer, parser, semantics, IR, domains, backends and CLI |
-| [`tests/`](tests/) | Compiler contracts and checked learning examples |
-| [`scripts/release/`](scripts/release/) | Native package assembly and smoke tests |
-| [`.github/workflows/`](.github/workflows/) | CI and GitHub Releases automation |
-
-## What can it do today?
-
-| Area | Current capability |
-| --- | --- |
-| Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If` / `Unless` / `otherwise if` / `Otherwise`, static `for every`, comments, escaped strings |
-| Console | print typed values from executable programs with explicit authorization |
-| Web | build typed web documents and render HTML |
-| Structured data | build typed schemas and render JSON Schema |
-| Filesystem | plan and explicitly execute write/append/copy/move/mkdir/touch/delete workflows |
-| ML | plan typed datasets, models, devices, training, inference, LoRA/QLoRA and training configuration |
-| Tooling | inspect HIR, symbols, effects, optimization and runtime plans; capability-gated `run` |
-
-Compilation remains effect-free. Execution is a separate opt-in step and effectful programs must be authorized explicitly.
-
-## Write and run a `.sema` program
-
-Semauri source files use the `.sema` extension. Create a file such as `hello.sema`:
-
-```text
+```sema
 let answer be 6 times 7.
+assert answer is equal to 42.
 print "Hello from Semauri".
 print answer.
 ```
 
-First validate it without executing effects:
+Save it as `hello.sema`, then validate, inspect, and explicitly authorize console output:
 
 ```sh
 semauri check hello.sema
-```
-
-Ask the compiler to explain how it resolved and lowered the program:
-
-```sh
-semauri explain hello.sema
-```
-
-`explain` does not execute the program. For this example it reports:
-
-```text
-1. Bound 'answer' as symbol #1 to number 42.
-2. Planned runtime operation 'console.print' as operation #1.
-3. Variable 'answer' resolved to symbol #1 (number 42).
-4. Planned runtime operation 'console.print' as operation #2.
-```
-
-Inspect what the runtime would execute:
-
-```sh
 semauri run --dry-run hello.sema
-```
-
-Then run it after explicitly authorizing console output:
-
-```sh
 semauri run --allow console_write hello.sema
 ```
 
-The program prints:
+Expected console output:
 
 ```text
 Hello from Semauri
 42
 ```
 
-The authorization is intentional: Semauri discovers required effects statically and refuses to execute them unless they are allowed. A missing capability produces a diagnostic instead of silently performing the effect.
+An `assert` with a false condition reports a source-located runtime error (`S502`). Compilation, checking, planning, graph export and audits do not perform the program's declared effects.
 
-## Install Semauri
+## Lowercase syntax and formatter (new in v0.17.0)
 
-The easiest way to use Semauri is to install the native binary published in GitHub Releases. End users do **not** need Rust.
+The lexer recognizes language keywords and registered domain commands case-insensitively. `LET`, `Let`, and `let` have the same meaning, but all new official source files use lowercase.
 
-Linux or macOS:
+```sh
+semauri fmt examples/hello_console.sema           # print formatted source
+semauri fmt examples/hello_console.sema --check   # exit 1 when formatting differs
+semauri fmt examples/hello_console.sema --write   # rewrite this file
+```
 
-~~~bash
-curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
-~~~
+`fmt` uses real lexer tokens and source spans. It lowercases **recognized syntax**, not quoted strings, comments, identifiers, names or source formatting. It does not change Rust APIs, JSON field names or filesystem path case. All **19 official examples** and **22 bilingual course programs** now follow this convention, and an automated test enforces it. See [lowercase syntax](docs/21_LOWERCASE_SYNTAX.md).
 
-Windows PowerShell:
+## Language capabilities
 
-~~~powershell
-irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
-~~~
+| Area | Supported behavior |
+| --- | --- |
+| Typed core | Immutable bindings, numbers, strings, booleans, colors, homogeneous lists, comparisons, arithmetic and short-circuit logic |
+| Control flow | `if`, `unless`, `otherwise if`, lexical scopes and **static** `for every` iteration |
+| Collections | `length of`, typed `contains`, zero-based `list at index`, immutable `list plus list` |
+| Assertions and tests | Pure typed `assert` statements, source-located failures and `semauri test` suites |
+| Web and structured data | Typed declarations compiled to HTML and JSON Schema |
+| Filesystem | Build shell plans or explicitly execute authorized filesystem operations; deletion is file-only |
+| ML semantic domain | Typed dataset/model/device operations, training configs, LoRA/QLoRA, inference and evaluation **plans** |
+| Analysis | Typed HIR, optimizer, symbols, declared effects, JSON diagnostics, SSA dependency graphs and ML reproducibility preflight |
 
-Verify the installation:
+Semauri does **not yet** have user-defined typed functions, general runtime-dependent branching/loops, arbitrary file/network execution, or a framework backend that actually trains a model. These are future milestones, not current features.
 
-~~~text
-semauri version
-semauri help
-~~~
+### Typed collections
 
-To download without the installer, open the [latest GitHub Release](https://github.com/edujbarrios/semauri/releases/latest), choose the archive for your platform, verify it with <code>SHA256SUMS</code>, extract it and run the executable under <code>bin/</code>.
+```sema
+let numbers be a list of 5, 9, 13.
+let more be a list of 21, 34.
+let combined be numbers plus more.
+assert combined contains 21.
+assert (numbers at 1) is equal to 9.
+assert length of combined is equal to 5.
+```
 
-## CLI workflow
+List elements have one compatible type. List indexing is zero-based and checked for invalid or out-of-range positions; concatenation creates a new list without mutating its inputs. See the [language reference](docs/01_LANGUAGE.md), [indexing](docs/16_LIST_INDEXING.md), and [list concatenation](docs/17_LIST_CONCATENATION.md).
 
-Use the following commands when working with a program:
+### First-class assertion tests
+
+```sh
+semauri test examples/test_suite
+semauri test examples/test_suite --allow-console
+```
+
+Test discovery is deterministic and recursive. Every test file must execute at least one `assert`; file/network/ML effects are rejected. Console printing requires explicit `--allow-console` authorization. A failed suite returns a nonzero exit code. See the [test runner contract](docs/15_TEST_RUNNER.md).
+
+## ML engineering: typed, inspectable plans
+
+ML syntax expresses **intended work** while retaining typed dependencies and declared effects. It is not a substitute for executing and evaluating experiments in PyTorch or another framework.
+
+```sema
+within ml:
+  let dataset be source dataset "./images" revision "dataset-v3".
+  let model be resolve model "resnet18" revision "weights-v2".
+  let device be select device "cpu".
+  let config be configure training for 3 epochs using optimizer "adamw" learning rate 0.0003 batch size 16 seed 42.
+  let run be fit model using dataset on device with config.
+end.
+```
+
+Save as `train.sema` and inspect the compiler's output:
+
+```sh
+semauri check train.sema
+semauri effects train.sema
+semauri plan train.sema
+semauri graph train.sema
+semauri audit train.sema --strict
+```
+
+**`graph`** exports a versioned JSON SSA dependency graph with producer/consumer edges, declared effects, source spans and validated reference types. **`audit`** checks for unversioned dataset/model declarations and direct unseeded training forms; `--strict` exits with status `2` when warnings exist. **Declared revisions are unverified metadata** until an external execution adapter checks the artifacts. A warning-free audit is *not* proof of actual reproducibility, deterministic accelerators or successful training.
+
+Read [ML semantics](docs/06_ML.md), [dataflow graphs](docs/18_ML_DATAFLOW.md), [version-qualified inputs](docs/19_ML_VERSIONED_INPUTS.md) and [audit limitations](docs/20_ML_AUDIT.md).
+
+## Command reference
 
 | Command | Purpose |
 | --- | --- |
-| `semauri check FILE` | Parse, resolve and type-check without producing output or performing effects |
-| `semauri explain FILE` | Explain symbol binding, reference resolution and lowering decisions without executing |
-| `semauri run --dry-run FILE` | Inspect the executable runtime plan without performing effects |
-| `semauri run --allow EFFECT FILE` | Execute a supported program with explicit capabilities |
-| `semauri build FILE` | Compile build-time domains to HTML, JSON Schema or a shell plan |
-| `semauri plan FILE` | Print the typed runtime operation plan as JSON |
-| `semauri effects FILE` | List the capabilities required by the source |
-| `semauri tokens/ast/hir FILE` | Inspect compiler stages while debugging language behavior |
+| `semauri help`, `semauri version`, `semauri domains` | CLI help, version and registered domains |
+| `semauri check FILE [--json]` | Validate and type-check without executing; structured diagnostics with `--json` |
+| `semauri fmt FILE [--check \| --write]` | Canonicalize syntax or enforce it in CI |
+| `semauri test PATH [--allow-console]` | Run assertion-based tests in a file/directory |
+| `semauri tokens FILE`, `semauri ast FILE` | Inspect token stream and syntax tree |
+| `semauri hir FILE`, `semauri optimize FILE`, `semauri symbols FILE` | Inspect typed IR, optimization and symbol bindings |
+| `semauri effects FILE`, `semauri plan FILE`, `semauri graph FILE` | Inspect effects, runtime operations and SSA dependencies |
+| `semauri audit FILE [--strict]` | Analyze ML provenance/seed declarations for CI |
+| `semauri explain FILE` | Explain compiler resolution and lowering |
+| `semauri build FILE [-o PATH]` | Generate supported build-time artifacts |
+| `semauri run FILE --allow EFFECT` | Run supported console or filesystem effects with explicit capabilities |
 
-Representative commands:
+Use `--dry-run` with `semauri run` to inspect work without performing it. For more detail, see [runtime and permissions](docs/05_RUNTIME.md) and [capabilities](docs/04_EFFECTS.md).
 
-~~~bash
-semauri check examples/hello_console.sema
-semauri explain examples/hello_console.sema
-semauri run --dry-run examples/hello_console.sema
-semauri run --allow console_write examples/hello_console.sema
-semauri build examples/shop.sema
-semauri plan examples/filesystem.sema
-~~~
+## Two additional application examples
 
-`build` compiles source into its domain output and remains effect-free. Filesystem execution requires every capability used by the program:
+**Web generation:**
 
-~~~bash
-semauri run --allow filesystem_read --allow filesystem_write examples/filesystem.sema
-~~~
-
-Use <code>--dry-run</code> to inspect the executable plan without performing effects. See [Installation](docs/00_INSTALLATION.md) for platform details and manual downloads.
-
-### Source usability
-
-Programs can now contain line comments and escaped text without preprocessing:
-
-```text
-# Strings support newline, tab, quote and backslash escapes.
-let message be "hello\nfrom Semauri".
-```
-
-Supported escapes are `\n`, `\t`, `\r`, `\"`, `\\` and Unicode scalar escapes such as `\u{1F680}`. Invalid escapes and Unicode code points are rejected with a source diagnostic instead of being silently accepted.
-
-## Example: Semauri to HTML
-
-The repository includes this example as `examples/shop.sema`:
-
-```text
+```sema
 let price be 18.
 let tax be 4.
 let total be price plus tax.
-
 create a web called Pet Shop.
 add a button called Buy.
-
 if total is greater than 20:
   set the color of the button called Buy to red.
 otherwise:
@@ -183,150 +148,73 @@ otherwise:
 end.
 ```
 
-Build it with:
-
 ```sh
 semauri build examples/shop.sema
 ```
 
-Semauri evaluates the deterministic control flow (`18 + 4 > 20`) and generates this HTML:
+**Filesystem operations:**
 
-```html
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pet Shop</title>
-</head>
-<body>
-  <h1>Pet Shop</h1>
-    <button style="color: red">Buy</button>
-</body>
-</html>
-```
-
-## Example: practical filesystem automation
-
-```text
+```sema
 within filesystem:
   mkdir "build".
-  write "hello from Semauri" to "build/notes.txt".
-  append " - deterministic automation" to "build/notes.txt".
+  write "hello" to "build/notes.txt".
   copy "build/notes.txt" to "build/backup.txt".
-  move "build/backup.txt" to "build/archive.txt".
-  touch "build/complete.marker".
   delete "build/old.tmp".
 end.
 ```
 
-Compile without effects:
-
 ```sh
-semauri build examples/filesystem.sema
-```
-
-Or explicitly execute it after authorizing capabilities:
-
-```sh
+semauri run --dry-run examples/filesystem.sema
 semauri run --allow filesystem_read --allow filesystem_write examples/filesystem.sema
 ```
 
-Use `--dry-run` to inspect the executable plan without performing effects, and `--cwd PATH` to choose the execution directory.
+Execution requires explicit authorization and is **not sandboxed by `--cwd`**. File deletion refuses directories instead of recursively deleting their contents. Never execute untrusted programs with sensitive filesystem permissions.
 
-## Direction
+## Install and learn
 
-Semauri is not yet a complete general-purpose runtime language. The next major milestones are user-defined typed procedures/functions, runtime-dependent control flow, structured record/map values, HTTP/process domains, richer filesystem reads/queries, modules and a small standard library.
+Official releases package the native Rust compiler for **Linux, macOS and Windows**, each on **x86_64 and ARM64**. End users do not need Rust installed.
 
-The design rule remains: add useful power without giving up deterministic semantics, inspectable effects or the compiler/runtime boundary.
+Linux/macOS:
 
-## Architecture
-
-```text
-Semauri source
-    ↓
-vocabulary + lexer
-    ↓
-recursive-descent parser
-    ↓
-syntax AST
-    ↓
-name resolution + type checking
-    ↓
-typed HIR
-    ↓
-optimization
-    ↓
-semantic/domain IR or RuntimePlan
-    ↓
-backend / explicit capability-gated runtime
+```sh
+curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
 ```
 
-## Documentation
+Windows PowerShell:
 
-For first-time learners, start with [learn_to_code/README.md](learn_to_code/README.md). For reference material, start with [docs/README.md](docs/README.md) for the documentation map. Installation and execution are covered in [docs/00_INSTALLATION.md](docs/00_INSTALLATION.md); language semantics start in [docs/01_LANGUAGE.md](docs/01_LANGUAGE.md).
+```powershell
+irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
+```
 
-## Develop and contribute to the language
+Choose a verified platform archive at [GitHub Releases](https://github.com/edujbarrios/semauri/releases/latest), check it against `SHA256SUMS`, and consult the [installation guide](docs/00_INSTALLATION.md) for manual methods.
 
-The reference compiler is written in Rust. Contributors need Git and Rust 1.83 or newer; users of published binaries do not.
+**Learn to Code:** an 11-lesson course is available in [English](learn_to_code/en/README.md) and [Spanish](learn_to_code/es/README.md). The code commands in both tracks are lowercase; localized prose and string outputs remain unchanged.
 
-Clone the repository and establish a clean baseline:
+## Architecture and development
 
-~~~bash
+```text
+.sema source
+    → lexer and domain vocabulary
+    → recursive-descent parser and AST
+    → name resolution and typed HIR
+    → optimization and effect analysis
+    → semantic IR / typed runtime plan
+    → backend or authorized executor
+```
+
+Compiler source: [`src/compiler/`](src/compiler/). Public Rust extension APIs support registering additional domains and backends. The core avoids guessing ambiguous natural language.
+
+```sh
 git clone https://github.com/edujbarrios/semauri.git
 cd semauri
 cargo fmt --check
 cargo test --all-targets
 cargo run -- check examples/hello_console.sema
-cargo run -- run --allow console_write examples/hello_console.sema
-~~~
-
-When changing the language, follow the complete pipeline rather than patching only the parser:
-
-```text
-source vocabulary and lexer
-    -> syntax AST and parser
-    -> name resolution and type checking
-    -> typed HIR
-    -> optimization and effect analysis
-    -> domain IR or RuntimePlan
-    -> backend or capability-gated executor
+cargo run -- fmt examples/hello_console.sema --check
 ```
 
-The main source areas are:
-
-| Change | Start here |
-| --- | --- |
-| Syntax or grammar | `src/compiler/frontend/` and `src/compiler/semantic/` |
-| Types, symbols or diagnostics | `src/compiler/core/` and `src/compiler/semantic/hir_builder.rs` |
-| Semantic domain or vocabulary | `src/compiler/domains/` |
-| Runtime planning or execution | `src/compiler/runtime/` and the relevant executor under `src/compiler/backends/` |
-| Generated output | `src/compiler/backends/` |
-| Optimizations | `src/compiler/semantic/optimizer.rs` |
-| CLI behavior | `src/compiler/cli.rs` |
-
-For every language change:
-
-1. Add a motivating `.sema` example or test case.
-2. Add positive tests and negative tests for invalid or ambiguous input.
-3. Preserve source spans, diagnostic codes, type safety and explicit effects.
-4. Update the relevant user documentation.
-5. Run the complete validation before opening a pull request.
-
-~~~bash
-cargo fmt --check
-cargo test --all-targets
-cargo run -- check examples/hello_console.sema
-cargo run -- run --allow console_write examples/hello_console.sema
-git diff --check
-~~~
-
-Compilation must remain effect-free. New executable behavior must declare its effects and validate capabilities before execution. Semantic domains should extend the registry rather than introduce domain-specific lexer or parser special cases, and backends should consume resolved IR rather than parse source text.
-
-Read [Developing Semauri](docs/DEVELOPMENT.md) for the compiler map and step-by-step workflows, [Contributing](CONTRIBUTING.md) for PR requirements, and the [documentation index](docs/README.md) for language, type, domain, runtime and architecture references.
+See [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.17.0 release notes](docs/releases/0.17.0.md).
 
 ## License
 
-Copyright 2026 Eduardo J. Barrios.
-
-Licensed under the **Apache License 2.0**. See `LICENSE` and `NOTICE`.
+Copyright 2026 Eduardo J. Barrios. Licensed under the **Apache License 2.0**; see [LICENSE](LICENSE) and [NOTICE](NOTICE).
