@@ -17,9 +17,9 @@ The runner reuses the same compiler and authorized console execution path as `se
 To write tests:
 
 ```sema
-Let answer be 6 times 7.
-Assert answer is equal to 42.
-Assert not false.
+let answer be 6 times 7.
+assert answer is equal to 42.
+assert not false.
 ```
 
 Future testing features may add fixtures, named tests and test coverage once typed functions and runtime control flow exist. This initial command is deliberately small and effect-safe.
