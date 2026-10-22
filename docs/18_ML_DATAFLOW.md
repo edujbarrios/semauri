@@ -16,12 +16,12 @@ Use the graph as an intermediate representation for visualization, planning, dep
 Example:
 
 ```sema
-Within ml:
-  Let dataset be Open dataset "./data".
-  Let model be Load model "resnet18".
-  Let device be Select device "cpu".
-  Let run be Train model using dataset on device for 3 epochs.
-End.
+within ml:
+  let dataset be open dataset "./data".
+  let model be load model "resnet18".
+  let device be select device "cpu".
+  let run be train model using dataset on device for 3 epochs.
+end.
 ```
 
 The graph captures dataset, model and device producers as distinct inputs to the training node. Machine-readable consumers should rely on `producer`, `consumer`, `argument`, and `type` rather than source-code formatting.
