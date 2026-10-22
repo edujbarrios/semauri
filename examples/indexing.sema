@@ -1,0 +1,5 @@
+Let values be a list of 5, 9, 13.
+Let selected be values at 1.
+Print selected.
+Print (values at 1) plus 3.
+Assert (values at 1) is equal to 9.

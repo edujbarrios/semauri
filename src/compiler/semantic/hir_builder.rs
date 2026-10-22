@@ -594,6 +594,20 @@ fn binary_type(
                 ))
             }
         }
+        BinaryOperator::AtIndex => {
+            match (left, right) {
+                (Type::List(element), Type::Number) => Ok((**element).clone()),
+                _ => Err(SemauriError::semantic(
+                    "S345",
+                    format!(
+                        "'at' expects a list and a number index, received {} and {}",
+                        left, right
+                    ),
+                    Some(span),
+                    None,
+                )),
+            }
+        }
         BinaryOperator::Contains => {
             match left {
                 Type::String if right == &Type::String => Ok(Type::Boolean),
