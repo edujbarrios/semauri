@@ -1124,6 +1124,10 @@ impl<'a> Lowerer<'a> {
             (BinaryOperator::Add, ValueData::String(a), ValueData::String(b)) => {
                 ValueData::String(format!("{a}{b}"))
             }
+            (BinaryOperator::Add, ValueData::List(mut a), ValueData::List(b)) => {
+                a.extend(b);
+                ValueData::List(a)
+            }
             (BinaryOperator::Subtract, ValueData::Number(a), ValueData::Number(b)) => {
                 ValueData::Number(NumberValue::from_f64(a.as_f64() - b.as_f64()))
             }

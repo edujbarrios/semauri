@@ -540,11 +540,13 @@ fn binary_type(
                 Ok(Type::Number)
             } else if left == &Type::String && right == &Type::String {
                 Ok(Type::String)
+            } else if matches!((left, right), (Type::List(a), Type::List(b)) if a == b) {
+                Ok(left.clone())
             } else {
                 Err(SemauriError::semantic(
                     "S314",
                     format!(
-                        "Operator '{}' requires two numbers or two strings, got {} and {}",
+                        "Operator '{}' requires matching number, string, or list operands, got {} and {}",
                         operator.as_str(),
                         left,
                         right
