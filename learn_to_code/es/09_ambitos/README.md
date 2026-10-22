@@ -11,14 +11,14 @@ Los bloques crean ámbitos léxicos. Un `Let` dentro de `If` solo existe en ese 
 Abre [`main.sema`](./main.sema):
 
 ```text
-Let mensaje be "fuera".
+let mensaje be "fuera".
 
-If true:
-  Let mensaje be "dentro".
-  Print mensaje.
-End.
+if true:
+  let mensaje be "dentro".
+  print mensaje.
+end.
 
-Print mensaje.
+print mensaje.
 ```
 
 ## Compruébalo
@@ -39,7 +39,7 @@ fuera
 
 ## Tu reto
 
-Añade `Let secreto be 7.` dentro del bloque e intenta imprimir `secreto` después de `End.`. Corrige el error moviendo su declaración.
+Añade `let secreto be 7.` dentro del bloque e intenta imprimir `secreto` después de `End.`. Corrige el error moviendo su declaración.
 
 Cuando termines, pasa de nuevo `check`. Si obtienes un error, revisa el mensaje y experimenta cambiando una sola cosa cada vez.
 
