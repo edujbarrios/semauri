@@ -41,6 +41,18 @@ fn ml_domain() -> DomainSpec {
                 &["filesystem_read"],
             ),
             op(
+                "source_dataset_revision",
+                &["source"],
+                vec![
+                    lit("dataset"),
+                    slot("source", Type::String),
+                    lit("revision"),
+                    slot("revision", Type::String),
+                ],
+                dataset.clone(),
+                &["filesystem_read"],
+            ),
+            op(
                 "transform_dataset",
                 &["transform"],
                 vec![slot("dataset", dataset.clone()), lit("using"), slot("transform", Type::String)],
@@ -64,6 +76,18 @@ fn ml_domain() -> DomainSpec {
                 "load_model",
                 &["load"],
                 vec![lit("model"), slot("identifier", Type::String)],
+                model.clone(),
+                &["model_load"],
+            ),
+            op(
+                "resolve_model_revision",
+                &["resolve"],
+                vec![
+                    lit("model"),
+                    slot("identifier", Type::String),
+                    lit("revision"),
+                    slot("revision", Type::String),
+                ],
                 model.clone(),
                 &["model_load"],
             ),
