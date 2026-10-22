@@ -1,16 +1,34 @@
 # Semauri
 
-**Semantic Expression Mapping and Unified Runtime Interpretation**
+**A programming language for readable, typed and predictable software.**
 
-**Natural to write. Deterministic to compile. Explicit about effects.**
+**Write clearly. Compile confidently. Build with intent.**
 
-> **Version: 0.17.0 · Experimental.** Semauri is a Rust-based controlled-natural-language compiler, not a natural-language chatbot, a Python replacement, or a production ML trainer.
+Semauri is a **statically typed programming language** with its own compiler, executable programs and domain-specific backends. Write programs in approachable, structured English-like syntax, compile them deterministically and inspect the effects they require before execution.
 
-Semauri combines lowercase-friendly English-like syntax with a real lexer, parser, typed AST/HIR, lexical scopes, an optimizer, domain-specific operations, a source-aware diagnostic system, and inspectable effect-gated runtime plans. Its primary focus is **deterministic code generation and typed workflow planning**.
+Implemented in Rust, the compiler includes a lexer, parser, typed intermediate representation, lexical scopes, optimization, source-aware diagnostics and effect-aware execution planning. Semauri programs can perform authorized console and filesystem operations, generate web pages and structured schemas, and describe typed machine-learning workflows.
 
-## Quick start
+**Latest release:** [Semauri v0.17.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
 
-Source code uses the `.sema` extension. **Lowercase commands are the canonical style**; earlier uppercase or mixed-case programs remain supported.
+## Get started
+
+**1. Install Semauri.** No Rust installation is needed to run published native binaries.
+
+On **Windows**, open **PowerShell** from the Start menu:
+
+```powershell
+irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
+```
+
+On **macOS or Linux**, open **Terminal**:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
+```
+
+Then open a new terminal if needed and verify the installation using `semauri version`.
+
+**2. Create a file named `hello.sema` in a plain-text editor.** Add:
 
 ```sema
 let answer be 6 times 7.
@@ -19,13 +37,18 @@ print "Hello from Semauri".
 print answer.
 ```
 
-Save it as `hello.sema`, then validate, inspect, and explicitly authorize console output:
+**3. Open a terminal in the directory containing the file, then check and run it.**
 
 ```sh
 semauri check hello.sema
-semauri run --dry-run hello.sema
 semauri run --allow console_write hello.sema
 ```
+
+For guidance on opening your terminal, creating a project folder, saving the right extension and fixing installation issues, see **[Your first Semauri program](docs/23_FIRST_PROGRAM.md)**. Prefer to inspect installers before running them? See the [manual, checksum-verified installation guide](docs/00_INSTALLATION.md).
+
+## Your first program's output
+
+To inspect what would happen before running it, use `semauri run --dry-run hello.sema`. Lowercase commands are the canonical style; earlier uppercase or mixed-case programs remain supported.
 
 Expected console output:
 
@@ -61,7 +84,7 @@ semauri fmt examples/hello_console.sema --write   # rewrite this file
 | ML semantic domain | Typed dataset/model/device operations, training configs, LoRA/QLoRA, inference and evaluation **plans** |
 | Analysis | Typed HIR, optimizer, symbols, declared effects, JSON diagnostics, SSA dependency graphs and ML reproducibility preflight |
 
-Semauri does **not yet** have user-defined typed functions, general runtime-dependent branching/loops, arbitrary file/network execution, or a framework backend that actually trains a model. These are future milestones, not current features.
+**Current language scope:** User-defined typed functions and general runtime-dependent branching/loops are on the roadmap. Domain-specific ML operations currently produce typed workflow plans; executing real model training requires a framework adapter. See the [architecture](docs/08_ARCHITECTURE.md) and [roadmap](docs/10_ROADMAP.md).
 
 ### Typed collections
 
@@ -170,23 +193,9 @@ semauri run --allow filesystem_read --allow filesystem_write examples/filesystem
 
 Execution requires explicit authorization and is **not sandboxed by `--cwd`**. File deletion refuses directories instead of recursively deleting their contents. Never execute untrusted programs with sensitive filesystem permissions.
 
-## Install and learn
+## Learn and explore
 
-Official releases package the native Rust compiler for **Linux, macOS and Windows**, each on **x86_64 and ARM64**. End users do not need Rust installed.
-
-Linux/macOS:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
-```
-
-Windows PowerShell:
-
-```powershell
-irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
-```
-
-Choose a verified platform archive at [GitHub Releases](https://github.com/edujbarrios/semauri/releases/latest), check it against `SHA256SUMS`, and consult the [installation guide](docs/00_INSTALLATION.md) for manual methods.
+Official Semauri releases include native executables for **Linux, macOS and Windows** on **x86_64 and ARM64**. Read the [installation guide](docs/00_INSTALLATION.md) for troubleshooting, version pinning and checksum-verified manual downloads.
 
 **Learn to Code:** an 11-lesson course is available in [English](learn_to_code/en/README.md) and [Spanish](learn_to_code/es/README.md). The code commands in both tracks are lowercase; localized prose and string outputs remain unchanged.
 
