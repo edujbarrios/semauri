@@ -4,6 +4,8 @@ pub enum UnaryOperator {
     Negate,
     Length,
     Reverse,
+    Sum,
+    Average,
     Uppercase,
     Lowercase,
 }
@@ -15,6 +17,8 @@ impl UnaryOperator {
             UnaryOperator::Negate => "negate",
             UnaryOperator::Length => "length",
             UnaryOperator::Reverse => "reverse",
+            UnaryOperator::Sum => "sum",
+            UnaryOperator::Average => "average",
             UnaryOperator::Uppercase => "uppercase",
             UnaryOperator::Lowercase => "lowercase",
         }

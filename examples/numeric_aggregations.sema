@@ -1,0 +1,7 @@
+let readings be a list of 2, 4, 6.
+let total be sum of readings.
+let mean be average of readings.
+assert total is equal to 12.
+assert mean is equal to 4.
+print total.
+print mean.

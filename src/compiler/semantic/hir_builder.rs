@@ -332,6 +332,17 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::String
                     }
+                    UnaryOperator::Sum | UnaryOperator::Average => {
+                        if operand.ty() != Type::List(Box::new(Type::Number)) {
+                            return Err(SemauriError::semantic(
+                                "S353",
+                                format!("Numeric aggregation requires list<number>, received {}", operand.ty()),
+                                Some(*span),
+                                None,
+                            ));
+                        }
+                        Type::Number
+                    }
                     UnaryOperator::Reverse => {
                         match operand.ty() {
                             Type::String | Type::List(_) => operand.ty(),
