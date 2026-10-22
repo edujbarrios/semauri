@@ -3,12 +3,12 @@
 Semauri supports a deterministic and typed unary `Length of` expression:
 
 ```sema
-Let name be "Semauri".
-Let count be Length of name.
-Let values be a list of 10, 20, 30.
-Print count.
-Print Length of values.
-Print Length of (name plus " rocks").
+let name be "Semauri".
+let count be length of name.
+let values be a list of 10, 20, 30.
+print count.
+print length of values.
+print length of (name plus " rocks").
 ```
 
 `Length of` accepts a **string** or a **list** and returns a number. For strings, length counts Unicode scalar values (Rust `char`s), not UTF-8 bytes or grapheme clusters. List length counts the outer elements. Using a number, boolean, color, or incompatible nominal value is a type error (`S343`).
