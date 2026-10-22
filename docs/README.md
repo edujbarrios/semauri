@@ -4,6 +4,7 @@ Use this page as the documentation map.
 
 ## Getting started
 
+- [Start here: terminal, installation, first `.sema` file and first run](23_FIRST_PROGRAM.md)
 - [Learn to Code: choose English or Spanish](../learn_to_code/README.md) ([English](../learn_to_code/en/README.md) · [Español](../learn_to_code/es/README.md))
 - [Installation, manual download and running programs](00_INSTALLATION.md)
 - [Language syntax and semantics](01_LANGUAGE.md)
