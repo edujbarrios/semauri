@@ -76,6 +76,12 @@ impl Compiler {
         self.runtime_plan(source)?.dataflow_graph()
     }
 
+    /// Advisory ML provenance and seed preflight. A clean report does not
+    /// verify dataset/model bytes or guarantee reproducible training.
+    pub fn ml_reproducibility_audit(&self, source: &str) -> Result<JsonValue> {
+        self.runtime_plan(source)?.ml_reproducibility_audit()
+    }
+
     pub fn analyze(&self, source: &str) -> Result<(Program, SemanticResult)> {
         let ast = self.parse(source)?;
         let hir = HirBuilder::new(&self.domains).build(&ast)?;

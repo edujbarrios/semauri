@@ -15,6 +15,9 @@ Use this page as the documentation map.
 - [Effects and capabilities](04_EFFECTS.md)
 - [Runtime model](05_RUNTIME.md)
 - [ML domain](06_ML.md)
+- [ML runtime dataflow graph](18_ML_DATAFLOW.md)
+- [Version-qualified ML inputs](19_ML_VERSIONED_INPUTS.md)
+- [Reproducibility preflight and CI audit](20_ML_AUDIT.md)
 - [Universal domain direction](07_UNIVERSAL_DOMAINS.md)
 
 ## Implementation

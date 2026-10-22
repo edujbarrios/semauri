@@ -38,6 +38,7 @@ include!("semantic/effects.rs");
 
 include!("runtime/model.rs");
 include!("runtime/dataflow.rs");
+include!("runtime/ml_audit.rs");
 include!("runtime/lowering.rs");
 
 include!("backends/api.rs");
