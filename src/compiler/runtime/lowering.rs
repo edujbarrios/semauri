@@ -1031,6 +1031,36 @@ impl<'a> Lowerer<'a> {
                 }
             }
             HirExpr::Unary {
+                operator: UnaryOperator::Reverse,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::String,
+                    data: ValueData::String(value),
+                } => Ok(BoundValue::Compile {
+                    ty: Type::String,
+                    data: ValueData::String(value.chars().rev().collect()),
+                }),
+                BoundValue::Compile {
+                    ty: ty @ Type::List(_),
+                    data: ValueData::List(mut values),
+                } => {
+                    values.reverse();
+                    Ok(BoundValue::Compile {
+                        ty,
+                        data: ValueData::List(values),
+                    })
+                }
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S352",
+                    format!("'reverse of' requires a string or list, received {ty}"),
+                    Some(expression.span()),
+                    None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Length,
                 operand,
                 ..
