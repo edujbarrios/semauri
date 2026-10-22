@@ -4,20 +4,20 @@
 
 ## Concept
 
-`For every item in list:` introduces a loop. The variable `item` is in scope inside the block. These loops are **static** and expand over collections known at compile time, rather than arbitrary runtime input.
+`for every item in list:` introduces a loop. The variable `item` is in scope inside the block. These loops are **static** and expand over collections known at compile time, rather than arbitrary runtime input.
 
 ## Example program
 
 Open [`main.sema`](./main.sema):
 
 ```text
-Let levels be a list of 1, 2, 3.
+let levels be a list of 1, 2, 3.
 
-For every level in levels:
-  Print level.
-End.
+for every level in levels:
+  print level.
+end.
 
-Print "Done".
+print "Done".
 ```
 
 ## Try it
