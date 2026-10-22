@@ -318,6 +318,20 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Boolean
                     }
+                    UnaryOperator::Uppercase | UnaryOperator::Lowercase => {
+                        if operand.ty() != Type::String {
+                            return Err(SemauriError::semantic(
+                                "S351",
+                                format!(
+                                    "String case transformation requires a string, received {}",
+                                    operand.ty()
+                                ),
+                                Some(*span),
+                                None,
+                            ));
+                        }
+                        Type::String
+                    }
                     UnaryOperator::Length => {
                         if !matches!(operand.ty(), Type::String | Type::List(_)) {
                             return Err(SemauriError::semantic(

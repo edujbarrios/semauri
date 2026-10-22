@@ -1005,6 +1005,32 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::Uppercase | UnaryOperator::Lowercase),
+                operand,
+                ..
+            } => {
+                match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::String,
+                    data: ValueData::String(value),
+                } => Ok(BoundValue::Compile {
+                    ty: Type::String,
+                    data: ValueData::String(match operator {
+                        UnaryOperator::Uppercase => value.to_uppercase(),
+                        UnaryOperator::Lowercase => value.to_lowercase(),
+                        _ => unreachable!(),
+                    }),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S351",
+                    format!("String case transformation requires a string, received {ty}"),
+                    Some(expression.span()),
+                    None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+                }
+            }
+            HirExpr::Unary {
                 operator: UnaryOperator::Length,
                 operand,
                 ..

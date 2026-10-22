@@ -230,6 +230,22 @@ fn fold_expr(
                         span: *span,
                     };
                 }
+                (UnaryOperator::Uppercase, Some(ValueData::String(value))) => {
+                    *changes += 1;
+                    return HirExpr::Literal {
+                        ty: Type::String,
+                        value: LiteralValue::String(value.to_uppercase()),
+                        span: *span,
+                    };
+                }
+                (UnaryOperator::Lowercase, Some(ValueData::String(value))) => {
+                    *changes += 1;
+                    return HirExpr::Literal {
+                        ty: Type::String,
+                        value: LiteralValue::String(value.to_lowercase()),
+                        span: *span,
+                    };
+                }
                 (UnaryOperator::Length, Some(ValueData::String(value))) => {
                     if let Ok(length) = i64::try_from(value.chars().count()) {
                         *changes += 1;
