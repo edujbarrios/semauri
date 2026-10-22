@@ -11,11 +11,11 @@
 Open [`main.sema`](./main.sema):
 
 ```text
-Let scores be a list of 10, 20, 30.
-Let colors be a list of red, green, blue.
+let scores be a list of 10, 20, 30.
+let colors be a list of red, green, blue.
 
-Print scores.
-Print colors.
+print scores.
+print colors.
 ```
 
 ## Try it
