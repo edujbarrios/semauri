@@ -22,9 +22,9 @@ fn reverses_strings_and_lists_without_mutating_inputs() {
     let output = run(r#"let word be "Semauri".
 let numbers be a list of 1, 2, 3.
 let reversed be reverse of numbers.
-assert numbers at 0 is equal to 1.
-assert reversed at 0 is equal to 3.
-assert reverse of reversed at 0 is equal to 1.
+assert (numbers at 0) is equal to 1.
+assert (reversed at 0) is equal to 3.
+assert ((reverse of reversed) at 0) is equal to 1.
 print reverse of word.
 print reversed.
 print numbers."#);
