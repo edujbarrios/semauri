@@ -4,24 +4,24 @@
 
 ## Concept
 
-`Unless condition:` is short for `If not condition:`. `Otherwise if` (also `Else if`) evaluates the next condition if earlier branches did not match. The whole chain has one `End.`.
+`unless condition:` is short for `if not condition:`. `otherwise if` (also `Else if`) evaluates the next condition if earlier branches did not match. The whole chain has one `End.`.
 
 ## Example program
 
 Open [`main.sema`](./main.sema):
 
 ```text
-Let score be 82.
+let score be 82.
 
-Unless score is greater than or equal to 50:
-  Print "Try again".
-Otherwise if score is greater than or equal to 90:
-  Print "Excellent".
-Otherwise if score is greater than or equal to 70:
-  Print "Great".
-Otherwise:
-  Print "Passed".
-End.
+unless score is greater than or equal to 50:
+  print "Try again".
+otherwise if score is greater than or equal to 90:
+  print "Excellent".
+otherwise if score is greater than or equal to 70:
+  print "Great".
+otherwise:
+  print "Passed".
+end.
 ```
 
 ## Try it
