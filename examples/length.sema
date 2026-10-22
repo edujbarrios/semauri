@@ -1,6 +1,6 @@
-Let name be "Semauri".
-Let count be Length of name.
-Let values be a list of 10, 20, 30.
-Print count.
-Print Length of values.
-Print Length of (name plus " rocks").
+let name be "Semauri".
+let count be length of name.
+let values be a list of 10, 20, 30.
+print count.
+print length of values.
+print length of (name plus " rocks").
