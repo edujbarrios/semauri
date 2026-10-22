@@ -55,9 +55,9 @@ Nominal types provide identities such as `filesystem.path`, `http.url`, `sql.row
 Artifact, element and property terms are globally unique. Action verbs may overlap; ambiguous actions require an explicit scope:
 
 ```text
-Within filesystem:
-  Delete "tmp.log".
-End.
+within filesystem:
+  delete "tmp.log".
+end.
 ```
 
 ## Extension rule
