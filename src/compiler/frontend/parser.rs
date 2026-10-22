@@ -732,11 +732,11 @@ impl<'a> Parser<'a> {
                 let start = self.advance().clone();
                 self.list_literal(&start, true)
             }
-            TokenKind::Length => {
+            TokenKind::Length | TokenKind::Uppercase | TokenKind::Lowercase => {
                 let start = self.advance().clone();
                 self.consume(
                     TokenKind::Of,
-                    "Expected 'of' after 'Length'",
+                    "Expected 'of' after string or length transformation",
                     "S242",
                 )?;
                 // A primary operand keeps prefix precedence unambiguous.
@@ -744,7 +744,12 @@ impl<'a> Parser<'a> {
                 let operand = self.primary()?;
                 let span = span_between_spans(start.span, operand.span());
                 Ok(Expr::Unary {
-                    operator: UnaryOperator::Length,
+                    operator: match start.kind {
+                        TokenKind::Length => UnaryOperator::Length,
+                        TokenKind::Uppercase => UnaryOperator::Uppercase,
+                        TokenKind::Lowercase => UnaryOperator::Lowercase,
+                        _ => unreachable!(),
+                    },
                     operand: Box::new(operand),
                     span,
                 })
