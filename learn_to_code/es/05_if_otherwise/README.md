@@ -4,20 +4,20 @@
 
 ## Concepto
 
-`If condicion:` abre un bloque; `Otherwise:` ofrece una alternativa; `End.` cierra la estructura. La condición debe ser booleana. En estos ejemplos el compilador puede decidir la rama con valores conocidos.
+`if condicion:` abre un bloque; `Otherwise:` ofrece una alternativa; `End.` cierra la estructura. La condición debe ser booleana. En estos ejemplos el compilador puede decidir la rama con valores conocidos.
 
 ## Programa de ejemplo
 
 Abre [`main.sema`](./main.sema):
 
 ```text
-Let nota be 7.
+let nota be 7.
 
-If nota is greater than or equal to 5:
-  Print "Aprobado".
-Otherwise:
-  Print "Hay que practicar".
-End.
+if nota is greater than or equal to 5:
+  print "Aprobado".
+otherwise:
+  print "Hay que practicar".
+end.
 ```
 
 ## Compruébalo
