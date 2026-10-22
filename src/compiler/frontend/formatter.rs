@@ -35,6 +35,7 @@ impl Compiler {
                     | TokenKind::Within
                     | TokenKind::List
                     | TokenKind::Length
+                    | TokenKind::Reverse
                     | TokenKind::Uppercase
                     | TokenKind::Lowercase
                     | TokenKind::Contains

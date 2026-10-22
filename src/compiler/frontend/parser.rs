@@ -732,7 +732,7 @@ impl<'a> Parser<'a> {
                 let start = self.advance().clone();
                 self.list_literal(&start, true)
             }
-            TokenKind::Length | TokenKind::Uppercase | TokenKind::Lowercase => {
+            TokenKind::Length | TokenKind::Reverse | TokenKind::Uppercase | TokenKind::Lowercase => {
                 let start = self.advance().clone();
                 self.consume(
                     TokenKind::Of,
@@ -746,6 +746,7 @@ impl<'a> Parser<'a> {
                 Ok(Expr::Unary {
                     operator: match start.kind {
                         TokenKind::Length => UnaryOperator::Length,
+                        TokenKind::Reverse => UnaryOperator::Reverse,
                         TokenKind::Uppercase => UnaryOperator::Uppercase,
                         TokenKind::Lowercase => UnaryOperator::Lowercase,
                         _ => unreachable!(),

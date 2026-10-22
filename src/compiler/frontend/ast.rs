@@ -3,6 +3,7 @@ pub enum UnaryOperator {
     Not,
     Negate,
     Length,
+    Reverse,
     Uppercase,
     Lowercase,
 }
@@ -13,6 +14,7 @@ impl UnaryOperator {
             UnaryOperator::Not => "not",
             UnaryOperator::Negate => "negate",
             UnaryOperator::Length => "length",
+            UnaryOperator::Reverse => "reverse",
             UnaryOperator::Uppercase => "uppercase",
             UnaryOperator::Lowercase => "lowercase",
         }
