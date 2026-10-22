@@ -1,4 +1,4 @@
-# Semauri language reference — v0.17.0
+# Semauri language reference — v0.18.0
 
 This document describes implemented language behavior, not aspirational syntax.
 
@@ -41,12 +41,25 @@ additive         = multiplicative { (PLUS | MINUS) multiplicative } ;
 multiplicative   = numeric_unary { TIMES numeric_unary | DIVIDED BY numeric_unary | MODULO numeric_unary } ;
 numeric_unary    = [ MINUS ] (numeric_unary | primary) ;
 primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
-                 | LENGTH OF primary
+                 | LENGTH OF primary | UPPERCASE OF primary | LOWERCASE OF primary
                  | variable_reference | "(" expression ")" ;
 list_literal     = [ ARTICLE ] LIST OF expression { "," expression } ;
 ```
 
 The handwritten recursive-descent parser remains the executable grammar during 0.x.
+
+## Unicode string transformations
+
+Semauri supports **pure, typed** prefix expressions for case mapping. Both return `string` and require a `string` operand; other input types are rejected during type checking (`S351`).
+
+```sema
+let name be "Semauri".
+let shouted be uppercase of name.
+assert lowercase of shouted is equal to "semauri".
+print shouted.
+```
+
+These operations follow Rust Unicode case mapping rather than language-specific locale rules. Use parentheses to transform larger expressions, for example `uppercase of ("hello" plus " world")`. See [typed string case expressions](22_STRING_CASE.md).
 
 ## Comments
 
