@@ -70,6 +70,12 @@ impl Compiler {
             .runtime_plan)
     }
 
+    /// Validated, portable SSA dependency graph for ML and other runtime domains.
+    /// The graph describes potential work; it does not execute any effects.
+    pub fn runtime_graph(&self, source: &str) -> Result<JsonValue> {
+        self.runtime_plan(source)?.dataflow_graph()
+    }
+
     pub fn analyze(&self, source: &str) -> Result<(Program, SemanticResult)> {
         let ast = self.parse(source)?;
         let hir = HirBuilder::new(&self.domains).build(&ast)?;
