@@ -17,12 +17,12 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 ## 0.4 — structured control flow and compiler IR ✅
 
 - arithmetic, comparisons and boolean algebra
-- `If / Otherwise / End`
+- `if / otherwise / end`
 - short-circuit evaluation
 - stable symbols
 - typed HIR
 - homogeneous `List<T>`
-- static `For every ... in ...`
+- static `for every ... in ...`
 - HIR-preserved branches and loops
 - production lowering consumes HIR rather than AST
 - separate symbol identity and compile-time value environments
@@ -80,7 +80,7 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - deterministic operation phrase patterns with typed expression slots
 - generic `AST::DomainOperation` and `HIR::domain_operation`
 - operation result types and effect/capability metadata in HIR
-- operation-only domains can lazily create semantic plans without `Create ...`
+- operation-only domains can lazily create semantic plans without `create ...`
 - generic immutable `IR::OperationPlan` / `IR::Operation`
 - optimizers propagate constants into operation arguments while preserving effectful operations
 - Filesystem domain as a non-CRUD proof of the extension model
@@ -101,7 +101,7 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 
 ### 0.6.2 — explicit semantic domain scopes ✅
 
-- `Within <domain>: ... End.` lexical semantic scopes
+- `within <domain>: ... end.` lexical semantic scopes
 - action verbs may be shared by multiple semantic domains
 - unqualified ambiguous actions fail deterministically with `S240`
 - scoped action resolution selects exactly the operation owned by the named domain
@@ -136,7 +136,7 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 
 ### 0.6.5 — runtime operation values ✅
 
-- value-returning domain operations may appear inside expressions such as `Let response be Fetch ...`
+- value-returning domain operations may appear inside expressions such as `let response be Fetch ...`
 - immutable `IR::RuntimePlan`, `IR::RuntimeOperation` and SSA-like `IR::RuntimeValueRef`
 - runtime results can flow directly into later semantic-domain operations
 - non-unit operations are planned rather than executed at compile time
@@ -167,14 +167,14 @@ Typed primitive values, immutable bindings, lexical scope, shadowing and propert
 - ML runtime-produced objects reject forged primitive values
 - `Configure training` captures epochs, optimizer, learning rate, batch size and seed
 - configured `Fit` consumes `ml.model`, `ml.dataset`, `ml.device` and `ml.training_config`
-- simple `Train ... for N epochs` remains available
+- simple `train ... for N epochs` remains available
 - domain-level operation validation hook keeps value constraints outside the parser
 - static validation for optimizer name, positive epochs/learning rate/batch size and non-negative seed
 - invalid ML configuration reports `S336`
 
 ### 0.7.2 — model construction and fine-tuning transforms ✅
 
-- `Build cnn` creates a typed `ml.model` plan with class count and input channels
+- `build cnn` creates a typed `ml.model` plan with class count and input channels
 - `Freeze <model> component <name>` produces a new derived model value
 - `Apply lora to <model> rank <r> alpha <a>` produces a new derived model value
 - model lineage is explicit through SSA-like RuntimePlan references rather than hidden mutation
