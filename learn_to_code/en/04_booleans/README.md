@@ -11,12 +11,12 @@
 Open [`main.sema`](./main.sema):
 
 ```text
-Let age be 20.
-Let adult be age is greater than or equal to 18.
-Let allowed be adult and not false.
+let age be 20.
+let adult be age is greater than or equal to 18.
+let allowed be adult and not false.
 
-Print adult.
-Print allowed.
+print adult.
+print allowed.
 ```
 
 ## Try it
