@@ -48,4 +48,5 @@ include!("backends/filesystem_executor.rs");
 include!("backends/console_executor.rs");
 
 include!("cli.rs");
+include!("backends/test_runner.rs");
 include!("tests.rs");
