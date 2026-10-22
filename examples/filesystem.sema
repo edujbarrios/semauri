@@ -1,9 +1,9 @@
-Within filesystem:
-  Mkdir "build".
-  Write "hello from Semauri" to "build/notes.txt".
-  Append " - deterministic automation" to "build/notes.txt".
-  Copy "build/notes.txt" to "build/backup.txt".
-  Move "build/backup.txt" to "build/archive.txt".
-  Touch "build/complete.marker".
-  Delete "build/old.tmp".
-End.
+within filesystem:
+  mkdir "build".
+  write "hello from Semauri" to "build/notes.txt".
+  append " - deterministic automation" to "build/notes.txt".
+  copy "build/notes.txt" to "build/backup.txt".
+  move "build/backup.txt" to "build/archive.txt".
+  touch "build/complete.marker".
+  delete "build/old.tmp".
+end.
