@@ -9,6 +9,7 @@ Use this page as the documentation map.
 - [Installation, manual download and running programs](00_INSTALLATION.md)
 - [Language syntax and semantics](01_LANGUAGE.md)
 - [Canonical lowercase syntax and formatter](21_LOWERCASE_SYNTAX.md)
+- [Typed uppercase/lowercase string expressions](22_STRING_CASE.md)
 - [Type system](02_TYPES.md)
 
 ## Language and domains
@@ -34,7 +35,7 @@ Use this page as the documentation map.
 
 ## Release notes
 
-- [Latest release: Semauri 0.17.0](releases/0.17.0.md)
+- [Latest release: Semauri 0.18.0](releases/0.18.0.md)
 
 ## Historical release notes
 
