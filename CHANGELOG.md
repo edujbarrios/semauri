@@ -1,3 +1,24 @@
+## 0.18.0 — 2026-10-22
+
+### Language
+
+- Add typed `uppercase of` and `lowercase of` string expressions, with deterministic Unicode case mapping, compile-time type checking (`S351`), constant folding, runtime lowering and no additional effect capabilities.
+- Support new string operations in the canonical lowercase source formatter, examples and regression tests.
+
+### Getting started and documentation
+
+- Present Semauri prominently as a statically typed programming language with an independent Rust compiler, native CLI and domain-specific build/execution backends.
+- Refresh the primary project messages: **“A programming language for readable, typed and predictable software”** and **“Write clearly. Compile confidently. Build with intent.”**
+- Add OS-specific installation and first-program instructions, including how to open PowerShell/Terminal, create and edit a `.sema` file, check and run it, resolve `PATH` issues and understand explicit capabilities.
+- Expand the language reference and installation troubleshooting without changing the English-language Semauri syntax or the existing Spanish course.
+
+### Compatibility
+
+- Existing programs remain valid, including uppercase and mixed-case source commands. No new runtime permissions or dependencies are required.
+- This release does not change the distinction between executable supported core operations and declarative ML workflow plans.
+
+See [v0.18.0 release notes](docs/releases/0.18.0.md).
+
 ## 0.17.0 — 2026-10-22
 
 ### Added: lowercase language workflow
