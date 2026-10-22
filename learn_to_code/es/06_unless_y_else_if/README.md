@@ -4,24 +4,24 @@
 
 ## Concepto
 
-`Unless condicion:` significa `If not condicion:`. En una cadena, `Otherwise if` o `Else if` evalúa la siguiente condición si no se ha elegido una rama anterior. Toda la cadena comparte un solo `End.`.
+`unless condicion:` significa `if not condicion:`. En una cadena, `otherwise if` o `Else if` evalúa la siguiente condición si no se ha elegido una rama anterior. Toda la cadena comparte un solo `End.`.
 
 ## Programa de ejemplo
 
 Abre [`main.sema`](./main.sema):
 
 ```text
-Let nota be 82.
+let nota be 82.
 
-Unless nota is greater than or equal to 50:
-  Print "Suspenso".
-Otherwise if nota is greater than or equal to 90:
-  Print "Excelente".
-Otherwise if nota is greater than or equal to 70:
-  Print "Notable".
-Otherwise:
-  Print "Aprobado".
-End.
+unless nota is greater than or equal to 50:
+  print "Suspenso".
+otherwise if nota is greater than or equal to 90:
+  print "Excelente".
+otherwise if nota is greater than or equal to 70:
+  print "Notable".
+otherwise:
+  print "Aprobado".
+end.
 ```
 
 ## Compruébalo
