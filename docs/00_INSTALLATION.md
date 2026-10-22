@@ -1,8 +1,10 @@
-# Installing and running Semauri
+# Install Semauri on Windows, macOS or Linux
 
-This guide covers binary installation, manual downloads, running <code>.sema</code> programs and installing an exact version.
+Semauri is a compiled programming language with its own native command-line tool. This guide covers the official installers, manual downloads, troubleshooting and version pinning.
 
-> Current release documented here: **0.16.1**
+**New to terminals or programming?** Begin with [your first Semauri program](23_FIRST_PROGRAM.md), which explains opening PowerShell or Terminal, creating a project folder, saving a `.sema` file, checking it and running it.
+
+> Current stable release documented here: **0.17.0**
 
 Official Semauri distributions contain a native executable. **Rust and Cargo are not required to use a published Semauri binary.**
 
@@ -76,13 +78,13 @@ On Windows PowerShell:
 Linux/macOS:
 
 ~~~bash
-curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | SEMAURI_VERSION=0.16.1 sh
+curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | SEMAURI_VERSION=0.17.0 sh
 ~~~
 
 Windows PowerShell:
 
 ~~~powershell
-$env:SEMAURI_VERSION = '0.16.1'
+$env:SEMAURI_VERSION = '0.17.0'
 irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
 Remove-Item Env:SEMAURI_VERSION
 ~~~
@@ -138,7 +140,55 @@ Inspect the plan without performing effects:
 semauri run --dry-run examples/filesystem.sema
 ~~~
 
-Use <code>--cwd PATH</code> to choose the working directory for relative filesystem paths.
+Use <code>--cwd PATH</code> to choose the working directory for relative filesystem paths. This is a convenience option, **not** a security sandbox; execute filesystem programs only with appropriate trust and permissions.
+
+## Troubleshooting
+
+### `semauri` is not found after installation
+
+1. **Close and reopen the terminal** first. Windows `PATH` changes do not automatically propagate to terminals already open.
+2. Verify that the executable exists at the installer's default location:
+
+   On **Windows PowerShell**:
+
+   ```powershell
+   Test-Path "$HOME\.semauri\bin\semauri.exe"
+   & "$HOME\.semauri\bin\semauri.exe" version
+   ```
+
+   On **Linux/macOS**:
+
+   ```sh
+   ls -l "$HOME/.local/bin/semauri"
+   "$HOME/.local/bin/semauri" version
+   ```
+
+3. If the absolute executable works but `semauri version` does not, the problem is the terminal's `PATH`, **not the compiler**.
+
+   In **PowerShell**, restart the terminal first; the Windows installer attempts to add `$HOME\.semauri\bin` to the current user's `PATH`.
+
+   On **Linux/macOS**, add the install directory to `PATH` temporarily:
+
+   ```sh
+   export PATH="$HOME/.local/bin:$PATH"
+   semauri version
+   ```
+
+   To persist it, add the `export PATH=...` line to your shell startup file, such as `~/.bashrc` (Bash) or `~/.zshrc` (Zsh). Reopen the terminal.
+
+### The program file cannot be found
+
+Ensure the file exists in your **current** directory. Use `pwd` and `ls` on Linux/macOS; use `Get-Location` and `dir` in PowerShell. You can also pass the full path to `hello.sema`.
+
+On Windows, verify Notepad did not append `.txt` to your file name.
+
+### Permission denied or checksum mismatch
+
+Do not disable checksum verification. Use the official [GitHub Releases](https://github.com/edujbarrios/semauri/releases/latest) page, choose the archive for your platform and verify `SHA256SUMS`. For executable permissions on Unix, ensure the extracted binary is executable. If installation fails, see [manual download](#manual-download).
+
+### `semauri run` reports a missing capability
+
+Running effectful operations requires explicit permission. For printing, use `semauri run --allow console_write hello.sema`. For file operations, see [runtime capabilities](05_RUNTIME.md). `check` and `--dry-run` let you inspect programs before granting permissions.
 
 ## Updating
 
