@@ -7,6 +7,7 @@ Use this page as the documentation map.
 - [Learn to Code: choose English or Spanish](../learn_to_code/README.md) ([English](../learn_to_code/en/README.md) · [Español](../learn_to_code/es/README.md))
 - [Installation, manual download and running programs](00_INSTALLATION.md)
 - [Language syntax and semantics](01_LANGUAGE.md)
+- [Canonical lowercase syntax and formatter](21_LOWERCASE_SYNTAX.md)
 - [Type system](02_TYPES.md)
 
 ## Language and domains
@@ -15,6 +16,9 @@ Use this page as the documentation map.
 - [Effects and capabilities](04_EFFECTS.md)
 - [Runtime model](05_RUNTIME.md)
 - [ML domain](06_ML.md)
+- [Assertions and test runner](12_ASSERTIONS.md)
+- [Typed collections: length, membership, indexing, concatenation](13_LENGTH_EXPRESSIONS.md) ([contains](14_CONTAINS.md) · [indexing](16_LIST_INDEXING.md) · [concatenation](17_LIST_CONCATENATION.md))
+- [Executable assertion suites](15_TEST_RUNNER.md)
 - [ML runtime dataflow graph](18_ML_DATAFLOW.md)
 - [Version-qualified ML inputs](19_ML_VERSIONED_INPUTS.md)
 - [Reproducibility preflight and CI audit](20_ML_AUDIT.md)
@@ -26,6 +30,10 @@ Use this page as the documentation map.
 - [Distribution and releases](09_DISTRIBUTION.md)
 - [Roadmap](10_ROADMAP.md)
 - [Developing the language from source](DEVELOPMENT.md)
+
+## Release notes
+
+- [Latest release: Semauri 0.17.0](releases/0.17.0.md)
 
 ## Historical release notes
 

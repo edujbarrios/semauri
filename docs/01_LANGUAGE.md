@@ -1,4 +1,4 @@
-# Semauri language specification — draft 0.8
+# Semauri language reference — v0.17.0
 
 This document describes implemented language behavior, not aspirational syntax.
 
@@ -6,12 +6,15 @@ This document describes implemented language behavior, not aspirational syntax.
 
 Semauri uses **controlled natural language**. Natural-looking syntax does not mean unrestricted prose. Accepted programs have explicit grammar and deterministic semantics. Ambiguity is an error rather than an invitation to guess.
 
+**Canonical source syntax is lowercase.** Core and registered-domain commands remain case-insensitive for backwards compatibility; use `semauri fmt FILE [--check | --write]` for canonical style. Quoted text, comments, user names, and Rust/JSON identifiers are not forced to lowercase. See [lowercase syntax](21_LOWERCASE_SYNTAX.md).
+
 ## Approximate grammar
 
 ```ebnf
 program          = statement* EOF ;
 statement        = create_artifact | add_title | add_element | make_property
-                 | let_binding | set_property | if_statement | for_each ;
+                 | let_binding | set_property | if_statement | for_each
+                 | domain_operation ;
 
 create_artifact  = ( CREATE | MAKE ) [ ARTICLE ] DOMAIN_ARTIFACT
                    [ CALLED phrase | FOR [ ARTICLE ] phrase ] ["."] ;
@@ -29,7 +32,8 @@ expression       = logical_or ;
 logical_or       = logical_and { OR logical_and } ;
 logical_and      = logical_not { AND logical_not } ;
 logical_not      = [ NOT ] (logical_not | comparison) ;
-comparison       = additive [ IS comparison_operator additive ] ;
+comparison       = additive [ IS comparison_operator additive
+                 | CONTAINS additive | AT additive ] ;
 comparison_operator = GREATER THAN [ OR EQUAL TO ]
                     | LESS THAN [ OR EQUAL TO ]
                     | EQUAL TO | NOT EQUAL TO ;
@@ -37,6 +41,7 @@ additive         = multiplicative { (PLUS | MINUS) multiplicative } ;
 multiplicative   = numeric_unary { TIMES numeric_unary | DIVIDED BY numeric_unary | MODULO numeric_unary } ;
 numeric_unary    = [ MINUS ] (numeric_unary | primary) ;
 primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
+                 | LENGTH OF primary
                  | variable_reference | "(" expression ")" ;
 list_literal     = [ ARTICLE ] LIST OF expression { "," expression } ;
 ```
@@ -113,7 +118,7 @@ let distance be 1_200.5E+2.
 
 Integers must fit into signed 64-bit range; decimal and scientific literals must parse to finite floating-point values. Invalid separators, incomplete exponents and out-of-range literals are lexical errors (`S106`), never compiler panics. A trailing period still terminates a statement unless followed by a fractional digit.
 
-`plus` is overloaded deliberately: it adds two numbers or concatenates two strings. It never coerces between strings and numbers. The remaining arithmetic operators are numeric and strictly typed. Prefix `minus` negates a number and binds more tightly than multiplication/division/modulo, which bind more tightly than addition/subtraction. `modulo` returns the numeric remainder and, like division, rejects a zero divisor with `S317`. Equality and inequality (`is equal to` / `is not equal to`) require both operands to have the same semantic type.
+`plus` is overloaded deliberately: it adds two numbers, concatenates two strings, or creates a new list when both operands are lists with the same element type. It never coerces between strings, numbers, and lists. The remaining arithmetic operators are numeric and strictly typed. Prefix `minus` negates a number and binds more tightly than multiplication/division/modulo, which bind more tightly than addition/subtraction. `modulo` returns the numeric remainder and, like division, rejects a zero divisor with `S317`. Equality and inequality (`is equal to` / `is not equal to`) require both operands to have the same semantic type.
 
 Ordering comparisons are numeric and strictly typed. Semauri supports `is greater than`, `is less than`, `is greater than or equal to`, and `is less than or equal to`. The inclusive forms include the boundary value and lower to distinct typed comparison operators rather than being rewritten as boolean combinations.
 
@@ -163,6 +168,12 @@ let colors be a list of red, green, blue.
 ```
 
 Their types are `list<number>` and `list<color>`. Mixed lists are rejected with `S321`. There is no implicit union/coercion rule.
+
+The typed collection operators in v0.17.0 include `length of` for strings and lists, `contains` for string substrings and list membership, zero-based `list at index`, and immutable same-type list concatenation using `plus`. They do not enable iteration over arbitrary values produced at runtime. Details: [length](13_LENGTH_EXPRESSIONS.md), [membership](14_CONTAINS.md), [indexing](16_LIST_INDEXING.md), and [concatenation](17_LIST_CONCATENATION.md).
+
+## Assertions and tests
+
+The registered console operation `assert boolean_expression.` checks a Boolean at execution; false raises a source-located `S502` runtime error. The pure assertion itself requires no effect permission. `semauri test PATH` discovers assertion-based `.sema` test files and refuses non-console effects. A program requiring `print` needs `--allow-console` to run under the test command. This is not a general-purpose testing runtime; see [assertions](12_ASSERTIONS.md) and [test runner](15_TEST_RUNNER.md).
 
 ## Variables and lexical scope
 

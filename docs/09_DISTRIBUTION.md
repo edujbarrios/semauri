@@ -7,12 +7,12 @@ Semauri's reference compiler is implemented in Rust. Official distributions ship
 Unix packages use this shape:
 
 ```text
-semauri-0.16.1-linux-x86_64/
+semauri-0.17.0-linux-x86_64/
 ├── bin/
 │   └── semauri
-├── learn_to_code/         # es/ y en/, 11 lecciones por idioma
-├── docs/                  # Referencia del lenguaje
-├── examples/              # Programas de muestra
+├── learn_to_code/         # en/ and es/, 11 lessons per language
+├── docs/                  # Language reference
+├── examples/              # Sample programs
 ├── manifest.json
 ├── LICENSE
 ├── NOTICE
@@ -22,12 +22,12 @@ semauri-0.16.1-linux-x86_64/
 Windows packages use:
 
 ```text
-semauri-0.16.0-windows-x86_64/
+semauri-0.17.0-windows-x86_64/
 ├── bin/
 │   └── semauri.exe
-├── learn_to_code/         # es/ y en/, 11 lecciones por idioma
-├── docs/                  # Referencia del lenguaje
-├── examples/              # Programas de muestra
+├── learn_to_code/         # en/ and es/, 11 lessons per language
+├── docs/                  # Language reference
+├── examples/              # Sample programs
 ├── manifest.json
 ├── LICENSE
 ├── NOTICE
