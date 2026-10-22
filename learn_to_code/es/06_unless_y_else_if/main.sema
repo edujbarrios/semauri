@@ -1,11 +1,11 @@
-Let nota be 82.
+let nota be 82.
 
-Unless nota is greater than or equal to 50:
-  Print "Suspenso".
-Otherwise if nota is greater than or equal to 90:
-  Print "Excelente".
-Otherwise if nota is greater than or equal to 70:
-  Print "Notable".
-Otherwise:
-  Print "Aprobado".
-End.
+unless nota is greater than or equal to 50:
+  print "Suspenso".
+otherwise if nota is greater than or equal to 90:
+  print "Excelente".
+otherwise if nota is greater than or equal to 70:
+  print "Notable".
+otherwise:
+  print "Aprobado".
+end.

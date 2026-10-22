@@ -1,5 +1,5 @@
-Let names be a list of "Ada", "Grace".
-Assert names contains "Ada".
-If "Semauri" contains "mau":
-  Print "found".
-End.
+let names be a list of "Ada", "Grace".
+assert names contains "Ada".
+if "Semauri" contains "mau":
+  print "found".
+end.

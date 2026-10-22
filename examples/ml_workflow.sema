@@ -1,7 +1,7 @@
-Within ml:
-  Let dataset be Open dataset "./data".
-  Let model be Load model "resnet18".
-  Let device be Select device "cpu".
-  Let config be Configure training for 3 epochs using optimizer "adamw" learning rate 0.0003 batch size 16 seed 42.
-  Let run be Fit model using dataset on device with config.
-End.
+within ml:
+  let dataset be open dataset "./data".
+  let model be load model "resnet18".
+  let device be select device "cpu".
+  let config be configure training for 3 epochs using optimizer "adamw" learning rate 0.0003 batch size 16 seed 42.
+  let run be fit model using dataset on device with config.
+end.

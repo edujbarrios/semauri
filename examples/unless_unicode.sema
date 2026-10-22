@@ -1,10 +1,10 @@
 # Unless is a typed shorthand for If not.
-Create a web called Greetings.
-Let score be 82.
-Let message be "Hola \u{1F30D}".
+create a web called Greetings.
+let score be 82.
+let message be "Hola \u{1F30D}".
 
-Unless score is greater than or equal to 70:
-  Add a button called KeepPracticing.
-Otherwise:
-  Add a button called Passed.
-End.
+unless score is greater than or equal to 70:
+  add a button called KeepPracticing.
+otherwise:
+  add a button called Passed.
+end.

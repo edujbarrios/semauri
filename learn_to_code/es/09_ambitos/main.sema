@@ -1,8 +1,8 @@
-Let mensaje be "fuera".
+let mensaje be "fuera".
 
-If true:
-  Let mensaje be "dentro".
-  Print mensaje.
-End.
+if true:
+  let mensaje be "dentro".
+  print mensaje.
+end.
 
-Print mensaje.
+print mensaje.

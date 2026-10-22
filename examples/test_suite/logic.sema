@@ -1,2 +1,2 @@
-Assert true and not false.
-Assert 10 modulo 3 is equal to 1.
+assert true and not false.
+assert 10 modulo 3 is equal to 1.
