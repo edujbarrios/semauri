@@ -4,16 +4,16 @@
 
 ## Concepto
 
-Semauri puede transformar un programa en HTML con `build`. `Create a web`, `Add a button` y `Set the color ...` pertenecen al dominio Web. **No uses `run`** aquí: `build` genera el documento sin efectos externos.
+Semauri puede transformar un programa en HTML con `build`. `create a web`, `add a button` y `set the color ...` pertenecen al dominio Web. **No uses `run`** aquí: `build` genera el documento sin efectos externos.
 
 ## Programa de ejemplo
 
 Abre [`main.sema`](./main.sema):
 
 ```text
-Create a web called Mi Primera Pagina.
-Add a button called Empezar.
-Set the color of the button called Empezar to blue.
+create a web called Mi Primera Pagina.
+add a button called Empezar.
+set the color of the button called Empezar to blue.
 ```
 
 ## Compruébalo
