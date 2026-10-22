@@ -47,8 +47,8 @@ The CLI executes authorized console and filesystem plans. ML and other runtime-v
 Console output is an explicit effect:
 
 ```text
-Let answer be 6 times 7.
-Print answer.
+let answer be 6 times 7.
+print answer.
 ```
 
 ```sh
@@ -57,7 +57,7 @@ semauri run --allow console_write program.sema
 
 ## Filesystem deletion semantics
 
-The native Rust filesystem executor interprets `Delete "path".` as **file-only** deletion, matching the generated POSIX shell backend's `rm -f` behavior. It refuses directories rather than deleting directory trees implicitly. Deleting a missing file remains a no-op. Use `Mkdir` to create directories; recursive directory deletion is not part of the current language contract.
+The native Rust filesystem executor interprets `delete "path".` as **file-only** deletion, matching the generated POSIX shell backend's `rm -f` behavior. It refuses directories rather than deleting directory trees implicitly. Deleting a missing file remains a no-op. Use `Mkdir` to create directories; recursive directory deletion is not part of the current language contract.
 
 All filesystem operation names and required argument types are validated before the executor begins applying a plan. As with ordinary scripts, earlier successful effects cannot be rolled back if an OS error occurs during later execution.
 
