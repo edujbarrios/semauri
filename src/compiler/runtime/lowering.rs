@@ -1004,12 +1004,10 @@ impl<'a> Lowerer<'a> {
                 )),
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
-            HirExpr::Unary {
-                operator: UnaryOperator::Uppercase | UnaryOperator::Lowercase,
-                operand,
-                operator,
-                ..
-            } => match self.evaluate(operand)? {
+            HirExpr::Unary { operator, operand, .. }
+                if matches!(operator, UnaryOperator::Uppercase | UnaryOperator::Lowercase) =>
+            {
+                match self.evaluate(operand)? {
                 BoundValue::Compile {
                     ty: Type::String,
                     data: ValueData::String(value),
@@ -1028,7 +1026,8 @@ impl<'a> Lowerer<'a> {
                     None,
                 )),
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
-            },
+                }
+            }
             HirExpr::Unary {
                 operator: UnaryOperator::Length,
                 operand,
