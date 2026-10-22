@@ -10,6 +10,8 @@ Use this page as the documentation map.
 - [Language syntax and semantics](01_LANGUAGE.md)
 - [Canonical lowercase syntax and formatter](21_LOWERCASE_SYNTAX.md)
 - [Typed uppercase/lowercase string expressions](22_STRING_CASE.md)
+- [Immutable sequence reversal](24_REVERSE.md)
+- [Typed numeric list aggregations](25_NUMERIC_AGGREGATIONS.md)
 - [Type system](02_TYPES.md)
 
 ## Language and domains
@@ -35,7 +37,7 @@ Use this page as the documentation map.
 
 ## Release notes
 
-- [Latest release: Semauri 0.18.0](releases/0.18.0.md)
+- [Latest release: Semauri 0.19.0](releases/0.19.0.md)
 
 ## Historical release notes
 
