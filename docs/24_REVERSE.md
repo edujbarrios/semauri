@@ -5,8 +5,8 @@ Use `reverse of` with a string or homogeneous list:
 ```sema
 let values be a list of 10, 20, 30.
 let backwards be reverse of values.
-assert backwards at 0 is equal to 30.
-assert values at 0 is equal to 10.
+assert (backwards at 0) is equal to 30.
+assert (values at 0) is equal to 10.
 print reverse of "Semauri".
 ```
 
