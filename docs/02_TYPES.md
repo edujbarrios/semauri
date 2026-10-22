@@ -29,7 +29,7 @@ The resulting type is `filesystem.path`. Another string-backed nominal type rema
 A nominal type may opt into promotion from its exact base type. Filesystem paths use this so:
 
 ```text
-Write "hello" to "notes.txt".
+write "hello" to "notes.txt".
 ```
 
 can lower to:
