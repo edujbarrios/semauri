@@ -28,6 +28,7 @@ pub enum BinaryOperator {
     LessThanOrEqual,
     Equal,
     NotEqual,
+    Contains,
     And,
     Or,
 }
@@ -46,6 +47,7 @@ impl BinaryOperator {
             BinaryOperator::LessThanOrEqual => "less_than_or_equal",
             BinaryOperator::Equal => "equal",
             BinaryOperator::NotEqual => "not_equal",
+            BinaryOperator::Contains => "contains",
             BinaryOperator::And => "and",
             BinaryOperator::Or => "or",
         }
