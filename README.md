@@ -8,7 +8,7 @@ Semauri is a **statically typed programming language** with its own compiler, ex
 
 Implemented in Rust, the compiler includes a lexer, parser, typed intermediate representation, lexical scopes, optimization, source-aware diagnostics and effect-aware execution planning. Semauri programs can perform authorized console and filesystem operations, generate web pages and structured schemas, and describe typed machine-learning workflows.
 
-**Latest release:** [Semauri v0.17.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
+**Latest release:** [Semauri v0.18.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
 
 ## Get started
 
@@ -59,7 +59,7 @@ Hello from Semauri
 
 An `assert` with a false condition reports a source-located runtime error (`S502`). Compilation, checking, planning, graph export and audits do not perform the program's declared effects.
 
-## Lowercase syntax and formatter (new in v0.17.0)
+## Lowercase syntax and formatter
 
 The lexer recognizes language keywords and registered domain commands case-insensitively. `LET`, `Let`, and `let` have the same meaning, but all new official source files use lowercase.
 
@@ -78,6 +78,7 @@ semauri fmt examples/hello_console.sema --write   # rewrite this file
 | Typed core | Immutable bindings, numbers, strings, booleans, colors, homogeneous lists, comparisons, arithmetic and short-circuit logic |
 | Control flow | `if`, `unless`, `otherwise if`, lexical scopes and **static** `for every` iteration |
 | Collections | `length of`, typed `contains`, zero-based `list at index`, immutable `list plus list` |
+| String transformations | Unicode-aware `uppercase of` and `lowercase of` with static type checking |
 | Assertions and tests | Pure typed `assert` statements, source-located failures and `semauri test` suites |
 | Web and structured data | Typed declarations compiled to HTML and JSON Schema |
 | Filesystem | Build shell plans or explicitly execute authorized filesystem operations; deletion is file-only |
@@ -97,7 +98,7 @@ assert (numbers at 1) is equal to 9.
 assert length of combined is equal to 5.
 ```
 
-List elements have one compatible type. List indexing is zero-based and checked for invalid or out-of-range positions; concatenation creates a new list without mutating its inputs. See the [language reference](docs/01_LANGUAGE.md), [indexing](docs/16_LIST_INDEXING.md), and [list concatenation](docs/17_LIST_CONCATENATION.md).
+List elements have one compatible type. List indexing is zero-based and checked for invalid or out-of-range positions; concatenation creates a new list without mutating its inputs. For string transformation, see [case expressions](docs/22_STRING_CASE.md): `uppercase of "hello"` returns `"HELLO"` and `lowercase of "HELLO"` returns `"hello"` without changing the case of Semauri syntax. See the [language reference](docs/01_LANGUAGE.md), [indexing](docs/16_LIST_INDEXING.md), and [list concatenation](docs/17_LIST_CONCATENATION.md).
 
 ### First-class assertion tests
 
@@ -222,7 +223,7 @@ cargo run -- check examples/hello_console.sema
 cargo run -- fmt examples/hello_console.sema --check
 ```
 
-See [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.17.0 release notes](docs/releases/0.17.0.md).
+See [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.18.0 release notes](docs/releases/0.18.0.md).
 
 ## License
 
