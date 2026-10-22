@@ -4,19 +4,19 @@
 
 ## Concepto
 
-El dominio Structured Data permite `Create a schema`, `Add a field` y propiedades tipadas. `build` produce JSON Schema. Un esquema valida la **forma** de los datos: no guarda registros ni realiza operaciones de archivos.
+El dominio Structured Data permite `create a schema`, `add a field` y propiedades tipadas. `build` produce JSON Schema. Un esquema valida la **forma** de los datos: no guarda registros ni realiza operaciones de archivos.
 
 ## Programa de ejemplo
 
 Abre [`main.sema`](./main.sema):
 
 ```text
-Create a schema called Alumno.
-Add a field called Nombre.
-Set the datatype of the field called Nombre to "string".
-Set the required of the field called Nombre to true.
-Add a field called Edad.
-Set the datatype of the field called Edad to "integer".
+create a schema called Alumno.
+add a field called Nombre.
+set the datatype of the field called Nombre to "string".
+set the required of the field called Nombre to true.
+add a field called Edad.
+set the datatype of the field called Edad to "integer".
 ```
 
 ## Compruébalo
