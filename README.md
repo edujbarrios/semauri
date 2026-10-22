@@ -8,7 +8,7 @@ Semauri is a **statically typed programming language** with its own compiler, ex
 
 Implemented in Rust, the compiler includes a lexer, parser, typed intermediate representation, lexical scopes, optimization, source-aware diagnostics and effect-aware execution planning. Semauri programs can perform authorized console and filesystem operations, generate web pages and structured schemas, and describe typed machine-learning workflows.
 
-**Latest release:** [Semauri v0.18.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
+**Latest release:** [Semauri v0.19.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
 
 ## Get started
 
@@ -69,7 +69,7 @@ semauri fmt examples/hello_console.sema --check   # exit 1 when formatting diffe
 semauri fmt examples/hello_console.sema --write   # rewrite this file
 ```
 
-`fmt` uses real lexer tokens and source spans. It lowercases **recognized syntax**, not quoted strings, comments, identifiers, names or source formatting. It does not change Rust APIs, JSON field names or filesystem path case. All **19 official examples** and **22 bilingual course programs** now follow this convention, and an automated test enforces it. See [lowercase syntax](docs/21_LOWERCASE_SYNTAX.md).
+`fmt` uses real lexer tokens and source spans. It lowercases **recognized syntax**, not quoted strings, comments, identifiers, names or source formatting. It does not change Rust APIs, JSON field names or filesystem path case. All official examples and **22 bilingual course programs** now follow this convention, and an automated test enforces it. See [lowercase syntax](docs/21_LOWERCASE_SYNTAX.md).
 
 ## Language capabilities
 
@@ -77,8 +77,9 @@ semauri fmt examples/hello_console.sema --write   # rewrite this file
 | --- | --- |
 | Typed core | Immutable bindings, numbers, strings, booleans, colors, homogeneous lists, comparisons, arithmetic and short-circuit logic |
 | Control flow | `if`, `unless`, `otherwise if`, lexical scopes and **static** `for every` iteration |
-| Collections | `length of`, typed `contains`, zero-based `list at index`, immutable `list plus list` |
-| String transformations | Unicode-aware `uppercase of` and `lowercase of` with static type checking |
+| Collections | `length of`, typed `contains`, zero-based indexing, immutable list concatenation and `reverse of` |
+| Numeric data | Checked `sum of` and typed `average of` numeric lists |
+| String transformations | Unicode-aware `uppercase of`, `lowercase of` and `reverse of` |
 | Assertions and tests | Pure typed `assert` statements, source-located failures and `semauri test` suites |
 | Web and structured data | Typed declarations compiled to HTML and JSON Schema |
 | Filesystem | Build shell plans or explicitly execute authorized filesystem operations; deletion is file-only |
@@ -98,7 +99,7 @@ assert (numbers at 1) is equal to 9.
 assert length of combined is equal to 5.
 ```
 
-List elements have one compatible type. List indexing is zero-based and checked for invalid or out-of-range positions; concatenation creates a new list without mutating its inputs. For string transformation, see [case expressions](docs/22_STRING_CASE.md): `uppercase of "hello"` returns `"HELLO"` and `lowercase of "HELLO"` returns `"hello"` without changing the case of Semauri syntax. See the [language reference](docs/01_LANGUAGE.md), [indexing](docs/16_LIST_INDEXING.md), and [list concatenation](docs/17_LIST_CONCATENATION.md).
+List elements have one compatible type. List indexing is zero-based and checked for invalid or out-of-range positions; concatenation creates a new list without mutating its inputs. `reverse of` creates a new reversed list or string, while `sum of` and `average of` compute typed numeric aggregates. For [sequence reversal](docs/24_REVERSE.md) and [numeric aggregates](docs/25_NUMERIC_AGGREGATIONS.md), see the new language reference sections. For string transformation, see [case expressions](docs/22_STRING_CASE.md): `uppercase of "hello"` returns `"HELLO"` and `lowercase of "HELLO"` returns `"hello"` without changing the case of Semauri syntax. See the [language reference](docs/01_LANGUAGE.md), [indexing](docs/16_LIST_INDEXING.md), and [list concatenation](docs/17_LIST_CONCATENATION.md).
 
 ### First-class assertion tests
 
@@ -223,7 +224,7 @@ cargo run -- check examples/hello_console.sema
 cargo run -- fmt examples/hello_console.sema --check
 ```
 
-See [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.18.0 release notes](docs/releases/0.18.0.md).
+See [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.19.0 release notes](docs/releases/0.19.0.md).
 
 ## License
 
