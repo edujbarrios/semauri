@@ -1031,6 +1031,30 @@ impl<'a> Lowerer<'a> {
                 }
             }
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::Sum | UnaryOperator::Average),
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::List(element),
+                    data: ValueData::List(values),
+                } if *element == Type::Number => Ok(BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(aggregate_numeric_list(
+                        &values,
+                        *operator == UnaryOperator::Average,
+                        expression.span(),
+                    )?),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S353",
+                    format!("Numeric aggregation requires list<number>, received {ty}"),
+                    Some(expression.span()),
+                    None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Reverse,
                 operand,
                 ..
@@ -1352,3 +1376,81 @@ fn inspect_value(value: &ValueData) -> String {
     }
 }
 
+
+
+/// Sum and mean of typed numeric lists. Exact integer sums are computed with
+/// checked i64 addition; floats follow the language's f64 number semantics.
+/// Overflow and non-finite floating results produce a located diagnostic.
+fn aggregate_numeric_list(
+    values: &[ValueData],
+    average: bool,
+    span: SourceSpan,
+) -> Result<NumberValue> {
+    if average && values.is_empty() {
+        return Err(SemauriError::semantic(
+            "S354",
+            "'average of' requires a non-empty numeric list",
+            Some(span),
+            None,
+        ));
+    }
+
+    let mut integer_total = 0_i64;
+    let mut floating_total = 0.0_f64;
+    let mut all_integers = true;
+
+    for value in values {
+        match value {
+            ValueData::Number(NumberValue::Int(number)) => {
+                if all_integers {
+                    integer_total = integer_total.checked_add(*number).ok_or_else(|| {
+                        SemauriError::semantic(
+                            "S354",
+                            "Numeric list sum exceeds the signed 64-bit integer range",
+                            Some(span),
+                            None,
+                        )
+                    })?;
+                }
+                floating_total += *number as f64;
+            }
+            ValueData::Number(NumberValue::Float(number)) => {
+                all_integers = false;
+                floating_total += number;
+            }
+            _ => {
+                return Err(SemauriError::semantic(
+                    "S354",
+                    "Numeric list contains a value that is not a number",
+                    Some(span),
+                    None,
+                ));
+            }
+        }
+        if !floating_total.is_finite() {
+            return Err(SemauriError::semantic(
+                "S354",
+                "Numeric list aggregation produced a non-finite result",
+                Some(span),
+                None,
+            ));
+        }
+    }
+
+    if average {
+        let mean = floating_total / values.len() as f64;
+        if !mean.is_finite() {
+            return Err(SemauriError::semantic(
+                "S354",
+                "Numeric list average produced a non-finite result",
+                Some(span),
+                None,
+            ));
+        }
+        Ok(NumberValue::from_f64(mean))
+    } else if all_integers {
+        Ok(NumberValue::Int(integer_total))
+    } else {
+        Ok(NumberValue::from_f64(floating_total))
+    }
+}
