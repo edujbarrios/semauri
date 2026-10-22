@@ -1176,6 +1176,32 @@ impl<'a> Lowerer<'a> {
             (BinaryOperator::Contains, ValueData::List(items), needle) => {
                 ValueData::Boolean(items.contains(&needle))
             }
+            (BinaryOperator::AtIndex, ValueData::List(items), ValueData::Number(index)) => {
+                let index = match index {
+                    NumberValue::Int(value) if value >= 0 => usize::try_from(value).ok(),
+                    _ => None,
+                }
+                .ok_or_else(|| {
+                    SemauriError::semantic(
+                        "S346",
+                        "List index must be a non-negative integer",
+                        Some(right.span()),
+                        None,
+                    )
+                })?;
+                items.get(index).cloned().ok_or_else(|| {
+                    SemauriError::semantic(
+                        "S346",
+                        format!(
+                            "List index {} is out of bounds for {} item(s)",
+                            index,
+                            items.len()
+                        ),
+                        Some(right.span()),
+                        None,
+                    )
+                })?
+            }
             (BinaryOperator::And, ValueData::Boolean(a), ValueData::Boolean(b)) => {
                 ValueData::Boolean(a && b)
             }
