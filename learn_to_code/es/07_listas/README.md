@@ -11,11 +11,11 @@
 Abre [`main.sema`](./main.sema):
 
 ```text
-Let puntuaciones be a list of 10, 20, 30.
-Let colores be a list of red, green, blue.
+let puntuaciones be a list of 10, 20, 30.
+let colores be a list of red, green, blue.
 
-Print puntuaciones.
-Print colores.
+print puntuaciones.
+print colores.
 ```
 
 ## Compruébalo
