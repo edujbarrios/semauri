@@ -30,6 +30,7 @@ include!("domains/builtins/ml.rs");
 include!("frontend/lexer.rs");
 include!("frontend/ast.rs");
 include!("frontend/parser.rs");
+include!("frontend/formatter.rs");
 
 include!("semantic/hir_model.rs");
 include!("semantic/hir_builder.rs");
