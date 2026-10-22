@@ -332,6 +332,17 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::String
                     }
+                    UnaryOperator::Reverse => {
+                        match operand.ty() {
+                            Type::String | Type::List(_) => operand.ty(),
+                            ty => return Err(SemauriError::semantic(
+                                "S352",
+                                format!("'reverse of' requires a string or list, received {ty}"),
+                                Some(*span),
+                                None,
+                            )),
+                        }
+                    }
                     UnaryOperator::Length => {
                         if !matches!(operand.ty(), Type::String | Type::List(_)) {
                             return Err(SemauriError::semantic(
