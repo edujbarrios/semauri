@@ -4,19 +4,19 @@
 
 ## Concept
 
-The Structured Data domain offers `Create a schema`, `Add a field` and typed properties. `semauri build` produces JSON Schema. A schema describes valid fields; it does not store records or write to the filesystem.
+The Structured Data domain offers `create a schema`, `add a field` and typed properties. `semauri build` produces JSON Schema. A schema describes valid fields; it does not store records or write to the filesystem.
 
 ## Example program
 
 Open [`main.sema`](./main.sema):
 
 ```text
-Create a schema called Student.
-Add a field called Name.
-Set the datatype of the field called Name to "string".
-Set the required of the field called Name to true.
-Add a field called Age.
-Set the datatype of the field called Age to "integer".
+create a schema called Student.
+add a field called Name.
+set the datatype of the field called Name to "string".
+set the required of the field called Name to true.
+add a field called Age.
+set the datatype of the field called Age to "integer".
 ```
 
 ## Try it
