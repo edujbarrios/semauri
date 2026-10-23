@@ -19,3 +19,5 @@ semauri run --allow console_write examples/median.sema
 ```
 
 The operation applies to ordinary typed core-language numeric lists, not live tensor values, datasets, or unverified ML training results.
+
+For a reproducible precision check, try `print median of a list of 9007199254740993, 9007199254740995.`: the exact integer result is `9007199254740994`.
