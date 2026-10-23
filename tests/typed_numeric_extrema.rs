@@ -26,12 +26,12 @@ fn run(source: &str) -> semauri::CliResult {
 
 #[test]
 fn extrema_are_pure_typed_and_composable() {
-    let result = run(r#"let scores be a list of 3, -4, 7, 1.
+    let result = run(r#"let scores be a list of 3, minus 4, 7, 1.
 let smallest be minimum of scores.
 let largest be maximum of scores.
-assert smallest is equal to -4.
+assert smallest is equal to minus 4.
 assert largest is equal to 7.
-assert minimum of (reverse of scores) is equal to -4.
+assert minimum of (reverse of scores) is equal to minus 4.
 assert (scores at 0) is equal to 3.
 print smallest.
 print largest."#);
@@ -48,7 +48,7 @@ fn integer_comparisons_above_f64_precision_are_exact() {
 
 #[test]
 fn decimal_extrema_and_duplicate_values() {
-    let result = run("print minimum of a list of 3.5, -0.5, 3.5. print maximum of a list of -2.5, 1.25, 1.25.");
+    let result = run("print minimum of a list of 3.5, minus 0.5, 3.5. print maximum of a list of minus 2.5, 1.25, 1.25.");
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert_eq!(result.stdout, "-0.5\n1.25\n");
 }
