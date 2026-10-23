@@ -1,4 +1,4 @@
-# Semauri language reference — v0.19.0
+# Semauri language reference — v0.20.0
 
 This document describes implemented language behavior, not aspirational syntax.
 

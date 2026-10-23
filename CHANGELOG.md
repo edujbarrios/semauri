@@ -1,3 +1,19 @@
+## 0.20.0 — 2026-10-23
+
+### Typed numeric extrema
+- Add `minimum of` and `maximum of` for `list<number>`, with static `S353` type errors, empty/non-finite `S355` evaluation diagnostics and no new effects. Exact integer-only comparisons preserve `i64` extrema beyond 2^53; mixed decimal/integer comparisons follow current `f64` semantics. [PR #157](https://github.com/edujbarrios/semauri/pull/157).
+- Add integration tests for type checking, fractional and negative numbers, precision, formatting, composition, and effect analysis; include a runnable example and language specification.
+
+### AI engineering reproducibility and portfolio evidence
+- Add a documented ML compiler case study and a CI contract against the checked-in versioned ML example, covering deterministic typed dependency graphs, declaration audits and capability enforcement. [PR #158](https://github.com/edujbarrios/semauri/pull/158).
+- Clarify that ML workflow planning, revision declarations, effect analysis and reproducibility preflight do not implement model training or prove external artifact integrity.
+
+### Compatibility
+- The new reserved words `minimum` and `maximum` cannot be used as bare variable identifiers. Other existing language constructs and case-insensitive command parsing remain supported.
+- Native builds continue to target six Linux/macOS/Windows platform architectures and include SHA256 checksums on release.
+
+See [v0.20.0 release notes](docs/releases/0.20.0.md).
+
 ## 0.19.0 — 2026-10-22
 
 ### Typed sequence and data processing
