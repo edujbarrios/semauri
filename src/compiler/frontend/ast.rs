@@ -6,6 +6,8 @@ pub enum UnaryOperator {
     Reverse,
     Sum,
     Average,
+    Minimum,
+    Maximum,
     Uppercase,
     Lowercase,
 }
@@ -19,6 +21,8 @@ impl UnaryOperator {
             UnaryOperator::Reverse => "reverse",
             UnaryOperator::Sum => "sum",
             UnaryOperator::Average => "average",
+            UnaryOperator::Minimum => "minimum",
+            UnaryOperator::Maximum => "maximum",
             UnaryOperator::Uppercase => "uppercase",
             UnaryOperator::Lowercase => "lowercase",
         }

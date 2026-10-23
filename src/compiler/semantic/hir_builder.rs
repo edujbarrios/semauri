@@ -332,7 +332,7 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::String
                     }
-                    UnaryOperator::Sum | UnaryOperator::Average => {
+                    UnaryOperator::Sum | UnaryOperator::Average | UnaryOperator::Minimum | UnaryOperator::Maximum => {
                         if operand.ty() != Type::List(Box::new(Type::Number)) {
                             return Err(SemauriError::semantic(
                                 "S353",

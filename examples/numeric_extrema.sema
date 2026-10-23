@@ -1,0 +1,8 @@
+# Pure numeric extrema on a typed list.
+let scores be a list of 8, 3, 13, 5.
+let low be minimum of scores.
+let high be maximum of scores.
+assert low is equal to 3.
+assert high is equal to 13.
+print low.
+print high.

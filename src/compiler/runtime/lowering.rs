@@ -1055,6 +1055,30 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::Minimum | UnaryOperator::Maximum),
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::List(element),
+                    data: ValueData::List(values),
+                } if *element == Type::Number => Ok(BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(extrema_numeric_list(
+                        &values,
+                        *operator == UnaryOperator::Minimum,
+                        expression.span(),
+                    )?),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S353",
+                    format!("Numeric aggregation requires list<number>, received {ty}"),
+                    Some(expression.span()),
+                    None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Reverse,
                 operand,
                 ..
@@ -1377,6 +1401,67 @@ fn inspect_value(value: &ValueData) -> String {
 }
 
 
+
+/// Return an extremum from a concrete numeric list without mutating it.
+/// Integer-only comparisons remain exact beyond the f64 precision limit.
+fn extrema_numeric_list(
+    values: &[ValueData],
+    minimum: bool,
+    span: SourceSpan,
+) -> Result<NumberValue> {
+    let mut best: Option<NumberValue> = None;
+    for value in values {
+        let ValueData::Number(candidate) = value else {
+            return Err(SemauriError::semantic(
+                "S353",
+                "Numeric aggregation requires list<number>",
+                Some(span),
+                None,
+            ));
+        };
+        if !candidate.as_f64().is_finite() {
+            return Err(SemauriError::semantic(
+                "S355",
+                "Numeric extrema require finite values",
+                Some(span),
+                None,
+            ));
+        }
+        let replace = match best.as_ref() {
+            None => true,
+            Some(NumberValue::Int(current)) => match candidate {
+                NumberValue::Int(number) => {
+                    if minimum { number < current } else { number > current }
+                }
+                _ => {
+                    if minimum {
+                        candidate.as_f64() < *current as f64
+                    } else {
+                        candidate.as_f64() > *current as f64
+                    }
+                }
+            },
+            Some(current) => {
+                if minimum {
+                    candidate.as_f64() < current.as_f64()
+                } else {
+                    candidate.as_f64() > current.as_f64()
+                }
+            }
+        };
+        if replace {
+            best = Some(candidate.clone());
+        }
+    }
+    best.ok_or_else(|| {
+        SemauriError::semantic(
+            "S355",
+            "Numeric extrema require a non-empty list",
+            Some(span),
+            None,
+        )
+    })
+}
 
 /// Sum and mean of typed numeric lists. Exact integer sums are computed with
 /// checked i64 addition; floats follow the language's f64 number semantics.

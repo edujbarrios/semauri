@@ -733,7 +733,7 @@ impl<'a> Parser<'a> {
                 self.list_literal(&start, true)
             }
             TokenKind::Length | TokenKind::Reverse | TokenKind::Sum | TokenKind::Average
-            | TokenKind::Uppercase | TokenKind::Lowercase => {
+            | TokenKind::Minimum | TokenKind::Maximum | TokenKind::Uppercase | TokenKind::Lowercase => {
                 let start = self.advance().clone();
                 self.consume(
                     TokenKind::Of,
@@ -750,6 +750,8 @@ impl<'a> Parser<'a> {
                         TokenKind::Reverse => UnaryOperator::Reverse,
                         TokenKind::Sum => UnaryOperator::Sum,
                         TokenKind::Average => UnaryOperator::Average,
+                        TokenKind::Minimum => UnaryOperator::Minimum,
+                        TokenKind::Maximum => UnaryOperator::Maximum,
                         TokenKind::Uppercase => UnaryOperator::Uppercase,
                         TokenKind::Lowercase => UnaryOperator::Lowercase,
                         _ => unreachable!(),
