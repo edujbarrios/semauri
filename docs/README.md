@@ -13,6 +13,8 @@ Use this page as the documentation map.
 - [Immutable sequence reversal](24_REVERSE.md)
 - [Typed numeric list aggregations](25_NUMERIC_AGGREGATIONS.md)
 - [Minimum and maximum of typed numeric lists](26_NUMERIC_EXTREMA.md)
+- [Typed any/all Boolean reductions](27_BOOLEAN_REDUCTIONS.md)
+- [Typed numeric median and exact integer negation](28_MEDIAN.md)
 - [Type system](02_TYPES.md)
 
 ## Language and domains
@@ -39,7 +41,7 @@ Use this page as the documentation map.
 
 ## Release notes
 
-- [Latest release: Semauri 0.20.0](releases/0.20.0.md)
+- [Latest release: Semauri 0.21.0](releases/0.21.0.md)
 
 ## Historical release notes
 

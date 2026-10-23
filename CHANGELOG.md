@@ -1,3 +1,19 @@
+## 0.21.0 — 2026-10-23
+
+### Language: typed Boolean reductions
+- Add `any of` and `all of` on `list<boolean>` with static type checking (`S356`), no new effects, integration tests, and a runnable example. `any` and `all` are newly reserved keywords. [PR #160](https://github.com/edujbarrios/semauri/pull/160).
+
+### Language: typed numeric median
+- Add `median of` for finite `list<number>` with checked type constraints (`S353`) and guarded empty/non-finite evaluation (`S357`). Exact integral medians and even integer midpoints preserve i64 precision using i128 intermediate sums; decimals follow f64 rounding. `median` is newly reserved. [PR #161](https://github.com/edujbarrios/semauri/pull/161).
+- Fix existing unary `minus` integer precision loss in both execution and constant folding; preserve exact i64 values and diagnose signed negation overflow (`S358`).
+- Include runnable examples, integration/regression tests, updated language reference, and release packaging documentation.
+
+### Boundaries
+- These operations are pure and work on concrete core-language lists, not tensors or runtime ML dataset handles. This release does not introduce model-training execution.
+- Existing mixed/uppercase language syntax remains compatible, apart from the newly reserved words.
+
+See [v0.21.0 release notes](docs/releases/0.21.0.md).
+
 ## 0.20.0 — 2026-10-23
 
 ### Typed numeric extrema
