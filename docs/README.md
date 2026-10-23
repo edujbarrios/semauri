@@ -12,6 +12,7 @@ Use this page as the documentation map.
 - [Typed uppercase/lowercase string expressions](22_STRING_CASE.md)
 - [Immutable sequence reversal](24_REVERSE.md)
 - [Typed numeric list aggregations](25_NUMERIC_AGGREGATIONS.md)
+- [Minimum and maximum of typed numeric lists](26_NUMERIC_EXTREMA.md)
 - [Type system](02_TYPES.md)
 
 ## Language and domains
@@ -24,6 +25,7 @@ Use this page as the documentation map.
 - [Typed collections: length, membership, indexing, concatenation](13_LENGTH_EXPRESSIONS.md) ([contains](14_CONTAINS.md) · [indexing](16_LIST_INDEXING.md) · [concatenation](17_LIST_CONCATENATION.md))
 - [Executable assertion suites](15_TEST_RUNNER.md)
 - [ML runtime dataflow graph](18_ML_DATAFLOW.md)
+- [AI engineering case study and verified CI contracts](AI_ENGINEERING_CASE_STUDY.md)
 - [Version-qualified ML inputs](19_ML_VERSIONED_INPUTS.md)
 - [Reproducibility preflight and CI audit](20_ML_AUDIT.md)
 - [Universal domain direction](07_UNIVERSAL_DOMAINS.md)
@@ -37,7 +39,7 @@ Use this page as the documentation map.
 
 ## Release notes
 
-- [Latest release: Semauri 0.19.0](releases/0.19.0.md)
+- [Latest release: Semauri 0.20.0](releases/0.20.0.md)
 
 ## Historical release notes
 

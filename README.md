@@ -8,7 +8,7 @@ Semauri is a **statically typed programming language** with its own compiler, ex
 
 Implemented in Rust, the compiler includes a lexer, parser, typed intermediate representation, lexical scopes, optimization, source-aware diagnostics and effect-aware execution planning. Semauri programs can perform authorized console and filesystem operations, generate web pages and structured schemas, and describe typed machine-learning workflows.
 
-**Latest release:** [Semauri v0.19.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
+**Latest release:** [Semauri v0.20.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
 
 ## Get started
 
@@ -99,7 +99,7 @@ assert (numbers at 1) is equal to 9.
 assert length of combined is equal to 5.
 ```
 
-List elements have one compatible type. List indexing is zero-based and checked for invalid or out-of-range positions; concatenation creates a new list without mutating its inputs. `reverse of` creates a new reversed list or string, while `sum of` and `average of` compute typed numeric aggregates. For [sequence reversal](docs/24_REVERSE.md) and [numeric aggregates](docs/25_NUMERIC_AGGREGATIONS.md), see the new language reference sections. For string transformation, see [case expressions](docs/22_STRING_CASE.md): `uppercase of "hello"` returns `"HELLO"` and `lowercase of "HELLO"` returns `"hello"` without changing the case of Semauri syntax. See the [language reference](docs/01_LANGUAGE.md), [indexing](docs/16_LIST_INDEXING.md), and [list concatenation](docs/17_LIST_CONCATENATION.md).
+List elements have one compatible type. List indexing is zero-based and checked for invalid or out-of-range positions; concatenation creates a new list without mutating its inputs. `reverse of` creates a new reversed list or string, while `sum of`, `average of`, `minimum of` and `maximum of` compute typed numeric aggregates. For [sequence reversal](docs/24_REVERSE.md), [numeric aggregates](docs/25_NUMERIC_AGGREGATIONS.md) and [numeric extrema](docs/26_NUMERIC_EXTREMA.md), see the new language reference sections. For string transformation, see [case expressions](docs/22_STRING_CASE.md): `uppercase of "hello"` returns `"HELLO"` and `lowercase of "HELLO"` returns `"hello"` without changing the case of Semauri syntax. See the [language reference](docs/01_LANGUAGE.md), [indexing](docs/16_LIST_INDEXING.md), and [list concatenation](docs/17_LIST_CONCATENATION.md).
 
 ### First-class assertion tests
 
@@ -224,7 +224,7 @@ cargo run -- check examples/hello_console.sema
 cargo run -- fmt examples/hello_console.sema --check
 ```
 
-See [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.19.0 release notes](docs/releases/0.19.0.md).
+See [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.20.0 release notes](docs/releases/0.20.0.md).
 
 ## License
 
