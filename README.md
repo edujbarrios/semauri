@@ -138,6 +138,8 @@ semauri audit train.sema --strict
 
 Read [ML semantics](docs/06_ML.md), [dataflow graphs](docs/18_ML_DATAFLOW.md), [version-qualified inputs](docs/19_ML_VERSIONED_INPUTS.md) and [audit limitations](docs/20_ML_AUDIT.md).
 
+**AI engineering case study:** [traceable ML plans, reproducibility contracts, and CI policy](docs/AI_ENGINEERING_CASE_STUDY.md), including executable checks against the checked-in ML workflow and an explicit distinction between a planning compiler and an ML training system.
+
 ## Command reference
 
 | Command | Purpose |

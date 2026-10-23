@@ -18,6 +18,8 @@ jobs:
         run: cargo test --test example_conformance
       - name: Test Rust compiler
         run: cargo test --all-targets
+      - name: Validate AI engineering ML contract
+        run: cargo test --test ml_portfolio_contract
 
   distribution-unix:
     name: distribution (${{ matrix.platform }})
