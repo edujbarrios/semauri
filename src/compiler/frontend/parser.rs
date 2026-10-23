@@ -733,11 +733,12 @@ impl<'a> Parser<'a> {
                 self.list_literal(&start, true)
             }
             TokenKind::Length | TokenKind::Reverse | TokenKind::Sum | TokenKind::Average
-            | TokenKind::Minimum | TokenKind::Maximum | TokenKind::Uppercase | TokenKind::Lowercase => {
+            | TokenKind::Minimum | TokenKind::Maximum | TokenKind::Any | TokenKind::All
+            | TokenKind::Uppercase | TokenKind::Lowercase => {
                 let start = self.advance().clone();
                 self.consume(
                     TokenKind::Of,
-                    "Expected 'of' after string or length transformation",
+                    "Expected 'of' after a prefix operation",
                     "S242",
                 )?;
                 // A primary operand keeps prefix precedence unambiguous.
@@ -752,6 +753,8 @@ impl<'a> Parser<'a> {
                         TokenKind::Average => UnaryOperator::Average,
                         TokenKind::Minimum => UnaryOperator::Minimum,
                         TokenKind::Maximum => UnaryOperator::Maximum,
+                        TokenKind::Any => UnaryOperator::Any,
+                        TokenKind::All => UnaryOperator::All,
                         TokenKind::Uppercase => UnaryOperator::Uppercase,
                         TokenKind::Lowercase => UnaryOperator::Lowercase,
                         _ => unreachable!(),

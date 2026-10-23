@@ -332,6 +332,17 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::String
                     }
+                    UnaryOperator::Any | UnaryOperator::All => {
+                        if operand.ty() != Type::List(Box::new(Type::Boolean)) {
+                            return Err(SemauriError::semantic(
+                                "S356",
+                                format!("Boolean reduction requires list<boolean>, received {}", operand.ty()),
+                                Some(*span),
+                                None,
+                            ));
+                        }
+                        Type::Boolean
+                    }
                     UnaryOperator::Sum | UnaryOperator::Average | UnaryOperator::Minimum | UnaryOperator::Maximum => {
                         if operand.ty() != Type::List(Box::new(Type::Number)) {
                             return Err(SemauriError::semantic(

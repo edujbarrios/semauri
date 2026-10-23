@@ -40,6 +40,8 @@ impl Compiler {
                     | TokenKind::Average
                     | TokenKind::Minimum
                     | TokenKind::Maximum
+                    | TokenKind::Any
+                    | TokenKind::All
                     | TokenKind::Uppercase
                     | TokenKind::Lowercase
                     | TokenKind::Contains
