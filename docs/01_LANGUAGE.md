@@ -1,4 +1,4 @@
-# Semauri language reference — v0.20.0
+# Semauri language reference — v0.21.0
 
 This document describes implemented language behavior, not aspirational syntax.
 
@@ -43,6 +43,7 @@ numeric_unary    = [ MINUS ] (numeric_unary | primary) ;
 primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
                  | LENGTH OF primary | REVERSE OF primary | SUM OF primary
                  | AVERAGE OF primary | MINIMUM OF primary | MAXIMUM OF primary
+                 | MEDIAN OF primary | ANY OF primary | ALL OF primary
                  | UPPERCASE OF primary | LOWERCASE OF primary
                  | variable_reference | "(" expression ")" ;
 list_literal     = [ ARTICLE ] LIST OF expression { "," expression } ;
@@ -54,7 +55,7 @@ The handwritten recursive-descent parser remains the executable grammar during 0
 
 Semauri includes pure operations for working with concrete strings and homogeneous lists. `reverse of` returns a new string or list with its elements in reverse order; original list bindings remain unchanged. String reversal operates on Unicode scalar values rather than grapheme clusters.
 
-Numeric reductions use `sum of`, `average of`, `minimum of` and `maximum of` with `list<number>` inputs and return `number`. Non-numeric inputs fail static validation (`S353`); integer sums check overflow and report `S354` rather than silently wrapping.
+Numeric reductions use `sum of`, `average of`, `minimum of`, `maximum of` and `median of` with `list<number>` inputs and return `number`. Non-numeric inputs fail static validation (`S353`); integer sums check overflow and report `S354` rather than silently wrapping.
 
 ```sema
 let readings be a list of 2, 4, 6.
@@ -66,7 +67,7 @@ assert total is equal to 12.
 assert mean is equal to 4.
 ```
 
-These prefix expressions bind to the next primary. Parenthesize larger expressions, for example `sum of (a plus b)`. See [reversal](24_REVERSE.md), [numeric aggregations](25_NUMERIC_AGGREGATIONS.md) and [numeric extrema](26_NUMERIC_EXTREMA.md) for full semantics, including floating-point precision and error cases.
+These prefix expressions bind to the next primary. Parenthesize larger expressions, for example `sum of (a plus b)`. See [reversal](24_REVERSE.md), [numeric aggregations](25_NUMERIC_AGGREGATIONS.md) and [numeric extrema](26_NUMERIC_EXTREMA.md) for full semantics, including floating-point precision and error cases. See [median](28_MEDIAN.md) for middle-element semantics and precise integer handling, and [Boolean reductions](27_BOOLEAN_REDUCTIONS.md) for `any of` and `all of` on typed `list<boolean>`.
 
 ## Unicode string transformations
 
