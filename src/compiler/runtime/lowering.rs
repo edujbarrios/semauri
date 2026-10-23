@@ -1055,6 +1055,36 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::Any | UnaryOperator::All),
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::List(element),
+                    data: ValueData::List(values),
+                } if *element == Type::Boolean => {
+                    let predicate = |value: &ValueData| {
+                        matches!(value, ValueData::Boolean(true))
+                    };
+                    let result = if *operator == UnaryOperator::Any {
+                        values.iter().any(predicate)
+                    } else {
+                        values.iter().all(predicate)
+                    };
+                    Ok(BoundValue::Compile {
+                        ty: Type::Boolean,
+                        data: ValueData::Boolean(result),
+                    })
+                }
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S356",
+                    format!("Boolean reduction requires list<boolean>, received {ty}"),
+                    Some(expression.span()),
+                    None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: operator @ (UnaryOperator::Minimum | UnaryOperator::Maximum),
                 operand,
                 ..

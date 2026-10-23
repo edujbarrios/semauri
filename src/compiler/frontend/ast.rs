@@ -8,6 +8,8 @@ pub enum UnaryOperator {
     Average,
     Minimum,
     Maximum,
+    Any,
+    All,
     Uppercase,
     Lowercase,
 }
@@ -23,6 +25,8 @@ impl UnaryOperator {
             UnaryOperator::Average => "average",
             UnaryOperator::Minimum => "minimum",
             UnaryOperator::Maximum => "maximum",
+            UnaryOperator::Any => "any",
+            UnaryOperator::All => "all",
             UnaryOperator::Uppercase => "uppercase",
             UnaryOperator::Lowercase => "lowercase",
         }
