@@ -10,6 +10,7 @@ pub enum UnaryOperator {
     Maximum,
     Any,
     All,
+    Median,
     Uppercase,
     Lowercase,
 }
@@ -27,6 +28,7 @@ impl UnaryOperator {
             UnaryOperator::Maximum => "maximum",
             UnaryOperator::Any => "any",
             UnaryOperator::All => "all",
+            UnaryOperator::Median => "median",
             UnaryOperator::Uppercase => "uppercase",
             UnaryOperator::Lowercase => "lowercase",
         }
