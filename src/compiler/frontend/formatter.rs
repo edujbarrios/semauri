@@ -38,6 +38,8 @@ impl Compiler {
                     | TokenKind::Reverse
                     | TokenKind::Sum
                     | TokenKind::Average
+                    | TokenKind::Minimum
+                    | TokenKind::Maximum
                     | TokenKind::Uppercase
                     | TokenKind::Lowercase
                     | TokenKind::Contains
