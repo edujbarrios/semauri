@@ -1085,6 +1085,26 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::Median,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::List(element),
+                    data: ValueData::List(values),
+                } if *element == Type::Number => Ok(BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(median_numeric_list(&values, expression.span())?),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S353",
+                    format!("Numeric aggregation requires list<number>, received {ty}"),
+                    Some(expression.span()),
+                    None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: operator @ (UnaryOperator::Minimum | UnaryOperator::Maximum),
                 operand,
                 ..
@@ -1191,10 +1211,25 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Compile {
                     ty: Type::Number,
                     data: ValueData::Number(value),
-                } => Ok(BoundValue::Compile {
-                    ty: Type::Number,
-                    data: ValueData::Number(NumberValue::from_f64(-value.as_f64())),
-                }),
+                } => {
+                    let negated = match value {
+                        NumberValue::Int(integer) => NumberValue::Int(
+                            integer.checked_neg().ok_or_else(|| {
+                                SemauriError::semantic(
+                                    "S358",
+                                    "Negating this integer exceeds the signed 64-bit range",
+                                    Some(expression.span()),
+                                    None,
+                                )
+                            })?,
+                        ),
+                        NumberValue::Float(number) => NumberValue::Float(-number),
+                    };
+                    Ok(BoundValue::Compile {
+                        ty: Type::Number,
+                        data: ValueData::Number(negated),
+                    })
+                },
                 BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
                     "S314",
                     format!("Unary 'minus' requires a number operand, received {ty}"),
@@ -1431,6 +1466,69 @@ fn inspect_value(value: &ValueData) -> String {
 }
 
 
+
+/// Median of concrete numeric data. Integer pairs use i128 to avoid
+/// overflowing their sum; sorting pure i64 values does not round via f64.
+fn median_numeric_list(values: &[ValueData], span: SourceSpan) -> Result<NumberValue> {
+    let mut numbers = Vec::with_capacity(values.len());
+    for value in values {
+        let ValueData::Number(number) = value else {
+            return Err(SemauriError::semantic(
+                "S353",
+                "Numeric median requires list<number>",
+                Some(span),
+                None,
+            ));
+        };
+        if !number.as_f64().is_finite() {
+            return Err(SemauriError::semantic(
+                "S357",
+                "Numeric median requires finite values",
+                Some(span),
+                None,
+            ));
+        }
+        numbers.push(number.clone());
+    }
+    if numbers.is_empty() {
+        return Err(SemauriError::semantic(
+            "S357",
+            "Numeric median requires a non-empty list",
+            Some(span),
+            None,
+        ));
+    }
+    numbers.sort_by(|a, b| match (a, b) {
+        (NumberValue::Int(left), NumberValue::Int(right)) => left.cmp(right),
+        _ => a.as_f64().partial_cmp(&b.as_f64()).unwrap_or(std::cmp::Ordering::Equal),
+    });
+    let middle = numbers.len() / 2;
+    if numbers.len() % 2 == 1 {
+        return Ok(numbers[middle].clone());
+    }
+    match (&numbers[middle - 1], &numbers[middle]) {
+        (NumberValue::Int(left), NumberValue::Int(right)) => {
+            let sum = i128::from(*left) + i128::from(*right);
+            if sum % 2 == 0 {
+                Ok(NumberValue::Int((sum / 2) as i64))
+            } else {
+                Ok(NumberValue::Float(sum as f64 / 2.0))
+            }
+        }
+        (left, right) => {
+            let value = left.as_f64() / 2.0 + right.as_f64() / 2.0;
+            if !value.is_finite() {
+                return Err(SemauriError::semantic(
+                    "S357",
+                    "Numeric median produced a non-finite result",
+                    Some(span),
+                    None,
+                ));
+            }
+            Ok(NumberValue::Float(value))
+        }
+    }
+}
 
 /// Return an extremum from a concrete numeric list without mutating it.
 /// Integer-only comparisons remain exact beyond the f64 precision limit.

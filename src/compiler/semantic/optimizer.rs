@@ -223,12 +223,19 @@ fn fold_expr(
                     };
                 }
                 (UnaryOperator::Negate, Some(ValueData::Number(value))) => {
-                    *changes += 1;
-                    return HirExpr::Literal {
-                        ty: Type::Number,
-                        value: LiteralValue::Number(NumberValue::from_f64(-value.as_f64())),
-                        span: *span,
+                    let negated = match value {
+                        NumberValue::Int(integer) => integer.checked_neg().map(NumberValue::Int),
+                        NumberValue::Float(number) => Some(NumberValue::Float(-number)),
                     };
+                    // Do not fold an overflowing negation; evaluation reports S358.
+                    if let Some(negated) = negated {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(negated),
+                            span: *span,
+                        };
+                    }
                 }
                 (UnaryOperator::Uppercase, Some(ValueData::String(value))) => {
                     *changes += 1;
