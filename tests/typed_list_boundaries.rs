@@ -45,6 +45,19 @@ print last of a list of false, true."#);
 }
 
 #[test]
+fn preserves_legacy_first_and_last_variable_identifiers() {
+    let result = run(r#"let first be a list of 1, 2.
+let last be a list of 3, 4.
+let joined be first plus last.
+assert length of joined is equal to 4.
+print first.
+print last.
+print first of joined."#);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "[1, 2]\\n[3, 4]\\n1\\n");
+}
+
+#[test]
 fn single_item_list_is_its_own_first_and_last() {
     let result = run("print first of a list of 7. print last of a list of 7.");
     assert_eq!(result.status, 0, "{}", result.stderr);
