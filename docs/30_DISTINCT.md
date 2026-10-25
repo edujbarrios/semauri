@@ -21,3 +21,5 @@ semauri run --allow console_write examples/distinct.sema
 ```
 
 See [sorting](29_SORTED.md), [list membership](14_CONTAINS.md), and [the language reference](01_LANGUAGE.md).
+
+For reproducible output, example data is evaluated once before deduplication, and source list values remain available unchanged for later statements. This pure transformation introduces no additional effect grants.
