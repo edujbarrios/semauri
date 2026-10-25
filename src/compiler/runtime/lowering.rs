@@ -1129,6 +1129,69 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::Sorted,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::List(element),
+                    data: ValueData::List(mut values),
+                } if matches!(element.as_ref(), Type::Number | Type::String | Type::Boolean) => {
+                    match element.as_ref() {
+                        Type::Number => {
+                            for value in &values {
+                                let ValueData::Number(number) = value else {
+                                    return Err(SemauriError::semantic(
+                                        "S359",
+                                        "Sorted numeric list contains a non-number",
+                                        Some(expression.span()),
+                                        None,
+                                    ));
+                                };
+                                if !number.as_f64().is_finite() {
+                                    return Err(SemauriError::semantic(
+                                        "S359",
+                                        "Sorted numeric list requires finite values",
+                                        Some(expression.span()),
+                                        None,
+                                    ));
+                                }
+                            }
+                            values.sort_by(|left, right| {
+                                let (ValueData::Number(left), ValueData::Number(right)) = (left, right) else {
+                                    unreachable!("type-checked numeric list")
+                                };
+                                compare_finite_numbers(left, right)
+                            });
+                        }
+                        Type::String => values.sort_by(|left, right| {
+                            let (ValueData::String(left), ValueData::String(right)) = (left, right) else {
+                                unreachable!("type-checked string list")
+                            };
+                            left.cmp(right)
+                        }),
+                        Type::Boolean => values.sort_by(|left, right| {
+                            let (ValueData::Boolean(left), ValueData::Boolean(right)) = (left, right) else {
+                                unreachable!("type-checked boolean list")
+                            };
+                            left.cmp(right)
+                        }),
+                        _ => unreachable!("type-checked sortable list"),
+                    }
+                    Ok(BoundValue::Compile {
+                        ty: Type::List(element),
+                        data: ValueData::List(values),
+                    })
+                }
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S359",
+                    format!("'sorted of' requires list<number>, list<string> or list<boolean>, received {ty}"),
+                    Some(expression.span()),
+                    None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Reverse,
                 operand,
                 ..
@@ -1467,6 +1530,39 @@ fn inspect_value(value: &ValueData) -> String {
 
 
 
+/// Exact, transitive comparison for finite ints/floats. Converting an i64
+/// into f64 would conflate adjacent integers beyond 2^53 and can make
+/// mixed-type sort comparisons inconsistent.
+fn compare_finite_numbers(left: &NumberValue, right: &NumberValue) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+    match (left, right) {
+        (NumberValue::Int(a), NumberValue::Int(b)) => a.cmp(b),
+        (NumberValue::Float(a), NumberValue::Float(b)) => {
+            a.partial_cmp(b).expect("finite numeric values")
+        }
+        (NumberValue::Int(a), NumberValue::Float(b)) => compare_integer_to_float(*a, *b),
+        (NumberValue::Float(a), NumberValue::Int(b)) => compare_integer_to_float(*b, *a).reverse(),
+    }
+}
+
+fn compare_integer_to_float(integer: i64, decimal: f64) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+    // 2^63 is exactly representable in f64, but not in i64.
+    // Handle out-of-range decimals before using a checked-range cast.
+    if decimal >= 9_223_372_036_854_775_808.0 {
+        return Ordering::Less;
+    }
+    if decimal < -9_223_372_036_854_775_808.0 {
+        return Ordering::Greater;
+    }
+    let integral_part = decimal.trunc() as i64;
+    match integer.cmp(&integral_part) {
+        Ordering::Equal if decimal.fract() > 0.0 => Ordering::Less,
+        Ordering::Equal if decimal.fract() < 0.0 => Ordering::Greater,
+        other => other,
+    }
+}
+
 /// Median of concrete numeric data. Integer pairs use i128 to avoid
 /// overflowing their sum; sorting pure i64 values does not round via f64.
 fn median_numeric_list(values: &[ValueData], span: SourceSpan) -> Result<NumberValue> {
@@ -1498,10 +1594,7 @@ fn median_numeric_list(values: &[ValueData], span: SourceSpan) -> Result<NumberV
             None,
         ));
     }
-    numbers.sort_by(|a, b| match (a, b) {
-        (NumberValue::Int(left), NumberValue::Int(right)) => left.cmp(right),
-        _ => a.as_f64().partial_cmp(&b.as_f64()).unwrap_or(std::cmp::Ordering::Equal),
-    });
+    numbers.sort_by(compare_finite_numbers);
     let middle = numbers.len() / 2;
     if numbers.len() % 2 == 1 {
         return Ok(numbers[middle].clone());

@@ -354,6 +354,17 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::Sorted => {
+                        match operand.ty() {
+                            Type::List(element) if matches!(element.as_ref(), Type::Number | Type::String | Type::Boolean) => operand.ty(),
+                            ty => return Err(SemauriError::semantic(
+                                "S359",
+                                format!("'sorted of' requires list<number>, list<string> or list<boolean>, received {ty}"),
+                                Some(*span),
+                                None,
+                            )),
+                        }
+                    }
                     UnaryOperator::Reverse => {
                         match operand.ty() {
                             Type::String | Type::List(_) => operand.ty(),

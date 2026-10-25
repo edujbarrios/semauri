@@ -41,6 +41,7 @@ impl Compiler {
                     | TokenKind::Minimum
                     | TokenKind::Maximum
                     | TokenKind::Median
+                    | TokenKind::Sorted
                     | TokenKind::Any
                     | TokenKind::All
                     | TokenKind::Uppercase
