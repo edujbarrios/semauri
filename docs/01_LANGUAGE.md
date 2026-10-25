@@ -1,4 +1,4 @@
-# Semauri language reference — v0.23.0
+# Semauri language reference — v0.24.0
 
 This document describes implemented language behavior, not aspirational syntax.
 
@@ -47,6 +47,9 @@ primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
                  | ANY OF primary | ALL OF primary
                  | FIRST OF primary | LAST OF primary
                  | TAKE numeric_unary FROM primary | DROP numeric_unary FROM primary
+                 | MAP EVERY identifier IN primary TO expression
+                 | FILTER EVERY identifier IN primary IF expression
+                 | RANGE FROM numeric_unary TO numeric_unary
                  | UPPERCASE OF primary | LOWERCASE OF primary
                  | variable_reference | "(" expression ")" ;
 list_literal     = [ ARTICLE ] LIST OF expression { "," expression } ;
@@ -55,6 +58,10 @@ list_literal     = [ ARTICLE ] LIST OF expression { "," expression } ;
 The handwritten recursive-descent parser remains the executable grammar during 0.x.
 
 ## Typed sequence transformations and numeric reductions
+
+Version 0.24.0 adds `map every element in LIST to BODY` and `filter every element in LIST if PREDICATE` as pure, type-checked list expressions. Their iterator variables use lexical scopes and can access immutable enclosing bindings. Mapping infers `list<T> -> list<U>`; filtering requires a boolean predicate and retains `list<T>`. The contextual syntax does not prevent variables named `map` or `filter`. `range from START to END` produces up to 10,000 signed integer elements inclusively, ascending or descending; `range` is also contextual. Parenthesize nontrivial operands. See [map/filter](33_MAP_FILTER.md) and [integer ranges](34_INTEGER_RANGE.md).
+
+
 
 Semauri includes pure operations for working with concrete strings and homogeneous lists. `sorted of` returns a new ascending list of numbers, strings or booleans (with precise mixed integer/decimal comparisons), while `distinct of` returns a new homogeneous list without repeated values, keeping the first occurrence. Neither modifies its source. `first of` and `last of` select typed list elements without mutation; `take COUNT from LIST` and `drop COUNT from LIST` return typed prefixes/suffixes with clamped non-negative integer counts. `reverse of` returns a new string or list with its elements in reverse order; original list bindings remain unchanged. String reversal operates on Unicode scalar values rather than grapheme clusters.
 
@@ -316,6 +323,10 @@ Relevant diagnostics include:
 - `S362`: `first of` or `last of` evaluated on an empty typed list
 - `S363`: `take` / `drop` require a number count and typed list
 - `S364`: negative or fractional count for `take` / `drop`
+- `S365`: map/filter requires a list input
+- `S366`: invalid filter predicate or unit-valued map body
+- `S367`: range endpoints are not numeric
+- `S368`: fractional range endpoint or more than 10,000 generated elements
 
 ## Determinism rule
 

@@ -19,6 +19,8 @@ Use this page as the documentation map.
 - [Stable typed list deduplication](30_DISTINCT.md)
 - [First and last elements of typed lists](31_LIST_BOUNDARIES.md)
 - [Take and drop immutable typed list slices](32_LIST_WINDOWS.md)
+- [Typed scoped map/filter list pipelines](33_MAP_FILTER.md)
+- [Bounded inclusive integer ranges](34_INTEGER_RANGE.md)
 - [Type system](02_TYPES.md)
 
 ## Language and domains
@@ -45,7 +47,7 @@ Use this page as the documentation map.
 
 ## Release notes
 
-- [Latest release: Semauri 0.23.0](releases/0.23.0.md)
+- [Latest release: Semauri 0.24.0](releases/0.24.0.md)
 
 ## Historical release notes
 
