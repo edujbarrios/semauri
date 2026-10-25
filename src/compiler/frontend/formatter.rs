@@ -95,6 +95,7 @@ impl Compiler {
                     | TokenKind::DomainElement
                     | TokenKind::DomainProperty
                     | TokenKind::DomainAction
+                    | TokenKind::Word
             ) {
                 continue;
             }
