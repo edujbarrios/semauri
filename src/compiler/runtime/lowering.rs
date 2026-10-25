@@ -977,10 +977,12 @@ impl<'a> Lowerer<'a> {
                     return Err(self.runtime_value_error(iterable.span()));
                 };
                 let result_element = match ty {
-                    Type::List(element) => element.as_ref().clone(),
+                    Type::List(element) => Some(element.as_ref().clone()),
+                    Type::Number if *kind == ListTransformKind::Count => None,
                     _ => unreachable!("type-checked list transformation"),
                 };
-                let mut selected = Vec::with_capacity(input_values.len());
+                let mut selected = Vec::with_capacity(if *kind == ListTransformKind::Count { 0 } else { input_values.len() });
+                let mut matching_count = 0_i64;
                 for input in input_values {
                     self.push_environment();
                     self.environments.last_mut().unwrap().insert(
@@ -996,7 +998,7 @@ impl<'a> Lowerer<'a> {
                         return Err(self.runtime_value_error(body.span()));
                     };
                     if *kind == ListTransformKind::Map {
-                        if body_type != result_element {
+                        if Some(&body_type) != result_element.as_ref() {
                             return Err(SemauriError::semantic(
                                 "S365",
                                 "Mapped element type differs from its typed HIR result",
@@ -1007,7 +1009,18 @@ impl<'a> Lowerer<'a> {
                         selected.push(data);
                     } else {
                         match data {
-                            ValueData::Boolean(true) => selected.push(input),
+                            ValueData::Boolean(true) => {
+                                if *kind == ListTransformKind::Count {
+                                    matching_count = matching_count.checked_add(1).ok_or_else(|| {
+                                        SemauriError::semantic(
+                                            "S373",
+                                            "Counted list items exceed the signed integer range",
+                                            Some(expression.span()), None)
+                                    })?;
+                                } else {
+                                    selected.push(input);
+                                }
+                            },
                             ValueData::Boolean(false) => {},
                             _ => return Err(SemauriError::semantic(
                                 "S366",
@@ -1020,7 +1033,11 @@ impl<'a> Lowerer<'a> {
                 }
                 Ok(BoundValue::Compile {
                     ty: ty.clone(),
-                    data: ValueData::List(selected),
+                    data: if *kind == ListTransformKind::Count {
+                        ValueData::Number(NumberValue::Int(matching_count))
+                    } else {
+                        ValueData::List(selected)
+                    },
                 })
             }
             HirExpr::List { ty, items, .. } => {

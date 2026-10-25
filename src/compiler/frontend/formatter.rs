@@ -32,7 +32,7 @@ impl Compiler {
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
                 && !is_define && !is_function && !is_invoke
-                && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter")
+                && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::From))
