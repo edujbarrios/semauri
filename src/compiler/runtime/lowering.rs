@@ -1471,6 +1471,36 @@ impl<'a> Lowerer<'a> {
         let result_type = binary_type(operator, &left_ty, &right_ty, span)?;
 
         let result = match (operator, left_data, right_data) {
+            (BinaryOperator::Range, ValueData::Number(start), ValueData::Number(end)) => {
+                let endpoints = match (start, end) {
+                    (NumberValue::Int(a), NumberValue::Int(b)) => Some((a, b)),
+                    _ => None,
+                }.ok_or_else(|| SemauriError::semantic(
+                    "S368",
+                    "Range endpoints must be integers; decimals are not permitted",
+                    Some(span),
+                    None,
+                ))?;
+                let (start, end) = endpoints;
+                let distance = (i128::from(end) - i128::from(start)).abs() + 1;
+                // Bounds avoid unbounded compile-time memory or CPU work.
+                const MAX_RANGE_ELEMENTS: i128 = 10_000;
+                if distance > MAX_RANGE_ELEMENTS {
+                    return Err(SemauriError::semantic(
+                        "S368",
+                        "Range exceeds the 10,000-element compile-time safety limit",
+                        Some(span),
+                        None,
+                    ));
+                }
+                let step: i128 = if end >= start { 1 } else { -1 };
+                let values = (0..distance)
+                    .map(|offset| ValueData::Number(NumberValue::Int(
+                        (i128::from(start) + step * offset) as i64
+                    )))
+                    .collect();
+                ValueData::List(values)
+            }
             (BinaryOperator::Add, ValueData::Number(a), ValueData::Number(b)) => {
                 ValueData::Number(NumberValue::from_f64(a.as_f64() + b.as_f64()))
             }

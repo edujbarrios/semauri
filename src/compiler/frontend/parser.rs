@@ -804,6 +804,20 @@ impl<'a> Parser<'a> {
                     span,
                 })
             }
+            TokenKind::Word if token.lexeme.eq_ignore_ascii_case("range")
+                && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::From) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::From, "Expected 'from' after range", "S245")?;
+                let lower = self.numeric_unary()?;
+                self.consume(TokenKind::To, "Expected 'to' between range endpoints", "S245")?;
+                let upper = self.numeric_unary()?;
+                Ok(Expr::Binary {
+                    span: span_between_spans(start.span, upper.span()),
+                    operator: BinaryOperator::Range,
+                    left: Box::new(lower),
+                    right: Box::new(upper),
+                })
+            }
             TokenKind::Word if matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter")
                 && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Every) => {
                 let start = self.advance().clone();

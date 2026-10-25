@@ -672,6 +672,10 @@ fn removable_expression(expr: &HirExpr) -> bool {
             if !removable_expression(left) || !removable_expression(right) {
                 return false;
             }
+            if matches!(operator, BinaryOperator::Range) {
+                // Large or fractional ranges can fail at evaluation time.
+                return false;
+            }
             if matches!(operator, BinaryOperator::Divide | BinaryOperator::Modulo) {
                 return literal_data(right).is_some_and(
                     |value| matches!(value, ValueData::Number(number) if !number.is_zero()),
