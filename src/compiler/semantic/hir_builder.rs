@@ -367,7 +367,8 @@ impl<'a> HirBuilder<'a> {
                 let result = (|| {
                     let binding = self.create_symbol(iterator, "list_iterator", *element, *binding_span)?;
                     let body = self.build_expr(body)?;
-                    if *kind == ListTransformKind::Filter && body.ty() != Type::Boolean {
+                    if matches!(kind, ListTransformKind::Filter | ListTransformKind::Count)
+                        && body.ty() != Type::Boolean {
                         return Err(SemauriError::semantic(
                             "S366",
                             format!("Filter predicate must be boolean, received {}", body.ty()),
@@ -383,10 +384,10 @@ impl<'a> HirBuilder<'a> {
                             None,
                         ));
                     }
-                    let ty = if *kind == ListTransformKind::Map {
-                        Type::List(Box::new(body.ty()))
-                    } else {
-                        iterable.ty()
+                    let ty = match kind {
+                        ListTransformKind::Map => Type::List(Box::new(body.ty())),
+                        ListTransformKind::Filter => iterable.ty(),
+                        ListTransformKind::Count => Type::Number,
                     };
                     Ok(HirExpr::ListTransform {
                         ty,

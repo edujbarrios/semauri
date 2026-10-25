@@ -1,0 +1,6 @@
+# Count items satisfying a statically checked boolean predicate.
+define function is_even taking n as number to ((n modulo 2) is equal to 0).
+let values be range from 1 to 10.
+let even_count be count every value in values if (invoke is_even to value).
+assert even_count is equal to 5.
+print even_count.
