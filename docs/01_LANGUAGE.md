@@ -50,6 +50,7 @@ primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
                  | FIRST OF primary | LAST OF primary
                  | TAKE numeric_unary FROM primary | DROP numeric_unary FROM primary
                  | MAP EVERY identifier IN primary TO expression
+                  | COUNT EVERY identifier IN primary IF expression
                  | FILTER EVERY identifier IN primary IF expression
                  | RANGE FROM numeric_unary TO numeric_unary
                   | INVOKE identifier TO primary
@@ -70,6 +71,8 @@ let numbers be range from 1 to 4.
 let squares be map every x in numbers to (invoke square to x).
 assert last of squares is equal to 16.
 ```
+
+Typed `count every element in LIST if PREDICATE` produces an exact integer number of matches without materializing a filtered list. The iterator uses lexical scope and may call a previously declared pure function. Empty lists return zero; invalid inputs and predicates produce `S365`/`S366`, while count overflow would produce `S373`. See [predicate counting](36_COUNT_EVERY.md).
 
 Function bodies are restricted to pure core-language expressions. Calls are type checked before evaluation, receive their own parameter environment and work only on concrete compiler-known values. Recursive/forward calls, multi-parameter signatures and arbitrary runtime functions are not supported. `define`, `function` and `invoke` are contextual spellings. For complete semantics and diagnostics see [pure functions](35_PURE_FUNCTIONS.md).
 
@@ -347,6 +350,7 @@ Relevant diagnostics include:
 - `S370`: function argument does not match parameter type
 - `S371`: duplicate function name
 - `S372`: invalid function scope or impure function body
+- `S373`: `count every` matched element count exceeds signed 64-bit range
 
 ## Determinism rule
 

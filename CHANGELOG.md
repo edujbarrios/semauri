@@ -6,6 +6,11 @@
 - Types include primitive values and recursively nested `list of TYPE` parameters. Parameter counts are currently limited to one. Calls to unknown functions fail with `S369`, type mismatches with `S370`, duplicate declarations with `S371`, and invalid scope/effectful bodies with `S372`. Parser syntax errors use `S246`/`S247`.
 - Function invocation uses contextual `invoke`, avoiding collision with the existing ML `apply lora` domain action. `define` and `function` remain contextual. Add regression tests, runnable programs, examples, and reference documentation.
 
+### Language: typed predicate counting
+
+- Add pure `count every ELEMENT in LIST if PREDICATE` to return an exact `number` match count without allocating a filtered list, with lexical iterator bindings, checked boolean predicate typing, scoped evaluation and source-located S373 overflow diagnostic. Contextual `count` preserves earlier variable names. [PR #173](https://github.com/edujbarrios/semauri/pull/173).
+- Seven focused regression tests for empty lists, pure user-function integration, scope, formatter/HIR/optimizer/effect analysis and wrong-typed operands, plus a runnable example and semantic specification.
+
 ### Current boundaries
 
 - Functions are pure, top-level, declared before use, and evaluated only on compiler-known values. Recursion, forward references, first-class functions, multi-argument definitions and general runtime ML execution are **not** supported. No new effect grants or ML training framework integrations.
