@@ -18,3 +18,5 @@ No new execution capabilities, dataset streaming, runtime model training or tens
 semauri check examples/range_map_filter.sema
 semauri run --allow console_write examples/range_map_filter.sema
 ```
+
+The input to a generator is evaluated as a pair of concrete integer endpoints. Its result can be passed to nested map/filter expressions without changing the immutability or effect policy of either operator.
