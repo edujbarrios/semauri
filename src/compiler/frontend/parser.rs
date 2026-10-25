@@ -868,8 +868,8 @@ impl<'a> Parser<'a> {
                     iterator: iterator.lexeme.to_lowercase(),
                     binding_span: iterator.span,
                     iterable: Box::new(iterable),
-                    body: Box::new(body),
                     span: span_between_spans(start.span, body.span()),
+                    body: Box::new(body),
                 })
             }
             TokenKind::Length | TokenKind::Reverse | TokenKind::Sum | TokenKind::Average
