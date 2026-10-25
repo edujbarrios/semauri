@@ -4,7 +4,7 @@ Semauri is a compiled programming language with its own native command-line tool
 
 **New to terminals or programming?** Begin with [your first Semauri program](23_FIRST_PROGRAM.md), which explains opening PowerShell or Terminal, creating a project folder, saving a `.sema` file, checking it and running it.
 
-> Current stable release documented here: **0.24.0**
+> Current stable release documented here: **0.25.0**
 
 Official Semauri distributions contain a native executable. **Rust and Cargo are not required to use a published Semauri binary.**
 
@@ -78,13 +78,13 @@ On Windows PowerShell:
 Linux/macOS:
 
 ~~~bash
-curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | SEMAURI_VERSION=0.24.0 sh
+curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | SEMAURI_VERSION=0.25.0 sh
 ~~~
 
 Windows PowerShell:
 
 ~~~powershell
-$env:SEMAURI_VERSION = '0.24.0'
+$env:SEMAURI_VERSION = '0.25.0'
 irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
 Remove-Item Env:SEMAURI_VERSION
 ~~~

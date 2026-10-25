@@ -8,7 +8,7 @@ Semauri is a **statically typed programming language** with its own compiler, ex
 
 Implemented in Rust, the compiler includes a lexer, parser, typed intermediate representation, lexical scopes, optimization, source-aware diagnostics and effect-aware execution planning. Semauri programs can perform authorized console and filesystem operations, generate web pages and structured schemas, and describe typed machine-learning workflows.
 
-**Latest release:** [Semauri v0.24.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
+**Latest release:** [Semauri v0.25.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
 
 ## Get started
 
@@ -76,7 +76,7 @@ semauri fmt examples/hello_console.sema --write   # rewrite this file
 | Area | Supported behavior |
 | --- | --- |
 | Typed core | Immutable bindings, numbers, strings, booleans, colors, homogeneous lists, comparisons, arithmetic and short-circuit logic |
-| Control flow | `if`, `unless`, `otherwise if`, lexical scopes and **static** `for every` iteration |
+| Control flow | `if`, `unless`, `otherwise if`, lexical scopes, **static** `for every` iteration and single-parameter typed pure expression functions |
 | Collections | Typed `map every` / `filter every` list pipelines, bounded `range from ... to ...` generation, immutable sorting/deduplication, slicing and indexing |
 | Numeric data | Checked `sum of`, typed `average of`, `minimum of`, `maximum of` and `median of`; precision-safe mixed numeric sorting |
 | String transformations | Unicode-aware `uppercase of`, `lowercase of` and `reverse of` |
@@ -86,7 +86,7 @@ semauri fmt examples/hello_console.sema --write   # rewrite this file
 | ML semantic domain | Typed dataset/model/device operations, training configs, LoRA/QLoRA, inference and evaluation **plans** |
 | Analysis | Typed HIR, optimizer, symbols, declared effects, JSON diagnostics, SSA dependency graphs and ML reproducibility preflight |
 
-**Current language scope:** `map every` and `filter every` bind lexically scoped typed element variables, but arbitrary user-defined functions, lambdas, and general runtime-dependent branching/loops remain on the roadmap. Domain-specific ML operations currently produce typed workflow plans; executing real model training requires a framework adapter. See the [architecture](docs/08_ARCHITECTURE.md) and [roadmap](docs/10_ROADMAP.md).
+**Current language scope:** Typed pure user-defined functions with a single parameter and inferred return type, as well as scoped `map every` and `filter every`, operate on concrete compiler-known data. Multi-argument functions, recursion, lambdas, impure user functions and general runtime-dependent branching/loops remain on the roadmap. Domain-specific ML operations currently produce typed workflow plans; executing real model training requires a framework adapter. See the [architecture](docs/08_ARCHITECTURE.md) and [roadmap](docs/10_ROADMAP.md).
 
 ### Typed collections
 
@@ -97,6 +97,16 @@ let even_squares be filter every n in squares if ((n modulo 2) is equal to 0).
 assert length of even_squares is equal to 3.
 print even_squares.
 ```
+
+User functions compose with list pipelines:
+
+```sema
+define function square taking n as number to (n times n).
+let squared be map every x in numbers to (invoke square to x).
+print squared.
+```
+
+These pure functions use explicit parameter types, inferred return types and lexical scope; their names must be declared before use. See [pure function semantics](docs/35_PURE_FUNCTIONS.md).
 
 List-pipeline expressions type-check iterator bindings and output element types before evaluation. They apply to concrete core-language data and are not general runtime dataset streaming. See [map/filter semantics](docs/33_MAP_FILTER.md) and [bounded range generation](docs/34_INTEGER_RANGE.md).
 
@@ -237,7 +247,7 @@ cargo run -- check examples/hello_console.sema
 cargo run -- fmt examples/hello_console.sema --check
 ```
 
-See [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.24.0 release notes](docs/releases/0.24.0.md).
+See [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.25.0 release notes](docs/releases/0.25.0.md).
 
 ## License
 
