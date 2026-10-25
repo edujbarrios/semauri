@@ -5,11 +5,11 @@ A function is a reusable, **single-argument pure expression** with an explicit p
 ```sema
 define function square taking n as number to (n times n).
 let scores be a list of 2, 3, 4.
-let squares be map every x in scores to (apply square to x).
+let squares be map every x in scores to (invoke square to x).
 print squares.
 ```
 
-The supported signature form is `define function NAME taking PARAM as TYPE to EXPRESSION.`; the call is `apply NAME to PRIMARY`. Parenthesize compound arguments, e.g. `apply square to (2 plus 3)`. Types are `number`, `string`, `boolean`, `color`, or `list of TYPE` (recursively nested). The result type is derived from the statically checked body. One argument is currently supported: there are **no variadic parameters, function values, recursion, mutual recursion or forward references**. Define functions at top level before use. The `define`, `function`, `taking`, `as` and `apply` words are contextual, rather than breaking existing identifiers.
+The supported signature form is `define function NAME taking PARAM as TYPE to EXPRESSION.`; the call is `invoke NAME to PRIMARY`. Parenthesize compound arguments, e.g. `invoke square to (2 plus 3)`. Types are `number`, `string`, `boolean`, `color`, or `list of TYPE` (recursively nested). The result type is derived from the statically checked body. One argument is currently supported: there are **no variadic parameters, function values, recursion, mutual recursion or forward references**. Define functions at top level before use. The `define`, `function`, `taking`, `as` and `apply` words are contextual, rather than breaking existing identifiers.
 
 The compiler records a typed function-call HIR node, carrying its checked body and parameter symbol. Evaluation binds the argument once in a fresh lexical environment, executes the pure body, and returns a value of the inferred type. Both original bindings and list input data remain unchanged. Calls over runtime-only values are not implemented; this is compile-time-known data transformation, not arbitrary runtime execution.
 

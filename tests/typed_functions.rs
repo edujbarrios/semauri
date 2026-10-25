@@ -22,8 +22,8 @@ fn functions_are_typed_reusable_and_composable_with_map_filter() {
     let result = run(r#"define function square taking n as number to (n times n).
 define function large taking n as number to (n is greater than 5).
 let xs be range from 1 to 4.
-let squares be map every x in xs to (apply square to x).
-let selected be filter every x in squares if (apply large to x).
+let squares be map every x in xs to (invoke square to x).
+let selected be filter every x in squares if (invoke large to x).
 assert length of selected is equal to 2.
 print squares.
 print selected."#);
@@ -37,12 +37,12 @@ fn supports_string_boolean_list_parameters_and_nested_calls() {
 define function keep taking yes as boolean to (not yes).
 define function size taking xs as list of number to (length of xs).
 define function increment taking n as number to (n plus 1).
-define function twice taking n as number to (apply increment to (apply increment to n)).
+define function twice taking n as number to (invoke increment to (invoke increment to n)).
 let data be a list of 3, 4.
-assert apply size to data is equal to 2.
-assert apply keep to false is equal to true.
-print apply shout to "hello".
-print apply twice to 5."#);
+assert invoke size to data is equal to 2.
+assert invoke keep to false is equal to true.
+print invoke shout to "hello".
+print invoke twice to 5."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert_eq!(result.stdout, "HELLO\n7\n");
 }
@@ -52,7 +52,7 @@ fn parameter_shadows_outer_binding_without_leaking() {
     let result = run(r#"let x be 50.
 let offset be 3.
 define function add_offset taking x as number to (x plus offset).
-print apply add_offset to 2.
+print invoke add_offset to 2.
 print x."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert_eq!(result.stdout, "5\n50\n");
@@ -61,10 +61,10 @@ print x."#);
 #[test]
 fn rejects_unknown_duplicate_and_wrong_argument_types() {
     for (src, code) in [
-        ("print apply missing to 2.", "S369"),
-        ("define function f taking x as number to x. print apply f to true.", "S370"),
+        ("print invoke missing to 2.", "S369"),
+        ("define function f taking x as number to x. print invoke f to true.", "S370"),
         ("define function f taking x as number to x. define function f taking y as number to y. print 1.", "S371"),
-        ("define function f taking x as number to (apply f to x). print 1.", "S369"),
+        ("define function f taking x as number to (invoke f to x). print 1.", "S369"),
     ] {
         let err = Compiler::new().hir(src).unwrap_err();
         assert_eq!(err.code, code, "{src}: {err}");
@@ -86,11 +86,11 @@ fn refuses_effectful_function_bodies_and_nested_definitions() {
 #[test]
 fn functions_remain_contextual_without_renaming_legacy_variables() {
     let result = run(r#"let define be 2.
-let apply be 3.
+let invoke be 3.
 let function be 4.
-print define plus apply plus function.
+print define plus invoke plus function.
 define function double taking x as number to (x times 2).
-print apply double to 5."#);
+print invoke double to 5."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert_eq!(result.stdout, "9\n10\n");
 }
@@ -98,13 +98,13 @@ print apply double to 5."#);
 #[test]
 fn formatter_ast_hir_optimizer_and_effect_analysis() {
     let compiler = Compiler::new();
-    let source = "define function double taking n as number to (n times 2). print apply double to 4.";
+    let source = "define function double taking n as number to (n times 2). print invoke double to 4.";
     assert!(compiler.parse(source).unwrap().to_json().to_string().contains("function_definition"));
     assert!(compiler.hir(source).unwrap().to_json().to_string().contains("function_call"));
     assert!(compiler.optimized_hir(source).unwrap().to_json().to_string().contains("function_call"));
     assert_eq!(compiler.effect_analysis(source).unwrap().effects(), vec!["console_write".to_owned()]);
     assert_eq!(
-        compiler.format_source("PRINT APPLY double TO 4.").unwrap(),
-        "print apply double to 4."
+        compiler.format_source("PRINT INVOKE double TO 4.").unwrap(),
+        "print invoke double to 4."
     );
 }

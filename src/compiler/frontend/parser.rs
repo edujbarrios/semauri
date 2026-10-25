@@ -849,11 +849,11 @@ impl<'a> Parser<'a> {
                     span,
                 })
             }
-            TokenKind::Word if token.lexeme.eq_ignore_ascii_case("apply")
+            TokenKind::Word if token.lexeme.eq_ignore_ascii_case("invoke")
                 && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Word)
                 && self.tokens.get(self.current + 2).is_some_and(|next| next.kind == TokenKind::To) => {
                 let start = self.advance().clone();
-                let name = self.consume(TokenKind::Word, "Expected a function name after apply", "S247")?;
+                let name = self.consume(TokenKind::Word, "Expected a function name after invoke", "S247")?;
                 self.consume(TokenKind::To, "Expected 'to' after function name", "S247")?;
                 let argument = self.primary()?;
                 Ok(Expr::FunctionCall {
