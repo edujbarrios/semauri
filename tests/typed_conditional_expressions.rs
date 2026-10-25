@@ -70,6 +70,6 @@ fn formatter_ast_hir_effects_and_optimizer_support_conditional() {
     assert!(c.hir(src).unwrap().to_json().to_string().contains("conditional_expression"));
     assert_eq!(c.effect_analysis(src).unwrap().effects(),vec!["console_write".to_owned()]);
     assert_eq!(c.format_source("LET x BE IF true THEN 2 OTHERWISE 3.").unwrap(),
-        "let x be if true THEN 2 otherwise 3.");
+        "let x be if true then 2 otherwise 3.");
     assert!(c.optimized_hir(src).unwrap().to_json().to_string().contains("literal"));
 }
