@@ -1859,26 +1859,14 @@ fn extrema_numeric_list(
                 None,
             ));
         }
+        // Reuse the exact mixed i64/f64 comparator shared by sorted/median.
+        // Casting a large i64 to f64 here could make adjacent integers equal
+        // and silently select the wrong minimum or maximum past 2^53.
         let replace = match best.as_ref() {
             None => true,
-            Some(NumberValue::Int(current)) => match candidate {
-                NumberValue::Int(number) => {
-                    if minimum { number < current } else { number > current }
-                }
-                _ => {
-                    if minimum {
-                        candidate.as_f64() < *current as f64
-                    } else {
-                        candidate.as_f64() > *current as f64
-                    }
-                }
-            },
             Some(current) => {
-                if minimum {
-                    candidate.as_f64() < current.as_f64()
-                } else {
-                    candidate.as_f64() > current.as_f64()
-                }
+                let order = compare_finite_numbers(candidate, current);
+                if minimum { order.is_lt() } else { order.is_gt() }
             }
         };
         if replace {
