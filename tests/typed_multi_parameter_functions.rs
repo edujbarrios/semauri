@@ -42,7 +42,8 @@ print invoke square to 5."#);
 #[test]
 fn nested_list_and_heterogeneous_parameter_types_work() {
     let bad = Compiler::new().hir(r#"define function pick taking xs as list of number, enabled as boolean to (first of xs).
-print invoke pick to (a list of 7, true)."#).unwrap_err();
+let xs be a list of 7, true.
+print invoke pick to (xs, true)."#).unwrap_err();
     assert_eq!(bad.code, "S321");
     let ok = run(r#"define function pick taking xs as list of number, enabled as boolean to (first of xs).
 define function concatenate taking left as string, right as string to (left plus right).
@@ -113,5 +114,5 @@ fn compiler_apis_preserve_multi_argument_structure() {
     let optimized=c.optimized_hir(src).unwrap().to_json().to_string();
     assert!(optimized.contains("function_call"), "{optimized}");
     assert_eq!(c.effect_analysis(src).unwrap().effects(), vec!["console_write".to_owned()]);
-    assert_eq!(c.format_source("PRINT INVOKE add TO (2, 3).").unwrap(), "print invoke combine to (2, 3).");
+    assert_eq!(c.format_source("PRINT INVOKE combine TO (2, 3).").unwrap(), "print invoke combine to (2, 3).");
 }
