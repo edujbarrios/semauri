@@ -54,7 +54,7 @@ print first.
 print last.
 print first of joined."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
-    assert_eq!(result.stdout, "[1, 2]\\n[3, 4]\\n1\\n");
+    assert_eq!(result.stdout, "[1, 2]\n[3, 4]\n1\n");
 }
 
 #[test]
