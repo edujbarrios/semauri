@@ -940,6 +940,30 @@ impl<'a> Parser<'a> {
                     right: Box::new(upper),
                 })
             }
+            TokenKind::Word if token.lexeme.eq_ignore_ascii_case("reduce")
+                && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Every) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Every, "Expected 'every' after reduce", "S250")?;
+                let iterator = self.consume(TokenKind::Word, "Expected reduce element name", "S250")?;
+                self.consume(TokenKind::In, "Expected 'in' after element name", "S250")?;
+                let iterable = self.primary()?;
+                self.consume_surface("starting", "Expected 'starting' after reduce input", "S250")?;
+                let accumulator = self.consume(TokenKind::Word, "Expected accumulator name", "S250")?;
+                self.consume_surface("as", "Expected 'as' before reduce seed", "S250")?;
+                let initial = self.expression()?;
+                self.consume(TokenKind::To, "Expected 'to' before reduce body", "S250")?;
+                let body = self.expression()?;
+                Ok(Expr::Reduce {
+                    iterator: iterator.lexeme.to_lowercase(),
+                    iterator_span: iterator.span,
+                    accumulator: accumulator.lexeme.to_lowercase(),
+                    accumulator_span: accumulator.span,
+                    iterable: Box::new(iterable),
+                    initial: Box::new(initial),
+                    span: span_between_spans(start.span, body.span()),
+                    body: Box::new(body),
+                })
+            }
             TokenKind::Word if matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count")
                 && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Every) => {
                 let start = self.advance().clone();

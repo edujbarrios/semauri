@@ -411,6 +411,49 @@ impl<'a> HirBuilder<'a> {
                     span: *span,
                 })
             }
+            Expr::Reduce { iterator, iterator_span, accumulator, accumulator_span, iterable, initial, body, span } => {
+                let iterable = self.build_expr(iterable)?;
+                let Type::List(element) = iterable.ty() else {
+                    return Err(SemauriError::semantic(
+                        "S379", format!("'reduce every' requires a typed list, received {}", iterable.ty()),
+                        Some(iterable.span()), None));
+                };
+                let initial = self.build_expr(initial)?;
+                if initial.ty() == Type::Unit {
+                    return Err(SemauriError::semantic(
+                        "S380", "Reduce seed must produce a value", Some(initial.span()), None));
+                }
+                let ty = initial.ty();
+                self.push_scope();
+                let result = (|| {
+                    let item = self.create_symbol(iterator, "reduce_iterator", *element, *iterator_span)?;
+                    let acc = self.create_symbol(accumulator, "reduce_accumulator", ty.clone(), *accumulator_span)?;
+                    let body = self.build_expr(body)?;
+                    if body.ty() != ty {
+                        return Err(SemauriError::semantic(
+                            "S380", format!("Reduce body must return accumulator type {ty}, received {}", body.ty()),
+                            Some(body.span()), None));
+                    }
+                    if !pure_function_expression(&body) {
+                        return Err(SemauriError::semantic(
+                            "S381", "Reduce body must be a pure expression",
+                            Some(body.span()), None));
+                    }
+                    Ok(HirExpr::Reduce {
+                        ty,
+                        iterator_symbol_id: item.id,
+                        accumulator_symbol_id: acc.id,
+                        iterator_name: iterator.clone(),
+                        accumulator_name: accumulator.clone(),
+                        iterable: Box::new(iterable),
+                        initial: Box::new(initial),
+                        body: Box::new(body),
+                        span: *span,
+                    })
+                })();
+                self.pop_scope();
+                result
+            }
             Expr::ListTransform { kind, iterator, binding_span, iterable, body, span } => {
                 let iterable = self.build_expr(iterable)?;
                 let Type::List(element) = iterable.ty() else {
@@ -1188,6 +1231,8 @@ fn pure_function_expression(expr: &HirExpr) -> bool {
             pure_function_expression(operand),
         HirExpr::Binary { left, right, .. } =>
             pure_function_expression(left) && pure_function_expression(right),
+        HirExpr::Reduce { iterable, initial, body, .. } =>
+            pure_function_expression(iterable) && pure_function_expression(initial) && pure_function_expression(body),
         HirExpr::ListTransform { iterable, body, .. } =>
             pure_function_expression(iterable) && pure_function_expression(body),
         HirExpr::Repeat { count, value, .. } =>

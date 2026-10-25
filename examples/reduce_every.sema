@@ -1,0 +1,6 @@
+# Typed deterministic reductions with lexically scoped immutable accumulators.
+define function weighted taking acc as number, value as number to (acc plus value).
+let numbers be range from 1 to 5.
+let total be reduce every item in numbers starting current as 0 to (invoke weighted to (current, item)).
+assert total is equal to 15.
+print total.

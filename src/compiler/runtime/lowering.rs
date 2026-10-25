@@ -941,6 +941,8 @@ impl<'a> Lowerer<'a> {
                 }
                 dependent
             },
+            HirExpr::Reduce { iterable, initial, .. } =>
+                self.runtime_dependent(iterable)? || self.runtime_dependent(initial)?,
             HirExpr::ListTransform { iterable, .. } => {
                 // The iterator symbol exists only during the actual evaluation.
                 // The body is evaluated in its per-element lexical environment.
@@ -1026,6 +1028,39 @@ impl<'a> Lowerer<'a> {
                         Some(expression.span()), None));
                 }
                 Ok(result)
+            }
+            HirExpr::Reduce {
+                ty, iterator_symbol_id, accumulator_symbol_id, iterable, initial, body, ..
+            } => {
+                let BoundValue::Compile {
+                    ty: Type::List(element),
+                    data: ValueData::List(items),
+                } = self.evaluate(iterable)? else {
+                    return Err(self.runtime_value_error(iterable.span()));
+                };
+                let mut accumulator = self.evaluate(initial)?;
+                if accumulator.ty() != *ty {
+                    return Err(SemauriError::semantic(
+                        "S380", "Reduce seed has incorrect typed value", Some(initial.span()), None));
+                }
+                for item in items {
+                    self.push_environment();
+                    let frame = self.environments.last_mut().expect("reduce frame");
+                    frame.insert(*iterator_symbol_id, BoundValue::Compile {
+                        ty: element.as_ref().clone(),
+                        data: item,
+                    });
+                    frame.insert(*accumulator_symbol_id, accumulator);
+                    let next = self.evaluate(body);
+                    self.pop_environment();
+                    accumulator = next?;
+                    if accumulator.ty() != *ty {
+                        return Err(SemauriError::semantic(
+                            "S380", "Reduce step returned an unexpected type",
+                            Some(body.span()), None));
+                    }
+                }
+                Ok(accumulator)
             }
             HirExpr::ListTransform { ty, kind, iterator_symbol_id, iterable, body, .. } => {
                 let BoundValue::Compile {

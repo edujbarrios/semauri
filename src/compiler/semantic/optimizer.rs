@@ -234,6 +234,21 @@ fn fold_expr(
             body: body.clone(),
             span: *span,
         },
+        HirExpr::Reduce {
+            ty, iterator_symbol_id, accumulator_symbol_id, iterator_name, accumulator_name,
+            iterable, initial, body, span,
+        } => HirExpr::Reduce {
+            ty: ty.clone(),
+            iterator_symbol_id: *iterator_symbol_id,
+            accumulator_symbol_id: *accumulator_symbol_id,
+            iterator_name: iterator_name.clone(),
+            accumulator_name: accumulator_name.clone(),
+            iterable: Box::new(fold_expr(iterable, constants, changes)),
+            initial: Box::new(fold_expr(initial, constants, changes)),
+            // Scoped step bindings prevent safe caller-based specialization.
+            body: body.clone(),
+            span: *span,
+        },
         HirExpr::ListTransform {
             ty, kind, iterator_symbol_id, iterator_name, iterable, body, span,
         } => HirExpr::ListTransform {
@@ -720,6 +735,7 @@ fn removable_expression(expr: &HirExpr) -> bool {
             true
         }
         HirExpr::DomainOperation { .. } => false,
+        HirExpr::Reduce { .. } => false,
         HirExpr::ListTransform { .. } => false,
         HirExpr::FunctionCall { .. } | HirExpr::Conditional { .. } | HirExpr::Repeat { .. } => false,
     }
@@ -799,6 +815,15 @@ fn collect_symbol_refs_expr(expr: &HirExpr, refs: &mut HashSet<u64>) {
             let mut body_refs = HashSet::new();
             collect_symbol_refs_expr(body, &mut body_refs);
             for (symbol_id, _) in parameters { body_refs.remove(symbol_id); }
+            refs.extend(body_refs);
+        }
+        HirExpr::Reduce { iterable, initial, body, iterator_symbol_id, accumulator_symbol_id, .. } => {
+            collect_symbol_refs_expr(iterable, refs);
+            collect_symbol_refs_expr(initial, refs);
+            let mut body_refs = HashSet::new();
+            collect_symbol_refs_expr(body, &mut body_refs);
+            body_refs.remove(iterator_symbol_id);
+            body_refs.remove(accumulator_symbol_id);
             refs.extend(body_refs);
         }
         HirExpr::ListTransform { iterable, body, .. } => {
