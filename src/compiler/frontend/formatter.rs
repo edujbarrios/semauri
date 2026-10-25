@@ -29,9 +29,17 @@ impl Compiler {
                 && token.lexeme.eq_ignore_ascii_case("invoke")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Word)
                 && tokens.get(index + 2).is_some_and(|next| next.kind == TokenKind::To);
+            // 'then' is only a delimiter after an 'if' within this
+            // statement; existing identifiers or prose containing 'then'
+            // remain untouched.
+            let is_then = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("then")
+                && tokens[..index].iter().rev()
+                    .take_while(|previous| previous.kind != TokenKind::Dot)
+                    .any(|previous| previous.kind == TokenKind::If);
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_define && !is_function && !is_invoke
+                && !is_define && !is_function && !is_invoke && !is_then
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")
