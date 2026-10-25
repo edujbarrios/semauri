@@ -20,3 +20,5 @@ All transformations are pure over compiler-known list values. They do not grant 
 semauri check examples/list_windows.sema
 semauri run --allow console_write examples/list_windows.sema
 ```
+
+For example, `take 0 from readings` yields a typed empty `list<number>`; a later `first of` on that empty list correctly raises `S362` instead of returning an arbitrary value.
