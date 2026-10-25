@@ -66,7 +66,7 @@ fn rejects_invalid_operands_with_static_diagnostic() {
         "print flatten of \"hello\".",
     ] {
         let e=Compiler::new().hir(src).unwrap_err();
-        assert_eq!(e.code,"S383","{src}: {e}");
+        assert_eq!(e.code,"S385","{src}: {e}");
         assert!(e.span.is_some());
     }
 }

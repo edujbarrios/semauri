@@ -11,7 +11,7 @@ assert first of values is equal to 2.
 
 This composes with `partition every`: if `groups` has type `list<list<number>>`, `flatten of groups` produces a new `list<number>`. Unlike the original list, the flattened partition orders all matching elements before nonmatching elements. Typed empty inner lists are ignored, and an empty typed outer list produces an empty typed list. For deeper nested lists `list<list<list<T>>>`, the result is `list<list<T>>`; a second `flatten of` removes the next level.
 
-Non-list and `list<T>` (where T is not itself a list) operands fail during static type checking with source-located **S383**. A malformed nested runtime list is also guarded by S383. The word `flatten` is contextual, so existing variables named `flatten` remain valid.
+Non-list and `list<T>` (where T is not itself a list) operands fail during static type checking with source-located **S385**. A malformed nested runtime list is also guarded by S385. The word `flatten` is contextual, so existing variables named `flatten` remain valid.
 
 ```sh
 semauri check examples/flatten_lists.sema

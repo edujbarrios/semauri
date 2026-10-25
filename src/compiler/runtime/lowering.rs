@@ -1516,7 +1516,7 @@ impl<'a> Lowerer<'a> {
                     for group in groups {
                         let ValueData::List(mut entries) = group else {
                             return Err(SemauriError::semantic(
-                                "S383", "Flattened list contains a non-list element",
+                                "S385", "Flattened list contains a non-list element",
                                 Some(expression.span()), None));
                         };
                         output.append(&mut entries);
@@ -1527,7 +1527,7 @@ impl<'a> Lowerer<'a> {
                     })
                 }
                 BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
-                    "S383",
+                    "S385",
                     format!("'flatten of' requires a list of lists, received {ty}"),
                     Some(expression.span()), None,
                 )),
