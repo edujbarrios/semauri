@@ -21,13 +21,13 @@ fn run(source: &str) -> semauri::CliResult {
 
 #[test]
 fn map_transforms_list_elements_and_preserves_source_type() {
-    let result = run(r#"let source be a list of 1, 2, 3.
-let twice be map every value in source to (value times 2).
+    let result = run(r#"let values be a list of 1, 2, 3.
+let twice be map every value in values to (value times 2).
 assert (twice at 0) is equal to 2.
 assert (twice at 2) is equal to 6.
-assert (source at 0) is equal to 1.
+assert (values at 0) is equal to 1.
 print twice.
-print source."#);
+print values."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert_eq!(result.stdout, "[2, 4, 6]\n[1, 2, 3]\n");
 }
@@ -36,12 +36,12 @@ print source."#);
 fn map_supports_type_changes_outer_bindings_and_shadowing() {
     let result = run(r#"let offset be 4.
 let value be 100.
-let source be a list of 1, 3.
-let result be map every value in source to (value plus offset).
+let values be a list of 1, 3.
+let result be map every value in values to (value plus offset).
 assert (result at 0) is equal to 5.
 assert (result at 1) is equal to 7.
 assert value is equal to 100.
-let comparisons be map every n in source to (n is greater than 2).
+let comparisons be map every n in values to (n is greater than 2).
 assert (comparisons at 0) is equal to false.
 assert (comparisons at 1) is equal to true.
 print comparisons."#);
@@ -51,13 +51,13 @@ print comparisons."#);
 
 #[test]
 fn filter_uses_boolean_predicate_and_preserves_element_type() {
-    let result = run(r#"let source be a list of 1, 4, 2, 5.
-let selected be filter every n in source if (n is greater than 2).
+    let result = run(r#"let values be a list of 1, 4, 2, 5.
+let selected be filter every n in values if (n is greater than 2).
 assert length of selected is equal to 2.
 assert (selected at 0) is equal to 4.
 assert (selected at 1) is equal to 5.
 print selected.
-print source."#);
+print values."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert_eq!(result.stdout, "[4, 5]\n[1, 4, 2, 5]\n");
 }
@@ -94,7 +94,7 @@ fn rejects_wrong_input_types_and_nonboolean_filters() {
 #[test]
 fn iterator_variable_is_lexically_scoped_and_not_leaked() {
     let error = Compiler::new().hir(
-        "let source be a list of 1, 2. let output be map every n in source to (n times 2). print n."
+        "let values be a list of 1, 2. let output be map every n in values to (n times 2). print n."
     ).unwrap_err();
     assert_eq!(error.code, "S312");
 }
