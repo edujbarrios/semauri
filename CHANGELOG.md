@@ -1,3 +1,20 @@
+## 0.27.0 — 2026-10-25
+
+### Language: statically typed lazy conditional values
+
+- Add `if CONDITION then CONSEQUENCE otherwise ALTERNATIVE` as a pure, typed expression distinct from existing conditional statements, with boolean condition validation (`S375`), exact branch type matching (`S376`), and lazy evaluation of only the chosen branch. Static AST/HIR, optimizer, effects and symbol analysis support; compose with functions and typed map/filter. [PR #178](https://github.com/edujbarrios/semauri/pull/178).
+
+### Language: bounded typed list repetition
+
+- Add `repeat COUNT of VALUE` to create a fresh `list<T>` by evaluating one value and cloning it COUNT times. Counts must be integral and between 0–10,000 inclusive, with support for typed empty/nested lists, an `S377` static numeric-count error and an `S378` invalid count error. Contextual `repeat` avoids breaking existing identifiers. [PR #179](https://github.com/edujbarrios/semauri/pull/179).
+- Cover both features with end-to-end Rust tests, runnable examples, documentation and compiler API checks. The formatter recognizes contextual delimiters without requiring new globally reserved words.
+
+### Scope
+
+Both transformations operate on compiler-known values, are deterministic and pure, and do not add general runtime-dependent branching, recursion, external tensor execution or live ML model training. No new effects or permissions.
+
+See [v0.27.0 release notes](docs/releases/0.27.0.md).
+
 ## 0.26.0 — 2026-10-25
 
 ### Language: multi-parameter pure typed functions

@@ -1,4 +1,4 @@
-# Semauri language reference — v0.26.0
+# Semauri language reference — v0.27.0
 
 This document describes implemented language behavior, not aspirational syntax.
 
@@ -44,6 +44,8 @@ additive         = multiplicative { (PLUS | MINUS) multiplicative } ;
 multiplicative   = numeric_unary { TIMES numeric_unary | DIVIDED BY numeric_unary | MODULO numeric_unary } ;
 numeric_unary    = [ MINUS ] (numeric_unary | primary) ;
 primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
+                  | IF expression THEN expression OTHERWISE expression
+                  | REPEAT numeric_unary OF primary
                  | LENGTH OF primary | REVERSE OF primary | SUM OF primary
                  | AVERAGE OF primary | MINIMUM OF primary | MAXIMUM OF primary
                  | MEDIAN OF primary | SORTED OF primary | DISTINCT OF primary
@@ -61,6 +63,12 @@ list_literal     = [ ARTICLE ] LIST OF expression { "," expression } ;
 ```
 
 The handwritten recursive-descent parser remains the executable grammar during 0.x.
+
+## Typed lazy selections and bounded list generation
+
+Version 0.27.0 introduces `if CONDITION then VALUE otherwise VALUE` as an expression, distinct from existing statement-level `if CONDITION: ... end.`. Both branches must have the same statically inferred type (`S376`) and the condition must be Boolean (`S375`). The compiler evaluates **only the selected branch**, including under constant folding; branches can return lists and be used inside user-defined pure functions. See [typed conditional expressions](39_CONDITIONAL_EXPRESSIONS.md).
+
+`repeat COUNT of VALUE` constructs a `list<T>` with COUNT copies of a single evaluated value. COUNT must be an integer between 0 and 10,000 inclusive; zero produces a typed empty list. Static nonnumeric counts produce `S377`, while fractional, negative or excess counts produce `S378`. This operation is pure and keeps the `repeat` word contextual. See [typed repetition](40_REPEAT_LISTS.md).
 
 ## Typed pure user-defined functions
 
@@ -353,6 +361,10 @@ Relevant diagnostics include:
 - `S372`: invalid function scope or impure function body
 - `S373`: `count every` matched element count exceeds signed 64-bit range
 - `S374`: incorrect arity when invoking a typed user-defined function
+- `S375`: conditional expression condition is not boolean
+- `S376`: conditional expression branches have different types
+- `S377`: repeat count is not numeric or repeated element has no value
+- `S378`: negative, fractional, or greater-than-10,000 repeat count
 
 ## Determinism rule
 

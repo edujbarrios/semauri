@@ -25,6 +25,8 @@ Use this page as the documentation map.
 - [Pure typed count every predicate reductions](36_COUNT_EVERY.md)
 - [Typed functions with up to 16 parameters](37_MULTI_PARAMETER_FUNCTIONS.md)
 - [Exact extrema of mixed integers and decimals](38_EXACT_MIXED_EXTREMA.md)
+- [Pure typed lazy conditional expressions](39_CONDITIONAL_EXPRESSIONS.md)
+- [Bounded typed immutable list repetition](40_REPEAT_LISTS.md)
 - [Type system](02_TYPES.md)
 
 ## Language and domains
@@ -51,7 +53,7 @@ Use this page as the documentation map.
 
 ## Release notes
 
-- [Latest release: Semauri 0.26.0](releases/0.26.0.md)
+- [Latest release: Semauri 0.27.0](releases/0.27.0.md)
 
 ## Historical release notes
 
