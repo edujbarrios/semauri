@@ -982,6 +982,27 @@ impl<'a> Parser<'a> {
                     body: Box::new(body),
                 })
             }
+            TokenKind::Word if token.lexeme.eq_ignore_ascii_case("zip")
+                && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Every) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Every, "Expected 'every' after zip", "S251")?;
+                let left = self.consume(TokenKind::Word, "Expected first zip iterator", "S251")?;
+                self.consume(TokenKind::In, "Expected 'in' before first list", "S251")?;
+                let left_list = self.primary()?;
+                self.consume_surface("with", "Expected 'with' between lists", "S251")?;
+                let right = self.consume(TokenKind::Word, "Expected second zip iterator", "S251")?;
+                self.consume(TokenKind::In, "Expected 'in' before second list", "S251")?;
+                let right_list = self.primary()?;
+                self.consume(TokenKind::To, "Expected 'to' before zip body", "S251")?;
+                let body = self.expression()?;
+                Ok(Expr::ZipTransform {
+                    left_name: left.lexeme.to_lowercase(), left_span: left.span,
+                    left_list: Box::new(left_list),
+                    right_name: right.lexeme.to_lowercase(), right_span: right.span,
+                    right_list: Box::new(right_list), span: span_between_spans(start.span, body.span()),
+                    body: Box::new(body),
+                })
+            }
             TokenKind::Word if matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count")
                 && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Every) => {
                 let start = self.advance().clone();
