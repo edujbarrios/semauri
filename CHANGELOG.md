@@ -1,3 +1,17 @@
+## 0.23.0 — 2026-10-25
+
+### Language: typed boundary access
+- Implement pure `first of` and `last of` expressions with `list<T> -> T` static result types, preserving immutability. Source-located type errors `S361`; empty-list evaluation errors `S362`. Preserve legacy variable names `first` and `last` through contextual parsing and formatting, including user labels. [PR #166](https://github.com/edujbarrios/semauri/pull/166).
+
+### Language: typed immutable list slicing
+- Add `take COUNT from LIST` and `drop COUNT from LIST`, returning a new typed `list<T>`. Zero and over-length counts clamp naturally, enabling safe typed empty-list results, including nested lists. Wrong operand types receive `S363`; negative or fractional values receive `S364` at evaluation. [PR #167](https://github.com/edujbarrios/semauri/pull/167).
+- Add runnable examples, integration tests for composition, preserved input order/type, nested lists, invalid counts, backward compatibility, formatting and effect analysis. `take`, `drop`, and `from` are newly reserved words. `first` and `last` are contextual and remain valid existing identifiers without `of`.
+
+### Scope
+- All new operators work with concrete compiler-known lists and do not grant effects, execute external dataset streams, or train ML models. User-defined typed functions, map/filter lambdas, and general runtime-dependent iteration are still future roadmap items.
+
+See [v0.23.0 release notes](docs/releases/0.23.0.md).
+
 ## 0.22.0 — 2026-10-25
 
 ### Language: immutable typed sorting

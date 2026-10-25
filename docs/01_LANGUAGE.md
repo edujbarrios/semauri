@@ -1,4 +1,4 @@
-# Semauri language reference — v0.22.0
+# Semauri language reference — v0.23.0
 
 This document describes implemented language behavior, not aspirational syntax.
 
@@ -45,6 +45,8 @@ primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
                  | AVERAGE OF primary | MINIMUM OF primary | MAXIMUM OF primary
                  | MEDIAN OF primary | SORTED OF primary | DISTINCT OF primary
                  | ANY OF primary | ALL OF primary
+                 | FIRST OF primary | LAST OF primary
+                 | TAKE numeric_unary FROM primary | DROP numeric_unary FROM primary
                  | UPPERCASE OF primary | LOWERCASE OF primary
                  | variable_reference | "(" expression ")" ;
 list_literal     = [ ARTICLE ] LIST OF expression { "," expression } ;
@@ -54,7 +56,7 @@ The handwritten recursive-descent parser remains the executable grammar during 0
 
 ## Typed sequence transformations and numeric reductions
 
-Semauri includes pure operations for working with concrete strings and homogeneous lists. `sorted of` returns a new ascending list of numbers, strings or booleans (with precise mixed integer/decimal comparisons), while `distinct of` returns a new homogeneous list without repeated values, keeping the first occurrence. Neither modifies its source. `reverse of` returns a new string or list with its elements in reverse order; original list bindings remain unchanged. String reversal operates on Unicode scalar values rather than grapheme clusters.
+Semauri includes pure operations for working with concrete strings and homogeneous lists. `sorted of` returns a new ascending list of numbers, strings or booleans (with precise mixed integer/decimal comparisons), while `distinct of` returns a new homogeneous list without repeated values, keeping the first occurrence. Neither modifies its source. `first of` and `last of` select typed list elements without mutation; `take COUNT from LIST` and `drop COUNT from LIST` return typed prefixes/suffixes with clamped non-negative integer counts. `reverse of` returns a new string or list with its elements in reverse order; original list bindings remain unchanged. String reversal operates on Unicode scalar values rather than grapheme clusters.
 
 Numeric reductions use `sum of`, `average of`, `minimum of`, `maximum of` and `median of` with `list<number>` inputs and return `number`. Non-numeric inputs fail static validation (`S353`); integer sums check overflow and report `S354` rather than silently wrapping.
 
@@ -68,7 +70,7 @@ assert total is equal to 12.
 assert mean is equal to 4.
 ```
 
-These prefix expressions bind to the next primary. Parenthesize larger expressions, for example `sum of (a plus b)`. See [reversal](24_REVERSE.md), [numeric aggregations](25_NUMERIC_AGGREGATIONS.md) and [numeric extrema](26_NUMERIC_EXTREMA.md) for full semantics, including floating-point precision and error cases. See [median](28_MEDIAN.md) for middle-element semantics and precise integer handling, and [Boolean reductions](27_BOOLEAN_REDUCTIONS.md) for `any of` and `all of` on typed `list<boolean>`. See [sorted lists](29_SORTED.md) and [distinct lists](30_DISTINCT.md) for new typed transformations, stable ordering and representation-aware equality.
+These prefix expressions bind to the next primary. Parenthesize larger expressions, for example `sum of (a plus b)`. See [reversal](24_REVERSE.md), [numeric aggregations](25_NUMERIC_AGGREGATIONS.md) and [numeric extrema](26_NUMERIC_EXTREMA.md) for full semantics, including floating-point precision and error cases. See [median](28_MEDIAN.md) for middle-element semantics and precise integer handling, and [Boolean reductions](27_BOOLEAN_REDUCTIONS.md) for `any of` and `all of` on typed `list<boolean>`. See [sorted lists](29_SORTED.md) and [distinct lists](30_DISTINCT.md) for typed transformations, stable ordering and representation-aware equality. See [first/last](31_LIST_BOUNDARIES.md) and [take/drop](32_LIST_WINDOWS.md) for static element selection and immutable list slicing.
 
 ## Unicode string transformations
 
@@ -310,6 +312,10 @@ Relevant diagnostics include:
 - `S327`: cross-domain operation on the active artifact
 - `S359`: invalid input to `sorted of` or non-finite sorted numeric value
 - `S360`: `distinct of` requires a typed list
+- `S361`: `first of` and `last of` require a list
+- `S362`: `first of` or `last of` evaluated on an empty typed list
+- `S363`: `take` / `drop` require a number count and typed list
+- `S364`: negative or fractional count for `take` / `drop`
 
 ## Determinism rule
 
