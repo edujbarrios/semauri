@@ -1,0 +1,12 @@
+# Reusable pure typed functions with an immutable parameter.
+define function square taking n as number to (n times n).
+define function positive taking n as number to (n is greater than 0).
+define function describe taking word as string to (uppercase of word).
+
+let scores be a list of 2, 3, 4.
+let squared be map every x in scores to (apply square to x).
+let high be filter every x in squared if (apply positive to x).
+assert first of squared is equal to 4.
+assert last of squared is equal to 16.
+print high.
+print apply describe to "semauri".

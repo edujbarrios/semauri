@@ -38,6 +38,15 @@ pub enum HirExpr {
         source_name: String,
         span: SourceSpan,
     },
+    FunctionCall {
+        ty: Type,
+        name: String,
+        parameter_symbol_id: u64,
+        parameter_type: Type,
+        argument: Box<HirExpr>,
+        body: Box<HirExpr>,
+        span: SourceSpan,
+    },
     ListTransform {
         ty: Type,
         kind: ListTransformKind,
@@ -82,6 +91,7 @@ impl HirExpr {
             HirExpr::Literal { ty, .. }
             | HirExpr::List { ty, .. }
             | HirExpr::SymbolRef { ty, .. }
+            | HirExpr::FunctionCall { ty, .. }
             | HirExpr::ListTransform { ty, .. }
             | HirExpr::Promote { ty, .. }
             | HirExpr::Unary { ty, .. }
@@ -95,6 +105,7 @@ impl HirExpr {
             HirExpr::Literal { span, .. }
             | HirExpr::List { span, .. }
             | HirExpr::SymbolRef { span, .. }
+            | HirExpr::FunctionCall { span, .. }
             | HirExpr::ListTransform { span, .. }
             | HirExpr::Promote { span, .. }
             | HirExpr::Unary { span, .. }
@@ -108,6 +119,7 @@ impl HirExpr {
             HirExpr::Literal { .. } => "literal",
             HirExpr::List { .. } => "list",
             HirExpr::SymbolRef { .. } => "symbol_ref",
+            HirExpr::FunctionCall { .. } => "function_call",
             HirExpr::ListTransform { .. } => "list_transform",
             HirExpr::Promote { .. } => "promote",
             HirExpr::Unary { .. } => "unary",
@@ -137,6 +149,13 @@ impl HirExpr {
                 fields.insert("symbol_id".into(), json!(symbol_id));
                 fields.insert("name".into(), json!(name));
                 fields.insert("source_name".into(), json!(source_name));
+            }
+            HirExpr::FunctionCall { name, parameter_symbol_id, parameter_type, argument, body, .. } => {
+                fields.insert("name".into(), json!(name));
+                fields.insert("parameter_symbol_id".into(), json!(parameter_symbol_id));
+                fields.insert("parameter_type".into(), parameter_type.to_json());
+                fields.insert("argument".into(), argument.to_json());
+                fields.insert("body".into(), body.to_json());
             }
             HirExpr::ListTransform { kind, iterator_symbol_id, iterator_name, iterable, body, .. } => {
                 fields.insert("operator".into(), json!(kind.as_str()));

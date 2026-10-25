@@ -924,6 +924,7 @@ impl<'a> Lowerer<'a> {
                 }
                 false
             }
+            HirExpr::FunctionCall { argument, .. } => self.runtime_dependent(argument)?,
             HirExpr::ListTransform { iterable, .. } => {
                 // The iterator symbol exists only during the actual evaluation.
                 // The body is evaluated in its per-element lexical environment.
@@ -947,6 +948,27 @@ impl<'a> Lowerer<'a> {
                     LiteralValue::Color(value) => ValueData::Color(value.clone()),
                 },
             }),
+            HirExpr::FunctionCall {
+                ty, parameter_symbol_id, parameter_type, argument, body, ..
+            } => {
+                let value = self.evaluate(argument)?;
+                if value.ty() != *parameter_type {
+                    return Err(SemauriError::semantic(
+                        "S370", "Function argument differs from its declared parameter type",
+                        Some(argument.span()), None));
+                }
+                self.push_environment();
+                self.environments.last_mut().unwrap().insert(*parameter_symbol_id, value);
+                let result = self.evaluate(body);
+                self.pop_environment();
+                let result = result?;
+                if result.ty() != *ty {
+                    return Err(SemauriError::semantic(
+                        "S370", "Function result differs from its inferred return type",
+                        Some(expression.span()), None));
+                }
+                Ok(result)
+            }
             HirExpr::ListTransform { ty, kind, iterator_symbol_id, iterable, body, .. } => {
                 let BoundValue::Compile {
                     ty: Type::List(input_element),

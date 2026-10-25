@@ -2,6 +2,7 @@ struct HirBuilder<'a> {
     domains: &'a DomainRegistry,
     symbols: Vec<Symbol>,
     scopes: Vec<HashMap<String, u64>>,
+    functions: HashMap<String, (Type, u64, HirExpr)>,
 }
 
 impl<'a> HirBuilder<'a> {
@@ -10,6 +11,7 @@ impl<'a> HirBuilder<'a> {
             domains,
             symbols: Vec::new(),
             scopes: vec![HashMap::new()],
+            functions: HashMap::new(),
         }
     }
 
@@ -23,11 +25,44 @@ impl<'a> HirBuilder<'a> {
     }
 
     fn build_statements(&mut self, statements: &[Stmt]) -> Result<Vec<HirStmt>> {
-        statements.iter().map(|statement| self.build_stmt(statement)).collect()
+        let mut result = Vec::new();
+        for statement in statements {
+            if let Stmt::DefineFunction { name, parameter, parameter_type, body, span } = statement {
+                if self.scopes.len() != 1 {
+                    return Err(SemauriError::semantic(
+                        "S372", "Functions must be defined at top level",
+                        Some(*span), None));
+                }
+                if self.functions.contains_key(name) {
+                    return Err(SemauriError::semantic(
+                        "S371", format!("Function '{name}' is already defined"),
+                        Some(*span), None));
+                }
+                self.push_scope();
+                let built = (|| {
+                    let binding = self.create_symbol(
+                        parameter, "function_parameter", parameter_type.clone(), *span)?;
+                    let body = self.build_expr(body)?;
+                    if !pure_function_expression(&body) {
+                        return Err(SemauriError::semantic(
+                            "S372", "Function bodies must be pure core expressions",
+                            Some(body.span()), None));
+                    }
+                    Ok((binding.id, body))
+                })();
+                self.pop_scope();
+                let (symbol_id, body) = built?;
+                self.functions.insert(name.clone(), (parameter_type.clone(), symbol_id, body));
+            } else {
+                result.push(self.build_stmt(statement)?);
+            }
+        }
+        Ok(result)
     }
 
     fn build_stmt(&mut self, statement: &Stmt) -> Result<HirStmt> {
         match statement {
+            Stmt::DefineFunction { .. } => unreachable!("function declarations handled separately"),
             Stmt::DomainScope { domain, body, span } => {
                 self.domains.fetch(domain)?;
                 self.push_scope();
@@ -294,6 +329,27 @@ impl<'a> HirBuilder<'a> {
                     symbol_id: symbol.id,
                     name: symbol.name.clone(),
                     source_name: name.clone(),
+                    span: *span,
+                })
+            }
+            Expr::FunctionCall { name, argument, span } => {
+                let (parameter_type, parameter_symbol_id, body) = self.functions.get(name)
+                    .cloned().ok_or_else(|| SemauriError::semantic(
+                        "S369", format!("Unknown function '{name}' (define it before calling it)"),
+                        Some(*span), None))?;
+                let argument = self.build_expr(argument)?;
+                if argument.ty() != parameter_type {
+                    return Err(SemauriError::semantic(
+                        "S370", format!("Function '{name}' expects {parameter_type}, received {}", argument.ty()),
+                        Some(argument.span()), None));
+                }
+                Ok(HirExpr::FunctionCall {
+                    ty: body.ty(),
+                    name: name.clone(),
+                    parameter_symbol_id,
+                    parameter_type,
+                    argument: Box::new(argument),
+                    body: Box::new(body),
                     span: *span,
                 })
             }
@@ -1060,3 +1116,22 @@ fn validate_domain_operation(
     Ok(())
 }
 
+
+/// Validate function definitions by walking the typed expression tree.
+/// Domain operations can read or write runtime state and must not occur in
+/// reusable compile-time functions. Previously checked calls are pure.
+fn pure_function_expression(expr: &HirExpr) -> bool {
+    match expr {
+        HirExpr::DomainOperation { .. } => false,
+        HirExpr::Literal { .. } | HirExpr::SymbolRef { .. } => true,
+        HirExpr::List { items, .. } => items.iter().all(pure_function_expression),
+        HirExpr::Unary { operand, .. } | HirExpr::Promote { value: operand, .. } =>
+            pure_function_expression(operand),
+        HirExpr::Binary { left, right, .. } =>
+            pure_function_expression(left) && pure_function_expression(right),
+        HirExpr::ListTransform { iterable, body, .. } =>
+            pure_function_expression(iterable) && pure_function_expression(body),
+        HirExpr::FunctionCall { argument, body, .. } =>
+            pure_function_expression(argument) && pure_function_expression(body),
+    }
+}

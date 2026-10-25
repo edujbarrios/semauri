@@ -25,6 +25,14 @@ impl<'a> Parser<'a> {
     }
 
     fn statement(&mut self) -> Result<Stmt> {
+        if self.check(TokenKind::Word)
+            && self.peek().lexeme.eq_ignore_ascii_case("define")
+            && self.tokens.get(self.current + 1)
+                .is_some_and(|next| next.lexeme.eq_ignore_ascii_case("function"))
+        {
+            let start = self.advance().clone();
+            return self.define_function_statement(&start);
+        }
         if self.matches(&[TokenKind::Create]) {
             let start = self.previous().clone();
             return self.create_statement(&start);
@@ -92,6 +100,43 @@ impl<'a> Parser<'a> {
             "S201",
             None,
         ))
+    }
+
+    fn define_function_statement(&mut self, start: &Token) -> Result<Stmt> {
+        self.consume_surface("function", "Expected 'function' after define", "S246")?;
+        let name = self.consume(TokenKind::Word, "Expected function name", "S246")?;
+        self.consume_surface("taking", "Expected 'taking' after function name", "S246")?;
+        let parameter = self.consume(TokenKind::Word, "Expected parameter name", "S246")?;
+        self.consume_surface("as", "Expected 'as' after parameter name", "S246")?;
+        let parameter_type = self.function_type()?;
+        self.consume(TokenKind::To, "Expected 'to' before function body", "S246")?;
+        let body = self.expression()?;
+        self.consume_optional_dot();
+        Ok(Stmt::DefineFunction {
+            name: name.lexeme.to_lowercase(),
+            parameter: parameter.lexeme.to_lowercase(),
+            parameter_type,
+            body,
+            span: self.span_from(start),
+        })
+    }
+
+    fn function_type(&mut self) -> Result<Type> {
+        if self.matches(&[TokenKind::List]) {
+            self.consume(TokenKind::Of, "Expected 'of' after list type", "S246")?;
+            return Ok(Type::List(Box::new(self.function_type()?)));
+        }
+        let token = self.peek().clone();
+        let ty = match token.lexeme.to_ascii_lowercase().as_str() {
+            "number" => Type::Number,
+            "string" => Type::String,
+            "boolean" => Type::Boolean,
+            "color" => Type::Color,
+            _ => return Err(self.parse_error(&token,
+                "Expected parameter type number, string, boolean, color or list of TYPE", "S246", None)),
+        };
+        self.advance();
+        Ok(ty)
     }
 
     fn create_statement(&mut self, start: &Token) -> Result<Stmt> {
@@ -802,6 +847,19 @@ impl<'a> Parser<'a> {
                     },
                     operand: Box::new(operand),
                     span,
+                })
+            }
+            TokenKind::Word if token.lexeme.eq_ignore_ascii_case("apply")
+                && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Word)
+                && self.tokens.get(self.current + 2).is_some_and(|next| next.kind == TokenKind::To) => {
+                let start = self.advance().clone();
+                let name = self.consume(TokenKind::Word, "Expected a function name after apply", "S247")?;
+                self.consume(TokenKind::To, "Expected 'to' after function name", "S247")?;
+                let argument = self.primary()?;
+                Ok(Expr::FunctionCall {
+                    name: name.lexeme.to_lowercase(),
+                    span: span_between_spans(start.span, argument.span()),
+                    argument: Box::new(argument),
                 })
             }
             TokenKind::Word if token.lexeme.eq_ignore_ascii_case("range")
