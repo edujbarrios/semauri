@@ -106,16 +106,26 @@ impl<'a> Parser<'a> {
         self.consume_surface("function", "Expected 'function' after define", "S246")?;
         let name = self.consume(TokenKind::Word, "Expected function name", "S246")?;
         self.consume_surface("taking", "Expected 'taking' after function name", "S246")?;
-        let parameter = self.consume(TokenKind::Word, "Expected parameter name", "S246")?;
-        self.consume_surface("as", "Expected 'as' after parameter name", "S246")?;
-        let parameter_type = self.function_type()?;
+        let mut parameters = Vec::new();
+        loop {
+            let parameter = self.consume(TokenKind::Word, "Expected parameter name", "S246")?;
+            self.consume_surface("as", "Expected 'as' after parameter name", "S246")?;
+            let parameter_type = self.function_type()?;
+            parameters.push((parameter.lexeme.to_lowercase(), parameter_type));
+            if parameters.len() > 16 {
+                return Err(self.parse_error(&parameter,
+                    "Functions support at most 16 parameters", "S246", None));
+            }
+            if !self.matches(&[TokenKind::Comma]) {
+                break;
+            }
+        }
         self.consume(TokenKind::To, "Expected 'to' before function body", "S246")?;
         let body = self.expression()?;
         self.consume_optional_dot();
         Ok(Stmt::DefineFunction {
             name: name.lexeme.to_lowercase(),
-            parameter: parameter.lexeme.to_lowercase(),
-            parameter_type,
+            parameters,
             body,
             span: self.span_from(start),
         })
@@ -855,11 +865,34 @@ impl<'a> Parser<'a> {
                 let start = self.advance().clone();
                 let name = self.consume(TokenKind::Word, "Expected a function name after invoke", "S247")?;
                 self.consume(TokenKind::To, "Expected 'to' after function name", "S247")?;
-                let argument = self.primary()?;
+                // Parenthesized argument tuples support arity >1.
+                // A bare primary keeps all pre-0.26.0 single-argument syntax.
+                let (arguments, end_span) = if self.check(TokenKind::LParen) {
+                    let open = self.advance().clone();
+                    let mut args = Vec::new();
+                    if !self.check(TokenKind::RParen) {
+                        loop {
+                            args.push(self.expression()?);
+                            if args.len() > 16 {
+                                return Err(self.parse_error(self.peek(),
+                                    "Function calls support at most 16 arguments", "S247", None));
+                            }
+                            if !self.matches(&[TokenKind::Comma]) { break; }
+                        }
+                    }
+                    let close = self.consume(TokenKind::RParen,
+                        "Expected ')' to close function arguments", "S247")?;
+                    let _ = open;
+                    (args, close.span)
+                } else {
+                    let arg = self.primary()?;
+                    let end = arg.span();
+                    (vec![arg], end)
+                };
                 Ok(Expr::FunctionCall {
                     name: name.lexeme.to_lowercase(),
-                    span: span_between_spans(start.span, argument.span()),
-                    argument: Box::new(argument),
+                    span: span_between_spans(start.span, end_span),
+                    arguments,
                 })
             }
             TokenKind::Word if token.lexeme.eq_ignore_ascii_case("range")

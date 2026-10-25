@@ -41,9 +41,8 @@ pub enum HirExpr {
     FunctionCall {
         ty: Type,
         name: String,
-        parameter_symbol_id: u64,
-        parameter_type: Type,
-        argument: Box<HirExpr>,
+        parameters: Vec<(u64, Type)>,
+        arguments: Vec<HirExpr>,
         body: Box<HirExpr>,
         span: SourceSpan,
     },
@@ -150,11 +149,11 @@ impl HirExpr {
                 fields.insert("name".into(), json!(name));
                 fields.insert("source_name".into(), json!(source_name));
             }
-            HirExpr::FunctionCall { name, parameter_symbol_id, parameter_type, argument, body, .. } => {
+            HirExpr::FunctionCall { name, parameters, arguments, body, .. } => {
                 fields.insert("name".into(), json!(name));
-                fields.insert("parameter_symbol_id".into(), json!(parameter_symbol_id));
-                fields.insert("parameter_type".into(), parameter_type.to_json());
-                fields.insert("argument".into(), argument.to_json());
+                fields.insert("parameters".into(), JsonValue::Array(parameters.iter()
+                    .map(|(symbol_id, ty)| json!({"symbol_id": symbol_id, "type": ty.to_json()})).collect()));
+                fields.insert("arguments".into(), JsonValue::Array(arguments.iter().map(HirExpr::to_json).collect()));
                 fields.insert("body".into(), body.to_json());
             }
             HirExpr::ListTransform { kind, iterator_symbol_id, iterator_name, iterable, body, .. } => {
