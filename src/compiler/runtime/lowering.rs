@@ -1503,6 +1503,37 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::Flatten,
+                operand,
+                ty,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::List(outer),
+                    data: ValueData::List(groups),
+                } if matches!(outer.as_ref(), Type::List(_)) => {
+                    let mut output = Vec::new();
+                    for group in groups {
+                        let ValueData::List(mut entries) = group else {
+                            return Err(SemauriError::semantic(
+                                "S385", "Flattened list contains a non-list element",
+                                Some(expression.span()), None));
+                        };
+                        output.append(&mut entries);
+                    }
+                    Ok(BoundValue::Compile {
+                        ty: ty.clone(),
+                        data: ValueData::List(output),
+                    })
+                }
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S385",
+                    format!("'flatten of' requires a list of lists, received {ty}"),
+                    Some(expression.span()), None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Reverse,
                 operand,
                 ..

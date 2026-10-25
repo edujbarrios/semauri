@@ -1,0 +1,7 @@
+# Flatten one level of nested typed lists; preserve order and element type.
+let observations be a list of 3, 7, 2, 9.
+let buckets be partition every n in observations if (n is greater than 5).
+let all_items be flatten of buckets.
+assert length of all_items is equal to 4.
+assert first of all_items is equal to 7.
+print all_items.

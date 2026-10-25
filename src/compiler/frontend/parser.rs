@@ -872,6 +872,17 @@ impl<'a> Parser<'a> {
                     body: Box::new(body),
                 })
             }
+            TokenKind::Word if token.lexeme.eq_ignore_ascii_case("flatten")
+                && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Of, "Expected 'of' after flatten", "S242")?;
+                let operand = self.primary()?;
+                Ok(Expr::Unary {
+                    operator: UnaryOperator::Flatten,
+                    span: span_between_spans(start.span, operand.span()),
+                    operand: Box::new(operand),
+                })
+            }
             TokenKind::Length | TokenKind::Reverse | TokenKind::Sum | TokenKind::Average
             | TokenKind::Minimum | TokenKind::Maximum | TokenKind::Median | TokenKind::Sorted | TokenKind::Distinct | TokenKind::First | TokenKind::Last | TokenKind::Any | TokenKind::All
             | TokenKind::Uppercase | TokenKind::Lowercase => {

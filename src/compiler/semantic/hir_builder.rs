@@ -632,6 +632,21 @@ impl<'a> HirBuilder<'a> {
                             )),
                         }
                     }
+                    UnaryOperator::Flatten => match operand.ty() {
+                        Type::List(outer) => match *outer {
+                            Type::List(inner) => Type::List(inner),
+                            other => return Err(SemauriError::semantic(
+                                "S385",
+                                format!("'flatten of' requires a list of lists, received list<{other}>"),
+                                Some(*span), None,
+                            )),
+                        },
+                        other => return Err(SemauriError::semantic(
+                            "S385",
+                            format!("'flatten of' requires a list of lists, received {other}"),
+                            Some(*span), None,
+                        )),
+                    },
                     UnaryOperator::Reverse => {
                         match operand.ty() {
                             Type::String | Type::List(_) => operand.ty(),
