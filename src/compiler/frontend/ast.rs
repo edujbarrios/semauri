@@ -58,6 +58,8 @@ pub enum BinaryOperator {
     NotEqual,
     Contains,
     AtIndex,
+    Take,
+    Drop,
     And,
     Or,
 }
@@ -78,6 +80,8 @@ impl BinaryOperator {
             BinaryOperator::NotEqual => "not_equal",
             BinaryOperator::Contains => "contains",
             BinaryOperator::AtIndex => "at_index",
+            BinaryOperator::Take => "take",
+            BinaryOperator::Drop => "drop",
             BinaryOperator::And => "and",
             BinaryOperator::Or => "or",
         }

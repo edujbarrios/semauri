@@ -676,6 +676,15 @@ fn binary_type(
                 ))
             }
         }
+        BinaryOperator::Take | BinaryOperator::Drop => match (left, right) {
+            (Type::Number, Type::List(_)) => Ok(right.clone()),
+            _ => Err(SemauriError::semantic(
+                "S363",
+                format!("'take' and 'drop' require a number and list, received {left} and {right}"),
+                Some(span),
+                None,
+            )),
+        },
         BinaryOperator::AtIndex => {
             match (left, right) {
                 (Type::List(element), Type::Number) => Ok((**element).clone()),

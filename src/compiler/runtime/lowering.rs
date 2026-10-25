@@ -1474,6 +1474,27 @@ impl<'a> Lowerer<'a> {
             (BinaryOperator::Contains, ValueData::List(items), needle) => {
                 ValueData::Boolean(items.contains(&needle))
             }
+            (
+                BinaryOperator::Take | BinaryOperator::Drop,
+                ValueData::Number(count),
+                ValueData::List(items),
+            ) => {
+                let count = match count {
+                    NumberValue::Int(number) if number >= 0 => usize::try_from(number).ok(),
+                    _ => None,
+                }.ok_or_else(|| SemauriError::semantic(
+                    "S364",
+                    "List selection count must be a non-negative integer",
+                    Some(left.span()),
+                    None,
+                ))?;
+                let selected = if *operator == BinaryOperator::Take {
+                    items.into_iter().take(count).collect()
+                } else {
+                    items.into_iter().skip(count).collect()
+                };
+                ValueData::List(selected)
+            }
             (BinaryOperator::AtIndex, ValueData::List(items), ValueData::Number(index)) => {
                 let index = match index {
                     NumberValue::Int(value) if value >= 0 => usize::try_from(value).ok(),
