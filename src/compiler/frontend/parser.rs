@@ -269,11 +269,17 @@ impl<'a> Parser<'a> {
     }
 
     fn let_statement(&mut self, start: &Token) -> Result<Stmt> {
-        let name = self.consume(
-            TokenKind::Word,
-            "Expected a variable name after 'Let'",
-            "S209",
-        )?;
+        // 'first' and 'last' are contextual prefix operators, so existing
+        // programs may still use them as immutable variable names.
+        let name = if self.matches(&[TokenKind::First, TokenKind::Last]) {
+            self.previous().clone()
+        } else {
+            self.consume(
+                TokenKind::Word,
+                "Expected a variable name after 'Let'",
+                "S209",
+            )?
+        };
         self.consume(
             TokenKind::Be,
             "Expected 'be' after the variable name",
@@ -731,6 +737,15 @@ impl<'a> Parser<'a> {
             TokenKind::List => {
                 let start = self.advance().clone();
                 self.list_literal(&start, true)
+            }
+            TokenKind::First | TokenKind::Last
+                if self.tokens.get(self.current + 1)
+                    .is_some_and(|next| next.kind != TokenKind::Of) => {
+                self.advance();
+                Ok(Expr::Variable {
+                    name: token.lexeme.to_lowercase(),
+                    span: token.span,
+                })
             }
             TokenKind::Length | TokenKind::Reverse | TokenKind::Sum | TokenKind::Average
             | TokenKind::Minimum | TokenKind::Maximum | TokenKind::Median | TokenKind::Sorted | TokenKind::Distinct | TokenKind::First | TokenKind::Last | TokenKind::Any | TokenKind::All
