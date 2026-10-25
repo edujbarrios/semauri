@@ -121,7 +121,7 @@ fn formatter_ast_hir_optimizer_and_effects_integrate() {
         "let Map be 3. print Map."
     );
     let source = "let xs be a list of 1, 2. let ys be filter every n in xs if (n is greater than 1). print ys.";
-    assert!(c.ast(source).unwrap().to_json().to_string().contains("list_transform"));
+    assert!(c.parse(source).unwrap().to_json().to_string().contains("list_transform"));
     assert!(c.hir(source).unwrap().to_json().to_string().contains("iterator_symbol_id"));
     assert!(c.optimized_hir(source).unwrap().to_json().to_string().contains("list_transform"));
     assert_eq!(c.effect_analysis(source).unwrap().effects(), vec!["console_write".to_owned()]);
