@@ -23,6 +23,8 @@ Use this page as the documentation map.
 - [Bounded inclusive integer ranges](34_INTEGER_RANGE.md)
 - [Pure typed user-defined functions and invocation](35_PURE_FUNCTIONS.md)
 - [Pure typed count every predicate reductions](36_COUNT_EVERY.md)
+- [Typed functions with up to 16 parameters](37_MULTI_PARAMETER_FUNCTIONS.md)
+- [Exact extrema of mixed integers and decimals](38_EXACT_MIXED_EXTREMA.md)
 - [Type system](02_TYPES.md)
 
 ## Language and domains
@@ -49,7 +51,7 @@ Use this page as the documentation map.
 
 ## Release notes
 
-- [Latest release: Semauri 0.25.0](releases/0.25.0.md)
+- [Latest release: Semauri 0.26.0](releases/0.26.0.md)
 
 ## Historical release notes
 

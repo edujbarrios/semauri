@@ -1,3 +1,22 @@
+## 0.26.0 — 2026-10-25
+
+### Language: multi-parameter pure typed functions
+
+- Expand user-defined pure functions to accept **1–16** explicitly typed parameters, retaining inferred return types, immutability, lexical scopes, and compatibility with v0.25.0 one-parameter invocations. Accept `define function weighted taking score as number, weight as number, bias as number to ((score times weight) plus bias).` and `invoke weighted to (3, 2, 5)`. [PR #175](https://github.com/edujbarrios/semauri/pull/175).
+- Compile statically checked argument tuples to typed AST/HIR call nodes and evaluate arguments once left to right before binding parameter values in a fresh lexical environment. Add the source-located `S374` wrong-arity diagnostic, preserve `S370` for parameter type errors and `S311` for duplicate parameter names. Integrate formatter, optimizer, effects and regression tests.
+- Supports nested/list types and use within `map every`, `filter every` and `count every`. No recursion, first-class function values or effectful user-function bodies.
+
+### Correctness: precise minimum/maximum on mixed numeric lists
+
+- Reuse the exact transitive mixed `i64`/`f64` comparator already shared by sorting and median in `minimum of` and `maximum of`. Prevent silent wrong selections for large integers around and above `2^53` and binary64 decimal neighbors. [PR #176](https://github.com/edujbarrios/semauri/pull/176).
+- Add regression tests for mixed sign, integer boundaries and ordering independence, plus docs for numeric precision and existing finite-number requirements.
+
+### Boundaries
+
+All operations currently apply to compiler-known values. Semauri does not execute streaming ML tensors, model training or arbitrary runtime-dependent general-purpose functions. No new effect permissions.
+
+See [v0.26.0 release notes](docs/releases/0.26.0.md).
+
 ## 0.25.0 — 2026-10-25
 
 ### Language: typed pure user-defined functions
