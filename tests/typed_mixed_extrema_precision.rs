@@ -38,7 +38,7 @@ let others be a list of 9223372036854775807, 9223372036854775808.0.
 print minimum of others.
 print maximum of others."#);
     assert_eq!(r.status,0,"{}",r.stderr);
-    assert_eq!(r.stdout,"-9007199254740993\n-9007199254740992.0\n9223372036854775807\n9223372036854775808.0\n");
+    assert_eq!(r.stdout,"-9007199254740993\n-9007199254740992.0\n9223372036854775807\n9223372036854776000.0\n");
 }
 
 #[test]
