@@ -1,0 +1,9 @@
+# Combine immutable typed lists pairwise; length follows the shorter input.
+define function weighted taking score as number, weight as number to (score times weight).
+let scores be range from 1 to 4.
+let weights be a list of 2, 4, 6, 8.
+let products be zip every score in scores with weight in weights to (invoke weighted to (score, weight)).
+assert length of products is equal to 4.
+assert first of products is equal to 2.
+assert last of products is equal to 32.
+print products.
