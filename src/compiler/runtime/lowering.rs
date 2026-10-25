@@ -1072,9 +1072,10 @@ impl<'a> Lowerer<'a> {
                 let result_element = match ty {
                     Type::List(element) => Some(element.as_ref().clone()),
                     Type::Number if *kind == ListTransformKind::Count => None,
+                    Type::Boolean if matches!(kind, ListTransformKind::Any | ListTransformKind::All) => None,
                     _ => unreachable!("type-checked list transformation"),
                 };
-                let mut selected = Vec::with_capacity(if *kind == ListTransformKind::Count { 0 } else { input_values.len() });
+                let mut selected = Vec::with_capacity(if matches!(kind, ListTransformKind::Count | ListTransformKind::Any | ListTransformKind::All) { 0 } else { input_values.len() });
                 let mut matching_count = 0_i64;
                 for input in input_values {
                     self.push_environment();
@@ -1103,6 +1104,9 @@ impl<'a> Lowerer<'a> {
                     } else {
                         match data {
                             ValueData::Boolean(true) => {
+                                if *kind == ListTransformKind::Any {
+                                    return Ok(BoundValue::Compile { ty: Type::Boolean, data: ValueData::Boolean(true) });
+                                }
                                 if *kind == ListTransformKind::Count {
                                     matching_count = matching_count.checked_add(1).ok_or_else(|| {
                                         SemauriError::semantic(
@@ -1110,11 +1114,15 @@ impl<'a> Lowerer<'a> {
                                             "Counted list items exceed the signed integer range",
                                             Some(expression.span()), None)
                                     })?;
-                                } else {
+                                } else if *kind == ListTransformKind::Filter {
                                     selected.push(input);
                                 }
                             },
-                            ValueData::Boolean(false) => {},
+                            ValueData::Boolean(false) => {
+                                if *kind == ListTransformKind::All {
+                                    return Ok(BoundValue::Compile { ty: Type::Boolean, data: ValueData::Boolean(false) });
+                                }
+                            },
                             _ => return Err(SemauriError::semantic(
                                 "S366",
                                 "Filter predicate must evaluate to boolean",
@@ -1126,10 +1134,11 @@ impl<'a> Lowerer<'a> {
                 }
                 Ok(BoundValue::Compile {
                     ty: ty.clone(),
-                    data: if *kind == ListTransformKind::Count {
-                        ValueData::Number(NumberValue::Int(matching_count))
-                    } else {
-                        ValueData::List(selected)
+                    data: match kind {
+                        ListTransformKind::Count => ValueData::Number(NumberValue::Int(matching_count)),
+                        ListTransformKind::Any => ValueData::Boolean(false),
+                        ListTransformKind::All => ValueData::Boolean(true),
+                        ListTransformKind::Map | ListTransformKind::Filter => ValueData::List(selected),
                     },
                 })
             }

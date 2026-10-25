@@ -95,6 +95,8 @@ pub enum ListTransformKind {
     Map,
     Filter,
     Count,
+    Any,
+    All,
 }
 
 impl ListTransformKind {
@@ -103,6 +105,8 @@ impl ListTransformKind {
             Self::Map => "map",
             Self::Filter => "filter",
             Self::Count => "count",
+            Self::Any => "any",
+            Self::All => "all",
         }
     }
 }
