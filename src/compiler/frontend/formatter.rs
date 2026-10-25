@@ -18,8 +18,20 @@ impl Compiler {
         let mut rendered = String::with_capacity(source.len());
         let mut cursor = 0usize;
         for (index, token) in tokens.iter().enumerate() {
+            // Contextual function syntax is canonicalized only at operator positions.
+            let is_define = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("define")
+                && tokens.get(index + 1).is_some_and(|next| next.lexeme.eq_ignore_ascii_case("function"));
+            let is_function = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("function")
+                && index > 0 && tokens[index - 1].lexeme.eq_ignore_ascii_case("define");
+            let is_invoke = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("invoke")
+                && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Word)
+                && tokens.get(index + 2).is_some_and(|next| next.kind == TokenKind::To);
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
+                && !is_define && !is_function && !is_invoke
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")

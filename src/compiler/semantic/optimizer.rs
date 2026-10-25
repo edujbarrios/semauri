@@ -198,6 +198,19 @@ fn fold_expr(
             value: Box::new(fold_expr(value, constants, changes)),
             span: *span,
         },
+        HirExpr::FunctionCall {
+            ty, name, parameter_symbol_id, parameter_type, argument, body, span,
+        } => HirExpr::FunctionCall {
+            ty: ty.clone(),
+            name: name.clone(),
+            parameter_symbol_id: *parameter_symbol_id,
+            parameter_type: parameter_type.clone(),
+            argument: Box::new(fold_expr(argument, constants, changes)),
+            // Parameter bindings are dynamically scoped to each invocation,
+            // so the function body must not be specialized using caller constants.
+            body: body.clone(),
+            span: *span,
+        },
         HirExpr::ListTransform {
             ty, kind, iterator_symbol_id, iterator_name, iterable, body, span,
         } => HirExpr::ListTransform {
@@ -685,6 +698,7 @@ fn removable_expression(expr: &HirExpr) -> bool {
         }
         HirExpr::DomainOperation { .. } => false,
         HirExpr::ListTransform { .. } => false,
+        HirExpr::FunctionCall { .. } => false,
     }
 }
 
@@ -747,6 +761,11 @@ fn collect_symbol_refs_expr(expr: &HirExpr, refs: &mut HashSet<u64>) {
             for value in arguments.values() {
                 collect_symbol_refs_expr(value, refs);
             }
+        }
+        HirExpr::FunctionCall { argument, body, parameter_symbol_id, .. } => {
+            collect_symbol_refs_expr(argument, refs);
+            collect_symbol_refs_expr(body, refs);
+            refs.remove(parameter_symbol_id);
         }
         HirExpr::ListTransform { iterable, body, .. } => {
             collect_symbol_refs_expr(iterable, refs);

@@ -120,6 +120,11 @@ pub enum Expr {
         name: String,
         span: SourceSpan,
     },
+    FunctionCall {
+        name: String,
+        argument: Box<Expr>,
+        span: SourceSpan,
+    },
     ListTransform {
         kind: ListTransformKind,
         iterator: String,
@@ -153,6 +158,7 @@ impl Expr {
             Expr::Literal { span, .. }
             | Expr::List { span, .. }
             | Expr::Variable { span, .. }
+            | Expr::FunctionCall { span, .. }
             | Expr::ListTransform { span, .. }
             | Expr::Unary { span, .. }
             | Expr::Binary { span, .. }
@@ -165,6 +171,7 @@ impl Expr {
             Expr::Literal { ty, value, .. } => Expr::Literal { ty, value, span },
             Expr::List { items, .. } => Expr::List { items, span },
             Expr::Variable { name, .. } => Expr::Variable { name, span },
+            Expr::FunctionCall { name, argument, .. } => Expr::FunctionCall { name, argument, span },
             Expr::ListTransform { kind, iterator, binding_span, iterable, body, .. } => Expr::ListTransform {
                 kind, iterator, binding_span, iterable, body, span,
             },
@@ -221,6 +228,11 @@ impl Expr {
                     "items".into(),
                     JsonValue::Array(items.iter().map(Expr::to_json).collect()),
                 );
+            }
+            Expr::FunctionCall { name, argument, .. } => {
+                base.insert("type".into(), json!("function_call"));
+                base.insert("name".into(), json!(name));
+                base.insert("argument".into(), argument.to_json());
             }
             Expr::Variable { name, .. } => {
                 base.insert("type".into(), json!("variable_reference"));
@@ -350,6 +362,13 @@ impl Block {
 
 #[derive(Clone, Debug)]
 pub enum Stmt {
+    DefineFunction {
+        name: String,
+        parameter: String,
+        parameter_type: Type,
+        body: Expr,
+        span: SourceSpan,
+    },
     CreateArtifact {
         domain: String,
         kind: String,
@@ -408,7 +427,8 @@ pub enum Stmt {
 impl Stmt {
     fn span(&self) -> SourceSpan {
         match self {
-            Stmt::CreateArtifact { span, .. }
+            Stmt::DefineFunction { span, .. }
+            | Stmt::CreateArtifact { span, .. }
             | Stmt::DomainScope { span, .. }
             | Stmt::DomainOperation { span, .. }
             | Stmt::SetTitle { span, .. }
@@ -430,6 +450,13 @@ impl Stmt {
         object.insert("span".into(), json!(span));
 
         match self {
+            Stmt::DefineFunction { name, parameter, parameter_type, body, .. } => {
+                object.insert("type".into(), json!("function_definition"));
+                object.insert("name".into(), json!(name));
+                object.insert("parameter".into(), json!(parameter));
+                object.insert("parameter_type".into(), parameter_type.to_json());
+                object.insert("body".into(), body.to_json());
+            }
             Stmt::CreateArtifact {
                 domain,
                 kind,
