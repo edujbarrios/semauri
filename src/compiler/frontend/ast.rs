@@ -122,6 +122,11 @@ pub enum Expr {
         name: String,
         span: SourceSpan,
     },
+    Repeat {
+        count: Box<Expr>,
+        value: Box<Expr>,
+        span: SourceSpan,
+    },
     Conditional {
         condition: Box<Expr>,
         consequence: Box<Expr>,
@@ -168,6 +173,7 @@ impl Expr {
             | Expr::Variable { span, .. }
             | Expr::FunctionCall { span, .. }
             | Expr::Conditional { span, .. }
+            | Expr::Repeat { span, .. }
             | Expr::ListTransform { span, .. }
             | Expr::Unary { span, .. }
             | Expr::Binary { span, .. }
@@ -181,6 +187,7 @@ impl Expr {
             Expr::List { items, .. } => Expr::List { items, span },
             Expr::Variable { name, .. } => Expr::Variable { name, span },
             Expr::FunctionCall { name, arguments, .. } => Expr::FunctionCall { name, arguments, span },
+            Expr::Repeat { count, value, .. } => Expr::Repeat { count, value, span },
             Expr::Conditional { condition, consequence, alternative, .. } => Expr::Conditional {
                 condition, consequence, alternative, span,
             },
@@ -240,6 +247,11 @@ impl Expr {
                     "items".into(),
                     JsonValue::Array(items.iter().map(Expr::to_json).collect()),
                 );
+            }
+            Expr::Repeat { count, value, .. } => {
+                base.insert("type".into(), json!("repeat_expression"));
+                base.insert("count".into(), count.to_json());
+                base.insert("value".into(), value.to_json());
             }
             Expr::Conditional { condition, consequence, alternative, .. } => {
                 base.insert("type".into(), json!("conditional_expression"));

@@ -924,6 +924,8 @@ impl<'a> Lowerer<'a> {
                 }
                 false
             }
+            HirExpr::Repeat { count, value, .. } =>
+                self.runtime_dependent(count)? || self.runtime_dependent(value)?,
             HirExpr::Conditional { condition, consequence, alternative, .. } => {
                 self.runtime_dependent(condition)?
                     || self.runtime_dependent(consequence)?
@@ -962,6 +964,28 @@ impl<'a> Lowerer<'a> {
                     LiteralValue::Color(value) => ValueData::Color(value.clone()),
                 },
             }),
+            HirExpr::Repeat { ty, count, value, .. } => {
+                let BoundValue::Compile {
+                    data: ValueData::Number(number), ..
+                } = self.evaluate(count)? else {
+                    return Err(self.runtime_value_error(count.span()));
+                };
+                let count = match number {
+                    NumberValue::Int(count) if (0..=10_000).contains(&count) => count as usize,
+                    _ => return Err(SemauriError::semantic(
+                        "S378",
+                        "Repeat count must be a non-negative integer not exceeding 10,000",
+                        Some(count.span()), None)),
+                };
+                let element = self.evaluate(value)?;
+                let BoundValue::Compile { data, .. } = element else {
+                    return Err(self.runtime_value_error(value.span()));
+                };
+                Ok(BoundValue::Compile {
+                    ty: ty.clone(),
+                    data: ValueData::List(vec![data; count]),
+                })
+            }
             HirExpr::Conditional { condition, consequence, alternative, .. } => {
                 match self.evaluate(condition)? {
                     BoundValue::Compile { data: ValueData::Boolean(true), .. } =>

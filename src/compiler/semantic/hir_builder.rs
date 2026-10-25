@@ -336,6 +336,27 @@ impl<'a> HirBuilder<'a> {
                     span: *span,
                 })
             }
+            Expr::Repeat { count, value, span } => {
+                let count = self.build_expr(count)?;
+                if count.ty() != Type::Number {
+                    return Err(SemauriError::semantic(
+                        "S377",
+                        format!("Repeat count requires number, received {}", count.ty()),
+                        Some(count.span()), None));
+                }
+                let value = self.build_expr(value)?;
+                if value.ty() == Type::Unit {
+                    return Err(SemauriError::semantic(
+                        "S377", "Repeat element must have a concrete value type",
+                        Some(value.span()), None));
+                }
+                Ok(HirExpr::Repeat {
+                    ty: Type::List(Box::new(value.ty())),
+                    count: Box::new(count),
+                    value: Box::new(value),
+                    span: *span,
+                })
+            }
             Expr::Conditional { condition, consequence, alternative, span } => {
                 let condition = self.build_expr(condition)?;
                 if condition.ty() != Type::Boolean {
@@ -1169,6 +1190,8 @@ fn pure_function_expression(expr: &HirExpr) -> bool {
             pure_function_expression(left) && pure_function_expression(right),
         HirExpr::ListTransform { iterable, body, .. } =>
             pure_function_expression(iterable) && pure_function_expression(body),
+        HirExpr::Repeat { count, value, .. } =>
+            pure_function_expression(count) && pure_function_expression(value),
         HirExpr::Conditional { condition, consequence, alternative, .. } =>
             pure_function_expression(condition)
             && pure_function_expression(consequence)

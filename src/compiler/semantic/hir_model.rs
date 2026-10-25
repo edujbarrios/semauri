@@ -38,6 +38,12 @@ pub enum HirExpr {
         source_name: String,
         span: SourceSpan,
     },
+    Repeat {
+        ty: Type,
+        count: Box<HirExpr>,
+        value: Box<HirExpr>,
+        span: SourceSpan,
+    },
     Conditional {
         ty: Type,
         condition: Box<HirExpr>,
@@ -99,6 +105,7 @@ impl HirExpr {
             | HirExpr::SymbolRef { ty, .. }
             | HirExpr::FunctionCall { ty, .. }
             | HirExpr::Conditional { ty, .. }
+            | HirExpr::Repeat { ty, .. }
             | HirExpr::ListTransform { ty, .. }
             | HirExpr::Promote { ty, .. }
             | HirExpr::Unary { ty, .. }
@@ -114,6 +121,7 @@ impl HirExpr {
             | HirExpr::SymbolRef { span, .. }
             | HirExpr::FunctionCall { span, .. }
             | HirExpr::Conditional { span, .. }
+            | HirExpr::Repeat { span, .. }
             | HirExpr::ListTransform { span, .. }
             | HirExpr::Promote { span, .. }
             | HirExpr::Unary { span, .. }
@@ -129,6 +137,7 @@ impl HirExpr {
             HirExpr::SymbolRef { .. } => "symbol_ref",
             HirExpr::FunctionCall { .. } => "function_call",
             HirExpr::Conditional { .. } => "conditional_expression",
+            HirExpr::Repeat { .. } => "repeat_expression",
             HirExpr::ListTransform { .. } => "list_transform",
             HirExpr::Promote { .. } => "promote",
             HirExpr::Unary { .. } => "unary",
@@ -158,6 +167,10 @@ impl HirExpr {
                 fields.insert("symbol_id".into(), json!(symbol_id));
                 fields.insert("name".into(), json!(name));
                 fields.insert("source_name".into(), json!(source_name));
+            }
+            HirExpr::Repeat { count, value, .. } => {
+                fields.insert("count".into(), count.to_json());
+                fields.insert("value".into(), value.to_json());
             }
             HirExpr::Conditional { condition, consequence, alternative, .. } => {
                 fields.insert("condition".into(), condition.to_json());

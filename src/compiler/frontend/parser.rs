@@ -749,6 +749,20 @@ impl<'a> Parser<'a> {
     fn primary(&mut self) -> Result<Expr> {
         let token = self.peek().clone();
         match token.kind {
+            TokenKind::Word if token.lexeme.eq_ignore_ascii_case("repeat")
+                && self.tokens.get(self.current + 1).is_some_and(|next| matches!(
+                    next.kind, TokenKind::Number | TokenKind::Word | TokenKind::Minus | TokenKind::LParen
+                )) => {
+                let start = self.advance().clone();
+                let count = self.numeric_unary()?;
+                self.consume(TokenKind::Of, "Expected 'of' after repeat count", "S249")?;
+                let value = self.primary()?;
+                Ok(Expr::Repeat {
+                    span: span_between_spans(start.span, value.span()),
+                    count: Box::new(count),
+                    value: Box::new(value),
+                })
+            }
             TokenKind::If => {
                 // Expression-only branch form: if EXPR then EXPR otherwise EXPR.
                 // Existing statement 'if EXPR: ... end.' remains unchanged.
