@@ -1,3 +1,18 @@
+## 0.22.0 — 2026-10-25
+
+### Language: immutable typed sorting
+- Add `sorted of` for concrete homogeneous number, string, or Boolean lists, producing a new list without mutation and retaining element type. Sorting is stable; strings use case-sensitive Unicode scalar order and booleans sort false-first. Non-sortable inputs or non-finite numeric items raise `S359`. [PR #163](https://github.com/edujbarrios/semauri/pull/163).
+- Improve the shared numerical comparator for integers and decimals so mixed `i64`/`f64` sorting remains precise and transitive beyond `2^53`. The `median of` operator now uses the same comparator, fixing mixed-number median ordering.
+
+### Language: stable typed deduplication
+- Add `distinct of` on concrete homogeneous `list<T>` values. Keep first occurrences, preserve input order, and use existing list-membership equality (including distinguishing stored integer and decimal representations); non-list operands receive located `S360`. [PR #164](https://github.com/edujbarrios/semauri/pull/164).
+- Add eleven focused integration tests across the two operations, runnable examples, language reference updates, formatter and effect-analysis checks. `sorted` and `distinct` are newly reserved words.
+
+### Boundaries
+- All new operators are pure transformations on compiler-known lists, not streams, external ML datasets or tensors; no new effect permissions or ML training execution.
+
+See [v0.22.0 release notes](docs/releases/0.22.0.md).
+
 ## 0.21.0 — 2026-10-23
 
 ### Language: typed Boolean reductions
