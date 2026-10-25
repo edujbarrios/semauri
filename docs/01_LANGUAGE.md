@@ -1,4 +1,4 @@
-# Semauri language reference — v0.27.0
+# Semauri language reference — v0.28.0
 
 This document describes implemented language behavior, not aspirational syntax.
 
@@ -54,6 +54,9 @@ primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
                  | TAKE numeric_unary FROM primary | DROP numeric_unary FROM primary
                  | MAP EVERY identifier IN primary TO expression
                   | COUNT EVERY identifier IN primary IF expression
+                  | ANY EVERY identifier IN primary IF expression
+                  | ALL EVERY identifier IN primary IF expression
+                  | REDUCE EVERY identifier IN primary STARTING identifier AS expression TO expression
                  | FILTER EVERY identifier IN primary IF expression
                  | RANGE FROM numeric_unary TO numeric_unary
                   | INVOKE identifier TO primary | INVOKE identifier TO "(" expression { "," expression } ")"
@@ -69,6 +72,12 @@ The handwritten recursive-descent parser remains the executable grammar during 0
 Version 0.27.0 introduces `if CONDITION then VALUE otherwise VALUE` as an expression, distinct from existing statement-level `if CONDITION: ... end.`. Both branches must have the same statically inferred type (`S376`) and the condition must be Boolean (`S375`). The compiler evaluates **only the selected branch**, including under constant folding; branches can return lists and be used inside user-defined pure functions. See [typed conditional expressions](39_CONDITIONAL_EXPRESSIONS.md).
 
 `repeat COUNT of VALUE` constructs a `list<T>` with COUNT copies of a single evaluated value. COUNT must be an integer between 0 and 10,000 inclusive; zero produces a typed empty list. Static nonnumeric counts produce `S377`, while fractional, negative or excess counts produce `S378`. This operation is pure and keeps the `repeat` word contextual. See [typed repetition](40_REPEAT_LISTS.md).
+
+## Reductions and quantifiers (0.28.0)
+
+`reduce every ITEM in LIST starting ACC as SEED to BODY` folds a typed list with a seed of any supported value type. The step body must return the seed type; empty lists return the seed unmodified. Diagnoses invalid input (`S379`), incompatible step result (`S380`) or an impure body (`S381`); malformed syntax uses `S250`. See [typed reductions](41_REDUCE_EVERY.md).
+
+`any every ITEM in LIST if PREDICATE` and `all every ITEM in LIST if PREDICATE` are scoped typed Boolean predicates, respectively stopping on first true or false. Empty lists return false for any and true for all. Existing `any of` and `all of` remain unchanged. List/predicate diagnostics reuse `S365`/`S366`. See [quantifiers](42_QUANTIFIED_PREDICATES.md).
 
 ## Typed pure user-defined functions
 
@@ -365,6 +374,9 @@ Relevant diagnostics include:
 - `S376`: conditional expression branches have different types
 - `S377`: repeat count is not numeric or repeated element has no value
 - `S378`: negative, fractional, or greater-than-10,000 repeat count
+- `S379`: reduce requires a list
+- `S380`: accumulator seed/body type mismatch
+- `S381`: impure reduce body
 
 ## Determinism rule
 
