@@ -149,6 +149,11 @@ fn collect_effects_expr(expr: &HirExpr, uses: &mut Vec<EffectUse>) {
             for argument in arguments { collect_effects_expr(argument, uses); }
             collect_effects_expr(body, uses);
         }
+        HirExpr::Reduce { iterable, initial, body, .. } => {
+            collect_effects_expr(iterable, uses);
+            collect_effects_expr(initial, uses);
+            collect_effects_expr(body, uses);
+        }
         HirExpr::ListTransform { iterable, body, .. } => {
             collect_effects_expr(iterable, uses);
             collect_effects_expr(body, uses);

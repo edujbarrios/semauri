@@ -138,6 +138,16 @@ pub enum Expr {
         arguments: Vec<Expr>,
         span: SourceSpan,
     },
+    Reduce {
+        iterator: String,
+        iterator_span: SourceSpan,
+        accumulator: String,
+        accumulator_span: SourceSpan,
+        iterable: Box<Expr>,
+        initial: Box<Expr>,
+        body: Box<Expr>,
+        span: SourceSpan,
+    },
     ListTransform {
         kind: ListTransformKind,
         iterator: String,
@@ -174,6 +184,7 @@ impl Expr {
             | Expr::FunctionCall { span, .. }
             | Expr::Conditional { span, .. }
             | Expr::Repeat { span, .. }
+            | Expr::Reduce { span, .. }
             | Expr::ListTransform { span, .. }
             | Expr::Unary { span, .. }
             | Expr::Binary { span, .. }
@@ -191,6 +202,8 @@ impl Expr {
             Expr::Conditional { condition, consequence, alternative, .. } => Expr::Conditional {
                 condition, consequence, alternative, span,
             },
+            Expr::Reduce { iterator, iterator_span, accumulator, accumulator_span, iterable, initial, body, .. } =>
+                Expr::Reduce { iterator, iterator_span, accumulator, accumulator_span, iterable, initial, body, span },
             Expr::ListTransform { kind, iterator, binding_span, iterable, body, .. } => Expr::ListTransform {
                 kind, iterator, binding_span, iterable, body, span,
             },
@@ -267,6 +280,14 @@ impl Expr {
             Expr::Variable { name, .. } => {
                 base.insert("type".into(), json!("variable_reference"));
                 base.insert("name".into(), json!(name));
+            }
+            Expr::Reduce { iterator, accumulator, iterable, initial, body, .. } => {
+                base.insert("type".into(), json!("reduce_expression"));
+                base.insert("iterator".into(), json!(iterator));
+                base.insert("accumulator".into(), json!(accumulator));
+                base.insert("iterable".into(), iterable.to_json());
+                base.insert("initial".into(), initial.to_json());
+                base.insert("body".into(), body.to_json());
             }
             Expr::ListTransform { kind, iterator, iterable, body, .. } => {
                 base.insert("type".into(), json!("list_transform"));

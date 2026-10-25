@@ -59,6 +59,17 @@ pub enum HirExpr {
         body: Box<HirExpr>,
         span: SourceSpan,
     },
+    Reduce {
+        ty: Type,
+        iterator_symbol_id: u64,
+        accumulator_symbol_id: u64,
+        iterator_name: String,
+        accumulator_name: String,
+        iterable: Box<HirExpr>,
+        initial: Box<HirExpr>,
+        body: Box<HirExpr>,
+        span: SourceSpan,
+    },
     ListTransform {
         ty: Type,
         kind: ListTransformKind,
@@ -106,6 +117,7 @@ impl HirExpr {
             | HirExpr::FunctionCall { ty, .. }
             | HirExpr::Conditional { ty, .. }
             | HirExpr::Repeat { ty, .. }
+            | HirExpr::Reduce { ty, .. }
             | HirExpr::ListTransform { ty, .. }
             | HirExpr::Promote { ty, .. }
             | HirExpr::Unary { ty, .. }
@@ -122,6 +134,7 @@ impl HirExpr {
             | HirExpr::FunctionCall { span, .. }
             | HirExpr::Conditional { span, .. }
             | HirExpr::Repeat { span, .. }
+            | HirExpr::Reduce { span, .. }
             | HirExpr::ListTransform { span, .. }
             | HirExpr::Promote { span, .. }
             | HirExpr::Unary { span, .. }
@@ -138,6 +151,7 @@ impl HirExpr {
             HirExpr::FunctionCall { .. } => "function_call",
             HirExpr::Conditional { .. } => "conditional_expression",
             HirExpr::Repeat { .. } => "repeat_expression",
+            HirExpr::Reduce { .. } => "reduce_expression",
             HirExpr::ListTransform { .. } => "list_transform",
             HirExpr::Promote { .. } => "promote",
             HirExpr::Unary { .. } => "unary",
@@ -182,6 +196,15 @@ impl HirExpr {
                 fields.insert("parameters".into(), JsonValue::Array(parameters.iter()
                     .map(|(symbol_id, ty)| json!({"symbol_id": symbol_id, "type": ty.to_json()})).collect()));
                 fields.insert("arguments".into(), JsonValue::Array(arguments.iter().map(HirExpr::to_json).collect()));
+                fields.insert("body".into(), body.to_json());
+            }
+            HirExpr::Reduce { iterator_symbol_id, accumulator_symbol_id, iterator_name, accumulator_name, iterable, initial, body, .. } => {
+                fields.insert("iterator_symbol_id".into(), json!(iterator_symbol_id));
+                fields.insert("accumulator_symbol_id".into(), json!(accumulator_symbol_id));
+                fields.insert("iterator".into(), json!(iterator_name));
+                fields.insert("accumulator".into(), json!(accumulator_name));
+                fields.insert("iterable".into(), iterable.to_json());
+                fields.insert("initial".into(), initial.to_json());
                 fields.insert("body".into(), body.to_json());
             }
             HirExpr::ListTransform { kind, iterator_symbol_id, iterator_name, iterable, body, .. } => {
