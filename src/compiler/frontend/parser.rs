@@ -1003,17 +1003,18 @@ impl<'a> Parser<'a> {
                     body: Box::new(body),
                 })
             }
-            TokenKind::Word if matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count")
+            TokenKind::Word if matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count" | "partition")
                 && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Every) => {
                 let start = self.advance().clone();
                 let kind = match start.lexeme.to_ascii_lowercase().as_str() {
                     "map" => ListTransformKind::Map,
                     "filter" => ListTransformKind::Filter,
+                    "partition" => ListTransformKind::Partition,
                     _ => ListTransformKind::Count,
                 };
                 self.consume(
                     TokenKind::Every,
-                    "Expected 'every' after map/filter/count",
+                    "Expected 'every' after map/filter/count/partition",
                     "S244",
                 )?;
                 let variable = self.consume(
@@ -1031,8 +1032,8 @@ impl<'a> Parser<'a> {
                     ListTransformKind::Map => {
                         self.consume(TokenKind::To, "Expected 'to' after the map input", "S244")?;
                     }
-                    ListTransformKind::Filter | ListTransformKind::Count | ListTransformKind::Any | ListTransformKind::All => {
-                        self.consume(TokenKind::If, "Expected 'if' after the filter/count input", "S244")?;
+                    ListTransformKind::Filter | ListTransformKind::Partition | ListTransformKind::Count | ListTransformKind::Any | ListTransformKind::All => {
+                        self.consume(TokenKind::If, "Expected 'if' after the filter/count/partition input", "S244")?;
                     }
                 }
                 let body = self.expression()?;
