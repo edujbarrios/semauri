@@ -354,6 +354,17 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::First | UnaryOperator::Last => {
+                        match operand.ty() {
+                            Type::List(element) => *element,
+                            ty => return Err(SemauriError::semantic(
+                                "S361",
+                                format!("'first of' and 'last of' require a list, received {ty}"),
+                                Some(*span),
+                                None,
+                            )),
+                        }
+                    }
                     UnaryOperator::Distinct => {
                         match operand.ty() {
                             Type::List(_) => operand.ty(),
