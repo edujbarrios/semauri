@@ -17,3 +17,5 @@ The operation is pure and does not consume streaming datasets or perform runtime
 semauri check examples/count_every.sema
 semauri run --allow console_write examples/count_every.sema
 ```
+
+For reproducible pipelines, the input list is evaluated once and the predicate is evaluated sequentially for each element. No intermediate list or outside mutation is introduced. See [typed map/filter](33_MAP_FILTER.md) and [pure user functions](35_PURE_FUNCTIONS.md).
