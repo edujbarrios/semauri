@@ -1129,6 +1129,36 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::Distinct,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: ty @ Type::List(_),
+                    data: ValueData::List(values),
+                } => {
+                    // Preserve source order and element type. Equality deliberately
+                    // matches the existing list 'contains' operation.
+                    let mut distinct = Vec::with_capacity(values.len());
+                    for value in values {
+                        if !distinct.contains(&value) {
+                            distinct.push(value);
+                        }
+                    }
+                    Ok(BoundValue::Compile {
+                        ty,
+                        data: ValueData::List(distinct),
+                    })
+                }
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S360",
+                    format!("'distinct of' requires a list, received {ty}"),
+                    Some(expression.span()),
+                    None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Sorted,
                 operand,
                 ..
