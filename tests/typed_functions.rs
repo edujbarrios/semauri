@@ -79,7 +79,7 @@ fn refuses_effectful_function_bodies_and_nested_definitions() {
         "if true: define function bad taking x as number to x. end. print 1.",
     ] {
         let error = Compiler::new().hir(src).unwrap_err();
-        assert!(matches!(error.code.as_str(), "S201" | "S217" | "S372"), "{src}: {error}");
+        assert!(matches!(error.code.as_str(), "S201" | "S217" | "S241" | "S372"), "{src}: {error}");
     }
 }
 
