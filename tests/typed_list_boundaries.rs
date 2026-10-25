@@ -84,6 +84,10 @@ fn formatter_ast_hir_and_effects_support_new_prefix_expressions() {
         compiler.format_source("PRINT FIRST OF a LIST OF 4, 3.").unwrap(),
         "print first of a list of 4, 3."
     );
+    assert_eq!(
+        compiler.format_source("Create a web called My First page.").unwrap(),
+        "create a web called My First page."
+    );
     assert!(compiler.hir("let x be last of a list of 4, 3.")
         .unwrap().to_json().to_string().contains("\"last\""));
     assert_eq!(
