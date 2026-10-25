@@ -40,9 +40,7 @@ fn sorts_string_and_boolean_lists() {
     let result = run(r#"print sorted of a list of "zebra", "Apple", "ant".
 print sorted of a list of true, false, true."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
-    assert_eq!(result.stdout, r#"["Apple", "ant", "zebra"]
-[false, true, true]
-"#);
+    assert_eq!(result.stdout, "[Apple, ant, zebra]\n[false, true, true]\n");
 }
 
 #[test]
