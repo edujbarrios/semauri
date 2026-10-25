@@ -1,0 +1,7 @@
+# Typed lazy selection within pure functions and list pipelines.
+define function absolute taking n as number to (if (n is less than 0) then (minus n) otherwise n).
+let readings be a list of minus 3, 0, 7, minus 4.
+let magnitudes be map every value in readings to (invoke absolute to value).
+assert first of magnitudes is equal to 3.
+assert last of magnitudes is equal to 4.
+print magnitudes.

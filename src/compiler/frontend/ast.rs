@@ -122,6 +122,12 @@ pub enum Expr {
         name: String,
         span: SourceSpan,
     },
+    Conditional {
+        condition: Box<Expr>,
+        consequence: Box<Expr>,
+        alternative: Box<Expr>,
+        span: SourceSpan,
+    },
     FunctionCall {
         name: String,
         arguments: Vec<Expr>,
@@ -161,6 +167,7 @@ impl Expr {
             | Expr::List { span, .. }
             | Expr::Variable { span, .. }
             | Expr::FunctionCall { span, .. }
+            | Expr::Conditional { span, .. }
             | Expr::ListTransform { span, .. }
             | Expr::Unary { span, .. }
             | Expr::Binary { span, .. }
@@ -174,6 +181,9 @@ impl Expr {
             Expr::List { items, .. } => Expr::List { items, span },
             Expr::Variable { name, .. } => Expr::Variable { name, span },
             Expr::FunctionCall { name, arguments, .. } => Expr::FunctionCall { name, arguments, span },
+            Expr::Conditional { condition, consequence, alternative, .. } => Expr::Conditional {
+                condition, consequence, alternative, span,
+            },
             Expr::ListTransform { kind, iterator, binding_span, iterable, body, .. } => Expr::ListTransform {
                 kind, iterator, binding_span, iterable, body, span,
             },
@@ -230,6 +240,12 @@ impl Expr {
                     "items".into(),
                     JsonValue::Array(items.iter().map(Expr::to_json).collect()),
                 );
+            }
+            Expr::Conditional { condition, consequence, alternative, .. } => {
+                base.insert("type".into(), json!("conditional_expression"));
+                base.insert("condition".into(), condition.to_json());
+                base.insert("consequence".into(), consequence.to_json());
+                base.insert("alternative".into(), alternative.to_json());
             }
             Expr::FunctionCall { name, arguments, .. } => {
                 base.insert("type".into(), json!("function_call"));

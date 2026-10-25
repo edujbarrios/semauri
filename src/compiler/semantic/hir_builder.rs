@@ -336,6 +336,31 @@ impl<'a> HirBuilder<'a> {
                     span: *span,
                 })
             }
+            Expr::Conditional { condition, consequence, alternative, span } => {
+                let condition = self.build_expr(condition)?;
+                if condition.ty() != Type::Boolean {
+                    return Err(SemauriError::semantic(
+                        "S375",
+                        format!("Conditional expression requires boolean condition, received {}", condition.ty()),
+                        Some(condition.span()), None));
+                }
+                let consequence = self.build_expr(consequence)?;
+                let alternative = self.build_expr(alternative)?;
+                if consequence.ty() != alternative.ty() {
+                    return Err(SemauriError::semantic(
+                        "S376",
+                        format!("Conditional branches must have the same type, received {} and {}",
+                            consequence.ty(), alternative.ty()),
+                        Some(*span), None));
+                }
+                Ok(HirExpr::Conditional {
+                    ty: consequence.ty(),
+                    condition: Box::new(condition),
+                    consequence: Box::new(consequence),
+                    alternative: Box::new(alternative),
+                    span: *span,
+                })
+            }
             Expr::FunctionCall { name, arguments, span } => {
                 let (parameters, body) = self.functions.get(name)
                     .cloned().ok_or_else(|| SemauriError::semantic(
@@ -1144,6 +1169,10 @@ fn pure_function_expression(expr: &HirExpr) -> bool {
             pure_function_expression(left) && pure_function_expression(right),
         HirExpr::ListTransform { iterable, body, .. } =>
             pure_function_expression(iterable) && pure_function_expression(body),
+        HirExpr::Conditional { condition, consequence, alternative, .. } =>
+            pure_function_expression(condition)
+            && pure_function_expression(consequence)
+            && pure_function_expression(alternative),
         HirExpr::FunctionCall { arguments, body, .. } =>
             arguments.iter().all(pure_function_expression) && pure_function_expression(body),
     }

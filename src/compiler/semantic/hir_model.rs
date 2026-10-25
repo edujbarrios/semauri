@@ -38,6 +38,13 @@ pub enum HirExpr {
         source_name: String,
         span: SourceSpan,
     },
+    Conditional {
+        ty: Type,
+        condition: Box<HirExpr>,
+        consequence: Box<HirExpr>,
+        alternative: Box<HirExpr>,
+        span: SourceSpan,
+    },
     FunctionCall {
         ty: Type,
         name: String,
@@ -91,6 +98,7 @@ impl HirExpr {
             | HirExpr::List { ty, .. }
             | HirExpr::SymbolRef { ty, .. }
             | HirExpr::FunctionCall { ty, .. }
+            | HirExpr::Conditional { ty, .. }
             | HirExpr::ListTransform { ty, .. }
             | HirExpr::Promote { ty, .. }
             | HirExpr::Unary { ty, .. }
@@ -105,6 +113,7 @@ impl HirExpr {
             | HirExpr::List { span, .. }
             | HirExpr::SymbolRef { span, .. }
             | HirExpr::FunctionCall { span, .. }
+            | HirExpr::Conditional { span, .. }
             | HirExpr::ListTransform { span, .. }
             | HirExpr::Promote { span, .. }
             | HirExpr::Unary { span, .. }
@@ -119,6 +128,7 @@ impl HirExpr {
             HirExpr::List { .. } => "list",
             HirExpr::SymbolRef { .. } => "symbol_ref",
             HirExpr::FunctionCall { .. } => "function_call",
+            HirExpr::Conditional { .. } => "conditional_expression",
             HirExpr::ListTransform { .. } => "list_transform",
             HirExpr::Promote { .. } => "promote",
             HirExpr::Unary { .. } => "unary",
@@ -148,6 +158,11 @@ impl HirExpr {
                 fields.insert("symbol_id".into(), json!(symbol_id));
                 fields.insert("name".into(), json!(name));
                 fields.insert("source_name".into(), json!(source_name));
+            }
+            HirExpr::Conditional { condition, consequence, alternative, .. } => {
+                fields.insert("condition".into(), condition.to_json());
+                fields.insert("consequence".into(), consequence.to_json());
+                fields.insert("alternative".into(), alternative.to_json());
             }
             HirExpr::FunctionCall { name, parameters, arguments, body, .. } => {
                 fields.insert("name".into(), json!(name));
