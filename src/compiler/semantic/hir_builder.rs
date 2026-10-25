@@ -454,6 +454,43 @@ impl<'a> HirBuilder<'a> {
                 self.pop_scope();
                 result
             }
+            Expr::ZipTransform {
+                left_name, left_span, left_list,
+                right_name, right_span, right_list, body, span
+            } => {
+                let left_list = self.build_expr(left_list)?;
+                let Type::List(left_element) = left_list.ty() else {
+                    return Err(SemauriError::semantic(
+                        "S381", format!("Zip expects first list, received {}", left_list.ty()),
+                        Some(left_list.span()), None));
+                };
+                let right_list = self.build_expr(right_list)?;
+                let Type::List(right_element) = right_list.ty() else {
+                    return Err(SemauriError::semantic(
+                        "S381", format!("Zip expects second list, received {}", right_list.ty()),
+                        Some(right_list.span()), None));
+                };
+                self.push_scope();
+                let result = (|| {
+                    let left_symbol = self.create_symbol(left_name, "zip_iterator", *left_element, *left_span)?;
+                    let right_symbol = self.create_symbol(right_name, "zip_iterator", *right_element, *right_span)?;
+                    let body = self.build_expr(body)?;
+                    if body.ty() == Type::Unit {
+                        return Err(SemauriError::semantic(
+                            "S382", "Zip body must produce a concrete value",
+                            Some(body.span()), None));
+                    }
+                    Ok(HirExpr::ZipTransform {
+                        ty: Type::List(Box::new(body.ty())),
+                        left_symbol_id: left_symbol.id, left_name: left_name.clone(),
+                        left_list: Box::new(left_list), right_symbol_id: right_symbol.id,
+                        right_name: right_name.clone(), right_list: Box::new(right_list),
+                        body: Box::new(body), span: *span,
+                    })
+                })();
+                self.pop_scope();
+                result
+            }
             Expr::ListTransform { kind, iterator, binding_span, iterable, body, span } => {
                 let iterable = self.build_expr(iterable)?;
                 let Type::List(element) = iterable.ty() else {
@@ -1234,6 +1271,9 @@ fn pure_function_expression(expr: &HirExpr) -> bool {
             pure_function_expression(left) && pure_function_expression(right),
         HirExpr::Reduce { iterable, initial, body, .. } =>
             pure_function_expression(iterable) && pure_function_expression(initial) && pure_function_expression(body),
+        HirExpr::ZipTransform { left_list, right_list, body, .. } =>
+            pure_function_expression(left_list) && pure_function_expression(right_list) &&
+            pure_function_expression(body),
         HirExpr::ListTransform { iterable, body, .. } =>
             pure_function_expression(iterable) && pure_function_expression(body),
         HirExpr::Repeat { count, value, .. } =>
