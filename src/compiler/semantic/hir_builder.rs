@@ -354,6 +354,17 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::Distinct => {
+                        match operand.ty() {
+                            Type::List(_) => operand.ty(),
+                            ty => return Err(SemauriError::semantic(
+                                "S360",
+                                format!("'distinct of' requires a list, received {ty}"),
+                                Some(*span),
+                                None,
+                            )),
+                        }
+                    }
                     UnaryOperator::Sorted => {
                         match operand.ty() {
                             Type::List(element) if matches!(element.as_ref(), Type::Number | Type::String | Type::Boolean) => operand.ty(),
