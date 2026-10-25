@@ -1,0 +1,8 @@
+# Pure typed access to the first or last element.
+let readings be a list of 8, 3, 5.
+let oldest be first of readings.
+let newest be last of readings.
+assert oldest is equal to 8.
+assert newest is equal to 5.
+print oldest.
+print newest.

@@ -13,6 +13,8 @@ pub enum UnaryOperator {
     Median,
     Sorted,
     Distinct,
+    First,
+    Last,
     Uppercase,
     Lowercase,
 }
@@ -33,6 +35,8 @@ impl UnaryOperator {
             UnaryOperator::Median => "median",
             UnaryOperator::Sorted => "sorted",
             UnaryOperator::Distinct => "distinct",
+            UnaryOperator::First => "first",
+            UnaryOperator::Last => "last",
             UnaryOperator::Uppercase => "uppercase",
             UnaryOperator::Lowercase => "lowercase",
         }

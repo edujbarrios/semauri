@@ -1129,6 +1129,38 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::First | UnaryOperator::Last),
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::List(element),
+                    data: ValueData::List(values),
+                } => {
+                    let value = if *operator == UnaryOperator::First {
+                        values.first()
+                    } else {
+                        values.last()
+                    }.cloned().ok_or_else(|| SemauriError::semantic(
+                        "S362",
+                        format!("'{} of' requires a non-empty list", operator.as_str()),
+                        Some(expression.span()),
+                        None,
+                    ))?;
+                    Ok(BoundValue::Compile {
+                        ty: *element,
+                        data: value,
+                    })
+                }
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S361",
+                    format!("'first of' and 'last of' require a list, received {ty}"),
+                    Some(expression.span()),
+                    None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Distinct,
                 operand,
                 ..

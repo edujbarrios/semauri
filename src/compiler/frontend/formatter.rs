@@ -43,6 +43,8 @@ impl Compiler {
                     | TokenKind::Median
                     | TokenKind::Sorted
                     | TokenKind::Distinct
+                    | TokenKind::First
+                    | TokenKind::Last
                     | TokenKind::Any
                     | TokenKind::All
                     | TokenKind::Uppercase
