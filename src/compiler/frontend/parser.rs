@@ -751,7 +751,7 @@ impl<'a> Parser<'a> {
         match token.kind {
             TokenKind::Word if token.lexeme.eq_ignore_ascii_case("repeat")
                 && self.tokens.get(self.current + 1).is_some_and(|next| matches!(
-                    next.kind, TokenKind::Number | TokenKind::Word | TokenKind::Minus | TokenKind::LParen
+                    next.kind, TokenKind::Number | TokenKind::Boolean | TokenKind::String | TokenKind::Color | TokenKind::Word | TokenKind::Minus | TokenKind::LParen
                 )) => {
                 let start = self.advance().clone();
                 let count = self.numeric_unary()?;
