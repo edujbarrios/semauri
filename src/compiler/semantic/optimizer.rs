@@ -249,6 +249,17 @@ fn fold_expr(
             body: body.clone(),
             span: *span,
         },
+        HirExpr::ZipTransform {
+            ty, left_symbol_id, left_name, left_list,
+            right_symbol_id, right_name, right_list, body, span,
+        } => HirExpr::ZipTransform {
+            ty: ty.clone(), left_symbol_id: *left_symbol_id,
+            left_name: left_name.clone(),
+            left_list: Box::new(fold_expr(left_list, constants, changes)),
+            right_symbol_id: *right_symbol_id, right_name: right_name.clone(),
+            right_list: Box::new(fold_expr(right_list, constants, changes)),
+            body: body.clone(), span: *span,
+        },
         HirExpr::ListTransform {
             ty, kind, iterator_symbol_id, iterator_name, iterable, body, span,
         } => HirExpr::ListTransform {
@@ -736,6 +747,7 @@ fn removable_expression(expr: &HirExpr) -> bool {
         }
         HirExpr::DomainOperation { .. } => false,
         HirExpr::Reduce { .. } => false,
+        HirExpr::ZipTransform { .. } => false,
         HirExpr::ListTransform { .. } => false,
         HirExpr::FunctionCall { .. } | HirExpr::Conditional { .. } | HirExpr::Repeat { .. } => false,
     }
@@ -824,6 +836,17 @@ fn collect_symbol_refs_expr(expr: &HirExpr, refs: &mut HashSet<u64>) {
             collect_symbol_refs_expr(body, &mut body_refs);
             body_refs.remove(iterator_symbol_id);
             body_refs.remove(accumulator_symbol_id);
+            refs.extend(body_refs);
+        }
+        HirExpr::ZipTransform {
+            left_list, right_list, body, left_symbol_id, right_symbol_id, ..
+        } => {
+            collect_symbol_refs_expr(left_list, refs);
+            collect_symbol_refs_expr(right_list, refs);
+            let mut body_refs = HashSet::new();
+            collect_symbol_refs_expr(body, &mut body_refs);
+            body_refs.remove(left_symbol_id);
+            body_refs.remove(right_symbol_id);
             refs.extend(body_refs);
         }
         HirExpr::ListTransform { iterable, body, .. } => {

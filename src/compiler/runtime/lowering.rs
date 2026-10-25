@@ -943,6 +943,8 @@ impl<'a> Lowerer<'a> {
             },
             HirExpr::Reduce { iterable, initial, .. } =>
                 self.runtime_dependent(iterable)? || self.runtime_dependent(initial)?,
+            HirExpr::ZipTransform { left_list, right_list, .. } =>
+                self.runtime_dependent(left_list)? || self.runtime_dependent(right_list)?,
             HirExpr::ListTransform { iterable, .. } => {
                 // The iterator symbol exists only during the actual evaluation.
                 // The body is evaluated in its per-element lexical environment.
@@ -1061,6 +1063,48 @@ impl<'a> Lowerer<'a> {
                     }
                 }
                 Ok(accumulator)
+            }
+            HirExpr::ZipTransform {
+                ty, left_symbol_id, left_list, right_symbol_id, right_list, body, ..
+            } => {
+                let BoundValue::Compile {
+                    ty: Type::List(left_element),
+                    data: ValueData::List(left_values),
+                } = self.evaluate(left_list)? else {
+                    return Err(self.runtime_value_error(left_list.span()));
+                };
+                let BoundValue::Compile {
+                    ty: Type::List(right_element),
+                    data: ValueData::List(right_values),
+                } = self.evaluate(right_list)? else {
+                    return Err(self.runtime_value_error(right_list.span()));
+                };
+                let mut mapped = Vec::with_capacity(left_values.len().min(right_values.len()));
+                for (left_value, right_value) in left_values.into_iter().zip(right_values) {
+                    self.push_environment();
+                    let frame = self.environments.last_mut().expect("zip frame");
+                    frame.insert(*left_symbol_id, BoundValue::Compile {
+                        ty: left_element.as_ref().clone(), data: left_value,
+                    });
+                    frame.insert(*right_symbol_id, BoundValue::Compile {
+                        ty: right_element.as_ref().clone(), data: right_value,
+                    });
+                    let value = self.evaluate(body);
+                    self.pop_environment();
+                    let BoundValue::Compile { ty: element_ty, data } = value? else {
+                        return Err(self.runtime_value_error(body.span()));
+                    };
+                    let Type::List(expected_ty) = ty else {
+                        unreachable!("zip HIR must return a list")
+                    };
+                    if element_ty != **expected_ty {
+                        return Err(SemauriError::semantic(
+                            "S382", "Zipped body returned unexpected type",
+                            Some(body.span()), None));
+                    }
+                    mapped.push(data);
+                }
+                Ok(BoundValue::Compile { ty: ty.clone(), data: ValueData::List(mapped) })
             }
             HirExpr::ListTransform { ty, kind, iterator_symbol_id, iterable, body, .. } => {
                 let BoundValue::Compile {

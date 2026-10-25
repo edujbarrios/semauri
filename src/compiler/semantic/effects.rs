@@ -154,6 +154,11 @@ fn collect_effects_expr(expr: &HirExpr, uses: &mut Vec<EffectUse>) {
             collect_effects_expr(initial, uses);
             collect_effects_expr(body, uses);
         }
+        HirExpr::ZipTransform { left_list, right_list, body, .. } => {
+            collect_effects_expr(left_list, uses);
+            collect_effects_expr(right_list, uses);
+            collect_effects_expr(body, uses);
+        }
         HirExpr::ListTransform { iterable, body, .. } => {
             collect_effects_expr(iterable, uses);
             collect_effects_expr(body, uses);

@@ -70,6 +70,12 @@ pub enum HirExpr {
         body: Box<HirExpr>,
         span: SourceSpan,
     },
+    ZipTransform {
+        ty: Type,
+        left_symbol_id: u64, left_name: String, left_list: Box<HirExpr>,
+        right_symbol_id: u64, right_name: String, right_list: Box<HirExpr>,
+        body: Box<HirExpr>, span: SourceSpan,
+    },
     ListTransform {
         ty: Type,
         kind: ListTransformKind,
@@ -118,6 +124,7 @@ impl HirExpr {
             | HirExpr::Conditional { ty, .. }
             | HirExpr::Repeat { ty, .. }
             | HirExpr::Reduce { ty, .. }
+            | HirExpr::ZipTransform { ty, .. }
             | HirExpr::ListTransform { ty, .. }
             | HirExpr::Promote { ty, .. }
             | HirExpr::Unary { ty, .. }
@@ -135,6 +142,7 @@ impl HirExpr {
             | HirExpr::Conditional { span, .. }
             | HirExpr::Repeat { span, .. }
             | HirExpr::Reduce { span, .. }
+            | HirExpr::ZipTransform { span, .. }
             | HirExpr::ListTransform { span, .. }
             | HirExpr::Promote { span, .. }
             | HirExpr::Unary { span, .. }
@@ -152,6 +160,7 @@ impl HirExpr {
             HirExpr::Conditional { .. } => "conditional_expression",
             HirExpr::Repeat { .. } => "repeat_expression",
             HirExpr::Reduce { .. } => "reduce_expression",
+            HirExpr::ZipTransform { .. } => "zip_transform",
             HirExpr::ListTransform { .. } => "list_transform",
             HirExpr::Promote { .. } => "promote",
             HirExpr::Unary { .. } => "unary",
@@ -205,6 +214,16 @@ impl HirExpr {
                 fields.insert("accumulator".into(), json!(accumulator_name));
                 fields.insert("iterable".into(), iterable.to_json());
                 fields.insert("initial".into(), initial.to_json());
+                fields.insert("body".into(), body.to_json());
+            }
+            HirExpr::ZipTransform { left_symbol_id, left_name, left_list,
+                right_symbol_id, right_name, right_list, body, .. } => {
+                fields.insert("left_symbol_id".into(), json!(left_symbol_id));
+                fields.insert("left_iterator".into(), json!(left_name));
+                fields.insert("left_list".into(), left_list.to_json());
+                fields.insert("right_symbol_id".into(), json!(right_symbol_id));
+                fields.insert("right_iterator".into(), json!(right_name));
+                fields.insert("right_list".into(), right_list.to_json());
                 fields.insert("body".into(), body.to_json());
             }
             HirExpr::ListTransform { kind, iterator_symbol_id, iterator_name, iterable, body, .. } => {

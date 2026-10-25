@@ -152,6 +152,11 @@ pub enum Expr {
         body: Box<Expr>,
         span: SourceSpan,
     },
+    ZipTransform {
+        left_name: String, left_span: SourceSpan, left_list: Box<Expr>,
+        right_name: String, right_span: SourceSpan, right_list: Box<Expr>,
+        body: Box<Expr>, span: SourceSpan,
+    },
     ListTransform {
         kind: ListTransformKind,
         iterator: String,
@@ -189,6 +194,7 @@ impl Expr {
             | Expr::Conditional { span, .. }
             | Expr::Repeat { span, .. }
             | Expr::Reduce { span, .. }
+            | Expr::ZipTransform { span, .. }
             | Expr::ListTransform { span, .. }
             | Expr::Unary { span, .. }
             | Expr::Binary { span, .. }
@@ -208,6 +214,8 @@ impl Expr {
             },
             Expr::Reduce { iterator, iterator_span, accumulator, accumulator_span, iterable, initial, body, .. } =>
                 Expr::Reduce { iterator, iterator_span, accumulator, accumulator_span, iterable, initial, body, span },
+            Expr::ZipTransform { left_name, left_span, left_list, right_name, right_span, right_list, body, .. } =>
+                Expr::ZipTransform { left_name, left_span, left_list, right_name, right_span, right_list, body, span },
             Expr::ListTransform { kind, iterator, binding_span, iterable, body, .. } => Expr::ListTransform {
                 kind, iterator, binding_span, iterable, body, span,
             },
@@ -291,6 +299,14 @@ impl Expr {
                 base.insert("accumulator".into(), json!(accumulator));
                 base.insert("iterable".into(), iterable.to_json());
                 base.insert("initial".into(), initial.to_json());
+                base.insert("body".into(), body.to_json());
+            }
+            Expr::ZipTransform { left_name, left_list, right_name, right_list, body, .. } => {
+                base.insert("type".into(), json!("zip_transform"));
+                base.insert("left_iterator".into(), json!(left_name));
+                base.insert("left_list".into(), left_list.to_json());
+                base.insert("right_iterator".into(), json!(right_name));
+                base.insert("right_list".into(), right_list.to_json());
                 base.insert("body".into(), body.to_json());
             }
             Expr::ListTransform { kind, iterator, iterable, body, .. } => {
