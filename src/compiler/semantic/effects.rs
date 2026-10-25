@@ -136,6 +136,10 @@ fn collect_effects_expr(expr: &HirExpr, uses: &mut Vec<EffectUse>) {
             collect_effects_expr(left, uses);
             collect_effects_expr(right, uses);
         }
+        HirExpr::ListTransform { iterable, body, .. } => {
+            collect_effects_expr(iterable, uses);
+            collect_effects_expr(body, uses);
+        }
         _ => {}
     }
 }

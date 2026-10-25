@@ -924,6 +924,11 @@ impl<'a> Lowerer<'a> {
                 }
                 false
             }
+            HirExpr::ListTransform { iterable, .. } => {
+                // The iterator symbol exists only during the actual evaluation.
+                // The body is evaluated in its per-element lexical environment.
+                self.runtime_dependent(iterable)?
+            }
             HirExpr::Binary { left, right, .. } => {
                 self.runtime_dependent(left)? || self.runtime_dependent(right)?
             }
@@ -942,6 +947,60 @@ impl<'a> Lowerer<'a> {
                     LiteralValue::Color(value) => ValueData::Color(value.clone()),
                 },
             }),
+            HirExpr::ListTransform { ty, kind, iterator_symbol_id, iterable, body, .. } => {
+                let BoundValue::Compile {
+                    ty: Type::List(input_element),
+                    data: ValueData::List(input_values),
+                } = self.evaluate(iterable)? else {
+                    return Err(self.runtime_value_error(iterable.span()));
+                };
+                let result_element = match ty {
+                    Type::List(element) => element.as_ref().clone(),
+                    _ => unreachable!("type-checked list transformation"),
+                };
+                let mut selected = Vec::with_capacity(input_values.len());
+                for input in input_values {
+                    self.push_environment();
+                    self.environments.last_mut().unwrap().insert(
+                        *iterator_symbol_id,
+                        BoundValue::Compile {
+                            ty: input_element.as_ref().clone(),
+                            data: input.clone(),
+                        },
+                    );
+                    let result = self.evaluate(body);
+                    self.pop_environment();
+                    let BoundValue::Compile { ty: body_type, data } = result? else {
+                        return Err(self.runtime_value_error(body.span()));
+                    };
+                    if *kind == ListTransformKind::Map {
+                        if body_type != result_element {
+                            return Err(SemauriError::semantic(
+                                "S365",
+                                "Mapped element type differs from its typed HIR result",
+                                Some(body.span()),
+                                None,
+                            ));
+                        }
+                        selected.push(data);
+                    } else {
+                        match data {
+                            ValueData::Boolean(true) => selected.push(input),
+                            ValueData::Boolean(false) => {},
+                            _ => return Err(SemauriError::semantic(
+                                "S366",
+                                "Filter predicate must evaluate to boolean",
+                                Some(body.span()),
+                                None,
+                            )),
+                        }
+                    }
+                }
+                Ok(BoundValue::Compile {
+                    ty: ty.clone(),
+                    data: ValueData::List(selected),
+                })
+            }
             HirExpr::List { ty, items, .. } => {
                 let mut values = Vec::new();
                 for item in items {

@@ -198,6 +198,17 @@ fn fold_expr(
             value: Box::new(fold_expr(value, constants, changes)),
             span: *span,
         },
+        HirExpr::ListTransform {
+            ty, kind, iterator_symbol_id, iterator_name, iterable, body, span,
+        } => HirExpr::ListTransform {
+            ty: ty.clone(),
+            kind: *kind,
+            iterator_symbol_id: *iterator_symbol_id,
+            iterator_name: iterator_name.clone(),
+            iterable: Box::new(fold_expr(iterable, constants, changes)),
+            body: Box::new(fold_expr(body, constants, changes)),
+            span: *span,
+        },
         HirExpr::List { ty, items, span } => HirExpr::List {
             ty: ty.clone(),
             items: items
@@ -669,6 +680,7 @@ fn removable_expression(expr: &HirExpr) -> bool {
             true
         }
         HirExpr::DomainOperation { .. } => false,
+        HirExpr::ListTransform { .. } => false,
     }
 }
 
@@ -731,6 +743,10 @@ fn collect_symbol_refs_expr(expr: &HirExpr, refs: &mut HashSet<u64>) {
             for value in arguments.values() {
                 collect_symbol_refs_expr(value, refs);
             }
+        }
+        HirExpr::ListTransform { iterable, body, .. } => {
+            collect_symbol_refs_expr(iterable, refs);
+            collect_symbol_refs_expr(body, refs);
         }
         HirExpr::Literal { .. } => {}
     }
