@@ -461,13 +461,13 @@ impl<'a> HirBuilder<'a> {
                 let left_list = self.build_expr(left_list)?;
                 let Type::List(left_element) = left_list.ty() else {
                     return Err(SemauriError::semantic(
-                        "S381", format!("Zip expects first list, received {}", left_list.ty()),
+                        "S383", format!("Zip expects first list, received {}", left_list.ty()),
                         Some(left_list.span()), None));
                 };
                 let right_list = self.build_expr(right_list)?;
                 let Type::List(right_element) = right_list.ty() else {
                     return Err(SemauriError::semantic(
-                        "S381", format!("Zip expects second list, received {}", right_list.ty()),
+                        "S383", format!("Zip expects second list, received {}", right_list.ty()),
                         Some(right_list.span()), None));
                 };
                 self.push_scope();
@@ -477,7 +477,7 @@ impl<'a> HirBuilder<'a> {
                     let body = self.build_expr(body)?;
                     if body.ty() == Type::Unit {
                         return Err(SemauriError::semantic(
-                            "S382", "Zip body must produce a concrete value",
+                            "S384", "Zip body must produce a concrete value",
                             Some(body.span()), None));
                     }
                     Ok(HirExpr::ZipTransform {

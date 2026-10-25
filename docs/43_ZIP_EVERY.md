@@ -11,7 +11,7 @@ print sums.
 
 Output is `[11, 22]`. Both sources are evaluated once, before any pair is processed. Each pair is handled in input order with fresh lexical bindings. The original lists and outer variables remain unchanged. The body may call earlier pure user functions; zips compose with `map every`, `filter every`, `reduce every` and `range from`.
 
-Both operands must be typed lists (source-located `S381`). The result must be a concrete, non-unit value (`S382`). Duplicate iterator names are rejected as `S311`. `zip` is a contextual keyword only before `every`, so old `zip` identifiers remain valid. The word `with` separates the two input bindings in this construct, without becoming a reserved token. Parenthesize complex list operands.
+Both operands must be typed lists (source-located `S383`). The result must be a concrete, non-unit value (`S384`). Duplicate iterator names are rejected as `S311`. `zip` is a contextual keyword only before `every`, so old `zip` identifiers remain valid. The word `with` separates the two input bindings in this construct, without becoming a reserved token. Parenthesize complex list operands.
 
 Operations work with compiler-known values, not external dataset streams or ML tensor training. No additional effect permissions.
 

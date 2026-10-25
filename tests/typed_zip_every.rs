@@ -66,8 +66,8 @@ print out."#);
 #[test]
 fn reports_invalid_types_and_duplicate_names() {
     for (source,code) in [
-        ("print zip every x in true with y in (a list of 1, 2) to x.","S381"),
-        ("print zip every x in (a list of 1, 2) with y in false to x.","S381"),
+        ("print zip every x in true with y in (a list of 1, 2) to x.","S383"),
+        ("print zip every x in (a list of 1, 2) with y in false to x.","S383"),
         ("print zip every x in (a list of 1, 2) with x in (a list of 3, 4) to x.","S311"),
     ] {
         let err=Compiler::new().hir(source).unwrap_err();
