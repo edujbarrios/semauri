@@ -34,8 +34,8 @@ print last_value."#);
 
 #[test]
 fn handles_boolean_string_and_nested_list_elements() {
-    let result = run(r#"assert first of a list of true, false is equal to true.
-assert last of a list of "red", "blue" is equal to "blue".
+    let result = run(r#"assert first of (a list of true, false) is equal to true.
+assert last of (a list of "red", "blue") is equal to "blue".
 let nested be a list of (a list of 1, 2), (a list of 3, 4).
 let first_inner be first of nested.
 assert (first_inner at 0) is equal to 1.
