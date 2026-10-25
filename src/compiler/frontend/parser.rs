@@ -749,6 +749,23 @@ impl<'a> Parser<'a> {
     fn primary(&mut self) -> Result<Expr> {
         let token = self.peek().clone();
         match token.kind {
+            TokenKind::If => {
+                // Expression-only branch form: if EXPR then EXPR otherwise EXPR.
+                // Existing statement 'if EXPR: ... end.' remains unchanged.
+                let start = self.advance().clone();
+                let condition = self.expression()?;
+                self.consume_surface("then", "Expected 'then' after expression condition", "S248")?;
+                let consequence = self.expression()?;
+                self.consume(TokenKind::Otherwise,
+                    "Expected 'otherwise' between conditional expression values", "S248")?;
+                let alternative = self.expression()?;
+                Ok(Expr::Conditional {
+                    span: span_between_spans(start.span, alternative.span()),
+                    condition: Box::new(condition),
+                    consequence: Box::new(consequence),
+                    alternative: Box::new(alternative),
+                })
+            }
             TokenKind::Color => {
                 self.advance();
                 Ok(Expr::Literal {

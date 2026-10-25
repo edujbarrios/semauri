@@ -924,6 +924,11 @@ impl<'a> Lowerer<'a> {
                 }
                 false
             }
+            HirExpr::Conditional { condition, consequence, alternative, .. } => {
+                self.runtime_dependent(condition)?
+                    || self.runtime_dependent(consequence)?
+                    || self.runtime_dependent(alternative)?
+            },
             HirExpr::FunctionCall { arguments, .. } => {
                 let mut dependent = false;
                 for argument in arguments {
@@ -957,6 +962,18 @@ impl<'a> Lowerer<'a> {
                     LiteralValue::Color(value) => ValueData::Color(value.clone()),
                 },
             }),
+            HirExpr::Conditional { condition, consequence, alternative, .. } => {
+                match self.evaluate(condition)? {
+                    BoundValue::Compile { data: ValueData::Boolean(true), .. } =>
+                        self.evaluate(consequence),
+                    BoundValue::Compile { data: ValueData::Boolean(false), .. } =>
+                        self.evaluate(alternative),
+                    BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                        "S375", format!("Conditional requires boolean, received {ty}"),
+                        Some(condition.span()), None)),
+                    BoundValue::Runtime(_) => Err(self.runtime_value_error(condition.span())),
+                }
+            }
             HirExpr::FunctionCall {
                 ty, parameters, arguments, body, ..
             } => {

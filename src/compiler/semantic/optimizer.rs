@@ -198,6 +198,24 @@ fn fold_expr(
             value: Box::new(fold_expr(value, constants, changes)),
             span: *span,
         },
+        HirExpr::Conditional { ty, condition, consequence, alternative, span } => {
+            // Never evaluate/fold the unselected branch. This also prevents
+            // overflow or divide-by-zero in unreachable expressions.
+            let condition = fold_expr(condition, constants, changes);
+            if let HirExpr::Literal {
+                value: LiteralValue::Boolean(selected), ..
+            } = &condition {
+                *changes += 1;
+                return fold_expr(if *selected { consequence } else { alternative }, constants, changes);
+            }
+            HirExpr::Conditional {
+                ty: ty.clone(),
+                condition: Box::new(condition),
+                consequence: Box::new(fold_expr(consequence, constants, changes)),
+                alternative: Box::new(fold_expr(alternative, constants, changes)),
+                span: *span,
+            }
+        }
         HirExpr::FunctionCall {
             ty, name, parameters, arguments, body, span,
         } => HirExpr::FunctionCall {
@@ -760,6 +778,11 @@ fn collect_symbol_refs_expr(expr: &HirExpr, refs: &mut HashSet<u64>) {
             for value in arguments.values() {
                 collect_symbol_refs_expr(value, refs);
             }
+        }
+        HirExpr::Conditional { condition, consequence, alternative, .. } => {
+            collect_symbol_refs_expr(condition, refs);
+            collect_symbol_refs_expr(consequence, refs);
+            collect_symbol_refs_expr(alternative, refs);
         }
         HirExpr::FunctionCall { arguments, body, parameters, .. } => {
             for argument in arguments { collect_symbol_refs_expr(argument, refs); }

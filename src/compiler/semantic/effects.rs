@@ -136,6 +136,11 @@ fn collect_effects_expr(expr: &HirExpr, uses: &mut Vec<EffectUse>) {
             collect_effects_expr(left, uses);
             collect_effects_expr(right, uses);
         }
+        HirExpr::Conditional { condition, consequence, alternative, .. } => {
+            collect_effects_expr(condition, uses);
+            collect_effects_expr(consequence, uses);
+            collect_effects_expr(alternative, uses);
+        }
         HirExpr::FunctionCall { arguments, body, .. } => {
             for argument in arguments { collect_effects_expr(argument, uses); }
             collect_effects_expr(body, uses);
