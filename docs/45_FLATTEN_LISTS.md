@@ -19,3 +19,5 @@ semauri run --allow console_write examples/flatten_lists.sema
 ```
 
 This is deterministic compilation of concrete typed list values, not a streaming tensor reshaping operation or a live ML data pipeline.
+
+A flatten operation is linear in the total number of inner elements; it constructs a fresh result in memory. For two partitions, flattening concatenates the matching bucket before the nonmatching bucket rather than restoring original interleaving.
