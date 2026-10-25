@@ -1,3 +1,20 @@
+## 0.29.0 — 2026-10-25
+
+### Language: typed pairwise zip
+- Add pure `zip every LEFT in LIST1 with RIGHT in LIST2 to BODY`. Typed independent lexical iterators, static inferred result element type, shorter-length output, unchanged source inputs, and S383/S384 diagnostics. [PR #184](https://github.com/edujbarrios/semauri/pull/184).
+
+### Language: stable predicate partition
+- Add `partition every ITEM in LIST if PREDICATE` yielding `list<list<T>>` with true and false buckets in stable order, immutable inputs and typed empty results. Type checks reuse S365/S366. [PR #185](https://github.com/edujbarrios/semauri/pull/185).
+
+### Language: typed one-level flattening
+- Add contextual `flatten of`, turning `list<list<T>>` into `list<T>` by one-level concatenation, with preserved order and element types. Invalid operands receive located S385. Identifiers named `flatten` remain valid. [PR #186](https://github.com/edujbarrios/semauri/pull/186).
+
+### Validation and boundaries
+- Add 21 focused Rust integration tests across the three operators, runnable examples and semantics; native Windows/macOS/Linux builds for ARM64 and x86_64.
+- Operations apply only to compiler-known core list values, not tensor streaming, model training or arbitrary general runtime control flow. No additional capabilities.
+
+See [v0.29.0 release notes](docs/releases/0.29.0.md).
+
 ## 0.28.0 — 2026-10-25
 
 ### Language: typed seeded list reductions

@@ -8,7 +8,7 @@ Semauri is a **statically typed programming language** with its own compiler, ex
 
 Implemented in Rust, the compiler includes a lexer, parser, typed intermediate representation, lexical scopes, optimization, source-aware diagnostics and effect-aware execution planning. Semauri programs can perform authorized console and filesystem operations, generate web pages and structured schemas, and describe typed machine-learning workflows.
 
-**Latest release:** [Semauri v0.27.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
+**Latest release:** [Semauri v0.29.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
 
 ## Get started
 
@@ -77,7 +77,7 @@ semauri fmt examples/hello_console.sema --write   # rewrite this file
 | --- | --- |
 | Typed core | Immutable bindings, numbers, strings, booleans, colors, homogeneous lists, comparisons, arithmetic and short-circuit logic |
 | Control flow | `if`, `unless`, `otherwise if` statements; typed lazy `if ... then ... otherwise ...` expressions; static `for every`, lexical scopes, 1–16 parameter pure functions |
-| Collections | Bounded `repeat COUNT of VALUE` typed lists, `map every` / `filter every` / `count every`, integer ranges, immutable sorting/deduplication, slices and indexing |
+| Collections | Pure typed `zip every`, `partition every` and `flatten of`; map/filter/count/reduce, immutable sorting, repetition/ranges and slicing |
 | Numeric data | Checked `sum of`, typed `average of`, `minimum of`, `maximum of` and `median of`; precision-safe mixed numeric sorting |
 | String transformations | Unicode-aware `uppercase of`, `lowercase of` and `reverse of` |
 | Assertions and tests | Pure typed `assert` statements, source-located failures and `semauri test` suites |
@@ -86,7 +86,7 @@ semauri fmt examples/hello_console.sema --write   # rewrite this file
 | ML semantic domain | Typed dataset/model/device operations, training configs, LoRA/QLoRA, inference and evaluation **plans** |
 | Analysis | Typed HIR, optimizer, symbols, declared effects, JSON diagnostics, SSA dependency graphs and ML reproducibility preflight |
 
-**Current language scope:** Typed lazy conditional expressions and bounded repeated lists compose with 1–16 parameter pure functions, `map every`, `filter every` and `count every` over concrete compiler-known data. Recursion, first-class callable values, variadics, effectful functions and general runtime-dependent branching/loops remain on the roadmap. Domain-specific ML operations currently produce typed workflow plans; executing real model training requires a framework adapter. See the [architecture](docs/08_ARCHITECTURE.md) and [roadmap](docs/10_ROADMAP.md).
+**Current language scope:** Typed conditional values, `zip every`, `partition every` and `flatten of` compose with bounded repetition, pure 1–16 parameter functions and scoped map/filter/count/reduce over concrete compiler-known data. Recursion, first-class callable values, variadics, effectful functions and general runtime-dependent branching/loops remain on the roadmap. Domain-specific ML operations currently produce typed workflow plans; executing real model training requires a framework adapter. See the [architecture](docs/08_ARCHITECTURE.md) and [roadmap](docs/10_ROADMAP.md).
 
 ### Typed collections
 
@@ -248,9 +248,9 @@ cargo run -- check examples/hello_console.sema
 cargo run -- fmt examples/hello_console.sema --check
 ```
 
-New: [lazy typed conditional expressions](docs/39_CONDITIONAL_EXPRESSIONS.md) and [bounded typed repetition](docs/40_REPEAT_LISTS.md).
+New: [typed zip](docs/43_ZIP_EVERY.md), [stable partition](docs/44_PARTITION_EVERY.md) and [one-level flattening](docs/45_FLATTEN_LISTS.md), alongside [conditional expressions](docs/39_CONDITIONAL_EXPRESSIONS.md).
 
-See [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.27.0 release notes](docs/releases/0.27.0.md).
+See [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.29.0 release notes](docs/releases/0.29.0.md).
 
 ## License
 
