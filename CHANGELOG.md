@@ -1,3 +1,18 @@
+## 0.24.0 — 2026-10-25
+
+### Language: scoped typed map/filter pipelines
+- Add contextual `map every x in LIST to EXPRESSION` and `filter every x in LIST if PREDICATE`, using lexical iterator symbols, source-located typed errors S365/S366, a new AST/HIR node, per-item pure evaluation and optimizer/effect analysis traversal. Preserve existing variable spellings `map` and `filter`. Mapped element type is inferred statically; filters retain original list type and return typed empties if nothing passes. [PR #169](https://github.com/edujbarrios/semauri/pull/169).
+- Cover immutability, lexical shadowing, outer references, element-type conversion, nesting/composition, contextual formatting and diagnostics in regression tests.
+
+### Language: bounded inclusive integer generators
+- Add contextual `range from START to END` producing `list<number>`, ascending or descending, with inclusive endpoints and exact i64 values. Invalid operand types raise S367; non-integer bounds and ranges exceeding 10,000 values raise S368 without overflow or unbounded compile-time allocation. [PR #170](https://github.com/edujbarrios/semauri/pull/170).
+- Add runnable `map_filter.sema` and `range_map_filter.sema` examples plus detailed reference documentation and toolchain packaging verification.
+
+### Runtime and compatibility boundaries
+- These operations evaluate concrete compiler-known typed lists; they do **not** implement arbitrary user-defined functions, runtime streaming transforms, external ML tensors, or neural-network training. No new effect permissions were introduced. The words `map`, `filter`, and `range` remain valid variable identifiers outside the contextual operator syntax.
+
+See [v0.24.0 release notes](docs/releases/0.24.0.md).
+
 ## 0.23.0 — 2026-10-25
 
 ### Language: typed boundary access
