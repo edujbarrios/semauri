@@ -37,9 +37,14 @@ impl Compiler {
                 && tokens[..index].iter().rev()
                     .take_while(|previous| previous.kind != TokenKind::Dot)
                     .any(|previous| previous.kind == TokenKind::If);
+            let is_repeat = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("repeat")
+                && tokens.get(index + 1).is_some_and(|next|
+                    matches!(next.kind, TokenKind::Number | TokenKind::Word
+                        | TokenKind::Minus | TokenKind::LParen));
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_define && !is_function && !is_invoke && !is_then
+                && !is_define && !is_function && !is_invoke && !is_then && !is_repeat
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")

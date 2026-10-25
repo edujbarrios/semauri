@@ -198,6 +198,12 @@ fn fold_expr(
             value: Box::new(fold_expr(value, constants, changes)),
             span: *span,
         },
+        HirExpr::Repeat { ty, count, value, span } => HirExpr::Repeat {
+            ty: ty.clone(),
+            count: Box::new(fold_expr(count, constants, changes)),
+            value: Box::new(fold_expr(value, constants, changes)),
+            span: *span,
+        },
         HirExpr::Conditional { ty, condition, consequence, alternative, span } => {
             // Never evaluate/fold the unselected branch. This also prevents
             // overflow or divide-by-zero in unreachable expressions.
@@ -715,7 +721,7 @@ fn removable_expression(expr: &HirExpr) -> bool {
         }
         HirExpr::DomainOperation { .. } => false,
         HirExpr::ListTransform { .. } => false,
-        HirExpr::FunctionCall { .. } | HirExpr::Conditional { .. } => false,
+        HirExpr::FunctionCall { .. } | HirExpr::Conditional { .. } | HirExpr::Repeat { .. } => false,
     }
 }
 
@@ -778,6 +784,10 @@ fn collect_symbol_refs_expr(expr: &HirExpr, refs: &mut HashSet<u64>) {
             for value in arguments.values() {
                 collect_symbol_refs_expr(value, refs);
             }
+        }
+        HirExpr::Repeat { count, value, .. } => {
+            collect_symbol_refs_expr(count, refs);
+            collect_symbol_refs_expr(value, refs);
         }
         HirExpr::Conditional { condition, consequence, alternative, .. } => {
             collect_symbol_refs_expr(condition, refs);
