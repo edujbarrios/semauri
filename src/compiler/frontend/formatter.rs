@@ -22,6 +22,8 @@ impl Compiler {
             if token.kind == TokenKind::Word
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
+                && !(token.lexeme.eq_ignore_ascii_case("range")
+                    && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::From))
             {
                 continue;
             }

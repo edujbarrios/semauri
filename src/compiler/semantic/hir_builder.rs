@@ -724,6 +724,18 @@ fn binary_type(
                 ))
             }
         }
+        BinaryOperator::Range => {
+            if left == &Type::Number && right == &Type::Number {
+                Ok(Type::List(Box::new(Type::Number)))
+            } else {
+                Err(SemauriError::semantic(
+                    "S367",
+                    format!("'range from ... to ...' requires two numeric endpoints, received {left} and {right}"),
+                    Some(span),
+                    None,
+                ))
+            }
+        }
         BinaryOperator::Take | BinaryOperator::Drop => match (left, right) {
             (Type::Number, Type::List(_)) => Ok(right.clone()),
             _ => Err(SemauriError::semantic(
