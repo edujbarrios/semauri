@@ -1,4 +1,4 @@
-# Semauri language reference — v0.24.0
+# Semauri language reference — v0.25.0
 
 This document describes implemented language behavior, not aspirational syntax.
 
@@ -14,7 +14,7 @@ Semauri uses **controlled natural language**. Natural-looking syntax does not me
 program          = statement* EOF ;
 statement        = create_artifact | add_title | add_element | make_property
                  | let_binding | set_property | if_statement | for_each
-                 | domain_operation ;
+                 | domain_operation | function_definition ;
 
 create_artifact  = ( CREATE | MAKE ) [ ARTICLE ] DOMAIN_ARTIFACT
                    [ CALLED phrase | FOR [ ARTICLE ] phrase ] ["."] ;
@@ -23,6 +23,8 @@ set_property     = SET [ ARTICLE ] DOMAIN_PROPERTY OF reference TO expression ["
 reference        = PRONOUN | [ ARTICLE ] DOMAIN_ELEMENT CALLED phrase ;
 
 let_binding      = LET identifier BE expression ["."] ;
+function_definition = DEFINE FUNCTION identifier TAKING identifier AS function_type TO expression ["."] ;
+function_type    = NUMBER | STRING | BOOLEAN | COLOR | LIST OF function_type ;
 if_statement     = ( IF | UNLESS ) expression ":" block { OTHERWISE IF expression ":" block }
                  [ OTHERWISE ":" block ] END ["."] ;
 for_each         = FOR EVERY identifier IN expression ":" block END ["."] ;
@@ -48,14 +50,31 @@ primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
                  | FIRST OF primary | LAST OF primary
                  | TAKE numeric_unary FROM primary | DROP numeric_unary FROM primary
                  | MAP EVERY identifier IN primary TO expression
+                  | COUNT EVERY identifier IN primary IF expression
                  | FILTER EVERY identifier IN primary IF expression
                  | RANGE FROM numeric_unary TO numeric_unary
+                  | INVOKE identifier TO primary
                  | UPPERCASE OF primary | LOWERCASE OF primary
                  | variable_reference | "(" expression ")" ;
 list_literal     = [ ARTICLE ] LIST OF expression { "," expression } ;
 ```
 
 The handwritten recursive-descent parser remains the executable grammar during 0.x.
+
+## Typed pure user-defined functions
+
+Version 0.25.0 adds top-level `define function NAME taking PARAM as TYPE to EXPRESSION.` declarations and expression calls `invoke NAME to PRIMARY`. Parameter types are `number`, `string`, `boolean`, `color` or nested `list of TYPE`; return types are inferred by HIR. Functions accept one argument, support lexical shadowing and earlier immutable outer bindings, and may invoke earlier definitions. Parenthesize complex arguments such as `invoke square to (2 plus 3)`.
+
+```sema
+define function square taking n as number to (n times n).
+let numbers be range from 1 to 4.
+let squares be map every x in numbers to (invoke square to x).
+assert last of squares is equal to 16.
+```
+
+Typed `count every element in LIST if PREDICATE` produces an exact integer number of matches without materializing a filtered list. The iterator uses lexical scope and may call a previously declared pure function. Empty lists return zero; invalid inputs and predicates produce `S365`/`S366`, while count overflow would produce `S373`. See [predicate counting](36_COUNT_EVERY.md).
+
+Function bodies are restricted to pure core-language expressions. Calls are type checked before evaluation, receive their own parameter environment and work only on concrete compiler-known values. Recursive/forward calls, multi-parameter signatures and arbitrary runtime functions are not supported. `define`, `function` and `invoke` are contextual spellings. For complete semantics and diagnostics see [pure functions](35_PURE_FUNCTIONS.md).
 
 ## Typed sequence transformations and numeric reductions
 
@@ -327,6 +346,11 @@ Relevant diagnostics include:
 - `S366`: invalid filter predicate or unit-valued map body
 - `S367`: range endpoints are not numeric
 - `S368`: fractional range endpoint or more than 10,000 generated elements
+- `S369`: function not previously declared
+- `S370`: function argument does not match parameter type
+- `S371`: duplicate function name
+- `S372`: invalid function scope or impure function body
+- `S373`: `count every` matched element count exceeds signed 64-bit range
 
 ## Determinism rule
 

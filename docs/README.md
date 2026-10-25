@@ -21,6 +21,8 @@ Use this page as the documentation map.
 - [Take and drop immutable typed list slices](32_LIST_WINDOWS.md)
 - [Typed scoped map/filter list pipelines](33_MAP_FILTER.md)
 - [Bounded inclusive integer ranges](34_INTEGER_RANGE.md)
+- [Pure typed user-defined functions and invocation](35_PURE_FUNCTIONS.md)
+- [Pure typed count every predicate reductions](36_COUNT_EVERY.md)
 - [Type system](02_TYPES.md)
 
 ## Language and domains
@@ -47,7 +49,7 @@ Use this page as the documentation map.
 
 ## Release notes
 
-- [Latest release: Semauri 0.24.0](releases/0.24.0.md)
+- [Latest release: Semauri 0.25.0](releases/0.25.0.md)
 
 ## Historical release notes
 

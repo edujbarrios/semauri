@@ -222,7 +222,7 @@ See [`06_ML.md`](06_ML.md), [`09_DISTRIBUTION.md`](09_DISTRIBUTION.md), [`05_RUN
 - model interpretability operations (Grad-CAM, Integrated Gradients, attention/feature attribution)
 - Homebrew/Scoop/Winget integration where maintainable
 - project-local Semauri version selection
-- functions and call frames
+- multi-argument, recursive, effect-aware and runtime functions (v0.25.0 adds the first pure one-argument compiler-known function core)
 - collection operations
 - formatter
 - LSP, safe rename and go-to-definition
