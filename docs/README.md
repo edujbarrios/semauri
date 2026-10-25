@@ -29,6 +29,9 @@ Use this page as the documentation map.
 - [Bounded typed immutable list repetition](40_REPEAT_LISTS.md)
 - [Seeded typed reductions](41_REDUCE_EVERY.md)
 - [Short-circuit Boolean quantifiers](42_QUANTIFIED_PREDICATES.md)
+- [Typed pairwise zip mapping](43_ZIP_EVERY.md)
+- [Stable typed predicate partitioning](44_PARTITION_EVERY.md)
+- [One-level typed list flattening](45_FLATTEN_LISTS.md)
 - [Type system](02_TYPES.md)
 
 ## Language and domains
@@ -55,7 +58,7 @@ Use this page as the documentation map.
 
 ## Release notes
 
-- [Latest release: Semauri 0.28.0](releases/0.28.0.md)
+- [Latest release: Semauri 0.29.0](releases/0.29.0.md)
 
 ## Historical release notes
 

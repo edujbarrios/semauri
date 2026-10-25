@@ -1,4 +1,4 @@
-# Semauri language reference — v0.28.0
+# Semauri language reference — v0.29.0
 
 This document describes implemented language behavior, not aspirational syntax.
 
@@ -53,6 +53,9 @@ primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
                  | FIRST OF primary | LAST OF primary
                  | TAKE numeric_unary FROM primary | DROP numeric_unary FROM primary
                  | MAP EVERY identifier IN primary TO expression
+                 | ZIP EVERY identifier IN primary WITH identifier IN primary TO expression
+                 | PARTITION EVERY identifier IN primary IF expression
+                 | FLATTEN OF primary
                   | COUNT EVERY identifier IN primary IF expression
                   | ANY EVERY identifier IN primary IF expression
                   | ALL EVERY identifier IN primary IF expression
@@ -93,6 +96,16 @@ assert last of squares is equal to 16.
 Typed `count every element in LIST if PREDICATE` produces an exact integer number of matches without materializing a filtered list. The iterator uses lexical scope and may call a previously declared pure function. Empty lists return zero; invalid inputs and predicates produce `S365`/`S366`, while count overflow would produce `S373`. See [predicate counting](36_COUNT_EVERY.md).
 
 Function bodies are restricted to pure core-language expressions. Calls are type checked before evaluation, receive their own parameter environment and work only on concrete compiler-known values. Recursive/forward calls, more than 16 parameters and arbitrary runtime functions are not supported. `define`, `function` and `invoke` are contextual spellings. For complete semantics and diagnostics see [pure functions](35_PURE_FUNCTIONS.md) and [multi-parameter functions](37_MULTI_PARAMETER_FUNCTIONS.md). `minimum of` and `maximum of` also share the exact mixed i64/f64 comparator used for sorting and median, avoiding large-integer rounding errors; see [precision fix](38_EXACT_MIXED_EXTREMA.md).
+
+## Typed pairwise and nested-list transformations (0.29.0)
+
+`zip every LEFT in LIST1 with RIGHT in LIST2 to BODY` maps corresponding items of two typed lists using immutable lexical iterators. The output type is inferred from the result expression and its length is bounded by the shorter list. Non-list inputs and unit-valued bodies raise S383/S384. [Zip specification](43_ZIP_EVERY.md).
+
+`partition every ITEM in LIST if PREDICATE` creates two ordered buckets as `list<list<T>>`: the first holds values satisfying the Boolean predicate, the second holds all other values. Both remain typed even when empty; list/predicate type errors reuse S365/S366. [Partition specification](44_PARTITION_EVERY.md).
+
+`flatten of NESTED` performs one-level concatenation on a typed `list<list<T>>`, producing `list<T>` with original value representations and source order. Non-nested inputs raise S385. It is contextual and doesn't reserve existing identifier names. [Flatten specification](45_FLATTEN_LISTS.md).
+
+All operators process concrete compiler-known values; they are not external ML streaming transforms.
 
 ## Typed sequence transformations and numeric reductions
 
@@ -377,6 +390,9 @@ Relevant diagnostics include:
 - `S379`: reduce requires a list
 - `S380`: accumulator seed/body type mismatch
 - `S381`: impure reduce body
+- `S383`: invalid list input to `zip every`
+- `S384`: nonvalue result from `zip every`
+- `S385`: invalid nested list input to `flatten of`
 
 ## Determinism rule
 
