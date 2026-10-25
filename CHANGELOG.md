@@ -1,3 +1,18 @@
+## 0.28.0 — 2026-10-25
+
+### Language: typed seeded list reductions
+- Add `reduce every ITEM in LIST starting ACC as SEED to BODY`: a pure, typed, lexically scoped single-pass fold over concrete lists. Supports numeric, string, Boolean and list accumulators, empty-list seed semantics and pure user-function calls. Type-check input and step (S379/S380), reject impure steps (S381), and emit S250 for malformed syntax. [PR #181](https://github.com/edujbarrios/semauri/pull/181).
+- Add AST/HIR, optimizer, evaluator, effect-analysis and formatter integration; integration tests and a runnable example.
+
+### Language: scoped short-circuit Boolean quantifiers
+- Add `any every ITEM in LIST if PREDICATE` and `all every ITEM in LIST if PREDICATE`, reusing typed scoped predicate validation and early-exit evaluator paths. `any` over an empty typed list returns false; `all` returns true. Existing `any of`/`all of` remain supported. [PR #182](https://github.com/edujbarrios/semauri/pull/182).
+- Add tests for short-circuit behavior, empty inputs, type errors, pure functions and compiler tools.
+
+### Boundaries
+Pure compiler-known list transformations only. No arbitrary runtime iteration, streaming ML dataset reductions or neural model training backend.
+
+See [v0.28.0 release notes](docs/releases/0.28.0.md).
+
 ## 0.27.0 — 2026-10-25
 
 ### Language: statically typed lazy conditional values
