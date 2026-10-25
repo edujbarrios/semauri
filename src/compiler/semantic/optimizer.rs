@@ -199,15 +199,14 @@ fn fold_expr(
             span: *span,
         },
         HirExpr::FunctionCall {
-            ty, name, parameter_symbol_id, parameter_type, argument, body, span,
+            ty, name, parameters, arguments, body, span,
         } => HirExpr::FunctionCall {
             ty: ty.clone(),
             name: name.clone(),
-            parameter_symbol_id: *parameter_symbol_id,
-            parameter_type: parameter_type.clone(),
-            argument: Box::new(fold_expr(argument, constants, changes)),
-            // Parameter bindings are dynamically scoped to each invocation,
-            // so the function body must not be specialized using caller constants.
+            parameters: parameters.clone(),
+            arguments: arguments.iter().map(|arg| fold_expr(arg, constants, changes)).collect(),
+            // Parameter bindings are scoped to each invocation.
+            // Do not specialize the body using caller constants.
             body: body.clone(),
             span: *span,
         },
@@ -762,10 +761,12 @@ fn collect_symbol_refs_expr(expr: &HirExpr, refs: &mut HashSet<u64>) {
                 collect_symbol_refs_expr(value, refs);
             }
         }
-        HirExpr::FunctionCall { argument, body, parameter_symbol_id, .. } => {
-            collect_symbol_refs_expr(argument, refs);
-            collect_symbol_refs_expr(body, refs);
-            refs.remove(parameter_symbol_id);
+        HirExpr::FunctionCall { arguments, body, parameters, .. } => {
+            for argument in arguments { collect_symbol_refs_expr(argument, refs); }
+            let mut body_refs = HashSet::new();
+            collect_symbol_refs_expr(body, &mut body_refs);
+            for (symbol_id, _) in parameters { body_refs.remove(symbol_id); }
+            refs.extend(body_refs);
         }
         HirExpr::ListTransform { iterable, body, .. } => {
             collect_symbol_refs_expr(iterable, refs);

@@ -924,7 +924,16 @@ impl<'a> Lowerer<'a> {
                 }
                 false
             }
-            HirExpr::FunctionCall { argument, .. } => self.runtime_dependent(argument)?,
+            HirExpr::FunctionCall { arguments, .. } => {
+                let mut dependent = false;
+                for argument in arguments {
+                    if self.runtime_dependent(argument)? {
+                        dependent = true;
+                        break;
+                    }
+                }
+                dependent
+            },
             HirExpr::ListTransform { iterable, .. } => {
                 // The iterator symbol exists only during the actual evaluation.
                 // The body is evaluated in its per-element lexical environment.
@@ -949,16 +958,24 @@ impl<'a> Lowerer<'a> {
                 },
             }),
             HirExpr::FunctionCall {
-                ty, parameter_symbol_id, parameter_type, argument, body, ..
+                ty, parameters, arguments, body, ..
             } => {
-                let value = self.evaluate(argument)?;
-                if value.ty() != *parameter_type {
-                    return Err(SemauriError::semantic(
-                        "S370", "Function argument differs from its declared parameter type",
-                        Some(argument.span()), None));
+                let mut values = Vec::with_capacity(arguments.len());
+                // Evaluate all arguments once, in source order, before binding
+                // parameters so caller scope cannot be shadowed mid-evaluation.
+                for (argument, (_, expected)) in arguments.iter().zip(parameters) {
+                    let value = self.evaluate(argument)?;
+                    if value.ty() != *expected {
+                        return Err(SemauriError::semantic(
+                            "S370", "Function argument differs from its declared parameter type",
+                            Some(argument.span()), None));
+                    }
+                    values.push(value);
                 }
                 self.push_environment();
-                self.environments.last_mut().unwrap().insert(*parameter_symbol_id, value);
+                for ((symbol_id, _), value) in parameters.iter().zip(values) {
+                    self.environments.last_mut().unwrap().insert(*symbol_id, value);
+                }
                 let result = self.evaluate(body);
                 self.pop_environment();
                 let result = result?;

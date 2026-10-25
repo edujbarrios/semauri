@@ -2,7 +2,7 @@ struct HirBuilder<'a> {
     domains: &'a DomainRegistry,
     symbols: Vec<Symbol>,
     scopes: Vec<HashMap<String, u64>>,
-    functions: HashMap<String, (Type, u64, HirExpr)>,
+    functions: HashMap<String, (Vec<(u64, Type)>, HirExpr)>,
 }
 
 impl<'a> HirBuilder<'a> {
@@ -27,7 +27,7 @@ impl<'a> HirBuilder<'a> {
     fn build_statements(&mut self, statements: &[Stmt]) -> Result<Vec<HirStmt>> {
         let mut result = Vec::new();
         for statement in statements {
-            if let Stmt::DefineFunction { name, parameter, parameter_type, body, span } = statement {
+            if let Stmt::DefineFunction { name, parameters, body, span } = statement {
                 if self.scopes.len() != 1 {
                     return Err(SemauriError::semantic(
                         "S372", "Functions must be defined at top level",
@@ -40,19 +40,23 @@ impl<'a> HirBuilder<'a> {
                 }
                 self.push_scope();
                 let built = (|| {
-                    let binding = self.create_symbol(
-                        parameter, "function_parameter", parameter_type.clone(), *span)?;
+                    let mut bindings = Vec::new();
+                    for (parameter_name, parameter_type) in parameters {
+                        let binding = self.create_symbol(
+                            parameter_name, "function_parameter", parameter_type.clone(), *span)?;
+                        bindings.push((binding.id, parameter_type.clone()));
+                    }
                     let body = self.build_expr(body)?;
                     if !pure_function_expression(&body) {
                         return Err(SemauriError::semantic(
                             "S372", "Function bodies must be pure core expressions",
                             Some(body.span()), None));
                     }
-                    Ok((binding.id, body))
+                    Ok((bindings, body))
                 })();
                 self.pop_scope();
-                let (symbol_id, body) = built?;
-                self.functions.insert(name.clone(), (parameter_type.clone(), symbol_id, body));
+                let (bindings, body) = built?;
+                self.functions.insert(name.clone(), (bindings, body));
             } else {
                 result.push(self.build_stmt(statement)?);
             }
@@ -332,23 +336,31 @@ impl<'a> HirBuilder<'a> {
                     span: *span,
                 })
             }
-            Expr::FunctionCall { name, argument, span } => {
-                let (parameter_type, parameter_symbol_id, body) = self.functions.get(name)
+            Expr::FunctionCall { name, arguments, span } => {
+                let (parameters, body) = self.functions.get(name)
                     .cloned().ok_or_else(|| SemauriError::semantic(
                         "S369", format!("Unknown function '{name}' (define it before calling it)"),
                         Some(*span), None))?;
-                let argument = self.build_expr(argument)?;
-                if argument.ty() != parameter_type {
+                if arguments.len() != parameters.len() {
                     return Err(SemauriError::semantic(
-                        "S370", format!("Function '{name}' expects {parameter_type}, received {}", argument.ty()),
-                        Some(argument.span()), None));
+                        "S374", format!("Function '{name}' expects {} arguments, received {}",
+                            parameters.len(), arguments.len()),
+                        Some(*span), None));
+                }
+                let arguments = arguments.iter().map(|arg| self.build_expr(arg))
+                    .collect::<Result<Vec<_>>>()?;
+                for (argument, (_, param_type)) in arguments.iter().zip(&parameters) {
+                    if argument.ty() != *param_type {
+                        return Err(SemauriError::semantic(
+                            "S370", format!("Function '{name}' expects {param_type}, received {}", argument.ty()),
+                            Some(argument.span()), None));
+                    }
                 }
                 Ok(HirExpr::FunctionCall {
                     ty: body.ty(),
                     name: name.clone(),
-                    parameter_symbol_id,
-                    parameter_type,
-                    argument: Box::new(argument),
+                    parameters,
+                    arguments,
                     body: Box::new(body),
                     span: *span,
                 })
@@ -1132,7 +1144,7 @@ fn pure_function_expression(expr: &HirExpr) -> bool {
             pure_function_expression(left) && pure_function_expression(right),
         HirExpr::ListTransform { iterable, body, .. } =>
             pure_function_expression(iterable) && pure_function_expression(body),
-        HirExpr::FunctionCall { argument, body, .. } =>
-            pure_function_expression(argument) && pure_function_expression(body),
+        HirExpr::FunctionCall { arguments, body, .. } =>
+            arguments.iter().all(pure_function_expression) && pure_function_expression(body),
     }
 }

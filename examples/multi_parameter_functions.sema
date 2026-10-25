@@ -1,0 +1,9 @@
+# Reusable typed pure functions with two or three inputs.
+define function weighted taking x as number, weight as number, bias as number to ((x times weight) plus bias).
+define function square taking n as number to (n times n).
+
+let scores be range from 1 to 4.
+let transformed be map every score in scores to (invoke weighted to (invoke square to score, 2, 1)).
+assert first of transformed is equal to 3.
+assert last of transformed is equal to 33.
+print transformed.

@@ -124,7 +124,7 @@ pub enum Expr {
     },
     FunctionCall {
         name: String,
-        argument: Box<Expr>,
+        arguments: Vec<Expr>,
         span: SourceSpan,
     },
     ListTransform {
@@ -173,7 +173,7 @@ impl Expr {
             Expr::Literal { ty, value, .. } => Expr::Literal { ty, value, span },
             Expr::List { items, .. } => Expr::List { items, span },
             Expr::Variable { name, .. } => Expr::Variable { name, span },
-            Expr::FunctionCall { name, argument, .. } => Expr::FunctionCall { name, argument, span },
+            Expr::FunctionCall { name, arguments, .. } => Expr::FunctionCall { name, arguments, span },
             Expr::ListTransform { kind, iterator, binding_span, iterable, body, .. } => Expr::ListTransform {
                 kind, iterator, binding_span, iterable, body, span,
             },
@@ -231,10 +231,10 @@ impl Expr {
                     JsonValue::Array(items.iter().map(Expr::to_json).collect()),
                 );
             }
-            Expr::FunctionCall { name, argument, .. } => {
+            Expr::FunctionCall { name, arguments, .. } => {
                 base.insert("type".into(), json!("function_call"));
                 base.insert("name".into(), json!(name));
-                base.insert("argument".into(), argument.to_json());
+                base.insert("arguments".into(), JsonValue::Array(arguments.iter().map(Expr::to_json).collect()));
             }
             Expr::Variable { name, .. } => {
                 base.insert("type".into(), json!("variable_reference"));
@@ -366,8 +366,7 @@ impl Block {
 pub enum Stmt {
     DefineFunction {
         name: String,
-        parameter: String,
-        parameter_type: Type,
+        parameters: Vec<(String, Type)>,
         body: Expr,
         span: SourceSpan,
     },
@@ -452,11 +451,11 @@ impl Stmt {
         object.insert("span".into(), json!(span));
 
         match self {
-            Stmt::DefineFunction { name, parameter, parameter_type, body, .. } => {
+            Stmt::DefineFunction { name, parameters, body, .. } => {
                 object.insert("type".into(), json!("function_definition"));
                 object.insert("name".into(), json!(name));
-                object.insert("parameter".into(), json!(parameter));
-                object.insert("parameter_type".into(), parameter_type.to_json());
+                object.insert("parameters".into(), JsonValue::Array(parameters.iter()
+                    .map(|(name, ty)| json!({"name": name, "type": ty.to_json()})).collect()));
                 object.insert("body".into(), body.to_json());
             }
             Stmt::CreateArtifact {
