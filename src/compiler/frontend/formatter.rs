@@ -17,7 +17,14 @@ impl Compiler {
         }
         let mut rendered = String::with_capacity(source.len());
         let mut cursor = 0usize;
-        for token in tokens {
+        for (index, token) in tokens.iter().enumerate() {
+            // Contextual first/last preserve free-form labels and identifiers:
+            // only a following 'of' makes them operators to canonicalize.
+            if matches!(token.kind, TokenKind::First | TokenKind::Last)
+                && !tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of)
+            {
+                continue;
+            }
             if !matches!(
                 token.kind,
                 TokenKind::Create
