@@ -19,7 +19,7 @@ fn run(source: &str) -> semauri::CliResult {
 
 #[test]
 fn functions_accept_two_and_three_typed_arguments() {
-    let r = run(r#"define function sum_two taking a as number, b as number to (a plus b).
+    let r = run(r#"define function sum_two taking left as number, right as number to (left plus right).
 define function weighted taking x as number, weight as number, bias as number to ((x times weight) plus bias).
 print invoke sum_two to (9, 4).
 print invoke weighted to (3, 5, 2)."#);
@@ -41,16 +41,16 @@ print invoke square to 5."#);
 
 #[test]
 fn nested_list_and_heterogeneous_parameter_types_work() {
-    let r = run(r#"define function first_if taking xs as list of number, condition as boolean to (first of xs).
-define function concatenate taking a as string, b as string to (a plus b).
-print invoke first_if to (a list of 7, 8, true).
-print invoke concatenate to ("semi", "uri")."#);
-    assert_ne!(r.status, 0); // heterogeneous list literal must be rejected
+    let bad = Compiler::new().hir(r#"define function pick taking xs as list of number, enabled as boolean to (first of xs).
+print invoke pick to (a list of 7, true)."#).unwrap_err();
+    assert_eq!(bad.code, "S321");
     let ok = run(r#"define function pick taking xs as list of number, enabled as boolean to (first of xs).
+define function concatenate taking left as string, right as string to (left plus right).
 let xs be a list of 7, 8.
-print invoke pick to (xs, true)."#);
+print invoke pick to (xs, true).
+print invoke concatenate to ("semi", "uri")."#);
     assert_eq!(ok.status, 0, "{}", ok.stderr);
-    assert_eq!(ok.stdout, "7\n");
+    assert_eq!(ok.stdout, "7\nsemiuri\n");
 }
 
 #[test]
@@ -87,7 +87,7 @@ fn duplicate_parameter_names_rejected_and_scope_does_not_leak() {
     ).unwrap_err();
     assert_eq!(err.code, "S311");
     let err = Compiler::new().hir(
-        "define function add taking x as number, y as number to (x plus y). print y."
+        "define function combine taking x as number, y as number to (x plus y). print y."
     ).unwrap_err();
     assert_eq!(err.code, "S312");
 }
@@ -95,9 +95,9 @@ fn duplicate_parameter_names_rejected_and_scope_does_not_leak() {
 #[test]
 fn supports_parenthesized_single_arguments_and_nested_calls() {
     let r = run(r#"define function double taking x as number to (x times 2).
-define function add taking x as number, y as number to (x plus y).
+define function combine taking x as number, y as number to (x plus y).
 print invoke double to (3 plus 4).
-print invoke add to (invoke double to 2, invoke double to 3)."#);
+print invoke combine to (invoke double to 2, invoke double to 3)."#);
     assert_eq!(r.status, 0, "{}", r.stderr);
     assert_eq!(r.stdout, "14\n10\n");
 }
@@ -105,7 +105,7 @@ print invoke add to (invoke double to 2, invoke double to 3)."#);
 #[test]
 fn compiler_apis_preserve_multi_argument_structure() {
     let c=Compiler::new();
-    let src="define function add taking x as number, y as number to (x plus y). print invoke add to (2, 3).";
+    let src="define function combine taking x as number, y as number to (x plus y). print invoke combine to (2, 3).";
     let ast=c.parse(src).unwrap().to_json().to_string();
     assert!(ast.contains("parameters"), "{ast}");
     let hir=c.hir(src).unwrap().to_json().to_string();
@@ -113,5 +113,5 @@ fn compiler_apis_preserve_multi_argument_structure() {
     let optimized=c.optimized_hir(src).unwrap().to_json().to_string();
     assert!(optimized.contains("function_call"), "{optimized}");
     assert_eq!(c.effect_analysis(src).unwrap().effects(), vec!["console_write".to_owned()]);
-    assert_eq!(c.format_source("PRINT INVOKE add TO (2, 3).").unwrap(), "print invoke add to (2, 3).");
+    assert_eq!(c.format_source("PRINT INVOKE add TO (2, 3).").unwrap(), "print invoke combine to (2, 3).");
 }
