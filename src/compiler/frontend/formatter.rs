@@ -52,6 +52,9 @@ impl Compiler {
                     | TokenKind::Distinct
                     | TokenKind::First
                     | TokenKind::Last
+                    | TokenKind::Take
+                    | TokenKind::Drop
+                    | TokenKind::From
                     | TokenKind::Any
                     | TokenKind::All
                     | TokenKind::Uppercase

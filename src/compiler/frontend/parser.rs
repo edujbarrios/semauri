@@ -738,6 +738,27 @@ impl<'a> Parser<'a> {
                 let start = self.advance().clone();
                 self.list_literal(&start, true)
             }
+            TokenKind::Take | TokenKind::Drop => {
+                let start = self.advance().clone();
+                let count = self.numeric_unary()?;
+                self.consume(
+                    TokenKind::From,
+                    "Expected 'from' between a count and list",
+                    "S243",
+                )?;
+                let list = self.primary()?;
+                let span = span_between_spans(start.span, list.span());
+                Ok(Expr::Binary {
+                    left: Box::new(count),
+                    operator: if start.kind == TokenKind::Take {
+                        BinaryOperator::Take
+                    } else {
+                        BinaryOperator::Drop
+                    },
+                    right: Box::new(list),
+                    span,
+                })
+            }
             TokenKind::First | TokenKind::Last
                 if self.tokens.get(self.current + 1)
                     .is_some_and(|next| next.kind != TokenKind::Of) => {
