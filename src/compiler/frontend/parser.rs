@@ -854,6 +854,24 @@ impl<'a> Parser<'a> {
                     span: token.span,
                 })
             }
+            TokenKind::Any | TokenKind::All
+                if self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Every) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Every, "Expected 'every' after any/all", "S251")?;
+                let iterator = self.consume(TokenKind::Word, "Expected predicate iterator name", "S251")?;
+                self.consume(TokenKind::In, "Expected 'in' after predicate iterator", "S251")?;
+                let iterable = self.primary()?;
+                self.consume(TokenKind::If, "Expected 'if' before quantified predicate", "S251")?;
+                let body = self.expression()?;
+                Ok(Expr::ListTransform {
+                    kind: if start.kind == TokenKind::Any { ListTransformKind::Any } else { ListTransformKind::All },
+                    iterator: iterator.lexeme.to_lowercase(),
+                    binding_span: iterator.span,
+                    iterable: Box::new(iterable),
+                    span: span_between_spans(start.span, body.span()),
+                    body: Box::new(body),
+                })
+            }
             TokenKind::Length | TokenKind::Reverse | TokenKind::Sum | TokenKind::Average
             | TokenKind::Minimum | TokenKind::Maximum | TokenKind::Median | TokenKind::Sorted | TokenKind::Distinct | TokenKind::First | TokenKind::Last | TokenKind::Any | TokenKind::All
             | TokenKind::Uppercase | TokenKind::Lowercase => {
@@ -992,7 +1010,7 @@ impl<'a> Parser<'a> {
                     ListTransformKind::Map => {
                         self.consume(TokenKind::To, "Expected 'to' after the map input", "S244")?;
                     }
-                    ListTransformKind::Filter | ListTransformKind::Count => {
+                    ListTransformKind::Filter | ListTransformKind::Count | ListTransformKind::Any | ListTransformKind::All => {
                         self.consume(TokenKind::If, "Expected 'if' after the filter/count input", "S244")?;
                     }
                 }

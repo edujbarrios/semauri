@@ -1,0 +1,9 @@
+# Early-exit typed quantified predicates.
+define function positive taking value as number to (value is greater than 0).
+let values be a list of 2, 4, 6.
+let has_large be any every n in values if (n is greater than 5).
+let all_positive be all every n in values if (invoke positive to n).
+assert has_large is equal to true.
+assert all_positive is equal to true.
+print has_large.
+print all_positive.
