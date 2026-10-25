@@ -88,6 +88,21 @@ impl BinaryOperator {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ListTransformKind {
+    Map,
+    Filter,
+}
+
+impl ListTransformKind {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Map => "map",
+            Self::Filter => "filter",
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum Expr {
     Literal {
@@ -101,6 +116,14 @@ pub enum Expr {
     },
     Variable {
         name: String,
+        span: SourceSpan,
+    },
+    ListTransform {
+        kind: ListTransformKind,
+        iterator: String,
+        binding_span: SourceSpan,
+        iterable: Box<Expr>,
+        body: Box<Expr>,
         span: SourceSpan,
     },
     Unary {
@@ -128,6 +151,7 @@ impl Expr {
             Expr::Literal { span, .. }
             | Expr::List { span, .. }
             | Expr::Variable { span, .. }
+            | Expr::ListTransform { span, .. }
             | Expr::Unary { span, .. }
             | Expr::Binary { span, .. }
             | Expr::DomainOperation { span, .. } => *span,
@@ -139,6 +163,9 @@ impl Expr {
             Expr::Literal { ty, value, .. } => Expr::Literal { ty, value, span },
             Expr::List { items, .. } => Expr::List { items, span },
             Expr::Variable { name, .. } => Expr::Variable { name, span },
+            Expr::ListTransform { kind, iterator, binding_span, iterable, body, .. } => Expr::ListTransform {
+                kind, iterator, binding_span, iterable, body, span,
+            },
             Expr::Unary {
                 operator, operand, ..
             } => Expr::Unary {
@@ -196,6 +223,13 @@ impl Expr {
             Expr::Variable { name, .. } => {
                 base.insert("type".into(), json!("variable_reference"));
                 base.insert("name".into(), json!(name));
+            }
+            Expr::ListTransform { kind, iterator, iterable, body, .. } => {
+                base.insert("type".into(), json!("list_transform"));
+                base.insert("operator".into(), json!(kind.as_str()));
+                base.insert("iterator".into(), json!(iterator));
+                base.insert("iterable".into(), iterable.to_json());
+                base.insert("body".into(), body.to_json());
             }
             Expr::Unary {
                 operator, operand, ..

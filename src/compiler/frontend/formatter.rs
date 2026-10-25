@@ -18,6 +18,13 @@ impl Compiler {
         let mut rendered = String::with_capacity(source.len());
         let mut cursor = 0usize;
         for (index, token) in tokens.iter().enumerate() {
+            // Map/filter are contextual words, not reserved identifiers or label text.
+            if token.kind == TokenKind::Word
+                && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter")
+                    && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
+            {
+                continue;
+            }
             // Contextual first/last preserve free-form labels and identifiers:
             // only a following 'of' makes them operators to canonicalize.
             if matches!(token.kind, TokenKind::First | TokenKind::Last)

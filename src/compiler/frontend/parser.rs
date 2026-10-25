@@ -804,6 +804,49 @@ impl<'a> Parser<'a> {
                     span,
                 })
             }
+            TokenKind::Word if matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter")
+                && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Every) => {
+                let start = self.advance().clone();
+                let kind = if start.lexeme.eq_ignore_ascii_case("map") {
+                    ListTransformKind::Map
+                } else {
+                    ListTransformKind::Filter
+                };
+                self.consume(
+                    TokenKind::Every,
+                    "Expected 'every' after map/filter",
+                    "S244",
+                )?;
+                let variable = self.consume(
+                    TokenKind::Word,
+                    "Expected a list-element variable name after 'every'",
+                    "S244",
+                )?;
+                self.consume(
+                    TokenKind::In,
+                    "Expected 'in' before the input list",
+                    "S244",
+                )?;
+                let iterable = self.primary()?;
+                match kind {
+                    ListTransformKind::Map => {
+                        self.consume(TokenKind::To, "Expected 'to' after the map input", "S244")?;
+                    }
+                    ListTransformKind::Filter => {
+                        self.consume(TokenKind::If, "Expected 'if' after the filter input", "S244")?;
+                    }
+                }
+                let body = self.expression()?;
+                let span = span_between_spans(start.span, body.span());
+                Ok(Expr::ListTransform {
+                    kind,
+                    iterator: variable.lexeme.to_lowercase(),
+                    binding_span: variable.span,
+                    iterable: Box::new(iterable),
+                    body: Box::new(body),
+                    span,
+                })
+            }
             TokenKind::Word => {
                 self.advance();
                 Ok(Expr::Variable {

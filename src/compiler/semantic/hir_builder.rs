@@ -297,6 +297,54 @@ impl<'a> HirBuilder<'a> {
                     span: *span,
                 })
             }
+            Expr::ListTransform { kind, iterator, binding_span, iterable, body, span } => {
+                let iterable = self.build_expr(iterable)?;
+                let Type::List(element) = iterable.ty() else {
+                    return Err(SemauriError::semantic(
+                        "S365",
+                        format!("'{} every' requires a list input, received {}", kind.as_str(), iterable.ty()),
+                        Some(iterable.span()),
+                        None,
+                    ));
+                };
+                self.push_scope();
+                let result = (|| {
+                    let binding = self.create_symbol(iterator, "list_iterator", *element, *binding_span)?;
+                    let body = self.build_expr(body)?;
+                    if *kind == ListTransformKind::Filter && body.ty() != Type::Boolean {
+                        return Err(SemauriError::semantic(
+                            "S366",
+                            format!("Filter predicate must be boolean, received {}", body.ty()),
+                            Some(body.span()),
+                            None,
+                        ));
+                    }
+                    if *kind == ListTransformKind::Map && body.ty() == Type::Unit {
+                        return Err(SemauriError::semantic(
+                            "S366",
+                            "Map body must produce a value rather than unit",
+                            Some(body.span()),
+                            None,
+                        ));
+                    }
+                    let ty = if *kind == ListTransformKind::Map {
+                        Type::List(Box::new(body.ty()))
+                    } else {
+                        iterable.ty()
+                    };
+                    Ok(HirExpr::ListTransform {
+                        ty,
+                        kind: *kind,
+                        iterator_symbol_id: binding.id,
+                        iterator_name: iterator.clone(),
+                        iterable: Box::new(iterable),
+                        body: Box::new(body),
+                        span: *span,
+                    })
+                })();
+                self.pop_scope();
+                result
+            }
             Expr::Unary {
                 operator,
                 operand,

@@ -38,6 +38,15 @@ pub enum HirExpr {
         source_name: String,
         span: SourceSpan,
     },
+    ListTransform {
+        ty: Type,
+        kind: ListTransformKind,
+        iterator_symbol_id: u64,
+        iterator_name: String,
+        iterable: Box<HirExpr>,
+        body: Box<HirExpr>,
+        span: SourceSpan,
+    },
     Promote {
         ty: Type,
         from_type: Type,
@@ -73,6 +82,7 @@ impl HirExpr {
             HirExpr::Literal { ty, .. }
             | HirExpr::List { ty, .. }
             | HirExpr::SymbolRef { ty, .. }
+            | HirExpr::ListTransform { ty, .. }
             | HirExpr::Promote { ty, .. }
             | HirExpr::Unary { ty, .. }
             | HirExpr::Binary { ty, .. }
@@ -85,6 +95,7 @@ impl HirExpr {
             HirExpr::Literal { span, .. }
             | HirExpr::List { span, .. }
             | HirExpr::SymbolRef { span, .. }
+            | HirExpr::ListTransform { span, .. }
             | HirExpr::Promote { span, .. }
             | HirExpr::Unary { span, .. }
             | HirExpr::Binary { span, .. }
@@ -97,6 +108,7 @@ impl HirExpr {
             HirExpr::Literal { .. } => "literal",
             HirExpr::List { .. } => "list",
             HirExpr::SymbolRef { .. } => "symbol_ref",
+            HirExpr::ListTransform { .. } => "list_transform",
             HirExpr::Promote { .. } => "promote",
             HirExpr::Unary { .. } => "unary",
             HirExpr::Binary { .. } => "binary",
@@ -125,6 +137,13 @@ impl HirExpr {
                 fields.insert("symbol_id".into(), json!(symbol_id));
                 fields.insert("name".into(), json!(name));
                 fields.insert("source_name".into(), json!(source_name));
+            }
+            HirExpr::ListTransform { kind, iterator_symbol_id, iterator_name, iterable, body, .. } => {
+                fields.insert("operator".into(), json!(kind.as_str()));
+                fields.insert("iterator_symbol_id".into(), json!(iterator_symbol_id));
+                fields.insert("iterator".into(), json!(iterator_name));
+                fields.insert("iterable".into(), iterable.to_json());
+                fields.insert("body".into(), body.to_json());
             }
             HirExpr::Promote {
                 from_type, value, ..
