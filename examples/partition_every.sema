@@ -1,0 +1,12 @@
+# Partition keeps matches and non-matches in stable source order.
+define function passing taking score as number, limit as number to (score is greater than limit).
+let readings be a list of 8, 3, 10, 2, 7.
+let groups be partition every reading in readings if (invoke passing to (reading, 6)).
+let above be groups at 0.
+let below be groups at 1.
+assert length of above is equal to 3.
+assert length of below is equal to 2.
+assert first of above is equal to 8.
+assert first of below is equal to 3.
+print above.
+print below.

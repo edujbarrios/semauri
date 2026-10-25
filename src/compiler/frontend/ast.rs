@@ -94,6 +94,7 @@ impl BinaryOperator {
 pub enum ListTransformKind {
     Map,
     Filter,
+    Partition,
     Count,
     Any,
     All,
@@ -104,6 +105,7 @@ impl ListTransformKind {
         match self {
             Self::Map => "map",
             Self::Filter => "filter",
+            Self::Partition => "partition",
             Self::Count => "count",
             Self::Any => "any",
             Self::All => "all",
