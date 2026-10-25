@@ -715,7 +715,7 @@ fn removable_expression(expr: &HirExpr) -> bool {
         }
         HirExpr::DomainOperation { .. } => false,
         HirExpr::ListTransform { .. } => false,
-        HirExpr::FunctionCall { .. } => false,
+        HirExpr::FunctionCall { .. } | HirExpr::Conditional { .. } => false,
     }
 }
 
