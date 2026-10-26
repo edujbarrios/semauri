@@ -1254,6 +1254,25 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::Characters | UnaryOperator::Codepoints
+                    | UnaryOperator::Codepoint | UnaryOperator::CharacterFrom),
+                operand,
+                ty,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile { data, .. } => {
+                    let result = eval_unicode_scalar(operator, &data).ok_or_else(||
+                        SemauriError::semantic(
+                            "S409",
+                            "Invalid Unicode scalar, character count, or code point",
+                            Some(expression.span()),
+                            Some("Use exactly one character, a valid integer scalar, or at most 10,000 characters.".into()),
+                        ))?;
+                    Ok(BoundValue::Compile { ty: ty.clone(), data: result })
+                }
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::JsonKeys,
                 operand,
                 ..

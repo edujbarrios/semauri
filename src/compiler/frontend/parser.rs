@@ -1112,9 +1112,22 @@ impl<'a> Parser<'a> {
                     right: Box::new(right),
                 })
             }
+            // Construct one Unicode scalar from a checked integer code point.
+            TokenKind::Word
+                if token.lexeme.eq_ignore_ascii_case("character")
+                    && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::From) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::From, "Expected 'from' after character", "S242")?;
+                let operand = self.primary()?;
+                Ok(Expr::Unary {
+                    operator: UnaryOperator::CharacterFrom,
+                    span: span_between_spans(start.span, operand.span()),
+                    operand: Box::new(operand),
+                })
+            }
             // Contextual text operators do not reserve identifiers such as 'words'.
             TokenKind::Word
-                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "trim" | "words" | "lines" | "json")
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "trim" | "words" | "lines" | "json" | "characters" | "codepoints" | "codepoint")
                     && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
                 let start = self.advance().clone();
                 self.consume(TokenKind::Of, "Expected 'of' after a text operation", "S242")?;
@@ -1125,6 +1138,9 @@ impl<'a> Parser<'a> {
                         "words" => UnaryOperator::Words,
                         "lines" => UnaryOperator::Lines,
                         "json" => UnaryOperator::Json,
+                        "characters" => UnaryOperator::Characters,
+                        "codepoints" => UnaryOperator::Codepoints,
+                        "codepoint" => UnaryOperator::Codepoint,
                         _ => unreachable!(),
                     },
                     span: span_between_spans(start.span, operand.span()),

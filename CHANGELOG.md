@@ -1,3 +1,10 @@
+## Unreleased
+
+### Pure Unicode character and code point conversions
+- Add contextual `characters of TEXT`, `codepoints of TEXT`, `codepoint of TEXT`, and `character from NUMBER` to inspect and construct Unicode scalar values.
+- Enforce exact numeric scalar validity and a 10,000-item safety bound; report static `S408` and runtime `S409` diagnostics.
+- Share one implementation across evaluator and optimizer, and update the formatter, editor grammar, docs, examples and tests.
+
 ## 0.38.0 — 2026-10-26
 
 ### RFC 6901 JSON pointer navigation
