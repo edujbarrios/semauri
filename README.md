@@ -341,6 +341,25 @@ diagnostic. They are deterministic, case sensitive, require no new effects,
 and support compile-time constant folding. Search results count Unicode
 scalar values, not extended grapheme clusters or locale-sensitive matches.
 
+### Literal substring removal
+
+`remove all of NEEDLE from TEXT` removes every **non-overlapping literal**
+match of `NEEDLE` from `TEXT`, returning a new string. Search is
+case-sensitive, Unicode-aware, and does not interpret the needle as a regular
+expression. If the needle is missing, the input text is unchanged.
+
+```text
+let cleaned be remove all of "é" from "café café".
+assert cleaned is equal to "caf caf".
+let compact be remove all of "aa" from "aaaaa".
+assert compact is equal to "a".
+```
+
+Both operands must be strings (`S412`). Empty needles produce a located
+`S413` error. Valid literal expressions can be constant-folded, the
+operation has no external effects, and the existing `remove` domain action
+remains reserved for its established operation syntax.
+
 ### Natural-language string predicates
 
 Use `TEXT starts with PREFIX` and `TEXT ends with SUFFIX` to validate names,

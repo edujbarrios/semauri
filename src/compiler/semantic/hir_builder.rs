@@ -1104,6 +1104,17 @@ fn binary_type(
             }
             Ok(json_field_type(operator).expect("known JSON field type"))
         }
+        BinaryOperator::TextRemoveAll => {
+            if left == &Type::String && right == &Type::String {
+                Ok(Type::String)
+            } else {
+                Err(SemauriError::semantic(
+                    "S412",
+                    format!("'remove all of NEEDLE from TEXT' requires two strings, received {left} and {right}"),
+                    Some(span), None,
+                ))
+            }
+        }
         BinaryOperator::CharacterAt => {
             if left == &Type::Number && right == &Type::String {
                 Ok(Type::String)

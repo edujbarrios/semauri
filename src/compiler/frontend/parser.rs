@@ -1112,6 +1112,28 @@ impl<'a> Parser<'a> {
                     right: Box::new(right),
                 })
             }
+            // Pure literal substring removal is a full contextual phrase,
+            // preserving domain actions and ordinary identifier names.
+            TokenKind::Word | TokenKind::DomainAction
+                if token.lexeme.eq_ignore_ascii_case("remove")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.lexeme.eq_ignore_ascii_case("all"))
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.advance(); // all
+                self.consume(TokenKind::Of, "Expected 'of' after 'remove all'", "S242")?;
+                let needle = self.primary()?;
+                self.consume(TokenKind::From, "Expected 'from' after search text", "S242")?;
+                let text = self.primary()?;
+                let span = span_between_spans(start.span, text.span());
+                Ok(Expr::Binary {
+                    left: Box::new(needle),
+                    operator: BinaryOperator::TextRemoveAll,
+                    right: Box::new(text),
+                    span,
+                })
+            }
             // Character indexing uses Unicode scalar positions and is contextual,
             // just like 'character from' in the scalar conversion family.
             TokenKind::Word

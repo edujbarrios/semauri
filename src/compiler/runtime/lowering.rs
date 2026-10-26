@@ -2003,6 +2003,14 @@ impl<'a> Lowerer<'a> {
                 }
                 ValueData::Number(NumberValue::Int(text.matches(&needle).count() as i64))
             }
+            (BinaryOperator::TextRemoveAll, ValueData::String(needle), ValueData::String(text)) => {
+                if needle.is_empty() {
+                    return Err(SemauriError::semantic(
+                        "S413", "Substring to remove must not be empty", Some(left.span()), None,
+                    ));
+                }
+                ValueData::String(text.replace(&needle, ""))
+            }
             (BinaryOperator::CharacterAt, ValueData::Number(index), ValueData::String(text)) => {
                 let selected = text_character_at(&index, &text).ok_or_else(|| 
                     SemauriError::semantic(

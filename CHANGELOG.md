@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Pure literal substring removal
+- Add contextual `remove all of NEEDLE from TEXT` for non-overlapping, case-sensitive literal Unicode substring removal.
+- Statically require string operands (`S412`) and reject empty search text (`S413`) without suppressing invalid values during optimization.
+- Preserve pure deterministic behavior, formatting/editor support, runnable examples and integration tests.
+
+
 ### Direct Unicode character indexing
 - Add `character at INDEX in TEXT` to return one Unicode scalar string using zero-based Unicode positions.
 - Enforce static numeric/string operand typing (`S410`) and reject fractional, negative, and out-of-range indices (`S411`).

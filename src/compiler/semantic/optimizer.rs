@@ -710,6 +710,10 @@ fn eval_constant_binary(
                 text.matches(needle).count() as i64,
             )))
         }
+        (BinaryOperator::TextRemoveAll, ValueData::String(needle), ValueData::String(text))
+            if !needle.is_empty() => {
+            Some(ValueData::String(text.replace(needle, "")))
+        }
         (BinaryOperator::CharacterAt, ValueData::Number(index), ValueData::String(text)) => {
             text_character_at(index, text).map(ValueData::String)
         }
