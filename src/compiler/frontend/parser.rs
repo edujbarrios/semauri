@@ -926,6 +926,26 @@ impl<'a> Parser<'a> {
                 })
             }
             // Split is also a registered ML action; the following 'of'\n            // distinguishes this pure expression without changing ML syntax.
+            TokenKind::Word
+                if token.lexeme.eq_ignore_ascii_case("parse")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        matches!(next.kind, TokenKind::Word | TokenKind::DomainAction)
+                            && matches!(next.lexeme.to_ascii_lowercase().as_str(), "number" | "boolean"))
+                    && self.tokens.get(self.current + 2).is_some_and(|next| next.kind == TokenKind::From) => {
+                let start = self.advance().clone();
+                let target = self.advance().clone();
+                self.consume(TokenKind::From, "Expected 'from' after parse type", "S242")?;
+                let operand = self.primary()?;
+                Ok(Expr::Unary {
+                    operator: if target.lexeme.eq_ignore_ascii_case("number") {
+                        UnaryOperator::ParseNumber
+                    } else {
+                        UnaryOperator::ParseBoolean
+                    },
+                    span: span_between_spans(start.span, operand.span()),
+                    operand: Box::new(operand),
+                })
+            }
             TokenKind::Word | TokenKind::DomainAction
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(), "split" | "join")
                     && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {

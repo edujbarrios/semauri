@@ -577,6 +577,16 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::String
                     }
+                    UnaryOperator::ParseNumber | UnaryOperator::ParseBoolean => {
+                        if operand.ty() != Type::String {
+                            return Err(SemauriError::semantic(
+                                "S394",
+                                format!("'{}' needs a string, received {}", operator.as_str(), operand.ty()),
+                                Some(*span), None,
+                            ));
+                        }
+                        if *operator == UnaryOperator::ParseNumber { Type::Number } else { Type::Boolean }
+                    }
                     UnaryOperator::Json => {
                         if !is_json_serializable_type(&operand.ty()) {
                             return Err(SemauriError::semantic(

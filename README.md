@@ -147,6 +147,25 @@ assert row is equal to "name / role / team".
 
 `join` remains a legal identifier outside the operator phrase. The word\n`split` also names an existing ML-domain action, which continues to work.
 
+### Safe typed conversions from text
+
+`parse number from TEXT` and `parse boolean from TEXT` return checked
+`number` and `boolean` values. Surrounding whitespace is ignored. Boolean
+values must be `true` or `false`, case-insensitively. Numbers accept signed
+64-bit integers, finite decimals and exponent notation. Integer overflow
+is rejected rather than rounded to a floating-point value.
+
+```text
+let amount be parse number from " 125.5 ".
+let enabled be parse boolean from "TRUE".
+assert amount is greater than 125.
+assert enabled.
+```
+
+Non-string inputs are rejected during type checking (`S394`); invalid text
+produces a source-aware `S395` error during evaluation. Parsing is pure,
+does not silently coerce values, and `parse` remains an ordinary identifier.
+
 ### Natural-language string predicates
 
 Use `TEXT starts with PREFIX` and `TEXT ends with SUFFIX` to validate names,

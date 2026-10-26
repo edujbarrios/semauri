@@ -52,6 +52,14 @@ impl Compiler {
                     || (token.lexeme.eq_ignore_ascii_case("with")
                         && index > 0
                         && matches!(tokens[index - 1].lexeme.to_ascii_lowercase().as_str(), "starts" | "ends")));
+            let is_parse_conversion = token.kind == TokenKind::Word
+                && ((token.lexeme.eq_ignore_ascii_case("parse")
+                    && tokens.get(index + 1).is_some_and(|next|
+                        matches!(next.lexeme.to_ascii_lowercase().as_str(), "number" | "boolean"))
+                    && tokens.get(index + 2).is_some_and(|next| next.kind == TokenKind::From))
+                    || (matches!(token.lexeme.to_ascii_lowercase().as_str(), "number" | "boolean")
+                        && index > 0 && tokens[index - 1].lexeme.eq_ignore_ascii_case("parse")
+                        && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::From)));
             let is_text_operation = token.kind == TokenKind::Word
                 && matches!(token.lexeme.to_ascii_lowercase().as_str(), "trim" | "words" | "lines" | "json" | "split" | "join")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
@@ -67,7 +75,7 @@ impl Compiler {
                         | TokenKind::Minus | TokenKind::LParen));
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute && !is_product && !is_text_operation && !is_text_predicate && !is_join_with
+                && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute && !is_product && !is_text_operation && !is_text_predicate && !is_join_with && !is_parse_conversion
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count" | "reduce" | "zip" | "partition")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")

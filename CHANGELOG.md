@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Safe typed conversions from text
+- Add contextual `parse number from TEXT` and `parse boolean from TEXT` expressions with verified types and deterministic parsing.
+- Reject non-string operands (`S394`), malformed/non-finite values and oversized integers (`S395`), with source-aware diagnostics.
+- Share text conversion between optimizer and evaluator and extend formatting, editor grammar, examples and regression coverage.
+
+
 ### Typed text splitting and joining
 - Add contextual `split of TEXT by DELIMITER` and `join of LIST with DELIMITER`, with strict operand checking, Unicode support, and literal separators.
 - Keep empty fields, reject empty split delimiters and excessive expansion with explicit source-aware diagnostics, and keep existing ML-domain `split` action compatibility while preserving `join` as an identifier.

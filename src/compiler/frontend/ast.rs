@@ -24,6 +24,8 @@ pub enum UnaryOperator {
     Words,
     Lines,
     Json,
+    ParseNumber,
+    ParseBoolean,
 }
 
 impl UnaryOperator {
@@ -53,6 +55,8 @@ impl UnaryOperator {
             UnaryOperator::Words => "words",
             UnaryOperator::Lines => "lines",
             UnaryOperator::Json => "json",
+            UnaryOperator::ParseNumber => "parse_number",
+            UnaryOperator::ParseBoolean => "parse_boolean",
         }
     }
 }

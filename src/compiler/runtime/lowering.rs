@@ -1254,6 +1254,36 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::ParseNumber | UnaryOperator::ParseBoolean),
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile { data: ValueData::String(value), .. } => match operator {
+                    UnaryOperator::ParseNumber => {
+                        let parsed = parse_number_text(&value).ok_or_else(||
+                            SemauriError::semantic("S395", "Cannot parse text as a finite number",
+                                Some(expression.span()), None))?;
+                        Ok(BoundValue::Compile {
+                            ty: Type::Number, data: ValueData::Number(parsed),
+                        })
+                    }
+                    UnaryOperator::ParseBoolean => {
+                        let parsed = parse_boolean_text(&value).ok_or_else(||
+                            SemauriError::semantic("S395", "Cannot parse text as boolean (true or false)",
+                                Some(expression.span()), None))?;
+                        Ok(BoundValue::Compile {
+                            ty: Type::Boolean, data: ValueData::Boolean(parsed),
+                        })
+                    }
+                    _ => unreachable!(),
+                },
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S394", format!("Text parsing requires a string, received {ty}"),
+                    Some(expression.span()), None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Json,
                 operand,
                 ..
