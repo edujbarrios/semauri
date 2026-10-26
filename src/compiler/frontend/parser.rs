@@ -954,11 +954,12 @@ impl<'a> Parser<'a> {
                 let key = self.primary()?;
                 self.consume(TokenKind::In, "Expected 'in' before JSON document", "S242")?;
                 let document = self.primary()?;
+                let span = span_between_spans(start.span, document.span());
                 Ok(Expr::Binary {
                     operator: BinaryOperator::JsonHasKey,
                     left: Box::new(key),
                     right: Box::new(document),
-                    span: span_between_spans(start.span, document.span()),
+                    span,
                 })
             }
             // Type-directed JSON decoding is a complete contextual phrase.
