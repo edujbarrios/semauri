@@ -272,6 +272,13 @@ Add `--json` to supported inspection and validation commands when consuming outp
 - `examples/`: checked runnable programs.
 - `learn_to_code/`: English and Spanish courses.
 - `tests/`: compiler and language contracts.
+- `editors/vscode/`: installable VS Code metadata and the canonical `source.semauri` TextMate grammar.
+
+## Editor and GitHub highlighting
+
+The repository includes a TextMate grammar for `.suri` and `.config.suri` files under `editors/vscode/`. It provides local VS Code highlighting now and is the canonical public grammar for future GitHub Linguist integration.
+
+GitHub only adds a new language after its public-usage threshold is met. Until `.suri` has sufficient independently distributed usage, GitHub will not provide official `semauri` fenced-code highlighting or a Semauri language bar entry. Do not mislabel Semauri as another language in `.gitattributes`; that would make repository statistics inaccurate.
 
 ## Contribution contract
 
