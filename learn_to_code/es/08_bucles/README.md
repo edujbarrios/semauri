@@ -8,7 +8,7 @@
 
 ## Programa de ejemplo
 
-Abre [`main.sema`](./main.sema):
+Abre [`main.suri`](./main.suri):
 
 ```text
 let niveles be a list of 1, 2, 3.
@@ -25,8 +25,8 @@ print "Fin".
 Desde la raíz del repositorio:
 
 ```sh
-semauri check learn_to_code/es/08_bucles/main.sema
-semauri run --allow console_write learn_to_code/es/08_bucles/main.sema
+semauri check learn_to_code/es/08_bucles/main.suri
+semauri run --allow console_write learn_to_code/es/08_bucles/main.suri
 ```
 
 **Salida esperada en la consola:**

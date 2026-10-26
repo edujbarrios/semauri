@@ -8,7 +8,7 @@
 
 ## Programa de ejemplo
 
-Abre [`main.sema`](./main.sema):
+Abre [`main.suri`](./main.suri):
 
 ```text
 let puntuaciones be a list of 10, 20, 30.
@@ -23,8 +23,8 @@ print colores.
 Desde la raíz del repositorio:
 
 ```sh
-semauri check learn_to_code/es/07_listas/main.sema
-semauri run --allow console_write learn_to_code/es/07_listas/main.sema
+semauri check learn_to_code/es/07_listas/main.suri
+semauri run --allow console_write learn_to_code/es/07_listas/main.suri
 ```
 
 **Salida esperada en la consola:**

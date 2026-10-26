@@ -51,9 +51,9 @@ fn both_courses_check_and_run_all_console_lessons() {
         for &(name, expected) in lessons {
             let dir = lesson_path(language, name);
             let readme = fs::read_to_string(dir.join("README.md")).unwrap();
-            assert!(readme.contains("main.sema"), "{language}/{name}: missing link");
+            assert!(readme.contains("main.suri"), "{language}/{name}: missing link");
 
-            let path = dir.join("main.sema");
+            let path = dir.join("main.suri");
             check(&path);
 
             // Console access is explicitly approved; no filesystem or network
@@ -76,8 +76,8 @@ fn both_courses_check_and_build_web_and_schema_lessons() {
         ("es", "10_crea_una_web", "11_esquemas", "Empezar", "Nombre", "Edad"),
         ("en", "10_build_a_website", "11_schemas", "Start", "Name", "Age"),
     ] {
-        let web = lesson_path(language, web_name).join("main.sema");
-        let schema = lesson_path(language, schema_name).join("main.sema");
+        let web = lesson_path(language, web_name).join("main.suri");
+        let schema = lesson_path(language, schema_name).join("main.suri");
         for path in [&web, &schema] {
             assert!(path.parent().unwrap().join("README.md").is_file());
             check(path);

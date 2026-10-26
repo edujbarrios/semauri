@@ -75,7 +75,7 @@ fn graph_rejects_corrupted_operation_ids_and_mismatched_results() {
 fn graph_export_does_not_require_permission_or_execute_ml_effects() {
     let id = NEXT.fetch_add(1, Ordering::Relaxed);
     let file = std::env::temp_dir().join(format!(
-        "semauri-ml-graph-{}-{}.sema", std::process::id(), id
+        "semauri-ml-graph-{}-{}.suri", std::process::id(), id
     ));
     fs::write(&file, ml_source()).unwrap();
     let result = run_cli(&["graph".into(), file.to_string_lossy().into_owned()]);

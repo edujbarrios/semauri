@@ -10,7 +10,7 @@ static NEXT_TEMP: AtomicU64 = AtomicU64::new(1);
 fn run(source: &str) -> semauri::CliResult {
     let id = NEXT_TEMP.fetch_add(1, Ordering::Relaxed);
     let path = std::env::temp_dir().join(format!(
-        "semauri-length-{}-{id}.sema", std::process::id()
+        "semauri-length-{}-{id}.suri", std::process::id()
     ));
     fs::write(&path, source).unwrap();
     let result = run_cli(&[

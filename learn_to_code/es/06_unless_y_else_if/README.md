@@ -8,7 +8,7 @@
 
 ## Programa de ejemplo
 
-Abre [`main.sema`](./main.sema):
+Abre [`main.suri`](./main.suri):
 
 ```text
 let nota be 82.
@@ -29,8 +29,8 @@ end.
 Desde la raíz del repositorio:
 
 ```sh
-semauri check learn_to_code/es/06_unless_y_else_if/main.sema
-semauri run --allow console_write learn_to_code/es/06_unless_y_else_if/main.sema
+semauri check learn_to_code/es/06_unless_y_else_if/main.suri
+semauri run --allow console_write learn_to_code/es/06_unless_y_else_if/main.suri
 ```
 
 **Salida esperada en la consola:**

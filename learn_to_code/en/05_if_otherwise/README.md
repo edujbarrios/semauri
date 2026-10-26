@@ -8,7 +8,7 @@
 
 ## Example program
 
-Open [`main.sema`](./main.sema):
+Open [`main.suri`](./main.suri):
 
 ```text
 let grade be 7.
@@ -25,8 +25,8 @@ end.
 Run these commands from the repository root (or the extracted package root):
 
 ```sh
-semauri check learn_to_code/en/05_if_otherwise/main.sema
-semauri run --allow console_write learn_to_code/en/05_if_otherwise/main.sema
+semauri check learn_to_code/en/05_if_otherwise/main.suri
+semauri run --allow console_write learn_to_code/en/05_if_otherwise/main.suri
 ```
 
 **Expected console output:**

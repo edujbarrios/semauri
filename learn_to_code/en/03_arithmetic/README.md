@@ -8,7 +8,7 @@ Semauri supports `plus`, `minus`, `times`, `divided by` and `modulo` (remainder)
 
 ## Example program
 
-Open [`main.sema`](./main.sema):
+Open [`main.suri`](./main.suri):
 
 ```text
 let subtotal be 10 plus 5 times 2.
@@ -25,8 +25,8 @@ print remainder.
 Run these commands from the repository root (or the extracted package root):
 
 ```sh
-semauri check learn_to_code/en/03_arithmetic/main.sema
-semauri run --allow console_write learn_to_code/en/03_arithmetic/main.sema
+semauri check learn_to_code/en/03_arithmetic/main.suri
+semauri run --allow console_write learn_to_code/en/03_arithmetic/main.suri
 ```
 
 **Expected console output:**

@@ -8,7 +8,7 @@
 
 ## Example program
 
-Open [`main.sema`](./main.sema):
+Open [`main.suri`](./main.suri):
 
 ```text
 let levels be a list of 1, 2, 3.
@@ -25,8 +25,8 @@ print "Done".
 Run these commands from the repository root (or the extracted package root):
 
 ```sh
-semauri check learn_to_code/en/08_loops/main.sema
-semauri run --allow console_write learn_to_code/en/08_loops/main.sema
+semauri check learn_to_code/en/08_loops/main.suri
+semauri run --allow console_write learn_to_code/en/08_loops/main.suri
 ```
 
 **Expected console output:**

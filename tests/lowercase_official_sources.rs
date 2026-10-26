@@ -16,7 +16,7 @@ fn visit(path: &Path, compiler: &Compiler, visited: &mut usize) {
         }
         return;
     }
-    if path.extension().is_none_or(|extension| extension != "sema") {
+    if path.extension().is_none_or(|extension| extension != "suri") {
         return;
     }
     let source = fs::read_to_string(path).unwrap();
@@ -40,5 +40,5 @@ fn official_examples_and_bilingual_learning_programs_are_lowercase() {
     for folder in ["examples", "learn_to_code/en", "learn_to_code/es"] {
         visit(&root.join(folder), &compiler, &mut visited);
     }
-    assert!(visited >= 41, "Expected all 19 examples and 22 lessons; found {visited}");
+    assert_eq!(visited, 65, "Expected all 43 examples and 22 lessons; found {visited}");
 }

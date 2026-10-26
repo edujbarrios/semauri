@@ -7,9 +7,9 @@ Choose a language / Elige un idioma:
 | 🇪🇸 **Español** | [**Comenzar el curso en español →**](./es/README.md) |
 | 🇬🇧 **English** | [**Start the course in English →**](./en/README.md) |
 
-Both courses have **11 complete lessons**, each with an explanation, a working `.sema` file, expected results and practice exercises. They use the same Semauri language and ship with the native release packages.
+Both courses have **11 complete lessons**, each with an explanation, a working `.suri` file, expected results and practice exercises. They use the same Semauri language and ship with the native release packages.
 
-Los dos cursos ofrecen **11 lecciones completas**, con explicaciones, archivos `.sema` ejecutables, resultados esperados y ejercicios. Ambos están incluidos en los paquetes oficiales.
+Los dos cursos ofrecen **11 lecciones completas**, con explicaciones, archivos `.suri` ejecutables, resultados esperados y ejercicios. Ambos están incluidos en los paquetes oficiales.
 
 ```text
 learn_to_code/

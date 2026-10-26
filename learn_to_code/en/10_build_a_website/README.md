@@ -8,7 +8,7 @@
 
 ## Example program
 
-Open [`main.sema`](./main.sema):
+Open [`main.suri`](./main.suri):
 
 ```text
 create a web called My First page.
@@ -21,8 +21,8 @@ set the color of the button called Start to blue.
 Run these commands from the repository root (or the extracted package root):
 
 ```sh
-semauri check learn_to_code/en/10_build_a_website/main.sema
-semauri build learn_to_code/en/10_build_a_website/main.sema
+semauri check learn_to_code/en/10_build_a_website/main.suri
+semauri build learn_to_code/en/10_build_a_website/main.suri
 ```
 
 **Expected result:** HTML with a blue Start button. The generated content appears in the output of `build`.

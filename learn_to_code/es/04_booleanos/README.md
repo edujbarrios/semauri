@@ -8,7 +8,7 @@
 
 ## Programa de ejemplo
 
-Abre [`main.sema`](./main.sema):
+Abre [`main.suri`](./main.suri):
 
 ```text
 let edad be 20.
@@ -24,8 +24,8 @@ print permiso.
 Desde la raíz del repositorio:
 
 ```sh
-semauri check learn_to_code/es/04_booleanos/main.sema
-semauri run --allow console_write learn_to_code/es/04_booleanos/main.sema
+semauri check learn_to_code/es/04_booleanos/main.suri
+semauri run --allow console_write learn_to_code/es/04_booleanos/main.suri
 ```
 
 **Salida esperada en la consola:**

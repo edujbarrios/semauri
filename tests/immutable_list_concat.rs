@@ -9,7 +9,7 @@ static NEXT: AtomicU64 = AtomicU64::new(1);
 
 fn run(source: &str) -> semauri::CliResult {
     let path = std::env::temp_dir().join(format!(
-        "semauri-list-concat-{}-{}.sema",
+        "semauri-list-concat-{}-{}.suri",
         std::process::id(),
         NEXT.fetch_add(1, Ordering::Relaxed)
     ));

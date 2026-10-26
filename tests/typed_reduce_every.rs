@@ -2,7 +2,7 @@ use semauri::{run_cli, Compiler};
 use std::{fs, sync::atomic::{AtomicU64, Ordering}};
 static N: AtomicU64=AtomicU64::new(1);
 fn run(source:&str)->semauri::CliResult {
-    let path=std::env::temp_dir().join(format!("semauri-reduce-{}-{}.sema",std::process::id(),N.fetch_add(1,Ordering::Relaxed)));
+    let path=std::env::temp_dir().join(format!("semauri-reduce-{}-{}.suri",std::process::id(),N.fetch_add(1,Ordering::Relaxed)));
     fs::write(&path,source).unwrap();
     let result=run_cli(&["run".into(),"--allow".into(),"console_write".into(),path.to_string_lossy().into_owned()]);
     fs::remove_file(path).unwrap();

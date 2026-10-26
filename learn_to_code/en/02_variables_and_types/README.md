@@ -8,7 +8,7 @@
 
 ## Example program
 
-Open [`main.sema`](./main.sema):
+Open [`main.suri`](./main.suri):
 
 ```text
 let name be "Alex".
@@ -25,8 +25,8 @@ print learning.
 Run these commands from the repository root (or the extracted package root):
 
 ```sh
-semauri check learn_to_code/en/02_variables_and_types/main.sema
-semauri run --allow console_write learn_to_code/en/02_variables_and_types/main.sema
+semauri check learn_to_code/en/02_variables_and_types/main.suri
+semauri run --allow console_write learn_to_code/en/02_variables_and_types/main.suri
 ```
 
 **Expected console output:**
