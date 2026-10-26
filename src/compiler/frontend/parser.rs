@@ -1118,7 +1118,7 @@ impl<'a> Parser<'a> {
                     && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::From) => {
                 let start = self.advance().clone();
                 self.consume(TokenKind::From, "Expected 'from' after character", "S242")?;
-                let operand = self.primary()?;
+                let operand = self.numeric_unary()?;
                 Ok(Expr::Unary {
                     operator: UnaryOperator::CharacterFrom,
                     span: span_between_spans(start.span, operand.span()),
