@@ -61,6 +61,8 @@ fn rejects_invalid_json_and_mismatched_shapes() {
         r#"print decode json as number from "null"."#,
         r#"print decode json as numbers from "{}"."#,
         r#"print decode json as number from "9223372036854775808"."#,
+        r#"print decode json as number from "-9223372036854775809"."#,
+        r#"print decode json as numbers from "[-9223372036854775809]"."#,
         r#"print decode json as strings from "[\"unclosed"."#,
     ] {
         let result = run(input);
