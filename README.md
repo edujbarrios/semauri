@@ -34,6 +34,24 @@ cargo test
 cargo run -- check examples/hello.suri
 ```
 
+## Start a new Semauri project
+
+Create a ready-to-run project with reusable typed functions and tests:
+
+```sh
+semauri init my-project
+cd my-project
+semauri check main.suri
+semauri run --allow console_write main.suri
+semauri test tests --allow-console
+```
+
+The initializer creates `main.suri`, `lib/math.suri`,
+`tests/math.suri`, `.semauri-root`, and a project `README.md`.
+It requires a **new directory** and refuses to overwrite an existing
+project. The entry and test files demonstrate safe imports, typed functions,
+capability checks, and executable assertions.
+
 ## Multi-file programs and imports
 
 Semauri projects can share statically typed functions and other definitions
@@ -58,10 +76,17 @@ Imports are compile-time source dependencies, not runtime filesystem reads.
 Every imported declaration and effect is type-checked and permission-checked
 within the final program. Files are imported only once by canonical path.
 Cycles, imports after executable statements, absolute paths, paths outside
-the entry file's project directory (even through symlinks), and files
-without a `.suri` extension are rejected with `S416`. Maximums are
+the active project root (even through symlinks), and files without a
+`.suri` extension are rejected with `S416`. Maximums are
 **64 files**, **32 import levels**, and **4 MiB** of total UTF-8 source.
 Diagnostics report the original file and line when available.
+
+For a project with tests or modules in nested directories, create a regular
+empty `.semauri-root` file at the project root. The compiler uses the
+**nearest ancestor** with this marker to define its import boundary.
+Without a marker, the entry file's own directory is the boundary.
+This allows test files to import `../lib/math.suri` within a marked project
+without opening unrestricted access to unrelated directories.
 
 Imports currently share one symbol namespace: duplicate definitions are
 errors. Only CLI commands that take a file path resolve imports; in-memory
