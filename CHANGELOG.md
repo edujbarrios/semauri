@@ -5,8 +5,6 @@
 - Update the CLI test runner, diagnostics, all 43 runnable examples, all 22 bilingual course programs, test fixtures, package smoke tests, guides and documentation links.
 - Treat this as a breaking filename migration: rename existing source files from `name.sema` to `name.suri`.
 
-See [v0.31.0 release notes](docs/releases/0.31.0.md).
-
 ## 0.30.0 — 2026-10-26
 
 ### Language: exact contextual absolute values
@@ -17,8 +15,6 @@ See [v0.31.0 release notes](docs/releases/0.31.0.md).
 
 ### Boundaries
 - No arbitrary runtime streaming datasets, tensor execution or neural network training are implemented; these expressions operate on concrete compiler-known values and grant no effects.
-
-See [v0.30.0 release notes](docs/releases/0.30.0.md).
 
 ## 0.29.0 — 2026-10-25
 
@@ -35,8 +31,6 @@ See [v0.30.0 release notes](docs/releases/0.30.0.md).
 - Add 21 focused Rust integration tests across the three operators, runnable examples and semantics; native Windows/macOS/Linux builds for ARM64 and x86_64.
 - Operations apply only to compiler-known core list values, not tensor streaming, model training or arbitrary general runtime control flow. No additional capabilities.
 
-See [v0.29.0 release notes](docs/releases/0.29.0.md).
-
 ## 0.28.0 — 2026-10-25
 
 ### Language: typed seeded list reductions
@@ -49,8 +43,6 @@ See [v0.29.0 release notes](docs/releases/0.29.0.md).
 
 ### Boundaries
 Pure compiler-known list transformations only. No arbitrary runtime iteration, streaming ML dataset reductions or neural model training backend.
-
-See [v0.28.0 release notes](docs/releases/0.28.0.md).
 
 ## 0.27.0 — 2026-10-25
 
@@ -66,8 +58,6 @@ See [v0.28.0 release notes](docs/releases/0.28.0.md).
 ### Scope
 
 Both transformations operate on compiler-known values, are deterministic and pure, and do not add general runtime-dependent branching, recursion, external tensor execution or live ML model training. No new effects or permissions.
-
-See [v0.27.0 release notes](docs/releases/0.27.0.md).
 
 ## 0.26.0 — 2026-10-25
 
@@ -86,8 +76,6 @@ See [v0.27.0 release notes](docs/releases/0.27.0.md).
 
 All operations currently apply to compiler-known values. Semauri does not execute streaming ML tensors, model training or arbitrary runtime-dependent general-purpose functions. No new effect permissions.
 
-See [v0.26.0 release notes](docs/releases/0.26.0.md).
-
 ## 0.25.0 — 2026-10-25
 
 ### Language: typed pure user-defined functions
@@ -105,8 +93,6 @@ See [v0.26.0 release notes](docs/releases/0.26.0.md).
 
 - Functions are pure, top-level, declared before use, and evaluated only on compiler-known values. Recursion, forward references, first-class functions, multi-argument definitions and general runtime ML execution are **not** supported. No new effect grants or ML training framework integrations.
 
-See [v0.25.0 release notes](docs/releases/0.25.0.md).
-
 ## 0.24.0 — 2026-10-25
 
 ### Language: scoped typed map/filter pipelines
@@ -120,8 +106,6 @@ See [v0.25.0 release notes](docs/releases/0.25.0.md).
 ### Runtime and compatibility boundaries
 - These operations evaluate concrete compiler-known typed lists; they do **not** implement arbitrary user-defined functions, runtime streaming transforms, external ML tensors, or neural-network training. No new effect permissions were introduced. The words `map`, `filter`, and `range` remain valid variable identifiers outside the contextual operator syntax.
 
-See [v0.24.0 release notes](docs/releases/0.24.0.md).
-
 ## 0.23.0 — 2026-10-25
 
 ### Language: typed boundary access
@@ -133,8 +117,6 @@ See [v0.24.0 release notes](docs/releases/0.24.0.md).
 
 ### Scope
 - All new operators work with concrete compiler-known lists and do not grant effects, execute external dataset streams, or train ML models. User-defined typed functions, map/filter lambdas, and general runtime-dependent iteration are still future roadmap items.
-
-See [v0.23.0 release notes](docs/releases/0.23.0.md).
 
 ## 0.22.0 — 2026-10-25
 
@@ -148,8 +130,6 @@ See [v0.23.0 release notes](docs/releases/0.23.0.md).
 
 ### Boundaries
 - All new operators are pure transformations on compiler-known lists, not streams, external ML datasets or tensors; no new effect permissions or ML training execution.
-
-See [v0.22.0 release notes](docs/releases/0.22.0.md).
 
 ## 0.21.0 — 2026-10-23
 
@@ -165,8 +145,6 @@ See [v0.22.0 release notes](docs/releases/0.22.0.md).
 - These operations are pure and work on concrete core-language lists, not tensors or runtime ML dataset handles. This release does not introduce model-training execution.
 - Existing mixed/uppercase language syntax remains compatible, apart from the newly reserved words.
 
-See [v0.21.0 release notes](docs/releases/0.21.0.md).
-
 ## 0.20.0 — 2026-10-23
 
 ### Typed numeric extrema
@@ -180,8 +158,6 @@ See [v0.21.0 release notes](docs/releases/0.21.0.md).
 ### Compatibility
 - The new reserved words `minimum` and `maximum` cannot be used as bare variable identifiers. Other existing language constructs and case-insensitive command parsing remain supported.
 - Native builds continue to target six Linux/macOS/Windows platform architectures and include SHA256 checksums on release.
-
-See [v0.20.0 release notes](docs/releases/0.20.0.md).
 
 ## 0.19.0 — 2026-10-22
 
@@ -197,8 +173,6 @@ See [v0.20.0 release notes](docs/releases/0.20.0.md).
 - Existing uppercase/mixed-case Semauri programs remain accepted. `reverse`, `sum` and `average` are newly reserved language keywords; use different names for user identifiers that previously used those words.
 - Numeric aggregation operates on concrete typed lists; the reference compiler does not compute over runtime-produced ML tensors or datasets.
 - No new effects, external dependencies or framework execution capabilities are introduced.
-
-See [v0.19.0 release notes](docs/releases/0.19.0.md).
 
 ## 0.18.0 — 2026-10-22
 
@@ -218,8 +192,6 @@ See [v0.19.0 release notes](docs/releases/0.19.0.md).
 
 - Existing programs remain valid, including uppercase and mixed-case source commands. No new runtime permissions or dependencies are required.
 - This release does not change the distinction between executable supported core operations and declarative ML workflow plans.
-
-See [v0.18.0 release notes](docs/releases/0.18.0.md).
 
 ## 0.17.0 — 2026-10-22
 
@@ -253,8 +225,6 @@ See [v0.18.0 release notes](docs/releases/0.18.0.md).
 - Quoted strings, user-defined names and labels, comments, Rust APIs, generated output case and JSON keys are not blanket-lowercased.
 - ML revisions are *declared*, not artifact-verified. Semauri still produces ML workflow plans rather than executing model training.
 - User-defined functions and general dynamic runtime control flow are not part of this release.
-
-See [v0.17.0 release notes](docs/releases/0.17.0.md).
 
 # Changelog
 
@@ -315,9 +285,4 @@ All notable changes to Semauri are documented here.
 
 ## Earlier releases
 
-Detailed release notes for earlier language milestones remain under `docs/`:
-
-- [0.13](docs/releases/0.13.md)
-- [0.12](docs/releases/0.12.md)
-- [0.11](docs/releases/0.11.md)
-- [0.9](docs/releases/0.9.md)
+Earlier milestones remain summarized in this changelog and in Git history.
