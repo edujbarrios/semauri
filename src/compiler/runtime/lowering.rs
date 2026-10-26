@@ -308,7 +308,7 @@ impl<'a> Lowerer<'a> {
                 "Semauri currently supports one artifact/plan per semantic domain in a source file",
                 Some(span),
                 Some(format!(
-                    "Reuse the existing {domain} domain output or split independent {domain} artifacts into separate .sema files."
+                    "Reuse the existing {domain} domain output or split independent {domain} artifacts into separate .suri files."
                 )),
             ));
         }

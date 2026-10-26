@@ -29,21 +29,21 @@ fn test_run(dir: &PathBuf, allow_console: bool) -> semauri::CliResult {
 #[test]
 fn runs_pure_assertion_suites_in_deterministic_filename_order() {
     let dir = temp_dir();
-    fs::write(dir.join("z_last.sema"), "Assert 2 is greater than 1.").unwrap();
-    fs::write(dir.join("a_first.sema"), "Let answer be 6 times 7. Assert answer is equal to 42.").unwrap();
+    fs::write(dir.join("z_last.suri"), "Assert 2 is greater than 1.").unwrap();
+    fs::write(dir.join("a_first.suri"), "Let answer be 6 times 7. Assert answer is equal to 42.").unwrap();
 
     let result = test_run(&dir, false);
     assert_eq!(result.status, 0, "{}", result.stdout);
     assert!(result.stdout.contains("2 passed; 0 failed"));
-    assert!(result.stdout.find("a_first.sema").unwrap() < result.stdout.find("z_last.sema").unwrap());
+    assert!(result.stdout.find("a_first.suri").unwrap() < result.stdout.find("z_last.suri").unwrap());
     fs::remove_dir_all(&dir).unwrap();
 }
 
 #[test]
 fn failed_assertions_fail_the_suite_and_report_source_location() {
     let dir = temp_dir();
-    fs::write(dir.join("pass.sema"), "Assert true.").unwrap();
-    fs::write(dir.join("fail.sema"), "Assert false.").unwrap();
+    fs::write(dir.join("pass.suri"), "Assert true.").unwrap();
+    fs::write(dir.join("fail.suri"), "Assert false.").unwrap();
 
     let result = test_run(&dir, false);
     assert_eq!(result.status, 1);
@@ -56,8 +56,8 @@ fn failed_assertions_fail_the_suite_and_report_source_location() {
 #[test]
 fn requires_assertions_and_rejects_effectful_filesystem_programs() {
     let dir = temp_dir();
-    fs::write(dir.join("no_assert.sema"), "Print \"hello\".").unwrap();
-    fs::write(dir.join("unsafe.sema"), "Assert true. Write \"data\" to \"unexpected.txt\".").unwrap();
+    fs::write(dir.join("no_assert.suri"), "Print \"hello\".").unwrap();
+    fs::write(dir.join("unsafe.suri"), "Assert true. Write \"data\" to \"unexpected.txt\".").unwrap();
 
     let result = test_run(&dir, true);
     assert_eq!(result.status, 1);
@@ -70,7 +70,7 @@ fn requires_assertions_and_rejects_effectful_filesystem_programs() {
 #[test]
 fn printing_requires_an_explicit_optional_console_grant() {
     let dir = temp_dir();
-    fs::write(dir.join("visible.sema"), "Assert true. Print \"ok\".").unwrap();
+    fs::write(dir.join("visible.suri"), "Assert true. Print \"ok\".").unwrap();
 
     let denied = test_run(&dir, false);
     assert_eq!(denied.status, 1);
@@ -86,14 +86,14 @@ fn printing_requires_an_explicit_optional_console_grant() {
 fn directory_discovery_is_recursive_and_empty_suites_are_usage_errors() {
     let dir = temp_dir();
     fs::create_dir(dir.join("nested")).unwrap();
-    fs::write(dir.join("nested").join("case.sema"), "Assert true.").unwrap();
+    fs::write(dir.join("nested").join("case.suri"), "Assert true.").unwrap();
 
     let result = test_run(&dir, false);
     assert_eq!(result.status, 0, "{}", result.stdout);
 
-    fs::remove_file(dir.join("nested").join("case.sema")).unwrap();
+    fs::remove_file(dir.join("nested").join("case.suri")).unwrap();
     let empty = test_run(&dir, false);
     assert_eq!(empty.status, 64);
-    assert!(empty.stderr.contains("No .sema test files"));
+    assert!(empty.stderr.contains("No .suri test files"));
     fs::remove_dir_all(&dir).unwrap();
 }
