@@ -1,4 +1,4 @@
-## Unreleased
+## 0.37.0 — 2026-10-26
 
 ### Unicode-aware text searching
 - Add `occurrences of NEEDLE in TEXT` for non-overlapping substring counts and `position of NEEDLE in TEXT` for the zero-based Unicode scalar position of the first match.
