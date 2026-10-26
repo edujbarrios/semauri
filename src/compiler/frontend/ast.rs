@@ -26,6 +26,12 @@ pub enum UnaryOperator {
     Json,
     ParseNumber,
     ParseBoolean,
+    DecodeJsonString,
+    DecodeJsonNumber,
+    DecodeJsonBoolean,
+    DecodeJsonStrings,
+    DecodeJsonNumbers,
+    DecodeJsonBooleans,
 }
 
 impl UnaryOperator {
@@ -57,6 +63,12 @@ impl UnaryOperator {
             UnaryOperator::Json => "json",
             UnaryOperator::ParseNumber => "parse_number",
             UnaryOperator::ParseBoolean => "parse_boolean",
+            UnaryOperator::DecodeJsonString => "decode_json_string",
+            UnaryOperator::DecodeJsonNumber => "decode_json_number",
+            UnaryOperator::DecodeJsonBoolean => "decode_json_boolean",
+            UnaryOperator::DecodeJsonStrings => "decode_json_strings",
+            UnaryOperator::DecodeJsonNumbers => "decode_json_numbers",
+            UnaryOperator::DecodeJsonBooleans => "decode_json_booleans",
         }
     }
 }
