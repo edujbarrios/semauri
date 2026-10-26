@@ -6,7 +6,7 @@ Curso **gratuito, en español y para principiantes**. No hace falta saber progra
 
 ## Cómo empezar
 
-1. [Instala Semauri](../../docs/00_INSTALLATION.md). Comprueba que funciona con `semauri version`. También puedes usar `cargo run --` desde la raíz del repositorio si tienes Rust.
+1. [Instala Semauri](../../README.md#install-and-verify). Comprueba que funciona con `semauri version`. También puedes usar `cargo run --` desde la raíz del repositorio si tienes Rust.
 2. Descarga o clona este repositorio, o utiliza la carpeta `learn_to_code/es/` incluida en los paquetes nativos de la release 0.16.1.
 3. Ejecuta los comandos desde la **raíz del repositorio**; si usas un paquete, puedes entrar en la carpeta que contiene `learn_to_code/es/`.
 
@@ -52,7 +52,7 @@ semauri build learn_to_code/es/11_esquemas/main.suri
 semauri explain learn_to_code/es/05_if_otherwise/main.suri
 ```
 
-Puedes aprender incluso sin autorizar efectos: usa `check`, `tokens`, `ast`, `hir`, `explain` y `build`. Si ves un diagnóstico como `S312` (variable no encontrada) o `S316` (condición no booleana), lee su ubicación en el archivo y consulta [la especificación](../../docs/01_LANGUAGE.md).
+Puedes aprender incluso sin autorizar efectos: usa `check`, `tokens`, `ast`, `hir`, `explain` y `build`. Si ves un diagnóstico como `S312` (variable no encontrada) o `S316` (condición no booleana), lee su ubicación en el archivo y consulta [la guía del lenguaje](../../README.md#core-syntax).
 
 ## Qué no enseña aún este curso
 
@@ -60,6 +60,6 @@ Semauri sigue siendo **experimental**. Aún no hay funciones de usuario, entrada
 
 ## ¿Y después?
 
-Mira los [ejemplos adicionales](../../examples/), el [manual de tipos](../../docs/02_TYPES.md) y la [guía del desarrollador](../../docs/DEVELOPMENT.md). Para contribuir, consulta [CONTRIBUTING.md](../../CONTRIBUTING.md).
+Mira los [ejemplos adicionales](../../examples/), la [guía canónica](../../README.md) y [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 **Mantenimiento:** los programas `main.suri` de este curso están cubiertos por tests automáticos en `tests/learning_course.rs` y se empaquetan en los seis artefactos nativos oficiales.

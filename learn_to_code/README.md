@@ -22,4 +22,4 @@ learn_to_code/
     └── 01_hello_world/… # 11 lessons
 ```
 
-[Installation / Instalación](../docs/00_INSTALLATION.md) · [Repository / Repositorio](../README.md)
+[Installation and language guide / Instalación y guía](../README.md) · [Repository / Repositorio](../README.md)
