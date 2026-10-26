@@ -128,6 +128,27 @@ semauri run --allow filesystem_read --allow filesystem_write program.suri
 
 Use `--dry-run` when you need the output plan without performing effects.
 
+## `.config.suri`
+
+Project configuration uses typed JSON parameters and named environment bindings:
+
+```text
+parameter model = "local/default".
+parameter max_tokens = 1024.
+parameter temperature = 0.2.
+environment model_api_key = "SEMAURI_MODEL_API_KEY".
+```
+
+Validate it without exposing environment values:
+
+```sh
+semauri config
+semauri config .config.suri --set temperature=0.0
+semauri config .config.suri --check-env
+```
+
+`--set` may override only declared parameters and accepts a JSON value. Environment bindings are resolved lazily from the process environment; summaries report only the variable name and whether it is set, never its value. Do not commit credentials.
+
 ## Assertions and tests
 
 ```text
@@ -163,6 +184,7 @@ semauri build page.suri -o page.html
 
 | Command | Purpose |
 | --- | --- |
+| `config [PATH]` | Validate parameters and environment bindings |
 | `check FILE` | Type-check and validate source |
 | `fmt FILE [--check\|--write]` | Enforce canonical lowercase syntax |
 | `tokens`, `ast`, `hir`, `optimize` | Inspect compiler stages |
