@@ -247,7 +247,7 @@ match returns `-1`, and an empty position needle returns `0`.
 let text be "café café".
 assert occurrences of "café" in text is equal to 2.
 assert position of "é" in text is equal to 3.
-assert position of "missing" in text is equal to -1.
+assert position of "missing" in text is equal to minus 1.
 ```
 
 Both operations return `number` and statically require two strings (`S402`).

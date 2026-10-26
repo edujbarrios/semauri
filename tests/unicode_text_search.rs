@@ -25,7 +25,7 @@ fn overlapping_matches_are_not_counted_twice() {
     let result = run(r#"assert occurrences of "aa" in "aaaaa" is equal to 2.
 assert occurrences of "AA" in "aaaaa" is equal to 0.
 assert position of "aa" in "baaa" is equal to 1.
-assert position of "foo" in "bar" is equal to -1.
+assert position of "foo" in "bar" is equal to minus 1.
 assert position of "" in "bar" is equal to 0."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
 }

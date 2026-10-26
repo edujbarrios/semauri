@@ -3,6 +3,6 @@ let text be "café café".
 assert occurrences of "café" in text is equal to 2.
 assert position of "é" in text is equal to 3.
 assert position of "café" in text is equal to 0.
-assert position of "not here" in text is equal to -1.
+assert position of "not here" in text is equal to minus 1.
 assert position of "" in text is equal to 0.
 print "Unicode text search passed".
