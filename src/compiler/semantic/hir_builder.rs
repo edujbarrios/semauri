@@ -1026,10 +1026,10 @@ fn binary_type(
             }
         }
         BinaryOperator::Take | BinaryOperator::Drop => match (left, right) {
-            (Type::Number, Type::List(_)) => Ok(right.clone()),
+            (Type::Number, Type::List(_)) | (Type::Number, Type::String) => Ok(right.clone()),
             _ => Err(SemauriError::semantic(
                 "S363",
-                format!("'take' and 'drop' require a number and list, received {left} and {right}"),
+                format!("'take' and 'drop' require a number and list or string, received {left} and {right}"),
                 Some(span),
                 None,
             )),

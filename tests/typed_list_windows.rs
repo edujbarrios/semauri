@@ -76,7 +76,7 @@ assert (first of selected at 0) is equal to 1."#);
 fn rejects_invalid_type_combinations_at_compile_time() {
     for source in [
         "print take true from a list of 1, 2.",
-        "print drop 1 from \"abc\".",
+        "print drop 1 from 123.",
         "print take 2 from false.",
     ] {
         let e = Compiler::new().hir(source).unwrap_err();

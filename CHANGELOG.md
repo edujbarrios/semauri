@@ -1,3 +1,10 @@
+## Unreleased
+
+### Unicode-aware take and drop on strings
+- Extend `take COUNT from COLLECTION` / `drop COUNT from COLLECTION` to immutable strings, counting Unicode scalar values rather than UTF-8 bytes.
+- Preserve typed-list compatibility, source-aware errors for invalid counts, constant folding, and pure evaluation.
+- Add runnable examples and regression tests for Unicode, boundaries, and nested selections.
+
 ## 0.37.0 — 2026-10-26
 
 ### Unicode-aware text searching

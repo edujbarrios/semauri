@@ -692,6 +692,16 @@ fn eval_constant_binary(
                 text.find(needle).map(|offset| text[..offset].chars().count() as i64).unwrap_or(-1),
             )))
         }
+        (BinaryOperator::Take | BinaryOperator::Drop, ValueData::Number(NumberValue::Int(count)), ValueData::String(text))
+            if *count >= 0 => {
+            let count = usize::try_from(*count).ok()?;
+            let selected: String = if *operator == BinaryOperator::Take {
+                text.chars().take(count).collect()
+            } else {
+                text.chars().skip(count).collect()
+            };
+            Some(ValueData::String(selected))
+        }
         (BinaryOperator::JsonHasKey, ValueData::String(key), ValueData::String(source)) => {
             json_object_has_key(source, key).map(ValueData::Boolean)
         }

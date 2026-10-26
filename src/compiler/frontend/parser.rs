@@ -849,7 +849,7 @@ impl<'a> Parser<'a> {
                 let count = self.numeric_unary()?;
                 self.consume(
                     TokenKind::From,
-                    "Expected 'from' between a count and list",
+                    "Expected 'from' between a count and a list or string",
                     "S243",
                 )?;
                 let list = self.primary()?;
