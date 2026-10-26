@@ -5,6 +5,18 @@ pub struct CliResult {
     pub stderr: String,
 }
 
+fn load_cli_program(
+    path: &Path,
+    current_source: &mut Option<String>,
+    current_loaded: &mut Option<LoadedSource>,
+) -> Result<String> {
+    let loaded = load_module_source(path)?;
+    let source = loaded.source.clone();
+    *current_source = Some(source.clone());
+    *current_loaded = Some(loaded);
+    Ok(source)
+}
+
 pub fn run_cli(args: &[String]) -> CliResult {
     if args.first().map(String::as_str) == Some("config") {
         return run_config_cli(&args[1..]);
@@ -16,6 +28,7 @@ pub fn run_cli(args: &[String]) -> CliResult {
     let mut stdout = String::new();
     let mut stderr = String::new();
     let mut current_source: Option<String> = None;
+    let mut current_loaded: Option<LoadedSource> = None;
     let mut json_diagnostics = false;
 
     let outcome = (|| -> Result<i32> {
@@ -58,8 +71,11 @@ pub fn run_cli(args: &[String]) -> CliResult {
                         source_args.push(arg.clone());
                     }
                 }
-                let source = read_single_source(&source_args)?;
-                current_source = Some(source.clone());
+                if source_args.len() != 1 {
+                    return Err(usage_error(usage()));
+                }
+                let source = load_cli_program(Path::new(&source_args[0]),
+                    &mut current_source, &mut current_loaded)?;
                 match command.unwrap() {
                     "tokens" => {
                         let tokens = compiler.tokenize(&source)?;
@@ -117,9 +133,8 @@ pub fn run_cli(args: &[String]) -> CliResult {
                 let path = path.ok_or_else(|| usage_error(
                     "Usage: semauri audit FILE [--strict]"
                 ))?;
-                let source = fs::read_to_string(&path)
-                    .map_err(|error| usage_error(format!("S001: {error}")))?;
-                current_source = Some(source.clone());
+                let source = load_cli_program(Path::new(&path),
+                    &mut current_source, &mut current_loaded)?;
                 let report = compiler.ml_reproducibility_audit(&source)?;
                 let warnings = report["warning_count"].as_u64().unwrap_or(0);
                 stdout.push_str(&pretty_json(&report));
@@ -208,9 +223,8 @@ pub fn run_cli(args: &[String]) -> CliResult {
                     }
                 }
                 let path = path.ok_or_else(|| usage_error(usage()))?;
-                let source = fs::read_to_string(&path)
-                    .map_err(|error| usage_error(format!("S001: {error}")))?;
-                current_source = Some(source.clone());
+                let source = load_cli_program(Path::new(&path),
+                    &mut current_source, &mut current_loaded)?;
                 compiler.analyze(&source)?;
                 if let Some(allowed) = allowed {
                     compiler.validate_capabilities(&source, &CapabilityPolicy::new(allowed))?;
@@ -265,9 +279,8 @@ pub fn run_cli(args: &[String]) -> CliResult {
                     }
                 }
                 let path = path.ok_or_else(|| usage_error(usage()))?;
-                let source = fs::read_to_string(&path)
-                    .map_err(|error| usage_error(format!("S001: {error}")))?;
-                current_source = Some(source.clone());
+                let source = load_cli_program(Path::new(&path),
+                    &mut current_source, &mut current_loaded)?;
                 let result = compiler.compile(&source, backend.as_deref())?;
                 if result.outputs.is_empty() && result.runtime() {
                     return Err(SemauriError::backend(
@@ -382,9 +395,8 @@ pub fn run_cli(args: &[String]) -> CliResult {
                     }
                 }
                 let path = path.ok_or_else(|| usage_error(usage()))?;
-                let source = fs::read_to_string(&path)
-                    .map_err(|error| usage_error(format!("S001: {error}")))?;
-                current_source = Some(source.clone());
+                let source = load_cli_program(Path::new(&path),
+                    &mut current_source, &mut current_loaded)?;
                 let result = compiler.compile(&source, None)?;
                 let executable_runtime = !result.semantic.runtime_plan.operations.is_empty()
                     && result
@@ -477,6 +489,20 @@ pub fn run_cli(args: &[String]) -> CliResult {
                 ErrorKind::Runtime => 70,
                 _ => 65,
             };
+            let mut reported = error.clone();
+            let mut reported_file: Option<String> = None;
+            let mut diagnostic_source = current_source.as_deref();
+            if let (Some(loaded), Some(span)) = (current_loaded.as_ref(), error.span) {
+                if let Some((path, line)) = loaded.origins.get(span.line().saturating_sub(1)) {
+                    if let Some(original) = loaded.files.get(path) {
+                        reported.span = Some(SourceSpan::new(*line, span.column(),
+                            line.saturating_add(span.end_line().saturating_sub(span.line())),
+                            span.end_column()));
+                        diagnostic_source = Some(original);
+                        reported_file = Some(path.display().to_string());
+                    }
+                }
+            }
             if json_diagnostics {
                 stdout.clear();
                 stdout.push_str(&pretty_json(&json!({
@@ -486,12 +512,17 @@ pub fn run_cli(args: &[String]) -> CliResult {
                         "code": error.code,
                         "kind": format!("{:?}", error.kind).to_lowercase(),
                         "message": error.message,
-                        "span": error.span,
+                        "span": reported.span,
+                        "file": reported_file,
                         "hint": error.hint,
                     }],
                 })));
             } else {
-                stderr.push_str(&error.diagnostic(current_source.as_deref()));
+                if let Some(file) = &reported_file {
+                    stderr.push_str(file);
+                    stderr.push_str(": ");
+                }
+                stderr.push_str(&reported.diagnostic(diagnostic_source));
                 stderr.push('\n');
             }
             CliResult {
@@ -590,13 +621,6 @@ fn config_cli_error(message: impl AsRef<str>) -> CliResult {
 
 fn pretty_json(value: &JsonValue) -> String {
     format!("{}\n", serde_json::to_string_pretty(value).unwrap())
-}
-
-fn read_single_source(args: &[String]) -> Result<String> {
-    if args.len() != 1 {
-        return Err(usage_error(usage()));
-    }
-    fs::read_to_string(&args[0]).map_err(|error| usage_error(format!("S001: {error}")))
 }
 
 fn usage_error(message: impl Into<String>) -> SemauriError {
