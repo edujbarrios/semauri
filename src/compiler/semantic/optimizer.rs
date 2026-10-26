@@ -326,6 +326,15 @@ fn fold_expr(
                         };
                     }
                 }
+                (UnaryOperator::Json, Some(value)) => {
+                    *changes += 1;
+                    return HirExpr::Literal {
+                        ty: Type::String,
+                        value: LiteralValue::String(serde_json::to_string(&value.to_json())
+                            .expect("serde_json::Value always serializes")),
+                        span: *span,
+                    };
+                }
                 (UnaryOperator::Trim, Some(ValueData::String(value))) => {
                     *changes += 1;
                     return HirExpr::Literal {

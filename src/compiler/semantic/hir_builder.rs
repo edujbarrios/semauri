@@ -577,6 +577,17 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::String
                     }
+                    UnaryOperator::Json => {
+                        if !is_json_serializable_type(&operand.ty()) {
+                            return Err(SemauriError::semantic(
+                                "S390",
+                                format!("'json of' requires a serializable value, received {}", operand.ty()),
+                                Some(*span),
+                                Some("Use numbers, booleans, strings, colors, or lists of those values.".into()),
+                            ));
+                        }
+                        Type::String
+                    }
                     UnaryOperator::Trim | UnaryOperator::Words | UnaryOperator::Lines => {
                         if operand.ty() != Type::String {
                             return Err(SemauriError::semantic(
@@ -1333,5 +1344,14 @@ fn pure_function_expression(expr: &HirExpr) -> bool {
             && pure_function_expression(alternative),
         HirExpr::FunctionCall { arguments, body, .. } =>
             arguments.iter().all(pure_function_expression) && pure_function_expression(body),
+    }
+}
+
+// JSON conversion excludes runtime handles and effects by construction.
+fn is_json_serializable_type(ty: &Type) -> bool {
+    match ty {
+        Type::Number | Type::Boolean | Type::String | Type::Color => true,
+        Type::List(element) => is_json_serializable_type(element),
+        _ => false,
     }
 }

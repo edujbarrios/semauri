@@ -1254,6 +1254,18 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::Json,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile { data, .. } => Ok(BoundValue::Compile {
+                    ty: Type::String,
+                    data: ValueData::String(serde_json::to_string(&data.to_json())
+                        .expect("serde_json::Value always serializes")),
+                }),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: operator @ (UnaryOperator::Trim | UnaryOperator::Words | UnaryOperator::Lines),
                 operand,
                 ty,

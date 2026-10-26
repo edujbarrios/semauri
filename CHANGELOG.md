@@ -1,5 +1,9 @@
 ## Unreleased
 
+### Typed JSON serialization
+- Add contextual `json of` with static type checks, deterministic JSON encoding, string escaping, and compile-time folding for literals.
+- Document integration payloads and preserve `json` as an ordinary variable name.
+
 ### Natural-language text processing
 - Add contextual `trim of`, `words of`, and `lines of` with Unicode-aware semantics, typed results, and constant folding.
 - Preserve existing variable names and add regression tests, examples, formatter coverage, and VS Code highlighting.

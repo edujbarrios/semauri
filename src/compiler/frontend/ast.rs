@@ -23,6 +23,7 @@ pub enum UnaryOperator {
     Trim,
     Words,
     Lines,
+    Json,
 }
 
 impl UnaryOperator {
@@ -51,6 +52,7 @@ impl UnaryOperator {
             UnaryOperator::Trim => "trim",
             UnaryOperator::Words => "words",
             UnaryOperator::Lines => "lines",
+            UnaryOperator::Json => "json",
         }
     }
 }
