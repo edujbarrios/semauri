@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Practical project initialization
+- Add `semauri init PROJECT` to create a non-overwriting multi-file project with typed library functions, an executable program, tests and English documentation.
+- Introduce an explicit `.semauri-root` project marker so tests in subdirectories can safely import shared modules while all import targets remain confined to the marked root.
+- Keep existing single-file programs and unmarked import restrictions backward compatible; add generated-project and safety regression tests.
+
+
 ### Secure local source imports
 - Add `import "relative/file.suri".` for reusable typed multi-file programs, resolving dependencies before standard compilation and effect analysis.
 - Reject import cycles, filesystem escapes including symlinks, imports after executable statements, invalid paths and oversized graphs (64 files, 32 levels, 4 MiB) using `S416`.
