@@ -42,8 +42,52 @@ fn json_scalar_to_data(value: &JsonValue, expected: &Type) -> Option<ValueData> 
     }
 }
 
+// Preserve integer exactness before serde_json can convert an out-of-range
+// negative integer into floating point notation. Skip quoted JSON strings,
+// including escaped quotes, and let serde_json validate the actual syntax.
+fn json_integer_literals_fit_i64(source: &str) -> bool {
+    let bytes = source.as_bytes();
+    let (mut index, mut in_string, mut escaped) = (0, false, false);
+    while index < bytes.len() {
+        let byte = bytes[index];
+        if in_string {
+            if escaped {
+                escaped = false;
+            } else if byte == b'\\' {
+                escaped = true;
+            } else if byte == b'"' {
+                in_string = false;
+            }
+            index += 1;
+            continue;
+        }
+        if byte == b'"' {
+            in_string = true;
+            index += 1;
+            continue;
+        }
+        if byte == b'-' || byte.is_ascii_digit() {
+            let start = index;
+            while index < bytes.len()
+                && !matches!(bytes[index], b' ' | b'\t' | b'\r' | b'\n' | b',' | b']' | b'}' | b':')
+            {
+                index += 1;
+            }
+            let token = &source[start..index];
+            if !token.contains('.') && !token.contains('e') && !token.contains('E')
+                && token.parse::<i64>().is_err()
+            {
+                return false;
+            }
+            continue;
+        }
+        index += 1;
+    }
+    true
+}
+
 fn decode_json_text(source: &str, operator: &UnaryOperator) -> Option<ValueData> {
-    if source.len() > MAX_JSON_TEXT_BYTES {
+    if source.len() > MAX_JSON_TEXT_BYTES || !json_integer_literals_fit_i64(source) {
         return None;
     }
     let expected = json_decode_type(operator)?;
