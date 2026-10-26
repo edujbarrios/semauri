@@ -8,7 +8,7 @@ Blocks create lexical scopes. A `Let` inside `If` exists only inside that block.
 
 ## Example program
 
-Open [`main.sema`](./main.sema):
+Open [`main.suri`](./main.suri):
 
 ```text
 let message be "outside".
@@ -26,8 +26,8 @@ print message.
 Run these commands from the repository root (or the extracted package root):
 
 ```sh
-semauri check learn_to_code/en/09_scopes/main.sema
-semauri run --allow console_write learn_to_code/en/09_scopes/main.sema
+semauri check learn_to_code/en/09_scopes/main.suri
+semauri run --allow console_write learn_to_code/en/09_scopes/main.suri
 ```
 
 **Expected console output:**

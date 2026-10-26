@@ -4,7 +4,7 @@
 use semauri::{run_cli, CapabilityPolicy, Compiler};
 use serde_json::Value;
 
-const SOURCE: &str = include_str!("../examples/ml_versioned_inputs.sema");
+const SOURCE: &str = include_str!("../examples/ml_versioned_inputs.suri");
 
 #[test]
 fn checked_in_ml_example_has_deterministic_and_typed_lineage() {
@@ -36,7 +36,7 @@ fn release_example_declares_pinned_inputs_but_does_not_claim_verification() {
 fn reproducibility_preflight_cannot_execute_training_without_capabilities() {
     let compiler = Compiler::new();
     assert!(compiler.validate_capabilities(SOURCE, &CapabilityPolicy::allow_none()).is_err());
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/ml_versioned_inputs.sema");
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/ml_versioned_inputs.suri");
     let result = run_cli(&["audit".into(), path.into(), "--strict".into()]);
     assert_eq!(result.status, 0, "{}", result.stderr);
     let report: Value = serde_json::from_str(&result.stdout).unwrap();

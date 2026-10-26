@@ -19,7 +19,7 @@ fn fixture() -> PathBuf {
 }
 
 fn run(root: &PathBuf, source: &str) -> semauri::CliResult {
-    let file = root.join("program.sema");
+    let file = root.join("program.suri");
     fs::write(&file, source).unwrap();
     run_cli(&[
         "run".into(),

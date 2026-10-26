@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 static NEXT: AtomicU64 = AtomicU64::new(1);
 fn run(source: &str) -> semauri::CliResult {
     let path = std::env::temp_dir().join(format!(
-        "semauri-functions-{}-{}.sema",
+        "semauri-functions-{}-{}.suri",
         std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)
     ));
     fs::write(&path, source).unwrap();

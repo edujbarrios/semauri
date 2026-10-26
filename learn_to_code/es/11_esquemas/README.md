@@ -8,7 +8,7 @@ El dominio Structured Data permite `create a schema`, `add a field` y propiedade
 
 ## Programa de ejemplo
 
-Abre [`main.sema`](./main.sema):
+Abre [`main.suri`](./main.suri):
 
 ```text
 create a schema called Alumno.
@@ -24,8 +24,8 @@ set the datatype of the field called Edad to "integer".
 Desde la raíz del repositorio:
 
 ```sh
-semauri check learn_to_code/es/11_esquemas/main.sema
-semauri build learn_to_code/es/11_esquemas/main.sema
+semauri check learn_to_code/es/11_esquemas/main.suri
+semauri build learn_to_code/es/11_esquemas/main.suri
 ```
 
 **Resultado esperado:** Genera JSON Schema con Nombre obligatorio y Edad entero. El contenido generado aparece en la salida de `build`.

@@ -9,7 +9,7 @@ static CASE: AtomicU64 = AtomicU64::new(1);
 
 fn run(source: &str) -> semauri::CliResult {
     let path = std::env::temp_dir().join(format!(
-        "semauri-contains-{}-{}.sema",
+        "semauri-contains-{}-{}.suri",
         std::process::id(),
         CASE.fetch_add(1, Ordering::Relaxed),
     ));

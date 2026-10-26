@@ -11,9 +11,9 @@ Curso **gratuito, en español y para principiantes**. No hace falta saber progra
 3. Ejecuta los comandos desde la **raíz del repositorio**; si usas un paquete, puedes entrar en la carpeta que contiene `learn_to_code/es/`.
 
 ```sh
-semauri check learn_to_code/es/01_hola_mundo/main.sema
-semauri run --dry-run learn_to_code/es/01_hola_mundo/main.sema
-semauri run --allow console_write learn_to_code/es/01_hola_mundo/main.sema
+semauri check learn_to_code/es/01_hola_mundo/main.suri
+semauri run --dry-run learn_to_code/es/01_hola_mundo/main.suri
+semauri run --allow console_write learn_to_code/es/01_hola_mundo/main.suri
 ```
 
 **Importante:** `check` revisa sintaxis y tipos, pero **no ejecuta**. `run --dry-run` muestra el plan sin efectos. `run --allow console_write` permite explícitamente escribir en la consola. Las lecciones 10 y 11 utilizan `semauri build` y no necesitan ejecutar operaciones.
@@ -34,22 +34,22 @@ semauri run --allow console_write learn_to_code/es/01_hola_mundo/main.sema
 | 10 | [Tu primera página web](./10_crea_una_web/README.md) | Generar HTML declarativamente con un dominio semántico. | `build` |
 | 11 | [Datos estructurados y JSON Schema](./11_esquemas/README.md) | Describir la estructura esperada de los datos. | `build` |
 
-Cada carpeta contiene un **README con explicación y reto**, más un `main.sema` ejecutable. Haz el reto modificando una copia del archivo, pasa `check` y después observa el resultado. No se requiere conexión a Internet para ejecutar las lecciones.
+Cada carpeta contiene un **README con explicación y reto**, más un `main.suri` ejecutable. Haz el reto modificando una copia del archivo, pasa `check` y después observa el resultado. No se requiere conexión a Internet para ejecutar las lecciones.
 
 ## Comandos útiles
 
 ```sh
 # Ejemplo de una lección de consola (01 a 09)
-semauri check learn_to_code/es/05_if_otherwise/main.sema
-semauri run --allow console_write learn_to_code/es/05_if_otherwise/main.sema
+semauri check learn_to_code/es/05_if_otherwise/main.suri
+semauri run --allow console_write learn_to_code/es/05_if_otherwise/main.suri
 
 # Lecciones de generación de archivos (10 y 11)
-semauri check learn_to_code/es/10_crea_una_web/main.sema
-semauri build learn_to_code/es/10_crea_una_web/main.sema
-semauri build learn_to_code/es/11_esquemas/main.sema
+semauri check learn_to_code/es/10_crea_una_web/main.suri
+semauri build learn_to_code/es/10_crea_una_web/main.suri
+semauri build learn_to_code/es/11_esquemas/main.suri
 
 # Ver la interpretación del compilador
-semauri explain learn_to_code/es/05_if_otherwise/main.sema
+semauri explain learn_to_code/es/05_if_otherwise/main.suri
 ```
 
 Puedes aprender incluso sin autorizar efectos: usa `check`, `tokens`, `ast`, `hir`, `explain` y `build`. Si ves un diagnóstico como `S312` (variable no encontrada) o `S316` (condición no booleana), lee su ubicación en el archivo y consulta [la especificación](../../docs/01_LANGUAGE.md).
@@ -62,4 +62,4 @@ Semauri sigue siendo **experimental**. Aún no hay funciones de usuario, entrada
 
 Mira los [ejemplos adicionales](../../examples/), el [manual de tipos](../../docs/02_TYPES.md) y la [guía del desarrollador](../../docs/DEVELOPMENT.md). Para contribuir, consulta [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
-**Mantenimiento:** los programas `main.sema` de este curso están cubiertos por tests automáticos en `tests/learning_course.rs` y se empaquetan en los seis artefactos nativos oficiales.
+**Mantenimiento:** los programas `main.suri` de este curso están cubiertos por tests automáticos en `tests/learning_course.rs` y se empaquetan en los seis artefactos nativos oficiales.

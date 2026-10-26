@@ -8,7 +8,7 @@ The Structured Data domain offers `create a schema`, `add a field` and typed pro
 
 ## Example program
 
-Open [`main.sema`](./main.sema):
+Open [`main.suri`](./main.suri):
 
 ```text
 create a schema called Student.
@@ -24,8 +24,8 @@ set the datatype of the field called Age to "integer".
 Run these commands from the repository root (or the extracted package root):
 
 ```sh
-semauri check learn_to_code/en/11_schemas/main.sema
-semauri build learn_to_code/en/11_schemas/main.sema
+semauri check learn_to_code/en/11_schemas/main.suri
+semauri build learn_to_code/en/11_schemas/main.suri
 ```
 
 **Expected result:** JSON Schema with required Name string and Age integer. The generated content appears in the output of `build`.

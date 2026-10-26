@@ -8,7 +8,7 @@ Se admiten `plus`, `minus`, `times`, `divided by` y `modulo` (resto). La multipl
 
 ## Programa de ejemplo
 
-Abre [`main.sema`](./main.sema):
+Abre [`main.suri`](./main.suri):
 
 ```text
 let subtotal be 10 plus 5 times 2.
@@ -25,8 +25,8 @@ print resto.
 Desde la raíz del repositorio:
 
 ```sh
-semauri check learn_to_code/es/03_aritmetica/main.sema
-semauri run --allow console_write learn_to_code/es/03_aritmetica/main.sema
+semauri check learn_to_code/es/03_aritmetica/main.suri
+semauri run --allow console_write learn_to_code/es/03_aritmetica/main.suri
 ```
 
 **Salida esperada en la consola:**

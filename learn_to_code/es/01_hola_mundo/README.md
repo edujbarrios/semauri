@@ -4,11 +4,11 @@
 
 ## Concepto
 
-Cada línea terminada en punto es una instrucción. `Print` muestra un texto o valor. El código fuente se guarda como `.sema`.
+Cada línea terminada en punto es una instrucción. `Print` muestra un texto o valor. El código fuente se guarda como `.suri`.
 
 ## Programa de ejemplo
 
-Abre [`main.sema`](./main.sema):
+Abre [`main.suri`](./main.suri):
 
 ```text
 # Un programa puede tener comentarios.
@@ -21,8 +21,8 @@ print 2026.
 Desde la raíz del repositorio:
 
 ```sh
-semauri check learn_to_code/es/01_hola_mundo/main.sema
-semauri run --allow console_write learn_to_code/es/01_hola_mundo/main.sema
+semauri check learn_to_code/es/01_hola_mundo/main.suri
+semauri run --allow console_write learn_to_code/es/01_hola_mundo/main.suri
 ```
 
 **Salida esperada en la consola:**

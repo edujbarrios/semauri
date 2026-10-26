@@ -8,7 +8,7 @@ Semauri puede transformar un programa en HTML con `build`. `create a web`, `add 
 
 ## Programa de ejemplo
 
-Abre [`main.sema`](./main.sema):
+Abre [`main.suri`](./main.suri):
 
 ```text
 create a web called Mi Primera Pagina.
@@ -21,8 +21,8 @@ set the color of the button called Empezar to blue.
 Desde la raíz del repositorio:
 
 ```sh
-semauri check learn_to_code/es/10_crea_una_web/main.sema
-semauri build learn_to_code/es/10_crea_una_web/main.sema
+semauri check learn_to_code/es/10_crea_una_web/main.suri
+semauri build learn_to_code/es/10_crea_una_web/main.suri
 ```
 
 **Resultado esperado:** Genera HTML con un botón Empezar de color azul. El contenido generado aparece en la salida de `build`.

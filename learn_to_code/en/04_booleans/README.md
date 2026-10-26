@@ -8,7 +8,7 @@
 
 ## Example program
 
-Open [`main.sema`](./main.sema):
+Open [`main.suri`](./main.suri):
 
 ```text
 let age be 20.
@@ -24,8 +24,8 @@ print allowed.
 Run these commands from the repository root (or the extracted package root):
 
 ```sh
-semauri check learn_to_code/en/04_booleans/main.sema
-semauri run --allow console_write learn_to_code/en/04_booleans/main.sema
+semauri check learn_to_code/en/04_booleans/main.suri
+semauri run --allow console_write learn_to_code/en/04_booleans/main.suri
 ```
 
 **Expected console output:**

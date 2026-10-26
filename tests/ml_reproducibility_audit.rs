@@ -25,7 +25,7 @@ End."#;
 
 fn audit_cli(source: &str, strict: bool) -> semauri::CliResult {
     let path = std::env::temp_dir().join(format!(
-        "semauri-audit-{}-{}.sema",
+        "semauri-audit-{}-{}.suri",
         std::process::id(),
         NEXT.fetch_add(1, Ordering::Relaxed),
     ));

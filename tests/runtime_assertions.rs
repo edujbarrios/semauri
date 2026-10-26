@@ -11,7 +11,7 @@ static NEXT_TEMP: AtomicU64 = AtomicU64::new(1);
 fn program(source: &str) -> PathBuf {
     let id = NEXT_TEMP.fetch_add(1, Ordering::Relaxed);
     let file = std::env::temp_dir().join(format!(
-        "semauri-assert-{}-{id}.sema",
+        "semauri-assert-{}-{id}.suri",
         std::process::id()
     ));
     fs::write(&file, source).unwrap();

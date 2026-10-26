@@ -9,7 +9,7 @@ static NEXT_TEMP: AtomicU64 = AtomicU64::new(1);
 fn temp_file(contents: &str) -> PathBuf {
     let id = NEXT_TEMP.fetch_add(1, Ordering::Relaxed);
     let path = std::env::temp_dir().join(format!(
-        "semauri-rust-parity-{}-{id}.sema",
+        "semauri-rust-parity-{}-{id}.suri",
         std::process::id()
     ));
     fs::write(&path, contents).unwrap();

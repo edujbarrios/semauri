@@ -4,11 +4,11 @@
 
 ## Concept
 
-Each statement ends with a period. `Print` displays a value. Programs are saved as `.sema` files, and a line starting with `#` is a comment.
+Each statement ends with a period. `Print` displays a value. Programs are saved as `.suri` files, and a line starting with `#` is a comment.
 
 ## Example program
 
-Open [`main.sema`](./main.sema):
+Open [`main.suri`](./main.suri):
 
 ```text
 # A comment explains the program.
@@ -21,8 +21,8 @@ print 2026.
 Run these commands from the repository root (or the extracted package root):
 
 ```sh
-semauri check learn_to_code/en/01_hello_world/main.sema
-semauri run --allow console_write learn_to_code/en/01_hello_world/main.sema
+semauri check learn_to_code/en/01_hello_world/main.suri
+semauri run --allow console_write learn_to_code/en/01_hello_world/main.suri
 ```
 
 **Expected console output:**

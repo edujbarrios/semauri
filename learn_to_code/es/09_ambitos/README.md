@@ -8,7 +8,7 @@ Los bloques crean ámbitos léxicos. Un `Let` dentro de `If` solo existe en ese 
 
 ## Programa de ejemplo
 
-Abre [`main.sema`](./main.sema):
+Abre [`main.suri`](./main.suri):
 
 ```text
 let mensaje be "fuera".
@@ -26,8 +26,8 @@ print mensaje.
 Desde la raíz del repositorio:
 
 ```sh
-semauri check learn_to_code/es/09_ambitos/main.sema
-semauri run --allow console_write learn_to_code/es/09_ambitos/main.sema
+semauri check learn_to_code/es/09_ambitos/main.suri
+semauri run --allow console_write learn_to_code/es/09_ambitos/main.suri
 ```
 
 **Salida esperada en la consola:**

@@ -9,7 +9,7 @@ static NEXT: AtomicU64 = AtomicU64::new(1);
 
 fn fixture(source: &str) -> std::path::PathBuf {
     let path = std::env::temp_dir().join(format!(
-        "semauri-format-{}-{}.sema",
+        "semauri-format-{}-{}.suri",
         std::process::id(),
         NEXT.fetch_add(1, Ordering::Relaxed)
     ));

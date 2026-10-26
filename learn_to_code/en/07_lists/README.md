@@ -8,7 +8,7 @@
 
 ## Example program
 
-Open [`main.sema`](./main.sema):
+Open [`main.suri`](./main.suri):
 
 ```text
 let scores be a list of 10, 20, 30.
@@ -23,8 +23,8 @@ print colors.
 Run these commands from the repository root (or the extracted package root):
 
 ```sh
-semauri check learn_to_code/en/07_lists/main.sema
-semauri run --allow console_write learn_to_code/en/07_lists/main.sema
+semauri check learn_to_code/en/07_lists/main.suri
+semauri run --allow console_write learn_to_code/en/07_lists/main.suri
 ```
 
 **Expected console output:**
