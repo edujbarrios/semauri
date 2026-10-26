@@ -1254,6 +1254,34 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::Trim | UnaryOperator::Words | UnaryOperator::Lines),
+                operand,
+                ty,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::String,
+                    data: ValueData::String(value),
+                } => {
+                    let data = match operator {
+                        UnaryOperator::Trim => ValueData::String(value.trim().to_string()),
+                        UnaryOperator::Words => ValueData::List(value.split_whitespace()
+                            .map(|word| ValueData::String(word.to_string())).collect()),
+                        UnaryOperator::Lines => ValueData::List(value.lines()
+                            .map(|line| ValueData::String(line.to_string())).collect()),
+                        _ => unreachable!(),
+                    };
+                    Ok(BoundValue::Compile { ty: ty.clone(), data })
+                }
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S351",
+                    format!("Text operation requires a string, received {ty}"),
+                    Some(expression.span()),
+                    None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: operator @ (UnaryOperator::Uppercase | UnaryOperator::Lowercase),
                 operand,
                 ..

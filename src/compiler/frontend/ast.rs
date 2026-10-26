@@ -20,6 +20,9 @@ pub enum UnaryOperator {
     Last,
     Uppercase,
     Lowercase,
+    Trim,
+    Words,
+    Lines,
 }
 
 impl UnaryOperator {
@@ -45,6 +48,9 @@ impl UnaryOperator {
             UnaryOperator::Last => "last",
             UnaryOperator::Uppercase => "uppercase",
             UnaryOperator::Lowercase => "lowercase",
+            UnaryOperator::Trim => "trim",
+            UnaryOperator::Words => "words",
+            UnaryOperator::Lines => "lines",
         }
     }
 }

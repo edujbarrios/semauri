@@ -577,6 +577,21 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::String
                     }
+                    UnaryOperator::Trim | UnaryOperator::Words | UnaryOperator::Lines => {
+                        if operand.ty() != Type::String {
+                            return Err(SemauriError::semantic(
+                                "S351",
+                                format!("Text operation '{}' requires a string, received {}", operator.as_str(), operand.ty()),
+                                Some(*span),
+                                None,
+                            ));
+                        }
+                        match operator {
+                            UnaryOperator::Trim => Type::String,
+                            UnaryOperator::Words | UnaryOperator::Lines => Type::List(Box::new(Type::String)),
+                            _ => unreachable!(),
+                        }
+                    }
                     UnaryOperator::Any | UnaryOperator::All => {
                         if operand.ty() != Type::List(Box::new(Type::Boolean)) {
                             return Err(SemauriError::semantic(

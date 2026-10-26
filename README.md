@@ -89,6 +89,28 @@ Supported expression families include arithmetic, comparisons, Boolean operators
 
 Use parentheses whenever generated code could be ambiguous.
 
+### Natural-language text processing
+
+The following pure, Unicode-aware, statically checked operations are contextual
+phrases. Names such as `words` and `lines` still work as identifiers:
+
+```text
+let title be trim of "  Información útil  ".
+let tokens be words of "uno   dos\\t三".
+let rows be lines of "a\\r\\nb\\n".
+assert title is equal to "Información útil".
+assert length of tokens is equal to 3.
+assert (tokens at 2) is equal to "三".
+assert length of rows is equal to 2.
+```
+
+- `trim of STRING` removes leading/trailing Unicode whitespace, returning `string`.
+- `words of STRING` splits on Unicode whitespace, omitting empty fields, returning `list<string>`.
+- `lines of STRING` splits on LF/CRLF, preserving interior blank lines and omitting a trailing empty field, returning `list<string>`.
+
+Non-string operands are rejected (`S351`), literals can be constant-folded, and
+none of these transformations grants or requires runtime capabilities.
+
 ### Control flow and scope
 
 ```text

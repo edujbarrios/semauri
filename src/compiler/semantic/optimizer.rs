@@ -326,6 +326,31 @@ fn fold_expr(
                         };
                     }
                 }
+                (UnaryOperator::Trim, Some(ValueData::String(value))) => {
+                    *changes += 1;
+                    return HirExpr::Literal {
+                        ty: Type::String,
+                        value: LiteralValue::String(value.trim().to_string()),
+                        span: *span,
+                    };
+                }
+                (UnaryOperator::Words | UnaryOperator::Lines, Some(ValueData::String(value))) => {
+                    let segments: Vec<&str> = match operator {
+                        UnaryOperator::Words => value.split_whitespace().collect(),
+                        UnaryOperator::Lines => value.lines().collect(),
+                        _ => unreachable!(),
+                    };
+                    *changes += 1;
+                    return HirExpr::List {
+                        ty: Type::List(Box::new(Type::String)),
+                        items: segments.into_iter().map(|part| HirExpr::Literal {
+                            ty: Type::String,
+                            value: LiteralValue::String(part.to_string()),
+                            span: *span,
+                        }).collect(),
+                        span: *span,
+                    };
+                }
                 (UnaryOperator::Uppercase, Some(ValueData::String(value))) => {
                     *changes += 1;
                     return HirExpr::Literal {
