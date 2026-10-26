@@ -162,10 +162,25 @@ fn run_verify_cli(args: &[String]) -> CliResult {
                 syntax_ok = false;
             }
         }
-        let checked = run_cli(&["check".into(), file.to_string_lossy().into_owned()]);
-        if checked.status != 0 {
-            issues.push(format!("{}: {}", file.display(), checked.stderr.trim()));
-            syntax_ok = false;
+        // Reusable modules may contain only function definitions. HIR typing
+        // validates them without the executable-output requirement (S301).
+        // Entry points and assertion tests still undergo full CLI compilation.
+        if file == &project.join("main.suri") || file.starts_with(&tests_dir) {
+            let checked = run_cli(&["check".into(), file.to_string_lossy().into_owned()]);
+            if checked.status != 0 {
+                issues.push(format!("{}: {}", file.display(), checked.stderr.trim()));
+                syntax_ok = false;
+            }
+        } else {
+            match load_module_source(file)
+                .and_then(|loaded| compiler.hir(&loaded.source))
+            {
+                Ok(_) => {},
+                Err(error) => {
+                    issues.push(format!("{}: {error}", file.display()));
+                    syntax_ok = false;
+                }
+            }
         }
     }
     let mut effects = Vec::new();
