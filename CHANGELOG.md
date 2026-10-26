@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Unicode-aware text searching
+- Add `occurrences of NEEDLE in TEXT` for non-overlapping substring counts and `position of NEEDLE in TEXT` for the zero-based Unicode scalar position of the first match.
+- Return `-1` for missing terms, `0` for the position of an empty term; reject empty occurrence terms with `S403` and incorrect types with `S402`.
+- Provide constant folding, formatter/editor support, examples and integration tests.
+
+
 ### Type-directed JSON field extraction
 - Add `json TYPE at KEY in DOCUMENT` for six checked scalar or homogeneous-list field types, including strings, numbers and booleans.
 - Reject missing keys, JSON null, type mismatches, overflowing integer text and excessive input with located `S400`/`S401` diagnostics.

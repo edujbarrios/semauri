@@ -236,6 +236,26 @@ literals, and collections over the 10,000-item limit produce the located
 `S401` diagnostic. Field names are exact and case sensitive. The operation
 is deterministic and pure; it requires no new permissions.
 
+### Unicode text searching
+
+Use `occurrences of NEEDLE in TEXT` to count **non-overlapping** matches,
+or `position of NEEDLE in TEXT` to find the **first match**. Positions are
+zero-based Unicode scalar-value indices, not UTF-8 byte offsets. A missing
+match returns `-1`, and an empty position needle returns `0`.
+
+```text
+let text be "café café".
+assert occurrences of "café" in text is equal to 2.
+assert position of "é" in text is equal to 3.
+assert position of "missing" in text is equal to -1.
+```
+
+Both operations return `number` and statically require two strings (`S402`).
+Counting occurrences of an empty needle is rejected with a located `S403`
+diagnostic. They are deterministic, case sensitive, require no new effects,
+and support compile-time constant folding. Search results count Unicode
+scalar values, not extended grapheme clusters or locale-sensitive matches.
+
 ### Natural-language string predicates
 
 Use `TEXT starts with PREFIX` and `TEXT ends with SUFFIX` to validate names,
