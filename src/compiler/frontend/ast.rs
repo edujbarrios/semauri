@@ -33,6 +33,10 @@ pub enum UnaryOperator {
     DecodeJsonNumbers,
     DecodeJsonBooleans,
     JsonKeys,
+    Characters,
+    Codepoints,
+    Codepoint,
+    CharacterFrom,
 }
 
 impl UnaryOperator {
@@ -71,6 +75,10 @@ impl UnaryOperator {
             UnaryOperator::DecodeJsonNumbers => "decode_json_numbers",
             UnaryOperator::DecodeJsonBooleans => "decode_json_booleans",
             UnaryOperator::JsonKeys => "json_keys",
+            UnaryOperator::Characters => "characters",
+            UnaryOperator::Codepoints => "codepoints",
+            UnaryOperator::Codepoint => "codepoint",
+            UnaryOperator::CharacterFrom => "character_from",
         }
     }
 }

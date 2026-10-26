@@ -577,6 +577,28 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::String
                     }
+                    UnaryOperator::Characters | UnaryOperator::Codepoints
+                    | UnaryOperator::Codepoint | UnaryOperator::CharacterFrom => {
+                        let expected = if *operator == UnaryOperator::CharacterFrom {
+                            Type::Number
+                        } else {
+                            Type::String
+                        };
+                        if operand.ty() != expected {
+                            return Err(SemauriError::semantic(
+                                "S408",
+                                format!("'{}' requires {}, received {}", operator.as_str(), expected, operand.ty()),
+                                Some(*span), None,
+                            ));
+                        }
+                        match operator {
+                            UnaryOperator::Characters => Type::List(Box::new(Type::String)),
+                            UnaryOperator::Codepoints => Type::List(Box::new(Type::Number)),
+                            UnaryOperator::Codepoint => Type::Number,
+                            UnaryOperator::CharacterFrom => Type::String,
+                            _ => unreachable!(),
+                        }
+                    }
                     UnaryOperator::JsonKeys => {
                         if operand.ty() != Type::String {
                             return Err(SemauriError::semantic(

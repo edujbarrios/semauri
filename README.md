@@ -236,6 +236,32 @@ literals, and collections over the 10,000-item limit produce the located
 `S401` diagnostic. Field names are exact and case sensitive. The operation
 is deterministic and pure; it requires no new permissions.
 
+### Unicode characters and code points
+
+Pure conversions work with Unicode **scalar values**, not UTF-8 bytes:
+
+- `characters of TEXT` gives a `list<string>` of one-scalar strings.
+- `codepoints of TEXT` gives a `list<number>` of Unicode scalar numbers.
+- `codepoint of TEXT` reads the scalar value of a string containing exactly
+  one character.
+- `character from NUMBER` constructs a single-character string from a valid
+  signed integer code point.
+
+```text
+let glyphs be characters of "Aé🙂".
+let numbers be codepoints of "Aé🙂".
+assert length of glyphs is equal to 3.
+assert (numbers at 1) is equal to 233.
+let emoji be character from 128578.
+assert codepoint of emoji is equal to 128578.
+```
+
+The compiler reports `S408` for incorrect operand types. Invalid Unicode
+values (including surrogates, non-integer numbers, or numbers above U+10FFFF),
+empty/multi-character input to `codepoint of`, and lists over 10,000
+characters report `S409` at evaluation. No extra capabilities or dependencies
+are needed. Multi-codepoint grapheme clusters may produce multiple list entries.
+
 ### Unicode string slicing with take and drop
 
 The existing list operations `take COUNT from COLLECTION` and

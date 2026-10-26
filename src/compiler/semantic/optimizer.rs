@@ -326,6 +326,29 @@ fn fold_expr(
                         };
                     }
                 }
+                (operator @ (UnaryOperator::Characters | UnaryOperator::Codepoints
+                    | UnaryOperator::Codepoint | UnaryOperator::CharacterFrom), Some(value)) => {
+                    if let Some(result) = eval_unicode_scalar(operator, &value) {
+                        *changes += 1;
+                        return match result {
+                            ValueData::List(items) => {
+                                let item_type = if *operator == UnaryOperator::Characters {
+                                    Type::String
+                                } else {
+                                    Type::Number
+                                };
+                                HirExpr::List {
+                                    ty: ty.clone(),
+                                    items: items.into_iter().map(|item|
+                                        hir_literal_from_data(item_type.clone(), item, *span)
+                                    ).collect(),
+                                    span: *span,
+                                }
+                            }
+                            scalar => hir_literal_from_data(ty.clone(), scalar, *span),
+                        };
+                    }
+                }
                 (UnaryOperator::JsonKeys, Some(ValueData::String(source))) => {
                     if let Some(keys) = json_object_keys(&source) {
                         *changes += 1;
