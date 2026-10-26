@@ -1,0 +1,10 @@
+# Direct Unicode scalar indexing; no intermediate character list.
+let text be "Aé🙂".
+let initial be character at 0 in text.
+let accent be character at 1 in text.
+let emoji be character at 2 in text.
+assert initial is equal to "A".
+assert accent is equal to "é".
+assert emoji is equal to "🙂".
+assert codepoint of emoji is equal to 128578.
+print emoji.

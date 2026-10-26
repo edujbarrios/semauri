@@ -262,6 +262,24 @@ empty/multi-character input to `codepoint of`, and lists over 10,000
 characters report `S409` at evaluation. No extra capabilities or dependencies
 are needed. Multi-codepoint grapheme clusters may produce multiple list entries.
 
+### Direct Unicode character indexing
+
+`character at INDEX in TEXT` extracts a single Unicode scalar from a string.
+The index is zero based, and indexing counts Unicode scalars rather than UTF-8
+bytes. The result is a new `string`.
+
+```text
+let text be "Aé🙂".
+assert (character at 0 in text) is equal to "A".
+assert (character at 1 in text) is equal to "é".
+assert (character at 2 in text) is equal to "🙂".
+```
+
+The compiler requires a `number` and a `string` (`S410`).
+Fractional, negative or out-of-range indices produce a located `S411`
+diagnostic during evaluation. No implicit rounding is allowed, and no
+new effects are required. Valid literal lookups are constant-folded.
+
 ### Unicode string slicing with take and drop
 
 The existing list operations `take COUNT from COLLECTION` and

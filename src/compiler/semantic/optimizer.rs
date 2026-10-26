@@ -710,6 +710,9 @@ fn eval_constant_binary(
                 text.matches(needle).count() as i64,
             )))
         }
+        (BinaryOperator::CharacterAt, ValueData::Number(index), ValueData::String(text)) => {
+            text_character_at(index, text).map(ValueData::String)
+        }
         (BinaryOperator::TextPosition, ValueData::String(needle), ValueData::String(text)) => {
             Some(ValueData::Number(NumberValue::Int(
                 text.find(needle).map(|offset| text[..offset].chars().count() as i64).unwrap_or(-1),
