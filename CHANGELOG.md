@@ -1,4 +1,4 @@
-## Unreleased
+## 0.38.0 — 2026-10-26
 
 ### RFC 6901 JSON pointer navigation
 - Add `json at pointer POINTER in DOCUMENT` to select nested objects, arrays, and scalar values as serialized JSON text.
