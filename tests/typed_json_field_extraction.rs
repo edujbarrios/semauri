@@ -23,7 +23,7 @@ fn extracts_all_six_types_with_precise_immutability() {
 #[test]
 fn composes_with_existing_json_serialization_and_expression_forms() {
     let doc = "{\"score\":17,\"enabled\":false}";
-    let program = format!("let document be {}.\nlet key be \"score\".\nassert (json number at key in document) is equal to 17.\nassert not (json boolean at \"enabled\" in document).", JSON.stringify(doc));
+    let program = format!("let document be {}.\nlet key be \"score\".\nassert (json number at key in document) is equal to 17.\nassert not (json boolean at \"enabled\" in document).", serde_json::to_string(doc).unwrap());
     let result = run(&program);
     assert_eq!(result.status, 0, "{}", result.stderr);
 }
