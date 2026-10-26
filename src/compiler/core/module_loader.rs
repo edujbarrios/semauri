@@ -36,14 +36,31 @@ fn import_line(line: &str) -> Option<&str> {
     }
 }
 
+// The nearest real .semauri-root file defines the project boundary.
+// Without one, a standalone script is confined to its own directory.
+fn module_project_root(entry: &Path) -> PathBuf {
+    let original = entry.parent().expect("canonical entry has a parent");
+    let mut directory = original;
+    loop {
+        if let Ok(metadata) = fs::symlink_metadata(directory.join(".semauri-root")) {
+            if metadata.file_type().is_file() {
+                return directory.to_path_buf();
+            }
+        }
+        match directory.parent() {
+            Some(parent) => directory = parent,
+            None => return original.to_path_buf(),
+        }
+    }
+}
+
 fn load_module_source(entry: &Path) -> Result<LoadedSource> {
     let entry = fs::canonicalize(entry).map_err(|error|
         usage_error(format!("Cannot open {}: {error}", entry.display())))?;
     if entry.extension().is_none_or(|ext| ext != "suri") {
         return Err(module_error(&entry, 1, "Source files must end in .suri"));
     }
-    let root = entry.parent().ok_or_else(||
-        module_error(&entry, 1, "Cannot determine source directory"))?.to_path_buf();
+    let root = module_project_root(&entry);
     let mut loader = ModuleLoader {
         root,
         visited: HashSet::new(),
