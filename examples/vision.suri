@@ -1,5 +1,8 @@
 let model_identifier be string config "vision_model".
 let image_path be string config "sample_image".
+let request_budget be number config "request_budget".
+cap ai requests to request_budget.
+memoize ai response cache.
 let model be activate vision model model_identifier.
 let description be inspect image image_path using model with "Describe only visible facts.".
 print description.

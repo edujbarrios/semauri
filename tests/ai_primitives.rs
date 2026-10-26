@@ -11,13 +11,16 @@ fn language_model_and_bounded_agent_form_a_typed_plan() {
     let compiler = Compiler::new();
     let plan = compiler.runtime_plan(AGENT).unwrap().to_json();
     let operations = plan["operations"].as_array().unwrap();
-    assert_eq!(operations.len(), 6);
+    assert_eq!(operations.len(), 11);
     assert_eq!(operations[0]["name"], "read_string");
     assert_eq!(operations[1]["name"], "read_number");
-    assert_eq!(operations[2]["name"], "language_model");
-    assert_eq!(operations[3]["name"], "bounded_agent");
-    assert_eq!(operations[4]["name"], "run_agent");
-    assert_eq!(operations[4]["result"]["type"]["domain"], "ai");
+    assert_eq!(operations[4]["name"], "request_budget");
+    assert_eq!(operations[5]["name"], "retry_policy");
+    assert_eq!(operations[6]["name"], "response_cache");
+    assert_eq!(operations[7]["name"], "language_model");
+    assert_eq!(operations[8]["name"], "bounded_agent");
+    assert_eq!(operations[9]["name"], "run_agent");
+    assert_eq!(operations[9]["result"]["type"]["domain"], "ai");
     assert!(compiler
         .effect_analysis(AGENT)
         .unwrap()
@@ -58,7 +61,15 @@ end."#;
 fn generic_embedding_and_tool_primitives_are_registered() {
     let compiler = Compiler::new();
     let metadata = compiler.domains().to_json().to_string();
-    for operation in ["embed_text", "typed_tool", "inspect_image", "generate_text"] {
+    for operation in [
+        "embed_text",
+        "typed_tool",
+        "inspect_image",
+        "generate_text",
+        "request_budget",
+        "retry_policy",
+        "response_cache",
+    ] {
         assert!(metadata.contains(operation), "{operation}");
     }
 }

@@ -179,6 +179,10 @@ Semauri provides typed, provider-neutral primitives for language models, vision 
 
 ```text
 let model_identifier be string config "language_model".
+let request_budget be number config "request_budget".
+cap ai requests to request_budget.
+reattempt ai requests 2 attempts.
+memoize ai response cache.
 let model be connect language model model_identifier.
 let assistant be compose agent using model system "Answer briefly." max 4 turns.
 let answer be ask assistant with "Summarize the supplied context.".
@@ -196,6 +200,9 @@ Available primitives:
 
 - `connect language model IDENTIFIER`
 - `activate vision model IDENTIFIER`
+- `cap ai requests to NUMBER`
+- `reattempt ai requests NUMBER attempts`
+- `memoize ai response cache`
 - `prompt MODEL with TEXT`
 - `inspect image PATH using MODEL with TEXT`
 - `embed TEXT using MODEL`
@@ -204,6 +211,21 @@ Available primitives:
 - `ask AGENT with TEXT`
 
 Language-model and vision-model handles are distinct nominal types. Configuration reads, network, model loading, inference, image reads, console output, and tool execution remain explicit effects. Compilation never contacts a provider or reads credentials.
+
+Request limits reject additional uncached inference once exhausted. The response cache is in-memory and scoped to one program run. Retry policy is stored by the runtime for provider adapters; the deterministic local adapter does not manufacture transient failures.
+
+## Capability roadmap
+
+Semauri is useful today for deterministic programs and inspectable local AI workflows. The larger runtime is intentionally being built in layers. Important capabilities not yet claimed as complete are:
+
+- hosted-provider adapters with streaming, timeouts, rate limits, retry backoff, and fallback chains;
+- structured records/maps, JSON decoding, typed extraction, classification, and schema validation;
+- multi-turn conversation values, tool dispatch with validated arguments, execution traces, and cost accounting;
+- HTTP, general file I/O, command-line input, persistent key-value storage, vector search, and text chunking;
+- recoverable errors, modules/imports, packages, macros, pattern matching, and richer numeric types;
+- formatter/editor services, debugger integration, a REPL, standalone builds, and WebAssembly tooling.
+
+New runtime features should preserve the existing rules: typed inputs, immutable values, explicit capabilities, deterministic local tests, inspectable plans, and no secret values in diagnostics.
 
 ## Declarative programs
 
