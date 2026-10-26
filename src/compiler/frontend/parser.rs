@@ -926,6 +926,41 @@ impl<'a> Parser<'a> {
                 })
             }
             // Split is also a registered ML action; the following 'of'\n            // distinguishes this pure expression without changing ML syntax.
+            // Inspect JSON object keys without materializing untyped records.
+            TokenKind::Word
+                if token.lexeme.eq_ignore_ascii_case("keys")
+                    && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of)
+                    && self.tokens.get(self.current + 2)
+                        .is_some_and(|next| next.lexeme.eq_ignore_ascii_case("json")) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Of, "Expected 'of' after keys", "S242")?;
+                self.advance(); // contextual 'json'
+                let operand = self.primary()?;
+                Ok(Expr::Unary {
+                    operator: UnaryOperator::JsonKeys,
+                    span: span_between_spans(start.span, operand.span()),
+                    operand: Box::new(operand),
+                })
+            }
+            TokenKind::Word
+                if token.lexeme.eq_ignore_ascii_case("has")
+                    && self.tokens.get(self.current + 1)
+                        .is_some_and(|next| next.lexeme.eq_ignore_ascii_case("json"))
+                    && self.tokens.get(self.current + 2)
+                        .is_some_and(|next| next.lexeme.eq_ignore_ascii_case("key")) => {
+                let start = self.advance().clone();
+                self.advance(); // json
+                self.advance(); // key
+                let key = self.primary()?;
+                self.consume(TokenKind::In, "Expected 'in' before JSON document", "S242")?;
+                let document = self.primary()?;
+                Ok(Expr::Binary {
+                    operator: BinaryOperator::JsonHasKey,
+                    left: Box::new(key),
+                    right: Box::new(document),
+                    span: span_between_spans(start.span, document.span()),
+                })
+            }
             // Type-directed JSON decoding is a complete contextual phrase.
             // No new reserved keywords are required.
             TokenKind::Word

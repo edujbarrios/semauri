@@ -1254,6 +1254,28 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::JsonKeys,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile { data: ValueData::String(source), .. } => {
+                    let keys = json_object_keys(&source).ok_or_else(||
+                        SemauriError::semantic(
+                            "S399", "Expected a JSON object within the allowed size limits",
+                            Some(expression.span()), None,
+                        ))?;
+                    Ok(BoundValue::Compile {
+                        ty: Type::List(Box::new(Type::String)),
+                        data: ValueData::List(keys.into_iter().map(ValueData::String).collect()),
+                    })
+                }
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S398", format!("JSON object inspection needs a string, received {ty}"),
+                    Some(expression.span()), None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: operator @ (UnaryOperator::DecodeJsonString | UnaryOperator::DecodeJsonNumber
                     | UnaryOperator::DecodeJsonBoolean | UnaryOperator::DecodeJsonStrings
                     | UnaryOperator::DecodeJsonNumbers | UnaryOperator::DecodeJsonBooleans),
@@ -1940,6 +1962,14 @@ impl<'a> Lowerer<'a> {
                     _ => unreachable!("join operand type was checked"),
                 }).collect();
                 ValueData::String(parts.join(&separator))
+            }
+            (BinaryOperator::JsonHasKey, ValueData::String(key), ValueData::String(source)) => {
+                let found = json_object_has_key(&source, &key).ok_or_else(||
+                    SemauriError::semantic(
+                        "S399", "Expected a JSON object within the allowed size limits",
+                        Some(span), None,
+                    ))?;
+                ValueData::Boolean(found)
             }
             (BinaryOperator::StartsWith, ValueData::String(text), ValueData::String(prefix)) => {
                 ValueData::Boolean(text.starts_with(&prefix))

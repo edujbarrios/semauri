@@ -577,6 +577,16 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::String
                     }
+                    UnaryOperator::JsonKeys => {
+                        if operand.ty() != Type::String {
+                            return Err(SemauriError::semantic(
+                                "S398",
+                                format!("'keys of json' needs a string document, received {}", operand.ty()),
+                                Some(*span), None,
+                            ));
+                        }
+                        Type::List(Box::new(Type::String))
+                    }
                     UnaryOperator::DecodeJsonString | UnaryOperator::DecodeJsonNumber
                     | UnaryOperator::DecodeJsonBoolean | UnaryOperator::DecodeJsonStrings
                     | UnaryOperator::DecodeJsonNumbers | UnaryOperator::DecodeJsonBooleans => {
@@ -1056,6 +1066,17 @@ fn binary_type(
                 Err(SemauriError::semantic(
                     "S392",
                     format!("'join of ... with ...' needs list<string> and string, received {left} and {right}"),
+                    Some(span), None,
+                ))
+            }
+        }
+        BinaryOperator::JsonHasKey => {
+            if left == &Type::String && right == &Type::String {
+                Ok(Type::Boolean)
+            } else {
+                Err(SemauriError::semantic(
+                    "S398",
+                    format!("'has json key ... in ...' needs string key and document, received {left} and {right}"),
                     Some(span), None,
                 ))
             }

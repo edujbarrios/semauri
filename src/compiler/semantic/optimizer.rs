@@ -326,6 +326,20 @@ fn fold_expr(
                         };
                     }
                 }
+                (UnaryOperator::JsonKeys, Some(ValueData::String(source))) => {
+                    if let Some(keys) = json_object_keys(&source) {
+                        *changes += 1;
+                        return HirExpr::List {
+                            ty: Type::List(Box::new(Type::String)),
+                            items: keys.into_iter().map(|key| HirExpr::Literal {
+                                ty: Type::String,
+                                value: LiteralValue::String(key),
+                                span: *span,
+                            }).collect(),
+                            span: *span,
+                        };
+                    }
+                }
                 (operator @ (UnaryOperator::DecodeJsonString | UnaryOperator::DecodeJsonNumber
                     | UnaryOperator::DecodeJsonBoolean | UnaryOperator::DecodeJsonStrings
                     | UnaryOperator::DecodeJsonNumbers | UnaryOperator::DecodeJsonBooleans),
@@ -658,6 +672,9 @@ fn eval_constant_binary(
         }
         // Split returns a list; leave it to normal evaluation to preserve the
         // existing optimizer's scalar-literal conversion invariant.
+        (BinaryOperator::JsonHasKey, ValueData::String(key), ValueData::String(source)) => {
+            json_object_has_key(source, key).map(ValueData::Boolean)
+        }
         (BinaryOperator::StartsWith, ValueData::String(text), ValueData::String(prefix)) => {
             Some(ValueData::Boolean(text.starts_with(prefix)))
         }
