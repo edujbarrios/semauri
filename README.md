@@ -255,6 +255,28 @@ Out-of-range counts clamp to the string length. Existing typed-list
 behavior is unchanged. These pure operators count Unicode scalar values,
 not bytes or extended grapheme clusters.
 
+### Nested JSON pointer extraction
+
+The pure expression `json at pointer POINTER in DOCUMENT` selects a
+nested JSON value using an RFC 6901 pointer and returns a `string`
+containing the **serialized JSON value**. Pair it with existing
+`decode json as TYPE from` for a statically checked scalar or list.
+
+```text
+let document be "{\\"users\\":[{\\"name\\":\\"Ada\\"}]}".
+let selected be json at pointer "/users/0/name" in document.
+let name_value be decode json as string from selected.
+assert name_value is equal to "Ada".
+```
+
+Paths start with `/`; an empty pointer selects the whole document.
+Segments use `~1` to escape `/` and `~0` to escape `~`.
+Array indexes are zero-based with no leading zeroes; missing or invalid
+paths produce `S407`. Both operands must be strings (`S406`).
+The JSON input is capped at 1 MiB and path depth at 64 segments.
+This expression does not grant network or filesystem permissions, and
+does not change the existing exact top-level `json TYPE at KEY` syntax.
+
 ### Unicode text searching
 
 Use `occurrences of NEEDLE in TEXT` to count **non-overlapping** matches,

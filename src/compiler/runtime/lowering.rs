@@ -1990,6 +1990,16 @@ impl<'a> Lowerer<'a> {
                     .unwrap_or(-1);
                 ValueData::Number(NumberValue::Int(position))
             }
+            (BinaryOperator::JsonPointer, ValueData::String(pointer), ValueData::String(source)) => {
+                let selected = extract_json_pointer_text(&source, &pointer).ok_or_else(||
+                    SemauriError::semantic(
+                        "S407",
+                        "Invalid or missing JSON pointer, invalid JSON document, or size limit exceeded",
+                        Some(span),
+                        Some("Use an RFC 6901 pointer such as '/users/0/name', with '~1' for '/' and '~0' for '~'.".into()),
+                    ))?;
+                ValueData::String(selected)
+            }
             (BinaryOperator::JsonHasKey, ValueData::String(key), ValueData::String(source)) => {
                 let found = json_object_has_key(&source, &key).ok_or_else(||
                     SemauriError::semantic(
