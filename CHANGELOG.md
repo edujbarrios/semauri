@@ -1,4 +1,4 @@
-## Unreleased
+## 0.36.0 — 2026-10-26
 
 ### JSON object introspection
 - Add pure `keys of json DOCUMENT` and `has json key KEY in DOCUMENT` expressions with sorted field names and exact membership semantics.
