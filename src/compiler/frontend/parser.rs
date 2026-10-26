@@ -905,6 +905,24 @@ impl<'a> Parser<'a> {
                     operand: Box::new(operand),
                 })
             }
+            // Contextual text operators do not reserve identifiers such as 'words'.
+            TokenKind::Word
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "trim" | "words" | "lines")
+                    && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Of, "Expected 'of' after a text operation", "S242")?;
+                let operand = self.primary()?;
+                Ok(Expr::Unary {
+                    operator: match start.lexeme.to_ascii_lowercase().as_str() {
+                        "trim" => UnaryOperator::Trim,
+                        "words" => UnaryOperator::Words,
+                        "lines" => UnaryOperator::Lines,
+                        _ => unreachable!(),
+                    },
+                    span: span_between_spans(start.span, operand.span()),
+                    operand: Box::new(operand),
+                })
+            }
             TokenKind::Length | TokenKind::Reverse | TokenKind::Sum | TokenKind::Average
             | TokenKind::Minimum | TokenKind::Maximum | TokenKind::Median | TokenKind::Sorted | TokenKind::Distinct | TokenKind::First | TokenKind::Last | TokenKind::Any | TokenKind::All
             | TokenKind::Uppercase | TokenKind::Lowercase => {

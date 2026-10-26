@@ -1,3 +1,9 @@
+## Unreleased
+
+### Natural-language text processing
+- Add contextual `trim of`, `words of`, and `lines of` with Unicode-aware semantics, typed results, and constant folding.
+- Preserve existing variable names and add regression tests, examples, formatter coverage, and VS Code highlighting.
+
 ## 0.33.0 — 2026-10-26
 
 ### Executable configuration and local AI runtime

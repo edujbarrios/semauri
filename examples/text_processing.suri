@@ -1,0 +1,9 @@
+# Pure Unicode-aware text cleanup and tokenization.
+let name be trim of "  Semauri  ".
+let tokens be words of "programming with natural language".
+let rows be lines of "first\\nsecond\\n".
+assert name is equal to "Semauri".
+assert length of tokens is equal to 4.
+assert (tokens at 2) is equal to "natural".
+assert length of rows is equal to 2.
+print name.
