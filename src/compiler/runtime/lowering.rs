@@ -1609,6 +1609,36 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::Absolute,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(number),
+                } => {
+                    let value = match number {
+                        NumberValue::Int(n) => NumberValue::Int(n.checked_abs().ok_or_else(|| {
+                            SemauriError::semantic(
+                                "S388", "Absolute value of i64 minimum overflows the signed 64-bit range",
+                                Some(expression.span()), None)
+                        })?),
+                        NumberValue::Float(n) if n.is_finite() => NumberValue::Float(n.abs()),
+                        NumberValue::Float(_) => return Err(SemauriError::semantic(
+                            "S388", "Absolute value requires a finite number",
+                            Some(expression.span()), None)),
+                    };
+                    Ok(BoundValue::Compile {
+                        ty: Type::Number,
+                        data: ValueData::Number(value),
+                    })
+                }
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S386", format!("'absolute of' requires number, received {ty}"),
+                    Some(expression.span()), None)),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Negate,
                 operand,
                 ..

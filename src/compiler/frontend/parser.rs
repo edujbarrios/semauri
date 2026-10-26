@@ -872,6 +872,17 @@ impl<'a> Parser<'a> {
                     body: Box::new(body),
                 })
             }
+            TokenKind::Word if token.lexeme.eq_ignore_ascii_case("absolute")
+                && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Of, "Expected 'of' after absolute", "S242")?;
+                let operand = self.primary()?;
+                Ok(Expr::Unary {
+                    operator: UnaryOperator::Absolute,
+                    span: span_between_spans(start.span, operand.span()),
+                    operand: Box::new(operand),
+                })
+            }
             TokenKind::Word if token.lexeme.eq_ignore_ascii_case("flatten")
                 && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
                 let start = self.advance().clone();

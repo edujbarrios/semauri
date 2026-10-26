@@ -295,6 +295,22 @@ fn fold_expr(
                         span: *span,
                     };
                 }
+                (UnaryOperator::Absolute, Some(ValueData::Number(value))) => {
+                    let absolute = match value {
+                        NumberValue::Int(integer) => integer.checked_abs().map(NumberValue::Int),
+                        NumberValue::Float(number) if number.is_finite() => Some(NumberValue::Float(number.abs())),
+                        _ => None,
+                    };
+                    // Keep invalid values in HIR so evaluation emits S388.
+                    if let Some(absolute) = absolute {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(absolute),
+                            span: *span,
+                        };
+                    }
+                }
                 (UnaryOperator::Negate, Some(ValueData::Number(value))) => {
                     let negated = match value {
                         NumberValue::Int(integer) => integer.checked_neg().map(NumberValue::Int),

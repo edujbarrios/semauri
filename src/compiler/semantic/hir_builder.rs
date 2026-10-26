@@ -610,6 +610,15 @@ impl<'a> HirBuilder<'a> {
                             )),
                         }
                     }
+                    UnaryOperator::Absolute => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S386",
+                                format!("'absolute of' requires number, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::Number
+                    }
                     UnaryOperator::Distinct => {
                         match operand.ty() {
                             Type::List(_) => operand.ty(),
