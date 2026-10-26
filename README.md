@@ -236,6 +236,25 @@ literals, and collections over the 10,000-item limit produce the located
 `S401` diagnostic. Field names are exact and case sensitive. The operation
 is deterministic and pure; it requires no new permissions.
 
+### Unicode string slicing with take and drop
+
+The existing list operations `take COUNT from COLLECTION` and
+`drop COUNT from COLLECTION` now accept strings. They return a new
+string containing the first `COUNT` Unicode scalar values, or the
+characters after the first `COUNT`, respectively.
+
+```text
+let name be "café".
+assert take 3 from name is equal to "caf".
+assert drop 3 from name is equal to "é".
+assert take 100 from name is equal to name.
+```
+
+Counts must be nonnegative integers; invalid values produce `S364`.
+Out-of-range counts clamp to the string length. Existing typed-list
+behavior is unchanged. These pure operators count Unicode scalar values,
+not bytes or extended grapheme clusters.
+
 ### Unicode text searching
 
 Use `occurrences of NEEDLE in TEXT` to count **non-overlapping** matches,
