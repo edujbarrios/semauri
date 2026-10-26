@@ -2031,6 +2031,21 @@ impl<'a> Lowerer<'a> {
                 };
                 ValueData::List(selected)
             }
+            (BinaryOperator::Take | BinaryOperator::Drop, ValueData::Number(count), ValueData::String(text)) => {
+                let count = match count {
+                    NumberValue::Int(value) if value >= 0 => usize::try_from(value).ok(),
+                    _ => None,
+                }.ok_or_else(|| SemauriError::semantic(
+                    "S364", "Text selection count must be a non-negative integer",
+                    Some(left.span()), None,
+                ))?;
+                let selected: String = if *operator == BinaryOperator::Take {
+                    text.chars().take(count).collect()
+                } else {
+                    text.chars().skip(count).collect()
+                };
+                ValueData::String(selected)
+            }
             (BinaryOperator::AtIndex, ValueData::List(items), ValueData::Number(index)) => {
                 let index = match index {
                     NumberValue::Int(value) if value >= 0 => usize::try_from(value).ok(),
