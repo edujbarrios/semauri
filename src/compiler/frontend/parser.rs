@@ -948,6 +948,26 @@ impl<'a> Parser<'a> {
                     span,
                 })
             }
+            // RFC 6901 JSON navigation composes with strict typed decoding.
+            TokenKind::Word
+                if token.lexeme.eq_ignore_ascii_case("json")
+                    && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::At)
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.lexeme.eq_ignore_ascii_case("pointer")) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::At, "Expected 'at' after json", "S242")?;
+                self.advance(); // pointer
+                let pointer = self.primary()?;
+                self.consume(TokenKind::In, "Expected 'in' before JSON document", "S242")?;
+                let document = self.primary()?;
+                let span = span_between_spans(start.span, document.span());
+                Ok(Expr::Binary {
+                    left: Box::new(pointer),
+                    operator: BinaryOperator::JsonPointer,
+                    right: Box::new(document),
+                    span,
+                })
+            }
             // Typed field projection requires a complete contextual phrase,
             // so existing 'json of' and identifiers are unaffected.
             TokenKind::Word
