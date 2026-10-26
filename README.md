@@ -357,8 +357,8 @@ assert compact is equal to "a".
 
 Both operands must be strings (`S412`). Empty needles produce a located
 `S413` error. Valid literal expressions can be constant-folded, the
-operation has no external effects, and `remove` remains a legal identifier
-outside the full expression phrase.
+operation has no external effects, and the existing `remove` domain action
+remains reserved for its established operation syntax.
 
 ### Natural-language string predicates
 
