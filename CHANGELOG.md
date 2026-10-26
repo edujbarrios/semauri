@@ -1,4 +1,4 @@
-## Unreleased
+## 0.41.0 — 2026-10-26
 
 ### Unicode substring positions and rightmost search
 - Add contextual `positions of NEEDLE in TEXT` returning a statically typed list of non-overlapping Unicode scalar match indices, bounded to 10,000 matches.
