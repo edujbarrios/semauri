@@ -1093,6 +1093,17 @@ fn binary_type(
                 ))
             }
         }
+        BinaryOperator::JsonPointer => {
+            if left == &Type::String && right == &Type::String {
+                Ok(Type::String)
+            } else {
+                Err(SemauriError::semantic(
+                    "S406",
+                    format!("'json at pointer ... in ...' needs a string pointer and a JSON string document, received {left} and {right}"),
+                    Some(span), None,
+                ))
+            }
+        }
         BinaryOperator::JsonHasKey => {
             if left == &Type::String && right == &Type::String {
                 Ok(Type::Boolean)
