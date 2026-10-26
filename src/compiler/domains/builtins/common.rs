@@ -10,6 +10,10 @@ fn ml_type(name: &str, base: Type) -> Type {
     nominal("ml", name, base, false)
 }
 
+fn ai_type(name: &str, base: Type) -> Type {
+    nominal("ai", name, base, false)
+}
+
 fn slot(name: &str, ty: Type) -> PatternSegment {
     PatternSegment::Slot {
         name: name.to_string(),

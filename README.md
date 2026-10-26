@@ -163,6 +163,38 @@ semauri test path/to/tests --allow-console
 
 The test runner recursively discovers `.suri` files, does not follow symbolic links, requires an executable assertion, and rejects non-console effects.
 
+## LLM and VLM primitives
+
+Semauri provides typed, provider-neutral primitives for language models, vision models, embeddings, tools, and bounded agents. They compile into an inspectable runtime plan; a runtime adapter is responsible for connecting the declared model identifier to a hosted or local provider.
+
+```text
+within ai:
+  let model be connect language model "local/default".
+  let assistant be compose agent using model system "Answer briefly." max 4 turns.
+  let answer be ask assistant with "Summarize the supplied context.".
+end.
+```
+
+```text
+within ai:
+  let model be load vision model "local/vision".
+  let description be inspect image "sample.png" using model with "Describe visible facts.".
+end.
+```
+
+Available primitives:
+
+- `connect language model IDENTIFIER`
+- `load vision model IDENTIFIER`
+- `prompt MODEL with TEXT`
+- `inspect image PATH using MODEL with TEXT`
+- `embed TEXT using MODEL`
+- `declare tool NAME schema JSON_SCHEMA`
+- `compose agent using MODEL system TEXT max NUMBER turns`
+- `ask AGENT with TEXT`
+
+Language-model and vision-model handles are distinct nominal types. Network, model loading, inference, image reads, and tool execution remain explicit effects. Model calls are plans only in this release; compilation never contacts a provider or reads credentials.
+
 ## Declarative programs
 
 Semauri can build checked web, structured-data, and filesystem artifacts. Use a domain scope when operations need one:

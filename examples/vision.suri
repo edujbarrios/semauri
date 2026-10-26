@@ -1,0 +1,4 @@
+within ai:
+  let model be load vision model "local/vision".
+  let description be inspect image "sample.png" using model with "Describe only visible facts.".
+end.

@@ -21,6 +21,7 @@ include!("core/types.rs");
 include!("domains/model.rs");
 include!("domains/registry.rs");
 include!("domains/builtins/common.rs");
+include!("domains/builtins/ai.rs");
 include!("domains/builtins/web.rs");
 include!("domains/builtins/structured_data.rs");
 include!("domains/builtins/filesystem.rs");
