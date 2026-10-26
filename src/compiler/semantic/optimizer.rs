@@ -672,6 +672,15 @@ fn eval_constant_binary(
         }
         // Split returns a list; leave it to normal evaluation to preserve the
         // existing optimizer's scalar-literal conversion invariant.
+        (operator @ (BinaryOperator::JsonFieldString | BinaryOperator::JsonFieldNumber
+            | BinaryOperator::JsonFieldBoolean | BinaryOperator::JsonFieldStrings
+            | BinaryOperator::JsonFieldNumbers | BinaryOperator::JsonFieldBooleans),
+            ValueData::String(key), ValueData::String(source)) => {
+            match extract_json_field(source, key, operator)? {
+                ValueData::List(_) => None, // Lists keep their typed HIR for runtime evaluation.
+                scalar => Some(scalar),
+            }
+        }
         (BinaryOperator::JsonHasKey, ValueData::String(key), ValueData::String(source)) => {
             json_object_has_key(source, key).map(ValueData::Boolean)
         }

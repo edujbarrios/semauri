@@ -52,6 +52,17 @@ impl Compiler {
                     || (token.lexeme.eq_ignore_ascii_case("with")
                         && index > 0
                         && matches!(tokens[index - 1].lexeme.to_ascii_lowercase().as_str(), "starts" | "ends")));
+            let is_json_field = matches!(token.kind, TokenKind::Word | TokenKind::DomainAction)
+                && ((token.lexeme.eq_ignore_ascii_case("json")
+                    && tokens.get(index + 1).is_some_and(|next| matches!(
+                        next.lexeme.to_ascii_lowercase().as_str(),
+                        "string" | "number" | "boolean" | "strings" | "numbers" | "booleans"
+                    ))
+                    && tokens.get(index + 2).is_some_and(|next| next.kind == TokenKind::At))
+                    || (matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                        "string" | "number" | "boolean" | "strings" | "numbers" | "booleans")
+                        && index > 0 && tokens[index - 1].lexeme.eq_ignore_ascii_case("json")
+                        && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::At)));
             let is_json_object_operation = token.kind == TokenKind::Word
                 && ((token.lexeme.eq_ignore_ascii_case("keys")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of)
@@ -112,7 +123,7 @@ impl Compiler {
                         | TokenKind::Minus | TokenKind::LParen));
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute && !is_product && !is_text_operation && !is_text_predicate && !is_join_with && !is_parse_conversion && !is_json_decode && !is_json_object_operation
+                && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute && !is_product && !is_text_operation && !is_text_predicate && !is_join_with && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count" | "reduce" | "zip" | "partition")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")

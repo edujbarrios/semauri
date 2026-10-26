@@ -1,3 +1,10 @@
+## Unreleased
+
+### Type-directed JSON field extraction
+- Add `json TYPE at KEY in DOCUMENT` for six checked scalar or homogeneous-list field types, including strings, numbers and booleans.
+- Reject missing keys, JSON null, type mismatches, overflowing integer text and excessive input with located `S400`/`S401` diagnostics.
+- Preserve contextual syntax, constant-fold valid scalar fields, and update examples, editor grammar and tests.
+
 ## 0.36.0 — 2026-10-26
 
 ### JSON object introspection

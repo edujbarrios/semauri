@@ -213,6 +213,29 @@ and keys are returned in deterministic Unicode code-point order. These
 operations inspect object structure; they do not introduce mutable maps or
 untyped dynamic values.
 
+### Typed JSON field extraction
+
+Use `json TYPE at KEY in DOCUMENT` to read a field from a JSON object without
+introducing dynamic maps or implicit coercion. The six supported field types
+are `string`, `number`, `boolean`, `strings`, `numbers`, and `booleans`.
+Plural forms produce homogeneous lists with stable element types.
+
+```text
+let document be "{\\"name\\":\\"Ada\\",\\"score\\":42,\\"tags\\":[\\"compiler\\",\\"typed\\"]}".
+let name_value be json string at "name" in document.
+let score be json number at "score" in document.
+let tags be json strings at "tags" in document.
+assert name_value is equal to "Ada".
+assert score is greater than 40.
+assert (tags at 1) is equal to "typed".
+```
+
+The key and document must both be strings (`S400`). Missing fields, explicit
+JSON `null`, mismatched types, oversized documents, overflowing integer
+literals, and collections over the 10,000-item limit produce the located
+`S401` diagnostic. Field names are exact and case sensitive. The operation
+is deterministic and pure; it requires no new permissions.
+
 ### Natural-language string predicates
 
 Use `TEXT starts with PREFIX` and `TEXT ends with SUFFIX` to validate names,

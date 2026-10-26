@@ -1963,6 +1963,18 @@ impl<'a> Lowerer<'a> {
                 }).collect();
                 ValueData::String(parts.join(&separator))
             }
+            (operator @ (BinaryOperator::JsonFieldString | BinaryOperator::JsonFieldNumber
+                | BinaryOperator::JsonFieldBoolean | BinaryOperator::JsonFieldStrings
+                | BinaryOperator::JsonFieldNumbers | BinaryOperator::JsonFieldBooleans),
+                ValueData::String(key), ValueData::String(source)) => {
+                extract_json_field(&source, &key, operator).ok_or_else(||
+                    SemauriError::semantic(
+                        "S401",
+                        "JSON field is missing, invalid, or does not match its declared type",
+                        Some(span),
+                        Some("Check the object, field name, type, and JSON size limits.".into()),
+                    ))?
+            }
             (BinaryOperator::JsonHasKey, ValueData::String(key), ValueData::String(source)) => {
                 let found = json_object_has_key(&source, &key).ok_or_else(||
                     SemauriError::semantic(
