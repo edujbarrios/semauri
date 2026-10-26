@@ -1,0 +1,5 @@
+# Project configuration: JSON values are typed and environment values are references.
+parameter model = "local/default".
+parameter max_tokens = 1024.
+parameter temperature = 0.2.
+environment model_api_key = "SEMAURI_MODEL_API_KEY".

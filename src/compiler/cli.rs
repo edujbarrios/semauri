@@ -6,6 +6,9 @@ pub struct CliResult {
 }
 
 pub fn run_cli(args: &[String]) -> CliResult {
+    if args.first().map(String::as_str) == Some("config") {
+        return run_config_cli(&args[1..]);
+    }
     if args.first().map(String::as_str) == Some("test") {
         return run_test_cli(&args[1..]);
     }
@@ -466,6 +469,77 @@ pub fn run_cli(args: &[String]) -> CliResult {
     }
 }
 
+fn run_config_cli(args: &[String]) -> CliResult {
+    let mut path = ".config.suri".to_string();
+    let mut path_seen = false;
+    let mut check_environment = false;
+    let mut overrides = Vec::new();
+    let mut index = 0;
+    while index < args.len() {
+        match args[index].as_str() {
+            "--check-env" => {
+                check_environment = true;
+                index += 1;
+            }
+            "--set" => {
+                let Some(override_value) = args.get(index + 1) else {
+                    return config_cli_error("--set requires NAME=JSON_VALUE");
+                };
+                overrides.push(override_value.clone());
+                index += 2;
+            }
+            value if value.starts_with('-') => {
+                return config_cli_error(format!("unknown config option: {value}"));
+            }
+            value if !path_seen => {
+                path = value.to_string();
+                path_seen = true;
+                index += 1;
+            }
+            value => return config_cli_error(format!("unexpected config argument: {value}")),
+        }
+    }
+
+    let mut config = match crate::ProgramConfig::from_file(&path) {
+        Ok(config) => config,
+        Err(error) => return config_cli_error(error.to_string()),
+    };
+    for item in overrides {
+        let Some((name, raw_value)) = item.split_once('=') else {
+            return config_cli_error(format!("invalid override '{item}'; expected NAME=JSON_VALUE"));
+        };
+        let value = match serde_json::from_str(raw_value) {
+            Ok(value) => value,
+            Err(_) => return config_cli_error(format!("override '{name}' is not valid JSON")),
+        };
+        if let Err(error) = config.set_parameter(name, value) {
+            return config_cli_error(error.to_string());
+        }
+    }
+    if check_environment {
+        if let Err(error) = config.resolve() {
+            return config_cli_error(error.to_string());
+        }
+    }
+
+    CliResult {
+        status: 0,
+        stdout: pretty_json(&config.summary_json(|name| std::env::var_os(name).is_some())),
+        stderr: String::new(),
+    }
+}
+
+fn config_cli_error(message: impl AsRef<str>) -> CliResult {
+    CliResult {
+        status: 64,
+        stdout: String::new(),
+        stderr: format!(
+            "S001: {}\nUsage: semauri config [PATH] [--set NAME=JSON_VALUE] [--check-env]\n",
+            message.as_ref()
+        ),
+    }
+}
+
 fn pretty_json(value: &JsonValue) -> String {
     format!("{}\n", serde_json::to_string_pretty(value).unwrap())
 }
@@ -482,7 +556,7 @@ fn usage_error(message: impl Into<String>) -> SemauriError {
 }
 
 pub fn usage() -> String {
-    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE             Explain semantic decisions\n  fmt FILE [--check|--write]  Lowercase source syntax while preserving strings\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] Execute assertion-based .suri test files\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
+    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE             Explain semantic decisions\n  fmt FILE [--check|--write]  Lowercase source syntax while preserving strings\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] Execute assertion-based .suri test files\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
         .to_string()
 }
 
