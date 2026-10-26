@@ -72,7 +72,7 @@
     },
     "collections": {
       "name": "support.function.collection.semauri",
-      "match": "\\b(?:length|reverse|sum|average|minimum|maximum|median|sorted|distinct|first|last|take|drop|uppercase|lowercase|trim|words|lines|character|characters|codepoint|codepoints|json|decode|keys|has|key|field|pointer|occurrences|position|split|join|parse|contains|range|map|filter|count|reduce|zip|partition|flatten|repeat|product|absolute|any|all)\\b"
+      "match": "\\b(?:length|reverse|sum|average|minimum|maximum|median|sorted|distinct|first|last|take|drop|uppercase|lowercase|trim|words|lines|character|characters|codepoint|codepoints|json|decode|keys|has|key|field|pointer|occurrences|position|remove|split|join|parse|contains|range|map|filter|count|reduce|zip|partition|flatten|repeat|product|absolute|any|all)\\b"
     },
     "operators": {
       "name": "keyword.operator.word.semauri",
