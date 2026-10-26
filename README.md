@@ -95,12 +95,12 @@ The following pure, Unicode-aware, statically checked operations are contextual
 phrases. Names such as `words` and `lines` still work as identifiers:
 
 ```text
-let title be trim of "  Información útil  ".
-let tokens be words of "uno   dos\\t三".
+let title be trim of "  Useful information  ".
+let tokens be words of "one   two\\tthree".
 let rows be lines of "a\\r\\nb\\n".
-assert title is equal to "Información útil".
+assert title is equal to "Useful information".
 assert length of tokens is equal to 3.
-assert (tokens at 2) is equal to "三".
+assert (tokens at 2) is equal to "three".
 assert length of rows is equal to 2.
 ```
 
@@ -110,6 +110,24 @@ assert length of rows is equal to 2.
 
 Non-string operands are rejected (`S351`), literals can be constant-folded, and
 none of these transformations grants or requires runtime capabilities.
+
+### Typed JSON serialization
+
+The pure `json of VALUE` operation produces valid JSON text from a number,
+boolean, string, color, or a nested homogeneous list of supported values.
+It is safe for generating JSON payloads and correctly escapes strings; it does
+not decode JSON, serialize runtime handles, or perform network requests.
+
+```text
+let labels be a list of "alpha", "beta".
+let payload be json of labels.
+assert payload is equal to "[\"alpha\",\"beta\"]".
+let enabled be json of true.
+assert enabled is equal to "true".
+```
+
+`json` remains a valid variable name unless immediately followed by `of`.
+Non-serializable types produce the static diagnostic `S390`.
 
 ### Control flow and scope
 
