@@ -63,7 +63,7 @@
     "declarations": {
       "patterns": [
         { "name": "storage.type.function.semauri", "match": "\\b(?:define\\s+function|taking|invoke)\\b" },
-        { "name": "keyword.declaration.semauri", "match": "\\b(?:let|be|create|make|set|add|called|title|declare|as)\\b" }
+        { "name": "keyword.declaration.semauri", "match": "\\b(?:let|be|create|make|set|add|called|title|declare|import|as)\\b" }
       ]
     },
     "ai": {

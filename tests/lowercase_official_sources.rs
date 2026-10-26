@@ -5,7 +5,7 @@
 //! The bilingual lessons keep their original natural-language text and
 //! user-visible values; only Semauri source syntax is normalized.
 
-use semauri::Compiler;
+use semauri::{run_cli, Compiler};
 use std::fs;
 use std::path::Path;
 
@@ -29,8 +29,13 @@ fn visit(path: &Path, compiler: &Compiler, visited: &mut usize) {
         "{}: example is not in canonical lowercase style; run 'semauri fmt {} --write'",
         path.display(), path.display(),
     );
-    compiler.parse(&source)
-        .unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+    if source.lines().any(|line| line.trim_start().starts_with("import ")) {
+        let checked = run_cli(&["check".to_string(), path.to_string_lossy().to_string()]);
+        assert_eq!(checked.status, 0, "{}: {}", path.display(), checked.stderr);
+    } else {
+        compiler.parse(&source)
+            .unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+    }
     *visited += 1;
 }
 
