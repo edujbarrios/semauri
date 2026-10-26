@@ -75,7 +75,13 @@ a success flag, file count, effect list, test results, and diagnosed issues.
 
 The verifier skips symlinks and build/cache directories, refuses a project
 larger than 256 source files or 4 MiB of total source, and does not modify
-any files. Fix formatting with `semauri fmt FILE --write`, then rerun
+any files. Use `semauri fmt PROJECT --check` to list all formatting problems or
+`semauri fmt PROJECT --write` to format every source in one operation.
+Directory formatting validates all sources before writing the first file,
+excludes symlinks and generated/cache directories, and is limited to 256
+files and 4 MiB total source. Single-file formatting remains unchanged.
+
+Rerun
 verification. This is a local project quality gate, not a dependency/package
 manager or a substitute for full integration and deployment tests.
 
