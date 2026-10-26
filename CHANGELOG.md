@@ -1,3 +1,11 @@
+## Unreleased
+
+### Secure local source imports
+- Add `import "relative/file.suri".` for reusable typed multi-file programs, resolving dependencies before standard compilation and effect analysis.
+- Reject import cycles, filesystem escapes including symlinks, imports after executable statements, invalid paths and oversized graphs (64 files, 32 levels, 4 MiB) using `S416`.
+- Deduplicate canonical module paths, preserve compiler type/effect checking across files, and remap CLI diagnostics to original file locations.
+- Support check, build, run, test and inspection commands; keep formatter handling contextual and update examples and regression coverage.
+
 ## 0.41.0 — 2026-10-26
 
 ### Unicode substring positions and rightmost search

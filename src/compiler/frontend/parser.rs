@@ -26,6 +26,18 @@ impl<'a> Parser<'a> {
 
     fn statement(&mut self) -> Result<Stmt> {
         if self.check(TokenKind::Word)
+            && self.peek().lexeme.eq_ignore_ascii_case("import")
+            && self.tokens.get(self.current + 1)
+                .is_some_and(|next| next.kind == TokenKind::String)
+        {
+            return Err(SemauriError::parse(
+                "S416",
+                "File imports must be resolved from a .suri source file",
+                self.peek().span,
+                Some("Use 'semauri check/build/run FILE' or 'semauri test PATH'.".into()),
+            ));
+        }
+        if self.check(TokenKind::Word)
             && self.peek().lexeme.eq_ignore_ascii_case("define")
             && self.tokens.get(self.current + 1)
                 .is_some_and(|next| next.lexeme.eq_ignore_ascii_case("function"))

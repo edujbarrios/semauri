@@ -21,6 +21,7 @@ include!("core/text_conversions.rs");
 include!("core/text_search.rs");
 include!("core/unicode_scalars.rs");
 include!("core/json_decode.rs");
+include!("core/module_loader.rs");
 
 include!("domains/model.rs");
 include!("domains/registry.rs");

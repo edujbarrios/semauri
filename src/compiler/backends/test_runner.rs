@@ -76,7 +76,8 @@ fn run_test_cli(args: &[String]) -> CliResult {
     for file in &files {
         let label = file.display();
         let outcome = (|| -> std::result::Result<(), String> {
-            let source = fs::read_to_string(file).map_err(|error| error.to_string())?;
+            let source = load_module_source(file)
+                .map_err(|error| error.to_string())?.source;
             let compiled = compiler
                 .compile(&source, None)
                 .map_err(|error| error.to_string())?;

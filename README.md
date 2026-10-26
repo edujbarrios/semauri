@@ -34,6 +34,39 @@ cargo test
 cargo run -- check examples/hello.suri
 ```
 
+## Multi-file programs and imports
+
+Semauri projects can share statically typed functions and other definitions
+across local `.suri` files. Write imports at the start of your entry file:
+
+```text
+# lib/math.suri
+define function square taking n as number to (n times n).
+
+# main.suri
+import "lib/math.suri".
+assert invoke square to 7 is equal to 49.
+```
+
+File-based CLI compilation resolves imports recursively with each path
+relative to the **importing file**: `semauri check main.suri`,
+`semauri run main.suri --allow console_write`, `semauri test main.suri`,
+and inspection commands such as `hir`, `effects`, and `plan`.
+`fmt` formats only the original file and preserves import strings.
+
+Imports are compile-time source dependencies, not runtime filesystem reads.
+Every imported declaration and effect is type-checked and permission-checked
+within the final program. Files are imported only once by canonical path.
+Cycles, imports after executable statements, absolute paths, paths outside
+the entry file's project directory (even through symlinks), and files
+without a `.suri` extension are rejected with `S416`. Maximums are
+**64 files**, **32 import levels**, and **4 MiB** of total UTF-8 source.
+Diagnostics report the original file and line when available.
+
+Imports currently share one symbol namespace: duplicate definitions are
+errors. Only CLI commands that take a file path resolve imports; in-memory
+`Compiler::parse` and `Compiler::hir` expect expanded source text.
+
 ## Smallest program
 
 Create `hello.suri`:
