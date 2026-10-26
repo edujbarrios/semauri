@@ -135,6 +135,62 @@ fn extract_json_field(source: &str, key: &str, operator: &BinaryOperator) -> Opt
     }
 }
 
+// Navigate an RFC 6901 JSON Pointer, returning a serialized JSON subtree.
+// Typed callers can use 'decode json as TYPE from' on the resulting text.
+// Keep this pure, deterministic and bounded even for user-provided input.
+fn json_pointer_unescape(segment: &str) -> Option<String> {
+    let mut output = String::with_capacity(segment.len());
+    let mut chars = segment.chars();
+    while let Some(character) = chars.next() {
+        if character != '~' {
+            output.push(character);
+            continue;
+        }
+        output.push(match chars.next()? {
+            '0' => '~',
+            '1' => '/',
+            _ => return None,
+        });
+    }
+    Some(output)
+}
+
+fn extract_json_pointer_text(source: &str, pointer: &str) -> Option<String> {
+    if source.len() > MAX_JSON_TEXT_BYTES || !json_integer_literals_fit_i64(source) {
+        return None;
+    }
+    let document: JsonValue = serde_json::from_str(source).ok()?;
+    let mut value = &document;
+    if !pointer.is_empty() {
+        let path = pointer.strip_prefix('/')?;
+        for (depth, segment) in path.split('/').enumerate() {
+            if depth >= 64 {
+                return None;
+            }
+            let name = json_pointer_unescape(segment)?;
+            value = match value {
+                JsonValue::Object(object) if object.len() <= MAX_JSON_LIST_ITEMS =>
+                    object.get(&name)?,
+                JsonValue::Array(items) if items.len() <= MAX_JSON_LIST_ITEMS => {
+                    if name.is_empty()
+                        || (name.len() > 1 && name.starts_with('0'))
+                        || !name.bytes().all(|c| c.is_ascii_digit()) {
+                        return None;
+                    }
+                    items.get(name.parse::<usize>().ok()?)?
+                }
+                _ => return None,
+            };
+        }
+    }
+    match value {
+        JsonValue::Array(items) if items.len() > MAX_JSON_LIST_ITEMS => return None,
+        JsonValue::Object(object) if object.len() > MAX_JSON_LIST_ITEMS => return None,
+        _ => {}
+    }
+    serde_json::to_string(value).ok()
+}
+
 fn json_object_keys(source: &str) -> Option<Vec<String>> {
     let object = parse_json_object_text(source)?;
     let mut keys = object.keys().cloned().collect::<Vec<_>>();
