@@ -1,0 +1,7 @@
+# Preserve exact integers when taking absolute values.
+define function distance taking difference as number to (absolute of difference).
+let values be a list of minus 9, 0, 4, minus 3.
+let distances be map every value in values to (invoke distance to value).
+assert (distances at 0) is equal to 9.
+assert (distances at 3) is equal to 3.
+print distances.
