@@ -1,4 +1,4 @@
-## Unreleased
+## 0.39.0 — 2026-10-26
 
 ### Pure Unicode character and code point conversions
 - Add contextual `characters of TEXT`, `codepoints of TEXT`, `codepoint of TEXT`, and `character from NUMBER` to inspect and construct Unicode scalar values.
