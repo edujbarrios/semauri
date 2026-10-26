@@ -1,4 +1,4 @@
-## Unreleased
+## 0.35.0 — 2026-10-26
 
 ### Safe typed conversions from text
 - Add contextual `parse number from TEXT` and `parse boolean from TEXT` expressions with verified types and deterministic parsing.
