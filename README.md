@@ -8,7 +8,7 @@ Semauri is a **statically typed programming language** with its own compiler, ex
 
 Implemented in Rust, the compiler includes a lexer, parser, typed intermediate representation, lexical scopes, optimization, source-aware diagnostics and effect-aware execution planning. Semauri programs can perform authorized console and filesystem operations, generate web pages and structured schemas, and describe typed machine-learning workflows.
 
-**Latest release:** [Semauri v0.29.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
+**Latest release:** [Semauri v0.30.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
 
 ## Get started
 
@@ -78,7 +78,7 @@ semauri fmt examples/hello_console.sema --write   # rewrite this file
 | Typed core | Immutable bindings, numbers, strings, booleans, colors, homogeneous lists, comparisons, arithmetic and short-circuit logic |
 | Control flow | `if`, `unless`, `otherwise if` statements; typed lazy `if ... then ... otherwise ...` expressions; static `for every`, lexical scopes, 1–16 parameter pure functions |
 | Collections | Pure typed `zip every`, `partition every` and `flatten of`; map/filter/count/reduce, immutable sorting, repetition/ranges and slicing |
-| Numeric data | Checked `sum of`, typed `average of`, `minimum of`, `maximum of` and `median of`; precision-safe mixed numeric sorting |
+| Numeric data | Checked exact `product of` numeric lists and `absolute of` numbers; typed sum, average, min/max, median and precision-safe mixed numeric sorting |
 | String transformations | Unicode-aware `uppercase of`, `lowercase of` and `reverse of` |
 | Assertions and tests | Pure typed `assert` statements, source-located failures and `semauri test` suites |
 | Web and structured data | Typed declarations compiled to HTML and JSON Schema |
@@ -121,7 +121,7 @@ assert (numbers at 1) is equal to 9.
 assert length of combined is equal to 5.
 ```
 
-List elements have one compatible type. List indexing is zero-based and checked for invalid or out-of-range positions; concatenation creates a new list without mutating its inputs. `reverse of` creates a new reversed list or string, while `sum of`, `average of`, `minimum of`, `maximum of` and `median of` compute typed numeric aggregates. `any of` and `all of` reduce concrete Boolean lists. New pure `sorted of` sorts numeric, string or Boolean lists into a new list; `distinct of` removes duplicates while preserving first-occurrence order and element type. `first of` / `last of` select typed elements; `take N from` / `drop N from` produce typed list slices, including empty lists for zero or oversized counts. For [sequence reversal](docs/24_REVERSE.md), [numeric aggregates](docs/25_NUMERIC_AGGREGATIONS.md) and [numeric extrema](docs/26_NUMERIC_EXTREMA.md), see the new language reference sections. Also explore [median](docs/28_MEDIAN.md) and [Boolean reductions](docs/27_BOOLEAN_REDUCTIONS.md), as well as [sorting](docs/29_SORTED.md) and [deduplication](docs/30_DISTINCT.md), [first/last](docs/31_LIST_BOUNDARIES.md) and [take/drop](docs/32_LIST_WINDOWS.md). For string transformation, see [case expressions](docs/22_STRING_CASE.md): `uppercase of "hello"` returns `"HELLO"` and `lowercase of "HELLO"` returns `"hello"` without changing the case of Semauri syntax. See the [language reference](docs/01_LANGUAGE.md), [indexing](docs/16_LIST_INDEXING.md), and [list concatenation](docs/17_LIST_CONCATENATION.md).
+List elements have one compatible type. List indexing is zero-based and checked for invalid or out-of-range positions; concatenation creates a new list without mutating its inputs. `reverse of` creates a new reversed list or string, while `sum of`, `average of`, `minimum of`, `maximum of`, `median of` and `product of` compute typed numeric aggregates. `absolute of` preserves exact i64 precision and reports overflow. `any of` and `all of` reduce concrete Boolean lists. New pure `sorted of` sorts numeric, string or Boolean lists into a new list; `distinct of` removes duplicates while preserving first-occurrence order and element type. `first of` / `last of` select typed elements; `take N from` / `drop N from` produce typed list slices, including empty lists for zero or oversized counts. For [sequence reversal](docs/24_REVERSE.md), [numeric aggregates](docs/25_NUMERIC_AGGREGATIONS.md) and [numeric extrema](docs/26_NUMERIC_EXTREMA.md), see the new language reference sections. Also explore [median](docs/28_MEDIAN.md) and [Boolean reductions](docs/27_BOOLEAN_REDUCTIONS.md), as well as [sorting](docs/29_SORTED.md) and [deduplication](docs/30_DISTINCT.md), [first/last](docs/31_LIST_BOUNDARIES.md) and [take/drop](docs/32_LIST_WINDOWS.md). For string transformation, see [case expressions](docs/22_STRING_CASE.md): `uppercase of "hello"` returns `"HELLO"` and `lowercase of "HELLO"` returns `"hello"` without changing the case of Semauri syntax. See the [language reference](docs/01_LANGUAGE.md), [indexing](docs/16_LIST_INDEXING.md), and [list concatenation](docs/17_LIST_CONCATENATION.md).
 
 ### First-class assertion tests
 
@@ -250,7 +250,7 @@ cargo run -- fmt examples/hello_console.sema --check
 
 New: [typed zip](docs/43_ZIP_EVERY.md), [stable partition](docs/44_PARTITION_EVERY.md) and [one-level flattening](docs/45_FLATTEN_LISTS.md), alongside [conditional expressions](docs/39_CONDITIONAL_EXPRESSIONS.md).
 
-See [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.29.0 release notes](docs/releases/0.29.0.md).
+See [absolute numeric values](docs/46_ABSOLUTE_NUMBERS.md), [checked numeric products](docs/47_PRODUCT_REDUCTION.md), [development](docs/DEVELOPMENT.md), [contributing](CONTRIBUTING.md), [documentation index](docs/README.md), [changelog](CHANGELOG.md), and the [v0.30.0 release notes](docs/releases/0.30.0.md).
 
 ## License
 

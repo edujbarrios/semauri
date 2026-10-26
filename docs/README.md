@@ -32,6 +32,8 @@ Use this page as the documentation map.
 - [Typed pairwise zip mapping](43_ZIP_EVERY.md)
 - [Stable typed predicate partitioning](44_PARTITION_EVERY.md)
 - [One-level typed list flattening](45_FLATTEN_LISTS.md)
+- [Precision-safe absolute values](46_ABSOLUTE_NUMBERS.md)
+- [Checked typed numeric product](47_PRODUCT_REDUCTION.md)
 - [Type system](02_TYPES.md)
 
 ## Language and domains
@@ -58,7 +60,7 @@ Use this page as the documentation map.
 
 ## Release notes
 
-- [Latest release: Semauri 0.29.0](releases/0.29.0.md)
+- [Latest release: Semauri 0.30.0](releases/0.30.0.md)
 
 ## Historical release notes
 
