@@ -99,6 +99,42 @@ fn parse_json_object_text(source: &str) -> Option<serde_json::Map<String, JsonVa
     Some(object)
 }
 
+fn json_field_type(operator: &BinaryOperator) -> Option<Type> {
+    match operator {
+        BinaryOperator::JsonFieldString => Some(Type::String),
+        BinaryOperator::JsonFieldNumber => Some(Type::Number),
+        BinaryOperator::JsonFieldBoolean => Some(Type::Boolean),
+        BinaryOperator::JsonFieldStrings => Some(Type::List(Box::new(Type::String))),
+        BinaryOperator::JsonFieldNumbers => Some(Type::List(Box::new(Type::Number))),
+        BinaryOperator::JsonFieldBooleans => Some(Type::List(Box::new(Type::Boolean))),
+        _ => None,
+    }
+}
+
+// Field decoding is strict: missing/null keys, mismatched types, and unsupported
+// shapes fail with the same diagnostic as invalid JSON. No implicit coercion.
+fn extract_json_field(source: &str, key: &str, operator: &BinaryOperator) -> Option<ValueData> {
+    let target = json_field_type(operator)?;
+    if !json_integer_literals_fit_i64(source) {
+        return None;
+    }
+    let object = parse_json_object_text(source)?;
+    let value = object.get(key)?;
+    match target {
+        Type::List(inner) => {
+            let elements = value.as_array()?;
+            if elements.len() > MAX_JSON_LIST_ITEMS {
+                return None;
+            }
+            elements.iter()
+                .map(|element| json_scalar_to_data(element, &inner))
+                .collect::<Option<Vec<_>>>()
+                .map(ValueData::List)
+        }
+        scalar => json_scalar_to_data(value, &scalar),
+    }
+}
+
 fn json_object_keys(source: &str) -> Option<Vec<String>> {
     let object = parse_json_object_text(source)?;
     let mut keys = object.keys().cloned().collect::<Vec<_>>();

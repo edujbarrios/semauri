@@ -1070,6 +1070,18 @@ fn binary_type(
                 ))
             }
         }
+        BinaryOperator::JsonFieldString | BinaryOperator::JsonFieldNumber
+        | BinaryOperator::JsonFieldBoolean | BinaryOperator::JsonFieldStrings
+        | BinaryOperator::JsonFieldNumbers | BinaryOperator::JsonFieldBooleans => {
+            if left != &Type::String || right != &Type::String {
+                return Err(SemauriError::semantic(
+                    "S400",
+                    format!("'json TYPE at KEY in DOCUMENT' needs string key and JSON document, received {left} and {right}"),
+                    Some(span), None,
+                ));
+            }
+            Ok(json_field_type(operator).expect("known JSON field type"))
+        }
         BinaryOperator::JsonHasKey => {
             if left == &Type::String && right == &Type::String {
                 Ok(Type::Boolean)

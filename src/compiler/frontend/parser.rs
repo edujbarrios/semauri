@@ -926,6 +926,38 @@ impl<'a> Parser<'a> {
                 })
             }
             // Split is also a registered ML action; the following 'of'\n            // distinguishes this pure expression without changing ML syntax.
+            // Typed field projection requires a complete contextual phrase,
+            // so existing 'json of' and identifiers are unaffected.
+            TokenKind::Word
+                if token.lexeme.eq_ignore_ascii_case("json")
+                    && self.tokens.get(self.current + 1).is_some_and(|next| matches!(
+                        next.lexeme.to_ascii_lowercase().as_str(),
+                        "string" | "number" | "boolean" | "strings" | "numbers" | "booleans"
+                    ))
+                    && self.tokens.get(self.current + 2).is_some_and(|next| next.kind == TokenKind::At) => {
+                let start = self.advance().clone();
+                let target = self.advance().clone();
+                self.consume(TokenKind::At, "Expected 'at' after JSON field type", "S242")?;
+                let key = self.primary()?;
+                self.consume(TokenKind::In, "Expected 'in' before JSON document", "S242")?;
+                let document = self.primary()?;
+                let span = span_between_spans(start.span, document.span());
+                let operator = match target.lexeme.to_ascii_lowercase().as_str() {
+                    "string" => BinaryOperator::JsonFieldString,
+                    "number" => BinaryOperator::JsonFieldNumber,
+                    "boolean" => BinaryOperator::JsonFieldBoolean,
+                    "strings" => BinaryOperator::JsonFieldStrings,
+                    "numbers" => BinaryOperator::JsonFieldNumbers,
+                    "booleans" => BinaryOperator::JsonFieldBooleans,
+                    _ => unreachable!(),
+                };
+                Ok(Expr::Binary {
+                    left: Box::new(key),
+                    right: Box::new(document),
+                    operator,
+                    span,
+                })
+            }
             // Inspect JSON object keys without materializing untyped records.
             TokenKind::Word
                 if token.lexeme.eq_ignore_ascii_case("keys")

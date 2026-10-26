@@ -1,0 +1,15 @@
+# Read structured JSON with checked field types.
+let document be "{\"name\":\"Ada\",\"score\":42,\"enabled\":true,\"tags\":[\"compiler\",\"typed\"],\"counts\":[1,2,3],\"flags\":[true,false],\"nil\":null}".
+let person_name be json string at "name" in document.
+let score be json number at "score" in document.
+let enabled be json boolean at "enabled" in document.
+let tags be json strings at "tags" in document.
+let counts be json numbers at "counts" in document.
+let flags be json booleans at "flags" in document.
+assert person_name is equal to "Ada".
+assert score is equal to 42.
+assert enabled.
+assert (tags at 1) is equal to "typed".
+assert sum of counts is equal to 6.
+assert not (flags at 1).
+print person_name.
