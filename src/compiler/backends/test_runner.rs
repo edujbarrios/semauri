@@ -1,19 +1,19 @@
 // Assertion-based test discovery is intentionally local and effect-restricted.
 // It does not execute arbitrary project hooks or shell scripts.
 
-fn collect_sema_test_files(path: &Path, output: &mut Vec<PathBuf>) -> std::io::Result<()> {
+fn collect_suri_test_files(path: &Path, output: &mut Vec<PathBuf>) -> std::io::Result<()> {
     let metadata = fs::symlink_metadata(path)?;
     if metadata.file_type().is_symlink() {
         // Do not follow links into unrelated trees or recursive link cycles.
         return Ok(());
     }
     if metadata.is_file() {
-        if path.extension().is_some_and(|ext| ext == "sema") {
+        if path.extension().is_some_and(|ext| ext == "suri") {
             output.push(path.to_path_buf());
         }
     } else if metadata.is_dir() {
         for entry in fs::read_dir(path)? {
-            collect_sema_test_files(&entry?.path(), output)?;
+            collect_suri_test_files(&entry?.path(), output)?;
         }
     }
     Ok(())
@@ -53,7 +53,7 @@ fn run_test_cli(args: &[String]) -> CliResult {
     };
     let target = Path::new(path);
     let mut files = Vec::new();
-    if let Err(error) = collect_sema_test_files(target, &mut files) {
+    if let Err(error) = collect_suri_test_files(target, &mut files) {
         return CliResult {
             status: 64,
             stdout: String::new(),
@@ -65,7 +65,7 @@ fn run_test_cli(args: &[String]) -> CliResult {
         return CliResult {
             status: 64,
             stdout: String::new(),
-            stderr: format!("No .sema test files found in '{}'\n", target.display()),
+            stderr: format!("No .suri test files found in '{}'\n", target.display()),
         };
     }
 
