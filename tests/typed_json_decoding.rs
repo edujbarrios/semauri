@@ -21,13 +21,13 @@ fn run(source: &str) -> semauri::CliResult {
 #[test]
 fn decodes_typed_scalars_and_homogeneous_lists() {
     let source = r#"let text be decode json as string from "\"hello\"".
-let number be decode json as number from "12.5".
+let parsed_number be decode json as number from "12.5".
 let enabled be decode json as boolean from "true".
 let names be decode json as strings from "[\"Ada\",\"Grace\"]".
 let amounts be decode json as numbers from "[1,2,3]".
 let flags be decode json as booleans from "[true,false]".
 assert text is equal to "hello".
-assert number is greater than 12.
+assert parsed_number is greater than 12.
 assert enabled.
 assert length of names is equal to 2.
 assert (names at 1) is equal to "Grace".
@@ -54,7 +54,7 @@ assert length of empty is equal to 0."#;
 #[test]
 fn rejects_invalid_json_and_mismatched_shapes() {
     for input in [
-        r#"print decode json as number from "\"42\"."#,
+        r#"print decode json as number from "\"42\""."#,
         r#"print decode json as number from "true"."#,
         r#"print decode json as strings from "[1,2]"."#,
         r#"print decode json as booleans from "[true,1]"."#,
