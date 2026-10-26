@@ -33,10 +33,9 @@ $ArchivePath = Join-Path $OutDir "$ArchiveBase.zip"
 try {
   New-Item -ItemType Directory -Force -Path (Join-Path $StageDir 'bin'), $OutDir | Out-Null
   Copy-Item $ResolvedBinary (Join-Path $StageDir 'bin\semauri.exe')
-  Copy-Item (Join-Path $RootDir 'LICENSE'), (Join-Path $RootDir 'NOTICE'), (Join-Path $RootDir 'README.md') $StageDir
+  Copy-Item (Join-Path $RootDir 'LICENSE'), (Join-Path $RootDir 'NOTICE'), (Join-Path $RootDir 'README.md'), (Join-Path $RootDir '.config.suri') $StageDir
 
   Copy-Item -Path (Join-Path $RootDir 'learn_to_code') -Destination (Join-Path $StageDir 'learn_to_code') -Recurse
-  Copy-Item -Path (Join-Path $RootDir 'docs') -Destination (Join-Path $StageDir 'docs') -Recurse
   Copy-Item -Path (Join-Path $RootDir 'examples') -Destination (Join-Path $StageDir 'examples') -Recurse
 
   $Manifest = [ordered]@{

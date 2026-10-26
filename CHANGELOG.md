@@ -1,3 +1,18 @@
+## 0.32.0 — 2026-10-26
+
+### Agent-first project guide
+- Remove the separate `docs/` tree and make the root README the canonical, compact language and operational guide for humans and coding agents.
+- Repair the bilingual course and contribution links so the repository remains self-contained.
+
+### Typed project configuration
+- Add `.config.suri` with typed JSON parameters and lazy environment bindings.
+- Add `semauri config [PATH]`, declared `--set NAME=JSON_VALUE` overrides, and `--check-env`. Configuration summaries never expose environment values.
+
+### General AI primitives
+- Add provider-neutral, typed primitives for language models, vision models, generation, image inspection, embeddings, tool schemas, bounded agents, and agent runs.
+- Preserve distinct LLM/VLM nominal types and explicit effects for model loading, network access, inference, filesystem reads, and tool execution.
+- Add two runnable `.suri` examples and focused compiler contracts. These primitives produce plans; provider execution remains the responsibility of an adapter.
+
 ## 0.31.0 — 2026-10-26
 
 ### Canonical source extension
