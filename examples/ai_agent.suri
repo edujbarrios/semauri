@@ -1,5 +1,10 @@
 let model_identifier be string config "language_model".
 let turn_limit be number config "max_turns".
+let request_budget be number config "request_budget".
+let retry_count be number config "retry_count".
+cap ai requests to request_budget.
+reattempt ai requests retry_count attempts.
+memoize ai response cache.
 let model be connect language model model_identifier.
 let assistant be compose agent using model system "Answer briefly and cite uncertainty." max turn_limit turns.
 let answer be ask assistant with "Summarize the supplied context.".

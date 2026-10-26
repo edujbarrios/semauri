@@ -30,6 +30,37 @@ fn ai_domain() -> DomainSpec {
         types,
         operations: vec![
             op(
+                "request_budget",
+                &["cap"],
+                vec![
+                    lit("ai"),
+                    lit("requests"),
+                    lit("to"),
+                    slot("count", Type::Number),
+                ],
+                Type::Unit,
+                &[],
+            ),
+            op(
+                "retry_policy",
+                &["reattempt"],
+                vec![
+                    lit("ai"),
+                    lit("requests"),
+                    slot("count", Type::Number),
+                    lit("attempts"),
+                ],
+                Type::Unit,
+                &[],
+            ),
+            op(
+                "response_cache",
+                &["memoize"],
+                vec![lit("ai"), lit("response"), lit("cache")],
+                Type::Unit,
+                &[],
+            ),
+            op(
                 "language_model",
                 &["connect"],
                 vec![

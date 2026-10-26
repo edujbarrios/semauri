@@ -1,6 +1,7 @@
 fn execute_runtime_plan(plan: &RuntimePlan, config: &crate::ProgramConfig) -> Result<String> {
     let mut values = BTreeMap::<String, ValueData>::new();
     let mut output = String::new();
+    let mut ai = AiRuntimeState::default();
     for operation in &plan.operations {
         let argument = |name: &str| -> Result<ValueData> {
             match operation.arguments.get(name) {
@@ -17,17 +18,29 @@ fn execute_runtime_plan(plan: &RuntimePlan, config: &crate::ProgramConfig) -> Re
                 let value = config.resolve_binding(&name).map_err(|error| runtime_error(operation, error.to_string()))?;
                 Some(json_config_value(value, kind, operation)?)
             }
+            ("ai", "request_budget") => {
+                ai.request_limit = Some(expect_nonnegative_integer(argument("count")?, operation, "count")?);
+                None
+            }
+            ("ai", "retry_policy") => {
+                ai.retries = expect_nonnegative_integer(argument("count")?, operation, "count")?;
+                None
+            }
+            ("ai", "response_cache") => {
+                ai.cache_enabled = true;
+                None
+            }
             ("ai", "language_model" | "vision_model") => Some(argument("identifier")?),
             ("ai", "generate_text") => {
                 let model = expect_string(argument("model")?, operation, "model")?;
                 let prompt = expect_string(argument("prompt")?, operation, "prompt")?;
-                Some(local_model_response(&model, &prompt, operation)?)
+                Some(ai.infer(&model, &prompt, operation)?)
             }
             ("ai", "inspect_image") => {
                 let model = expect_string(argument("model")?, operation, "model")?;
                 let image = expect_string(argument("image")?, operation, "image")?;
                 let prompt = expect_string(argument("prompt")?, operation, "prompt")?;
-                Some(local_model_response(&model, &format!("{prompt} [image: {image}]"), operation)?)
+                Some(ai.infer(&model, &format!("{prompt} [image: {image}]"), operation)?)
             }
             ("ai", "embed_text") => {
                 let model = expect_string(argument("model")?, operation, "model")?;
@@ -45,7 +58,7 @@ fn execute_runtime_plan(plan: &RuntimePlan, config: &crate::ProgramConfig) -> Re
             ("ai", "run_agent") => {
                 let model = expect_string(argument("agent")?, operation, "agent")?;
                 let prompt = expect_string(argument("prompt")?, operation, "prompt")?;
-                Some(local_model_response(&model, &prompt, operation)?)
+                Some(ai.infer(&model, &prompt, operation)?)
             }
             ("console", "print") => {
                 output.push_str(&display_console_value(&argument("value")?));
@@ -98,9 +111,49 @@ fn ensure_local_model(model: &str, operation: &RuntimeOperation) -> Result<()> {
     }
 }
 
-fn local_model_response(model: &str, prompt: &str, operation: &RuntimeOperation) -> Result<ValueData> {
-    ensure_local_model(model, operation)?;
-    Ok(ValueData::String(format!("[{model}] {prompt}")))
+#[derive(Default)]
+struct AiRuntimeState {
+    request_limit: Option<u64>,
+    requests: u64,
+    retries: u64,
+    cache_enabled: bool,
+    cache: BTreeMap<String, ValueData>,
+}
+
+impl AiRuntimeState {
+    fn infer(&mut self, model: &str, prompt: &str, operation: &RuntimeOperation) -> Result<ValueData> {
+        ensure_local_model(model, operation)?;
+        let key = format!("{model}\0{prompt}");
+        if self.cache_enabled {
+            if let Some(value) = self.cache.get(&key) {
+                return Ok(value.clone());
+            }
+        }
+        if self.request_limit.is_some_and(|limit| self.requests >= limit) {
+            return Err(runtime_error(operation, "AI request budget exhausted"));
+        }
+        self.requests += 1;
+        let _configured_retries = self.retries;
+        let value = ValueData::String(format!("[{model}] {prompt}"));
+        if self.cache_enabled {
+            self.cache.insert(key, value.clone());
+        }
+        Ok(value)
+    }
+}
+
+fn expect_nonnegative_integer(
+    value: ValueData,
+    operation: &RuntimeOperation,
+    name: &str,
+) -> Result<u64> {
+    match value {
+        ValueData::Number(NumberValue::Int(value)) if value >= 0 => Ok(value as u64),
+        _ => Err(runtime_error(
+            operation,
+            format!("argument '{name}' must be a non-negative integer"),
+        )),
+    }
 }
 
 fn runtime_error(operation: &RuntimeOperation, message: impl Into<String>) -> SemauriError {
