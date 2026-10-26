@@ -1,4 +1,4 @@
-## Unreleased
+## 0.42.0 — 2026-10-26
 
 ### Practical project initialization
 - Add `semauri init PROJECT` to create a non-overwriting multi-file project with typed library functions, an executable program, tests and English documentation.
