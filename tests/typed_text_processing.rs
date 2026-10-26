@@ -86,7 +86,7 @@ fn constant_folding_and_formatter_support_contextual_words() {
     ).unwrap();
     assert!(optimized.changes >= 1);
     let optimized_json = optimized.to_json().to_string();
-    assert!(optimized_json.contains("\\"value\\":2"), "{optimized_json}");
+    assert!(optimized_json.contains(r#""value":2"#), "{optimized_json}");
     let text = "PRINT TRIM OF \" Mixed Case \". PRINT WORDS OF \"A B\". PRINT LINES OF \"a\\nb\".";
     let formatted = compiler.format_source(text).unwrap();
     assert_eq!(formatted, "print trim of \" Mixed Case \". print words of \"A B\". print lines of \"a\\nb\".");
