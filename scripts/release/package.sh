@@ -25,9 +25,8 @@ trap 'rm -rf "$WORK_DIR"' EXIT
 mkdir -p "$STAGE_DIR/bin" "$OUT_DIR"
 cp "$SEMAURI_BINARY" "$STAGE_DIR/bin/semauri"
 chmod +x "$STAGE_DIR/bin/semauri"
-cp "$ROOT_DIR/LICENSE" "$ROOT_DIR/NOTICE" "$ROOT_DIR/README.md" "$STAGE_DIR/"
+cp "$ROOT_DIR/LICENSE" "$ROOT_DIR/NOTICE" "$ROOT_DIR/README.md" "$ROOT_DIR/.config.suri" "$STAGE_DIR/"
 cp -R "$ROOT_DIR/learn_to_code" "$STAGE_DIR/learn_to_code"
-cp -R "$ROOT_DIR/docs" "$STAGE_DIR/docs"
 cp -R "$ROOT_DIR/examples" "$STAGE_DIR/examples"
 
 cat > "$STAGE_DIR/manifest.json" <<JSON
