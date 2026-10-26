@@ -2003,6 +2003,15 @@ impl<'a> Lowerer<'a> {
                 }
                 ValueData::Number(NumberValue::Int(text.matches(&needle).count() as i64))
             }
+            (BinaryOperator::CharacterAt, ValueData::Number(index), ValueData::String(text)) => {
+                let selected = text_character_at(&index, &text).ok_or_else(|| 
+                    SemauriError::semantic(
+                        "S411",
+                        "Character index must be a non-negative integer within the Unicode text",
+                        Some(span), None,
+                    ))?;
+                ValueData::String(selected)
+            }
             (BinaryOperator::TextPosition, ValueData::String(needle), ValueData::String(text)) => {
                 let position = text.find(&needle)
                     .map(|byte_offset| text[..byte_offset].chars().count() as i64)

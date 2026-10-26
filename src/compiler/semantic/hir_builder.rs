@@ -1104,6 +1104,17 @@ fn binary_type(
             }
             Ok(json_field_type(operator).expect("known JSON field type"))
         }
+        BinaryOperator::CharacterAt => {
+            if left == &Type::Number && right == &Type::String {
+                Ok(Type::String)
+            } else {
+                Err(SemauriError::semantic(
+                    "S410",
+                    format!("'character at INDEX in TEXT' requires number index and string text, received {left} and {right}"),
+                    Some(span), None,
+                ))
+            }
+        }
         BinaryOperator::TextOccurrences | BinaryOperator::TextPosition => {
             if left == &Type::String && right == &Type::String {
                 Ok(Type::Number)

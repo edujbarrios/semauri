@@ -1,3 +1,10 @@
+## Unreleased
+
+### Direct Unicode character indexing
+- Add `character at INDEX in TEXT` to return one Unicode scalar string using zero-based Unicode positions.
+- Enforce static numeric/string operand typing (`S410`) and reject fractional, negative, and out-of-range indices (`S411`).
+- Integrate evaluation and optimizer folding through one helper, contextual formatting, examples, and regression coverage.
+
 ## 0.39.0 — 2026-10-26
 
 ### Pure Unicode character and code point conversions

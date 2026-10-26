@@ -1112,6 +1112,24 @@ impl<'a> Parser<'a> {
                     right: Box::new(right),
                 })
             }
+            // Character indexing uses Unicode scalar positions and is contextual,
+            // just like 'character from' in the scalar conversion family.
+            TokenKind::Word
+                if token.lexeme.eq_ignore_ascii_case("character")
+                    && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::At) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::At, "Expected 'at' after character", "S242")?;
+                let index = self.numeric_unary()?;
+                self.consume(TokenKind::In, "Expected 'in' before text", "S242")?;
+                let text = self.primary()?;
+                let span = span_between_spans(start.span, text.span());
+                Ok(Expr::Binary {
+                    left: Box::new(index),
+                    operator: BinaryOperator::CharacterAt,
+                    right: Box::new(text),
+                    span,
+                })
+            }
             // Construct one Unicode scalar from a checked integer code point.
             TokenKind::Word
                 if token.lexeme.eq_ignore_ascii_case("character")
