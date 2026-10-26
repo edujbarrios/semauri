@@ -37,6 +37,9 @@ impl Compiler {
                 && tokens[..index].iter().rev()
                     .take_while(|previous| previous.kind != TokenKind::Dot)
                     .any(|previous| previous.kind == TokenKind::If);
+            let is_product = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("product")
+                && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
             let is_absolute = token.kind == TokenKind::Word
                 && token.lexeme.eq_ignore_ascii_case("absolute")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
@@ -50,7 +53,7 @@ impl Compiler {
                         | TokenKind::Minus | TokenKind::LParen));
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute
+                && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute && !is_product
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count" | "reduce" | "zip" | "partition")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")

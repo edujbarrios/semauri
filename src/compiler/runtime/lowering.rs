@@ -1609,6 +1609,23 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::Product,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::List(element),
+                    data: ValueData::List(values),
+                } if *element == Type::Number => Ok(BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(product_numeric_list(&values, expression.span())?),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S353", format!("'product of' requires list<number>, received {ty}"),
+                    Some(expression.span()), None)),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Absolute,
                 operand,
                 ..
@@ -2169,5 +2186,40 @@ fn aggregate_numeric_list(
         Ok(NumberValue::Int(integer_total))
     } else {
         Ok(NumberValue::from_f64(floating_total))
+    }
+}
+
+/// Multiplication identity is one for empty typed lists. Exact integer-only
+/// products never round through f64. Mixed/decimal products use f64, and all
+/// intermediate results must remain finite; no partial result is returned.
+fn product_numeric_list(values: &[ValueData], span: SourceSpan) -> Result<NumberValue> {
+    let has_decimals = values.iter().any(|v| matches!(v, ValueData::Number(NumberValue::Float(_))));
+    if has_decimals {
+        let mut result = 1.0_f64;
+        for value in values {
+            let ValueData::Number(number) = value else {
+                return Err(SemauriError::semantic("S353", "Product requires list<number>", Some(span), None));
+            };
+            let factor = number.as_f64();
+            if !factor.is_finite() || !result.is_finite() {
+                return Err(SemauriError::semantic("S387", "Product requires finite numeric values", Some(span), None));
+            }
+            result *= factor;
+            if !result.is_finite() {
+                return Err(SemauriError::semantic("S387", "Numeric product produced a non-finite result", Some(span), None));
+            }
+        }
+        Ok(NumberValue::from_f64(result))
+    } else {
+        let mut result = 1_i64;
+        for value in values {
+            let ValueData::Number(NumberValue::Int(number)) = value else {
+                return Err(SemauriError::semantic("S353", "Product requires list<number>", Some(span), None));
+            };
+            result = result.checked_mul(*number).ok_or_else(|| {
+                SemauriError::semantic("S387", "Integer product exceeds signed 64-bit range", Some(span), None)
+            })?;
+        }
+        Ok(NumberValue::Int(result))
     }
 }
