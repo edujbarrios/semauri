@@ -1,5 +1,11 @@
 ## Unreleased
 
+### RFC 6901 JSON pointer navigation
+- Add `json at pointer POINTER in DOCUMENT` to select nested objects, arrays, and scalar values as serialized JSON text.
+- Support RFC 6901 escaped keys, exact array indices, empty-root pointers, bounded size and depth, deterministic serialization, and strict `S406`/`S407` diagnostics.
+- Compose with existing typed JSON decoding, add constant folding, formatter/editor support, executable examples, and regression coverage.
+
+
 ### Unicode-aware take and drop on strings
 - Extend `take COUNT from COLLECTION` / `drop COUNT from COLLECTION` to immutable strings, counting Unicode scalar values rather than UTF-8 bytes.
 - Preserve typed-list compatibility, source-aware errors for invalid counts, constant folding, and pure evaluation.
