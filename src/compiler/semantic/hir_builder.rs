@@ -1015,6 +1015,28 @@ fn binary_type(
                 )),
             }
         }
+        BinaryOperator::Split => {
+            if left == &Type::String && right == &Type::String {
+                Ok(Type::List(Box::new(Type::String)))
+            } else {
+                Err(SemauriError::semantic(
+                    "S392",
+                    format!("'split of ... by ...' needs two strings, received {left} and {right}"),
+                    Some(span), None,
+                ))
+            }
+        }
+        BinaryOperator::Join => {
+            if left == &Type::List(Box::new(Type::String)) && right == &Type::String {
+                Ok(Type::String)
+            } else {
+                Err(SemauriError::semantic(
+                    "S392",
+                    format!("'join of ... with ...' needs list<string> and string, received {left} and {right}"),
+                    Some(span), None,
+                ))
+            }
+        }
         BinaryOperator::StartsWith | BinaryOperator::EndsWith => {
             if left == &Type::String && right == &Type::String {
                 Ok(Type::Boolean)

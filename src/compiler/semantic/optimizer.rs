@@ -459,6 +459,26 @@ fn fold_expr(
                     span: *span,
                 };
             }
+            // Fold string-list joins directly: literal_data intentionally does not
+            // represent list expressions as scalar literals.
+            if *operator == BinaryOperator::Join {
+                if let (HirExpr::List { items, .. }, Some(ValueData::String(separator))) =
+                    (&left, literal_data(&right))
+                {
+                    let parts = items.iter().map(|item| match literal_data(item) {
+                        Some(ValueData::String(value)) => Some(value),
+                        _ => None,
+                    }).collect::<Option<Vec<_>>>();
+                    if let Some(parts) = parts {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::String,
+                            value: LiteralValue::String(parts.join(&separator)),
+                            span: *span,
+                        };
+                    }
+                }
+            }
             if let (Some(left_value), Some(right_value)) =
                 (literal_data(&left), literal_data(&right))
             {
@@ -582,6 +602,15 @@ fn eval_constant_binary(
         ) => Some(ValueData::Boolean(a.as_f64() <= b.as_f64())),
         (BinaryOperator::Equal, a, b) => Some(ValueData::Boolean(a == b)),
         (BinaryOperator::NotEqual, a, b) => Some(ValueData::Boolean(a != b)),
+        (BinaryOperator::Join, ValueData::List(items), ValueData::String(separator)) => {
+            let parts = items.iter().map(|item| match item {
+                ValueData::String(value) => Some(value.as_str()),
+                _ => None,
+            }).collect::<Option<Vec<_>>>()?;
+            Some(ValueData::String(parts.join(separator)))
+        }
+        // Split returns a list; leave it to normal evaluation to preserve the
+        // existing optimizer's scalar-literal conversion invariant.
         (BinaryOperator::StartsWith, ValueData::String(text), ValueData::String(prefix)) => {
             Some(ValueData::Boolean(text.starts_with(prefix)))
         }
