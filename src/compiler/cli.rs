@@ -326,6 +326,8 @@ pub fn run_cli(args: &[String]) -> CliResult {
                 let mut allowed = Vec::new();
                 let mut cwd: Option<PathBuf> = None;
                 let mut dry_run = false;
+                let mut config_path: Option<PathBuf> = None;
+                let mut config_overrides = Vec::new();
                 let mut path = None;
                 let mut index = 1;
                 while index < args.len() {
@@ -349,6 +351,21 @@ pub fn run_cli(args: &[String]) -> CliResult {
                             dry_run = true;
                             index += 1;
                         }
+                        "--config" => {
+                            config_path = Some(PathBuf::from(
+                                args.get(index + 1)
+                                    .ok_or_else(|| usage_error("--config requires a path"))?,
+                            ));
+                            index += 2;
+                        }
+                        "--set" => {
+                            config_overrides.push(
+                                args.get(index + 1)
+                                    .ok_or_else(|| usage_error("--set requires NAME=JSON_VALUE"))?
+                                    .clone(),
+                            );
+                            index += 2;
+                        }
                         value if value.starts_with('-') => {
                             return Err(usage_error(format!("Unknown option: {value}")))
                         }
@@ -369,20 +386,37 @@ pub fn run_cli(args: &[String]) -> CliResult {
                     .map_err(|error| usage_error(format!("S001: {error}")))?;
                 current_source = Some(source.clone());
                 let result = compiler.compile(&source, None)?;
-                let console_only = !result.semantic.runtime_plan.operations.is_empty()
+                let executable_runtime = !result.semantic.runtime_plan.operations.is_empty()
                     && result
                         .semantic
                         .runtime_plan
                         .operations
                         .iter()
-                        .all(|operation| operation.domain == "console");
-                if console_only {
+                        .all(|operation| matches!(operation.domain.as_str(), "config" | "ai" | "console"));
+                if executable_runtime {
                     if dry_run {
                         stdout.push_str(&pretty_json(&result.semantic.runtime_plan.to_json()));
                         return Ok(0);
                     }
                     CapabilityPolicy::new(allowed).validate(&result.effects)?;
-                    stdout.push_str(&execute_console_plan(&result.semantic.runtime_plan)?);
+                    let source_path = Path::new(&path);
+                    let discovered = config_path.or_else(|| discover_config(source_path));
+                    let mut config = match discovered {
+                        Some(path) => crate::ProgramConfig::from_file(&path).map_err(|error| {
+                            SemauriError::new(ErrorKind::Runtime, "S503", error.to_string(), None, None)
+                        })?,
+                        None => crate::ProgramConfig::default(),
+                    };
+                    for item in config_overrides {
+                        let (name, raw_value) = item.split_once('=').ok_or_else(|| {
+                            usage_error(format!("invalid override '{item}'; expected NAME=JSON_VALUE"))
+                        })?;
+                        let value = serde_json::from_str(raw_value).map_err(|_| {
+                            usage_error(format!("override '{name}' is not valid JSON"))
+                        })?;
+                        config.set_parameter(name, value).map_err(|error| usage_error(error.to_string()))?;
+                    }
+                    stdout.push_str(&execute_runtime_plan(&result.semantic.runtime_plan, &config)?);
                     return Ok(0);
                 }
                 if result.outputs.len() != 1
@@ -466,6 +500,20 @@ pub fn run_cli(args: &[String]) -> CliResult {
                 stderr,
             }
         }
+    }
+}
+
+fn discover_config(source: &Path) -> Option<PathBuf> {
+    let mut directory = source
+        .parent()
+        .filter(|path| !path.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    loop {
+        let candidate = directory.join(".config.suri");
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+        directory = directory.parent()?;
     }
 }
 

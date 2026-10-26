@@ -21,6 +21,7 @@ include!("core/types.rs");
 include!("domains/model.rs");
 include!("domains/registry.rs");
 include!("domains/builtins/common.rs");
+include!("domains/builtins/config.rs");
 include!("domains/builtins/ai.rs");
 include!("domains/builtins/web.rs");
 include!("domains/builtins/structured_data.rs");
@@ -49,7 +50,7 @@ include!("backends/html.rs");
 include!("backends/json_schema.rs");
 include!("backends/shell.rs");
 include!("backends/filesystem_executor.rs");
-include!("backends/console_executor.rs");
+include!("backends/runtime_executor.rs");
 
 include!("cli.rs");
 include!("backends/test_runner.rs");

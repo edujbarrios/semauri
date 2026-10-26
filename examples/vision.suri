@@ -1,4 +1,5 @@
-within ai:
-  let model be load vision model "local/vision".
-  let description be inspect image "sample.png" using model with "Describe only visible facts.".
-end.
+let model_identifier be string config "vision_model".
+let image_path be string config "sample_image".
+let model be activate vision model model_identifier.
+let description be inspect image image_path using model with "Describe only visible facts.".
+print description.

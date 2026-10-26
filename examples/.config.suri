@@ -1,0 +1,8 @@
+# Configuration shared by the executable AI examples.
+parameter language_model = "local/default".
+parameter vision_model = "local/vision".
+parameter sample_image = "examples/sample-image.svg".
+parameter max_turns = 4.
+
+# Hosted adapters may bind credentials without storing their values here.
+environment model_api_key = "SEMAURI_MODEL_API_KEY".
