@@ -1,4 +1,4 @@
-## Unreleased
+## 0.40.0 — 2026-10-26
 
 ### Pure literal substring removal
 - Add contextual `remove all of NEEDLE from TEXT` for non-overlapping, case-sensitive literal Unicode substring removal.
