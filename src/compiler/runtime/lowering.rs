@@ -1254,6 +1254,30 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::DecodeJsonString | UnaryOperator::DecodeJsonNumber
+                    | UnaryOperator::DecodeJsonBoolean | UnaryOperator::DecodeJsonStrings
+                    | UnaryOperator::DecodeJsonNumbers | UnaryOperator::DecodeJsonBooleans),
+                operand,
+                ty,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile { data: ValueData::String(source), .. } => {
+                    let value = decode_json_text(&source, operator).ok_or_else(||
+                        SemauriError::semantic(
+                            "S397",
+                            format!("Invalid JSON or value does not match requested type '{}'", ty),
+                            Some(expression.span()),
+                            Some("Provide valid JSON with exactly the requested scalar or homogeneous list type.".to_string()),
+                        ))?;
+                    Ok(BoundValue::Compile { ty: ty.clone(), data: value })
+                }
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S396", format!("JSON decoding requires a string, received {ty}"),
+                    Some(expression.span()), None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: operator @ (UnaryOperator::ParseNumber | UnaryOperator::ParseBoolean),
                 operand,
                 ..

@@ -577,6 +577,19 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::String
                     }
+                    UnaryOperator::DecodeJsonString | UnaryOperator::DecodeJsonNumber
+                    | UnaryOperator::DecodeJsonBoolean | UnaryOperator::DecodeJsonStrings
+                    | UnaryOperator::DecodeJsonNumbers | UnaryOperator::DecodeJsonBooleans => {
+                        if operand.ty() != Type::String {
+                            return Err(SemauriError::semantic(
+                                "S396",
+                                format!("'{}' needs JSON string input, received {}", operator.as_str(), operand.ty()),
+                                Some(*span),
+                                Some("Encode values with 'json of' or provide a JSON string.".to_string()),
+                            ));
+                        }
+                        json_decode_type(operator).expect("known JSON decode operator")
+                    }
                     UnaryOperator::ParseNumber | UnaryOperator::ParseBoolean => {
                         if operand.ty() != Type::String {
                             return Err(SemauriError::semantic(

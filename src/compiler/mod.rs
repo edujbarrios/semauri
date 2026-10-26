@@ -18,6 +18,7 @@ use std::sync::Arc;
 include!("core/diagnostics.rs");
 include!("core/types.rs");
 include!("core/text_conversions.rs");
+include!("core/json_decode.rs");
 
 include!("domains/model.rs");
 include!("domains/registry.rs");

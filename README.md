@@ -166,6 +166,30 @@ Non-string inputs are rejected during type checking (`S394`); invalid text
 produces a source-aware `S395` error during evaluation. Parsing is pure,
 does not silently coerce values, and `parse` remains an ordinary identifier.
 
+### Typed JSON decoding
+
+The `decode json as TYPE from TEXT` family reads a JSON document into a
+statically checked Semauri value. Supported types are `string`, `number`,
+`boolean`, `strings`, `numbers`, and `booleans` (the plural forms are
+homogeneous lists). JSON strings are unescaped by the decoder; JSON numbers,
+booleans, and arrays must match the requested type exactly.
+
+```text
+let names be decode json as strings from "[\\"Ada\\",\\"Grace\\"]".
+assert length of names is equal to 2.
+let threshold be decode json as number from "12.5".
+assert threshold is greater than 12.
+let flag be decode json as boolean from "true".
+assert flag.
+```
+
+Decoding is pure and uses a 1 MiB JSON text limit and a 10,000-item list limit.
+Malformed documents, unexpected JSON types, and unsupported shapes such as
+objects or nested arrays produce a located `S397` diagnostic. A non-string
+source produces a static `S396` diagnostic. JSON numeric values are finite,
+and integers larger than signed 64-bit range cannot be silently rounded. This
+is typed scalar and homogeneous-list decoding, not a general records/maps API.
+
 ### Natural-language string predicates
 
 Use `TEXT starts with PREFIX` and `TEXT ends with SUFFIX` to validate names,

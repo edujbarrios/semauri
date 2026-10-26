@@ -1,3 +1,10 @@
+## Unreleased
+
+### Type-directed JSON decoding
+- Add `decode json as TYPE from TEXT` for string, number, boolean, and homogeneous string/number/boolean lists.
+- Validate JSON syntax, strict type correspondence, bounded input and list expansion, integer exactness, and effect-free evaluation, reporting diagnostics `S396`/`S397`.
+- Add optimizer folding, formatter recognition, editor grammar, a runnable example, and integration tests.
+
 ## 0.35.0 — 2026-10-26
 
 ### Safe typed conversions from text

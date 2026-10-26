@@ -326,6 +326,33 @@ fn fold_expr(
                         };
                     }
                 }
+                (operator @ (UnaryOperator::DecodeJsonString | UnaryOperator::DecodeJsonNumber
+                    | UnaryOperator::DecodeJsonBoolean | UnaryOperator::DecodeJsonStrings
+                    | UnaryOperator::DecodeJsonNumbers | UnaryOperator::DecodeJsonBooleans),
+                    Some(ValueData::String(source))) => {
+                    if let Some(decoded) = decode_json_text(&source, operator) {
+                        *changes += 1;
+                        let expected_type = json_decode_type(operator)
+                            .expect("known JSON decode operator");
+                        return match decoded {
+                            ValueData::List(items) => HirExpr::List {
+                                ty: expected_type,
+                                items: items.into_iter().map(|item| {
+                                    let item_type = match &item {
+                                        ValueData::String(_) => Type::String,
+                                        ValueData::Number(_) => Type::Number,
+                                        ValueData::Boolean(_) => Type::Boolean,
+                                        _ => unreachable!(),
+                                    };
+                                    hir_literal_from_data(item_type, item, *span)
+                                }).collect(),
+                                span: *span,
+                            },
+                            scalar => hir_literal_from_data(expected_type, scalar, *span),
+                        };
+                    }
+                    // Keep invalid JSON in the HIR for a located evaluation error.
+                }
                 (UnaryOperator::ParseNumber, Some(ValueData::String(value))) => {
                     if let Some(parsed) = parse_number_text(&value) {
                         *changes += 1;

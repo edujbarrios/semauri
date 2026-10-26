@@ -52,6 +52,29 @@ impl Compiler {
                     || (token.lexeme.eq_ignore_ascii_case("with")
                         && index > 0
                         && matches!(tokens[index - 1].lexeme.to_ascii_lowercase().as_str(), "starts" | "ends")));
+            let is_json_decode = token.kind == TokenKind::Word
+                && (
+                    (token.lexeme.eq_ignore_ascii_case("decode")
+                        && tokens.get(index + 1).is_some_and(|next| next.lexeme.eq_ignore_ascii_case("json"))
+                        && tokens.get(index + 2).is_some_and(|next| next.lexeme.eq_ignore_ascii_case("as"))
+                        && tokens.get(index + 3).is_some_and(|next| matches!(
+                            next.lexeme.to_ascii_lowercase().as_str(),
+                            "string" | "number" | "boolean" | "strings" | "numbers" | "booleans"
+                        ))
+                        && tokens.get(index + 4).is_some_and(|next| next.kind == TokenKind::From))
+                    || (token.lexeme.eq_ignore_ascii_case("json")
+                        && index > 0 && tokens[index - 1].lexeme.eq_ignore_ascii_case("decode")
+                        && tokens.get(index + 1).is_some_and(|next| next.lexeme.eq_ignore_ascii_case("as")))
+                    || (token.lexeme.eq_ignore_ascii_case("as")
+                        && index > 1 && tokens[index - 2].lexeme.eq_ignore_ascii_case("decode")
+                        && tokens[index - 1].lexeme.eq_ignore_ascii_case("json"))
+                    || (matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                            "string" | "number" | "boolean" | "strings" | "numbers" | "booleans")
+                        && index > 2 && tokens[index - 3].lexeme.eq_ignore_ascii_case("decode")
+                        && tokens[index - 2].lexeme.eq_ignore_ascii_case("json")
+                        && tokens[index - 1].lexeme.eq_ignore_ascii_case("as")
+                        && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::From))
+                );
             let is_parse_conversion = token.kind == TokenKind::Word
                 && ((token.lexeme.eq_ignore_ascii_case("parse")
                     && tokens.get(index + 1).is_some_and(|next|
@@ -75,7 +98,7 @@ impl Compiler {
                         | TokenKind::Minus | TokenKind::LParen));
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute && !is_product && !is_text_operation && !is_text_predicate && !is_join_with && !is_parse_conversion
+                && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute && !is_product && !is_text_operation && !is_text_predicate && !is_join_with && !is_parse_conversion && !is_json_decode
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count" | "reduce" | "zip" | "partition")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")

@@ -926,6 +926,41 @@ impl<'a> Parser<'a> {
                 })
             }
             // Split is also a registered ML action; the following 'of'\n            // distinguishes this pure expression without changing ML syntax.
+            // Type-directed JSON decoding is a complete contextual phrase.
+            // No new reserved keywords are required.
+            TokenKind::Word
+                if token.lexeme.eq_ignore_ascii_case("decode")
+                    && self.tokens.get(self.current + 1)
+                        .is_some_and(|next| next.lexeme.eq_ignore_ascii_case("json"))
+                    && self.tokens.get(self.current + 2)
+                        .is_some_and(|next| next.lexeme.eq_ignore_ascii_case("as"))
+                    && self.tokens.get(self.current + 3).is_some_and(|next| matches!(
+                        next.lexeme.to_ascii_lowercase().as_str(),
+                        "string" | "number" | "boolean" | "strings" | "numbers" | "booleans"
+                    ))
+                    && self.tokens.get(self.current + 4)
+                        .is_some_and(|next| next.kind == TokenKind::From) => {
+                let start = self.advance().clone();
+                self.advance(); // json
+                self.advance(); // as
+                let target = self.advance().clone();
+                self.consume(TokenKind::From, "Expected 'from' after JSON type", "S242")?;
+                let operand = self.primary()?;
+                let operator = match target.lexeme.to_ascii_lowercase().as_str() {
+                    "string" => UnaryOperator::DecodeJsonString,
+                    "number" => UnaryOperator::DecodeJsonNumber,
+                    "boolean" => UnaryOperator::DecodeJsonBoolean,
+                    "strings" => UnaryOperator::DecodeJsonStrings,
+                    "numbers" => UnaryOperator::DecodeJsonNumbers,
+                    "booleans" => UnaryOperator::DecodeJsonBooleans,
+                    _ => unreachable!(),
+                };
+                Ok(Expr::Unary {
+                    operator,
+                    span: span_between_spans(start.span, operand.span()),
+                    operand: Box::new(operand),
+                })
+            }
             TokenKind::Word
                 if token.lexeme.eq_ignore_ascii_case("parse")
                     && self.tokens.get(self.current + 1).is_some_and(|next|
