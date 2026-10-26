@@ -76,7 +76,7 @@
     },
     "operators": {
       "name": "keyword.operator.word.semauri",
-      "match": "\\b(?:is|greater|less|than|equal|and|or|not|plus|minus|times|divided|modulo|by|of|to|from|at)\\b"
+      "match": "\\b(?:is|greater|less|than|equal|starts|ends|with|and|or|not|plus|minus|times|divided|modulo|by|of|to|from|at)\\b"
     },
     "domains": {
       "name": "support.namespace.semauri",

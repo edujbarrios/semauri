@@ -1015,6 +1015,19 @@ fn binary_type(
                 )),
             }
         }
+        BinaryOperator::StartsWith | BinaryOperator::EndsWith => {
+            if left == &Type::String && right == &Type::String {
+                Ok(Type::Boolean)
+            } else {
+                Err(SemauriError::semantic(
+                    "S391",
+                    format!("'{}' requires two strings, received {} and {}",
+                        operator.as_str(), left, right),
+                    Some(span),
+                    None,
+                ))
+            }
+        }
         BinaryOperator::Contains => {
             match left {
                 Type::String if right == &Type::String => Ok(Type::Boolean),

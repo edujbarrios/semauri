@@ -568,6 +568,26 @@ impl<'a> Parser<'a> {
 
     fn comparison(&mut self) -> Result<Expr> {
         let left = self.additive()?;
+        // Natural-language predicates are contextual pairs, not reserved words.
+        if self.check(TokenKind::Word)
+            && matches!(self.peek().lexeme.to_ascii_lowercase().as_str(), "starts" | "ends")
+            && self.tokens.get(self.current + 1).is_some_and(|next|
+                next.kind == TokenKind::Word && next.lexeme.eq_ignore_ascii_case("with"))
+        {
+            let operator = if self.advance().lexeme.eq_ignore_ascii_case("starts") {
+                BinaryOperator::StartsWith
+            } else {
+                BinaryOperator::EndsWith
+            };
+            self.advance(); // contextual 'with'
+            let right = self.additive()?;
+            return Ok(Expr::Binary {
+                span: span_between_spans(left.span(), right.span()),
+                left: Box::new(left),
+                operator,
+                right: Box::new(right),
+            });
+        }
         if self.matches(&[TokenKind::Contains, TokenKind::At]) {
             let operator = if self.previous().kind == TokenKind::Contains {
                 BinaryOperator::Contains

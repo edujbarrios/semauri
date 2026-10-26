@@ -129,6 +129,23 @@ assert enabled is equal to "true".
 `json` remains a valid variable name unless immediately followed by `of`.
 Non-serializable types produce the static diagnostic `S390`.
 
+### Natural-language string predicates
+
+Use `TEXT starts with PREFIX` and `TEXT ends with SUFFIX` to validate names,
+file extensions, routing paths, and other structured text. Both expressions
+return `boolean`, compare Unicode strings without locale-dependent coercion,
+and accept empty prefixes or suffixes. Type mismatches report `S391`.
+
+```text
+let filename be "report.json".
+let is_json be filename ends with ".json".
+let is_report be filename starts with "report".
+assert is_json and is_report.
+```
+
+These are pure operations; no new effect grants are required. Their words remain
+ordinary identifiers when they are not used as the complete operator phrase.
+
 ### Control flow and scope
 
 ```text

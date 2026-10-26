@@ -1,5 +1,9 @@
 ## Unreleased
 
+### Natural-language string predicates
+- Add contextual `starts with` and `ends with` to validate Unicode string prefixes and suffixes with checked operands and pure boolean results.
+- Support constant folding, editor formatting, highlighted syntax, and end-to-end diagnostics and examples.
+
 ### Typed JSON serialization
 - Add contextual `json of` with static type checks, deterministic JSON encoding, string escaping, and compile-time folding for literals.
 - Document integration payloads and preserve `json` as an ordinary variable name.
