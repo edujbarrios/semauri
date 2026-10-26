@@ -1865,6 +1865,12 @@ impl<'a> Lowerer<'a> {
             ) => ValueData::Boolean(a.as_f64() <= b.as_f64()),
             (BinaryOperator::Equal, a, b) => ValueData::Boolean(a == b),
             (BinaryOperator::NotEqual, a, b) => ValueData::Boolean(a != b),
+            (BinaryOperator::StartsWith, ValueData::String(text), ValueData::String(prefix)) => {
+                ValueData::Boolean(text.starts_with(&prefix))
+            }
+            (BinaryOperator::EndsWith, ValueData::String(text), ValueData::String(suffix)) => {
+                ValueData::Boolean(text.ends_with(&suffix))
+            }
             (BinaryOperator::Contains, ValueData::String(text), ValueData::String(needle)) => {
                 ValueData::Boolean(text.contains(&needle))
             }

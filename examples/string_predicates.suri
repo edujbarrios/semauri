@@ -1,0 +1,10 @@
+# Validate structured text using readable, checked predicates.
+let filename be "report.json".
+let subject be "Hello, world!".
+assert filename ends with ".json".
+assert filename starts with "report".
+assert subject starts with "Hello".
+assert subject ends with "!".
+assert subject ends with "".
+assert subject starts with "".
+print "validation passed".
