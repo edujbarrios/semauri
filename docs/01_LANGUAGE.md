@@ -1,4 +1,4 @@
-# Semauri language reference — v0.29.0
+# Semauri language reference — v0.30.0
 
 This document describes implemented language behavior, not aspirational syntax.
 
@@ -48,7 +48,8 @@ primary          = COLOR | STRING | NUMBER | BOOLEAN | list_literal
                   | REPEAT numeric_unary OF primary
                  | LENGTH OF primary | REVERSE OF primary | SUM OF primary
                  | AVERAGE OF primary | MINIMUM OF primary | MAXIMUM OF primary
-                 | MEDIAN OF primary | SORTED OF primary | DISTINCT OF primary
+                 | MEDIAN OF primary | PRODUCT OF primary | ABSOLUTE OF primary
+                  | SORTED OF primary | DISTINCT OF primary
                  | ANY OF primary | ALL OF primary
                  | FIRST OF primary | LAST OF primary
                  | TAKE numeric_unary FROM primary | DROP numeric_unary FROM primary
@@ -106,6 +107,12 @@ Function bodies are restricted to pure core-language expressions. Calls are type
 `flatten of NESTED` performs one-level concatenation on a typed `list<list<T>>`, producing `list<T>` with original value representations and source order. Non-nested inputs raise S385. It is contextual and doesn't reserve existing identifier names. [Flatten specification](45_FLATTEN_LISTS.md).
 
 All operators process concrete compiler-known values; they are not external ML streaming transforms.
+
+## Exact numeric absolute and product (0.30.0)
+
+`absolute of NUMBER` returns a typed `number` with exact checked signed i64 absolute value or binary64 decimal absolute value; errors S386 for wrong type and S388 for overflow/non-finite values. `product of LIST` accepts only `list<number>`, multiplies all integer elements exactly with checked overflow, and uses the current binary64 arithmetic for decimal/mixed lists. Empty typed numeric lists yield one (multiplicative identity). Wrong operand types raise S353, arithmetic overflow and non-finite values S387.
+
+Both operators are *contextual* keywords immediately before `of`; existing variables named `absolute` or `product` remain compatible. They operate over concrete compiler-known values without any new capabilities. See [exact absolute values](46_ABSOLUTE_NUMBERS.md) and [numeric list product](47_PRODUCT_REDUCTION.md).
 
 ## Typed sequence transformations and numeric reductions
 
@@ -393,6 +400,9 @@ Relevant diagnostics include:
 - `S383`: invalid list input to `zip every`
 - `S384`: nonvalue result from `zip every`
 - `S385`: invalid nested list input to `flatten of`
+- `S386`: `absolute of` operand is not numeric
+- `S387`: numeric product overflow or non-finite value
+- `S388`: invalid or overflowing absolute numeric value
 
 ## Determinism rule
 

@@ -1,3 +1,16 @@
+## 0.30.0 — 2026-10-26
+
+### Language: exact contextual absolute values
+- Add pure `absolute of NUMBER` with complete parser/AST/HIR/evaluator/formatter/optimizer support. Preserve exact signed i64 arithmetic above 2^53, avoiding f64 rounding; S386 type-checks operands and S388 diagnoses overflowing i64 minimum or non-finite results. The name `absolute` remains a valid identifier outside contextual `absolute of` syntax. Add six tests, runnable example and docs. [PR #188](https://github.com/edujbarrios/semauri/pull/188).
+
+### Language: checked product of typed numeric lists
+- Add pure `product of LIST` returning `number` for `list<number>`: exact checked integer multiplication with S387 on overflow and binary64 semantics for mixed/decimal lists, rejecting non-finite values. Typed empty numeric lists return one (multiplicative identity). Type errors reuse S353, and existing `product` variable identifiers remain compatible. Add eight integration tests, documentation and a runnable example. [PR #189](https://github.com/edujbarrios/semauri/pull/189).
+
+### Boundaries
+- No arbitrary runtime streaming datasets, tensor execution or neural network training are implemented; these expressions operate on concrete compiler-known values and grant no effects.
+
+See [v0.30.0 release notes](docs/releases/0.30.0.md).
+
 ## 0.29.0 — 2026-10-25
 
 ### Language: typed pairwise zip
