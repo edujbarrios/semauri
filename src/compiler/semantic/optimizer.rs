@@ -681,6 +681,17 @@ fn eval_constant_binary(
                 scalar => Some(scalar),
             }
         }
+        (BinaryOperator::TextOccurrences, ValueData::String(needle), ValueData::String(text))
+            if !needle.is_empty() => {
+            Some(ValueData::Number(NumberValue::Int(
+                text.matches(needle).count() as i64,
+            )))
+        }
+        (BinaryOperator::TextPosition, ValueData::String(needle), ValueData::String(text)) => {
+            Some(ValueData::Number(NumberValue::Int(
+                text.find(needle).map(|offset| text[..offset].chars().count() as i64).unwrap_or(-1),
+            )))
+        }
         (BinaryOperator::JsonHasKey, ValueData::String(key), ValueData::String(source)) => {
             json_object_has_key(source, key).map(ValueData::Boolean)
         }

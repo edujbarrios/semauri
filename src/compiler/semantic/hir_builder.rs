@@ -1082,6 +1082,17 @@ fn binary_type(
             }
             Ok(json_field_type(operator).expect("known JSON field type"))
         }
+        BinaryOperator::TextOccurrences | BinaryOperator::TextPosition => {
+            if left == &Type::String && right == &Type::String {
+                Ok(Type::Number)
+            } else {
+                Err(SemauriError::semantic(
+                    "S402",
+                    format!("'{} of ... in ...' requires two strings, received {left} and {right}", operator.as_str()),
+                    Some(span), None,
+                ))
+            }
+        }
         BinaryOperator::JsonHasKey => {
             if left == &Type::String && right == &Type::String {
                 Ok(Type::Boolean)

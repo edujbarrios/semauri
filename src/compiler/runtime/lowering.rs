@@ -1975,6 +1975,21 @@ impl<'a> Lowerer<'a> {
                         Some("Check the object, field name, type, and JSON size limits.".into()),
                     ))?
             }
+            (BinaryOperator::TextOccurrences, ValueData::String(needle), ValueData::String(text)) => {
+                if needle.is_empty() {
+                    return Err(SemauriError::semantic(
+                        "S403", "The occurrence search term must not be empty",
+                        Some(left.span()), None,
+                    ));
+                }
+                ValueData::Number(NumberValue::Int(text.matches(&needle).count() as i64))
+            }
+            (BinaryOperator::TextPosition, ValueData::String(needle), ValueData::String(text)) => {
+                let position = text.find(&needle)
+                    .map(|byte_offset| text[..byte_offset].chars().count() as i64)
+                    .unwrap_or(-1);
+                ValueData::Number(NumberValue::Int(position))
+            }
             (BinaryOperator::JsonHasKey, ValueData::String(key), ValueData::String(source)) => {
                 let found = json_object_has_key(&source, &key).ok_or_else(||
                     SemauriError::semantic(
