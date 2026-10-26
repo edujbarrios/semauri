@@ -1,0 +1,5 @@
+within ai:
+  let model be connect language model "local/default".
+  let assistant be compose agent using model system "Answer briefly and cite uncertainty." max 4 turns.
+  let answer be ask assistant with "Summarize the supplied context.".
+end.

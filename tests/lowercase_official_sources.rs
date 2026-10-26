@@ -40,5 +40,5 @@ fn official_examples_and_bilingual_learning_programs_are_lowercase() {
     for folder in ["examples", "learn_to_code/en", "learn_to_code/es"] {
         visit(&root.join(folder), &compiler, &mut visited);
     }
-    assert_eq!(visited, 65, "Expected all 43 examples and 22 lessons; found {visited}");
+    assert_eq!(visited, 67, "Expected all 45 examples and 22 lessons; found {visited}");
 }
