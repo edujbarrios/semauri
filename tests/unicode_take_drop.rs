@@ -19,12 +19,12 @@ fn unicode_slicing_respects_scalars_not_bytes() {
 }
 #[test]
 fn boundaries_and_nesting_are_deterministic() {
-    let result = run(r#"let source be "ab🍵é".
-assert (take 2 from (drop 1 from source)) is equal to "b🍵".
-assert take 0 from source is equal to "".
-assert drop 0 from source is equal to source.
-assert take 100 from source is equal to source.
-assert drop 100 from source is equal to ""."#);
+    let result = run(r#"let text_value be "ab🍵é".
+assert (take 2 from (drop 1 from text_value)) is equal to "b🍵".
+assert take 0 from text_value is equal to "".
+assert drop 0 from text_value is equal to text_value.
+assert take 100 from text_value is equal to text_value.
+assert drop 100 from text_value is equal to ""."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
 }
 #[test]
