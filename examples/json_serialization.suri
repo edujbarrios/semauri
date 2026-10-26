@@ -2,7 +2,7 @@
 let items be a list of "alpha", "beta".
 let payload be json of items.
 let active be json of true.
-assert payload is equal to "[\\\"alpha\\\",\\\"beta\\\"]".
+assert payload is equal to "[\"alpha\",\"beta\"]".
 assert active is equal to "true".
 assert json of 42 is equal to "42".
 print payload.

@@ -121,7 +121,7 @@ not decode JSON, serialize runtime handles, or perform network requests.
 ```text
 let labels be a list of "alpha", "beta".
 let payload be json of labels.
-assert payload is equal to "[\\\"alpha\\\",\\\"beta\\\"]".
+assert payload is equal to "[\"alpha\",\"beta\"]".
 let enabled be json of true.
 assert enabled is equal to "true".
 ```

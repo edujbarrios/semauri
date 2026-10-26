@@ -22,12 +22,12 @@ fn run(source: &str) -> semauri::CliResult {
 fn serializes_scalars_lists_and_escapes() {
     let source = r#"let labels be a list of "one", "two".
 let encoded be json of labels.
-assert encoded is equal to "[\\"one\\",\\"two\\"]".
+assert encoded is equal to "[\"one\",\"two\"]".
 assert (json of true) is equal to "true".
 assert (json of false) is equal to "false".
 assert (json of 42) is equal to "42".
-assert (json of "hello") is equal to "\\"hello\\"".
-assert (json of "") is equal to "\\"\\"".
+assert (json of "hello") is equal to "\"hello\"".
+assert (json of "") is equal to "\"\"".
 print encoded."#;
     let result = run(source);
     assert_eq!(result.status, 0, "{}", result.stderr);
@@ -37,7 +37,7 @@ print encoded."#;
 #[test]
 fn contextual_json_keyword_preserves_identifiers() {
     let result = run(r#"let json be "value".
-assert (json of json) is equal to "\\"value\\"".
+assert (json of json) is equal to "\"value\"".
 assert json is equal to "value"."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
 }
