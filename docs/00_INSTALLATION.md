@@ -2,7 +2,7 @@
 
 Semauri is a compiled programming language with its own native command-line tool. This guide covers the official installers, manual downloads, troubleshooting and version pinning.
 
-**New to terminals or programming?** Begin with [your first Semauri program](23_FIRST_PROGRAM.md), which explains opening PowerShell or Terminal, creating a project folder, saving a `.sema` file, checking it and running it.
+**New to terminals or programming?** Begin with [your first Semauri program](23_FIRST_PROGRAM.md), which explains opening PowerShell or Terminal, creating a project folder, saving a `.suri` file, checking it and running it.
 
 > Current stable release documented here: **0.30.0**
 
@@ -91,53 +91,53 @@ Remove-Item Env:SEMAURI_VERSION
 
 ## Learn programming with the bundled course
 
-All six official native archives include the full [bilingual Learn to Code curriculum](../learn_to_code/README.md): **11 lessons in English** ([`en/`](../learn_to_code/en/README.md)) and **11 in Spanish** ([`es/`](../learn_to_code/es/README.md)), each with a runnable `.sema` example. From the extracted archive root, try:
+All six official native archives include the full [bilingual Learn to Code curriculum](../learn_to_code/README.md): **11 lessons in English** ([`en/`](../learn_to_code/en/README.md)) and **11 in Spanish** ([`es/`](../learn_to_code/es/README.md)), each with a runnable `.suri` example. From the extracted archive root, try:
 
 ```sh
-semauri check learn_to_code/en/01_hello_world/main.sema
-semauri run --allow console_write learn_to_code/en/01_hello_world/main.sema
-semauri check learn_to_code/es/01_hola_mundo/main.sema
-semauri run --allow console_write learn_to_code/es/01_hola_mundo/main.sema
+semauri check learn_to_code/en/01_hello_world/main.suri
+semauri run --allow console_write learn_to_code/en/01_hello_world/main.suri
+semauri check learn_to_code/es/01_hola_mundo/main.suri
+semauri run --allow console_write learn_to_code/es/01_hola_mundo/main.suri
 ```
 
 Use the executable under `bin/` if `semauri` is not yet on your PATH.
 
 ## Running Semauri source files
 
-Semauri source files use the <code>.sema</code> extension.
+Semauri source files use the <code>.suri</code> extension.
 
 Validate a file without producing an output:
 
 ~~~bash
-semauri check examples/hello.sema
+semauri check examples/hello.suri
 ~~~
 
 Compile a file to its domain-specific output:
 
 ~~~bash
-semauri build examples/shop.sema
+semauri build examples/shop.suri
 ~~~
 
 Inspect tokens, AST, HIR, effects or runtime planning:
 
 ~~~bash
-semauri tokens examples/shop.sema
-semauri ast examples/shop.sema
-semauri hir examples/shop.sema
-semauri effects examples/filesystem.sema
-semauri plan examples/filesystem.sema
+semauri tokens examples/shop.suri
+semauri ast examples/shop.suri
+semauri hir examples/shop.suri
+semauri effects examples/filesystem.suri
+semauri plan examples/filesystem.suri
 ~~~
 
 Effectful execution is explicit. The current execution path supports authorized filesystem workflows:
 
 ~~~bash
-semauri run --allow filesystem_read --allow filesystem_write examples/filesystem.sema
+semauri run --allow filesystem_read --allow filesystem_write examples/filesystem.suri
 ~~~
 
 Inspect the plan without performing effects:
 
 ~~~bash
-semauri run --dry-run examples/filesystem.sema
+semauri run --dry-run examples/filesystem.suri
 ~~~
 
 Use <code>--cwd PATH</code> to choose the working directory for relative filesystem paths. This is a convenience option, **not** a security sandbox; execute filesystem programs only with appropriate trust and permissions.
@@ -178,7 +178,7 @@ Use <code>--cwd PATH</code> to choose the working directory for relative filesys
 
 ### The program file cannot be found
 
-Ensure the file exists in your **current** directory. Use `pwd` and `ls` on Linux/macOS; use `Get-Location` and `dir` in PowerShell. You can also pass the full path to `hello.sema`.
+Ensure the file exists in your **current** directory. Use `pwd` and `ls` on Linux/macOS; use `Get-Location` and `dir` in PowerShell. You can also pass the full path to `hello.suri`.
 
 On Windows, verify Notepad did not append `.txt` to your file name.
 
@@ -188,7 +188,7 @@ Do not disable checksum verification. Use the official [GitHub Releases](https:/
 
 ### `semauri run` reports a missing capability
 
-Running effectful operations requires explicit permission. For printing, use `semauri run --allow console_write hello.sema`. For file operations, see [runtime capabilities](05_RUNTIME.md). `check` and `--dry-run` let you inspect programs before granting permissions.
+Running effectful operations requires explicit permission. For printing, use `semauri run --allow console_write hello.suri`. For file operations, see [runtime capabilities](05_RUNTIME.md). `check` and `--dry-run` let you inspect programs before granting permissions.
 
 ## Updating
 

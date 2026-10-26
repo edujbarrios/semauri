@@ -13,6 +13,6 @@ Integer absolute values use checked `i64::abs` and **never pass through binary64
 `absolute` is a **contextual** operator only immediately before `of`: existing variables and labels named `absolute` remain valid. Parenthesize complex operands: `absolute of (a minus b)`. It composes with pure typed `map every` and functions. There are no new effect permissions or live ML tensor computations.
 
 ```sh
-semauri check examples/absolute.sema
-semauri run --allow console_write examples/absolute.sema
+semauri check examples/absolute.suri
+semauri run --allow console_write examples/absolute.suri
 ```

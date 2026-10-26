@@ -274,7 +274,7 @@ The typed collection operators in v0.17.0 include `length of` for strings and li
 
 ## Assertions and tests
 
-The registered console operation `assert boolean_expression.` checks a Boolean at execution; false raises a source-located `S502` runtime error. The pure assertion itself requires no effect permission. `semauri test PATH` discovers assertion-based `.sema` test files and refuses non-console effects. A program requiring `print` needs `--allow-console` to run under the test command. This is not a general-purpose testing runtime; see [assertions](12_ASSERTIONS.md) and [test runner](15_TEST_RUNNER.md).
+The registered console operation `assert boolean_expression.` checks a Boolean at execution; false raises a source-located `S502` runtime error. The pure assertion itself requires no effect permission. `semauri test PATH` discovers assertion-based `.suri` test files and refuses non-console effects. A program requiring `print` needs `--allow-console` to run under the test command. This is not a general-purpose testing runtime; see [assertions](12_ASSERTIONS.md) and [test runner](15_TEST_RUNNER.md).
 
 ## Variables and lexical scope
 
@@ -322,7 +322,7 @@ otherwise:
 end.
 ```
 
-The parser represents subsequent clauses as nested `if_statement` nodes inside the prior branch's alternative block. Each branch preserves its source span and lexical scope. Conditions in *all* clauses are type-checked, including unreachable clauses, and invalid conditions still report `S316`. Missing colons and empty clauses retain `S218` and `S221`, respectively. See [`examples/otherwise_if.sema`](../examples/otherwise_if.sema).
+The parser represents subsequent clauses as nested `if_statement` nodes inside the prior branch's alternative block. Each branch preserves its source span and lexical scope. Conditions in *all* clauses are type-checked, including unreachable clauses, and invalid conditions still report `S316`. Missing colons and empty clauses retain `S218` and `S221`, respectively. See [`examples/otherwise_if.suri`](../examples/otherwise_if.suri).
 
 The symbol table describes the complete typed program, including declarations inside a statically unselected branch. Branch elimination belongs to a later optimization/lowering phase, not name resolution.
 

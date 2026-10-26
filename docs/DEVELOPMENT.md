@@ -37,8 +37,8 @@ Run the CLI directly from source:
 
 ~~~bash
 cargo run -- version
-cargo run -- check examples/hello.sema
-cargo run -- build examples/shop.sema
+cargo run -- check examples/hello.suri
+cargo run -- build examples/shop.suri
 ~~~
 
 Create an optimized native binary:

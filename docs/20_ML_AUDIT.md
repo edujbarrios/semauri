@@ -3,8 +3,8 @@
 Semauri can audit the declarations in a typed ML runtime plan **without executing training**:
 
 ```sh
-semauri audit examples/ml_versioned_inputs.sema
-semauri audit examples/ml_versioned_inputs.sema --strict
+semauri audit examples/ml_versioned_inputs.suri
+semauri audit examples/ml_versioned_inputs.suri --strict
 ```
 
 `semauri audit FILE` prints a JSON report with stable `schema_version: 1`, `status`, `verification`, `warning_count`, `warnings`, and `declared_inputs`. Each warning includes the operation ID and source location. For CI, `--strict` returns exit code **2** if any audit warnings are present and **0** if none are present. Parsing and semantic errors preserve the normal compiler exit status of 65. Without `--strict`, advisory warnings do not affect the exit status.

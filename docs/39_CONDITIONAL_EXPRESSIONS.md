@@ -16,6 +16,6 @@ Syntax is intentionally explicit and distinguished from the existing statement f
 Conditionals are pure compiler-known expression selectors, not general runtime-dependent branching or a substitute for executing live ML model training.
 
 ```sh
-semauri check examples/conditional_expressions.sema
-semauri run --allow console_write examples/conditional_expressions.sema
+semauri check examples/conditional_expressions.suri
+semauri run --allow console_write examples/conditional_expressions.suri
 ```

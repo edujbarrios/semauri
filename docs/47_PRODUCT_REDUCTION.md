@@ -13,8 +13,8 @@ Integer-only lists use **checked exact signed 64-bit multiplication**, preservin
 A typed empty `list<number>` produces `1` (multiplicative identity). A non-numeric input is rejected statically with **S353**. Source lists remain immutable; no effect grants are added. `product` is contextual only before `of`; existing variables and labels named `product` remain valid. Parenthesize complex inputs, e.g. `product of (take 3 from values)`.
 
 ```sh
-semauri check examples/product.sema
-semauri run --allow console_write examples/product.sema
+semauri check examples/product.suri
+semauri run --allow console_write examples/product.suri
 ```
 
 This is a concrete-list aggregation in the Rust compiler, not a live tensor multiplication or ML training implementation.

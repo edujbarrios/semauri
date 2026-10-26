@@ -16,6 +16,6 @@ Both operands must be typed lists (source-located `S383`). The result must be a 
 Operations work with compiler-known values, not external dataset streams or ML tensor training. No additional effect permissions.
 
 ```sh
-semauri check examples/zip_every.sema
-semauri run --allow console_write examples/zip_every.sema
+semauri check examples/zip_every.suri
+semauri run --allow console_write examples/zip_every.suri
 ```

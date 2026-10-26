@@ -15,6 +15,6 @@ Neither operation mutates the input or grants runtime permissions. They work on 
 These are operations on concrete compiler-known lists; neither operator reads a dataset, executes a streaming pipeline or trains a model.
 
 ```sh
-semauri check examples/list_boundaries.sema
-semauri run --allow console_write examples/list_boundaries.sema
+semauri check examples/list_boundaries.suri
+semauri run --allow console_write examples/list_boundaries.suri
 ```

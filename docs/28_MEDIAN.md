@@ -14,8 +14,8 @@ For an odd-length list, the result is the middle value in sorted order. For an e
 The release also preserves exact signed `i64` values under unary `minus` in both evaluation and constant folding, rather than rounding through `f64`; overflow is diagnosed as `S358` at evaluation.\n\nThe operand must be `list<number>` (invalid types produce located diagnostic `S353`). Empty lists or non-finite values produce `S357` on evaluation. Current source syntax cannot construct empty list literals. This operator is a prefix expression binding to one primary: write `median of (reverse of readings)` to compose. `median` becomes a reserved keyword.
 
 ```sh
-semauri check examples/median.sema
-semauri run --allow console_write examples/median.sema
+semauri check examples/median.suri
+semauri run --allow console_write examples/median.suri
 ```
 
 The operation applies to ordinary typed core-language numeric lists, not live tensor values, datasets, or unverified ML training results.

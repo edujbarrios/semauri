@@ -8,7 +8,7 @@ Semauri is a **statically typed programming language** with its own compiler, ex
 
 Implemented in Rust, the compiler includes a lexer, parser, typed intermediate representation, lexical scopes, optimization, source-aware diagnostics and effect-aware execution planning. Semauri programs can perform authorized console and filesystem operations, generate web pages and structured schemas, and describe typed machine-learning workflows.
 
-**Latest release:** [Semauri v0.30.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.sema` · **Platforms:** Windows, macOS, Linux
+**Latest release:** [Semauri v0.31.0](https://github.com/edujbarrios/semauri/releases/latest) · **Source extension:** `.suri` · **Platforms:** Windows, macOS, Linux
 
 ## Get started
 
@@ -28,7 +28,7 @@ curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh
 
 Then open a new terminal if needed and verify the installation using `semauri version`.
 
-**2. Create a file named `hello.sema` in a plain-text editor.** Add:
+**2. Create a file named `hello.suri` in a plain-text editor.** Add:
 
 ```sema
 let answer be 6 times 7.
@@ -40,15 +40,15 @@ print answer.
 **3. Open a terminal in the directory containing the file, then check and run it.**
 
 ```sh
-semauri check hello.sema
-semauri run --allow console_write hello.sema
+semauri check hello.suri
+semauri run --allow console_write hello.suri
 ```
 
 For guidance on opening your terminal, creating a project folder, saving the right extension and fixing installation issues, see **[Your first Semauri program](docs/23_FIRST_PROGRAM.md)**. Prefer to inspect installers before running them? See the [manual, checksum-verified installation guide](docs/00_INSTALLATION.md).
 
 ## Your first program's output
 
-To inspect what would happen before running it, use `semauri run --dry-run hello.sema`. Lowercase commands are the canonical style; earlier uppercase or mixed-case programs remain supported.
+To inspect what would happen before running it, use `semauri run --dry-run hello.suri`. Lowercase commands are the canonical style; earlier uppercase or mixed-case programs remain supported.
 
 Expected console output:
 
@@ -64,9 +64,9 @@ An `assert` with a false condition reports a source-located runtime error (`S502
 The lexer recognizes language keywords and registered domain commands case-insensitively. `LET`, `Let`, and `let` have the same meaning, but all new official source files use lowercase.
 
 ```sh
-semauri fmt examples/hello_console.sema           # print formatted source
-semauri fmt examples/hello_console.sema --check   # exit 1 when formatting differs
-semauri fmt examples/hello_console.sema --write   # rewrite this file
+semauri fmt examples/hello_console.suri           # print formatted source
+semauri fmt examples/hello_console.suri --check   # exit 1 when formatting differs
+semauri fmt examples/hello_console.suri --write   # rewrite this file
 ```
 
 `fmt` uses real lexer tokens and source spans. It lowercases **recognized syntax**, not quoted strings, comments, identifiers, names or source formatting. It does not change Rust APIs, JSON field names or filesystem path case. All official examples and **22 bilingual course programs** now follow this convention, and an automated test enforces it. See [lowercase syntax](docs/21_LOWERCASE_SYNTAX.md).
@@ -146,14 +146,14 @@ within ml:
 end.
 ```
 
-Save as `train.sema` and inspect the compiler's output:
+Save as `train.suri` and inspect the compiler's output:
 
 ```sh
-semauri check train.sema
-semauri effects train.sema
-semauri plan train.sema
-semauri graph train.sema
-semauri audit train.sema --strict
+semauri check train.suri
+semauri effects train.suri
+semauri plan train.suri
+semauri graph train.suri
+semauri audit train.suri --strict
 ```
 
 **`graph`** exports a versioned JSON SSA dependency graph with producer/consumer edges, declared effects, source spans and validated reference types. **`audit`** checks for unversioned dataset/model declarations and direct unseeded training forms; `--strict` exits with status `2` when warnings exist. **Declared revisions are unverified metadata** until an external execution adapter checks the artifacts. A warning-free audit is *not* proof of actual reproducibility, deterministic accelerators or successful training.
@@ -198,7 +198,7 @@ end.
 ```
 
 ```sh
-semauri build examples/shop.sema
+semauri build examples/shop.suri
 ```
 
 **Filesystem operations:**
@@ -213,8 +213,8 @@ end.
 ```
 
 ```sh
-semauri run --dry-run examples/filesystem.sema
-semauri run --allow filesystem_read --allow filesystem_write examples/filesystem.sema
+semauri run --dry-run examples/filesystem.suri
+semauri run --allow filesystem_read --allow filesystem_write examples/filesystem.suri
 ```
 
 Execution requires explicit authorization and is **not sandboxed by `--cwd`**. File deletion refuses directories instead of recursively deleting their contents. Never execute untrusted programs with sensitive filesystem permissions.
@@ -228,7 +228,7 @@ Official Semauri releases include native executables for **Linux, macOS and Wind
 ## Architecture and development
 
 ```text
-.sema source
+.suri source
     → lexer and domain vocabulary
     → recursive-descent parser and AST
     → name resolution and typed HIR
@@ -244,8 +244,8 @@ git clone https://github.com/edujbarrios/semauri.git
 cd semauri
 cargo fmt --check
 cargo test --all-targets
-cargo run -- check examples/hello_console.sema
-cargo run -- fmt examples/hello_console.sema --check
+cargo run -- check examples/hello_console.suri
+cargo run -- fmt examples/hello_console.suri --check
 ```
 
 New: [typed zip](docs/43_ZIP_EVERY.md), [stable partition](docs/44_PARTITION_EVERY.md) and [one-level flattening](docs/45_FLATTEN_LISTS.md), alongside [conditional expressions](docs/39_CONDITIONAL_EXPRESSIONS.md).

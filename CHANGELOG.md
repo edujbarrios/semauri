@@ -1,3 +1,12 @@
+## 0.31.0 — 2026-10-26
+
+### Canonical source extension
+- Replace the conflicting `.sema` suffix with `.suri`, a short Semauri-specific source extension not assigned in the IANA media-type registry or the current GitHub Linguist extension catalog. The IANA registry already contains the unrelated `application/vnd.sema` media type.
+- Update the CLI test runner, diagnostics, all 43 runnable examples, all 22 bilingual course programs, test fixtures, package smoke tests, guides and documentation links.
+- Treat this as a breaking filename migration: rename existing source files from `name.sema` to `name.suri`.
+
+See [v0.31.0 release notes](docs/releases/0.31.0.md).
+
 ## 0.30.0 — 2026-10-26
 
 ### Language: exact contextual absolute values
@@ -106,7 +115,7 @@ See [v0.25.0 release notes](docs/releases/0.25.0.md).
 
 ### Language: bounded inclusive integer generators
 - Add contextual `range from START to END` producing `list<number>`, ascending or descending, with inclusive endpoints and exact i64 values. Invalid operand types raise S367; non-integer bounds and ranges exceeding 10,000 values raise S368 without overflow or unbounded compile-time allocation. [PR #170](https://github.com/edujbarrios/semauri/pull/170).
-- Add runnable `map_filter.sema` and `range_map_filter.sema` examples plus detailed reference documentation and toolchain packaging verification.
+- Add runnable `map_filter.suri` and `range_map_filter.suri` examples plus detailed reference documentation and toolchain packaging verification.
 
 ### Runtime and compatibility boundaries
 - These operations evaluate concrete compiler-known typed lists; they do **not** implement arbitrary user-defined functions, runtime streaming transforms, external ML tensors, or neural-network training. No new effect permissions were introduced. The words `map`, `filter`, and `range` remain valid variable identifiers outside the contextual operator syntax.
@@ -202,7 +211,7 @@ See [v0.19.0 release notes](docs/releases/0.19.0.md).
 
 - Present Semauri prominently as a statically typed programming language with an independent Rust compiler, native CLI and domain-specific build/execution backends.
 - Refresh the primary project messages: **“A programming language for readable, typed and predictable software”** and **“Write clearly. Compile confidently. Build with intent.”**
-- Add OS-specific installation and first-program instructions, including how to open PowerShell/Terminal, create and edit a `.sema` file, check and run it, resolve `PATH` issues and understand explicit capabilities.
+- Add OS-specific installation and first-program instructions, including how to open PowerShell/Terminal, create and edit a `.suri` file, check and run it, resolve `PATH` issues and understand explicit capabilities.
 - Expand the language reference and installation troubleshooting without changing the English-language Semauri syntax or the existing Spanish course.
 
 ### Compatibility
@@ -240,7 +249,7 @@ See [v0.18.0 release notes](docs/releases/0.18.0.md).
 
 ### Compatibility and limitations
 
-- Previously valid capitalized `.sema` programs still compile. The canonical lowercase convention is a source-style change, not a breaking grammar migration.
+- Previously valid capitalized `.suri` programs still compile. The canonical lowercase convention is a source-style change, not a breaking grammar migration.
 - Quoted strings, user-defined names and labels, comments, Rust APIs, generated output case and JSON keys are not blanket-lowercased.
 - ML revisions are *declared*, not artifact-verified. Semauri still produces ML workflow plans rather than executing model training.
 - User-defined functions and general dynamic runtime control flow are not part of this release.
@@ -265,7 +274,7 @@ All notable changes to Semauri are documented here.
 
 ### Added
 
-- An 11-lesson beginner course in Spanish, with runnable `.sema` programs and challenges.
+- An 11-lesson beginner course in Spanish, with runnable `.suri` programs and challenges.
 - `Unless`, `Otherwise if` / `Else if`, and Unicode scalar string escapes.
 - Beginner course packaged with native compiler distributions.
 

@@ -17,6 +17,6 @@ A non-list or wrong-element-type operand receives diagnostic `S356` during type 
 `any` and `all` become reserved words in Semauri 0.21.0 and cannot be bare variable identifiers. These operations act only on concrete, typed boolean lists, not framework tensors.
 
 ```sh
-semauri check examples/boolean_reductions.sema
-semauri run --allow console_write examples/boolean_reductions.sema
+semauri check examples/boolean_reductions.suri
+semauri run --allow console_write examples/boolean_reductions.suri
 ```
