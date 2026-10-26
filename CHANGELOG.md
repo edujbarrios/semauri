@@ -1,4 +1,4 @@
-## Unreleased
+## 0.34.0 — 2026-10-26
 
 ### Natural-language string predicates
 - Add contextual `starts with` and `ends with` to validate Unicode string prefixes and suffixes with checked operands and pure boolean results.
