@@ -929,7 +929,7 @@ impl<'a> Parser<'a> {
             TokenKind::Word
                 if token.lexeme.eq_ignore_ascii_case("parse")
                     && self.tokens.get(self.current + 1).is_some_and(|next|
-                        next.kind == TokenKind::Word
+                        matches!(next.kind, TokenKind::Word | TokenKind::DomainAction)
                             && matches!(next.lexeme.to_ascii_lowercase().as_str(), "number" | "boolean"))
                     && self.tokens.get(self.current + 2).is_some_and(|next| next.kind == TokenKind::From) => {
                 let start = self.advance().clone();
