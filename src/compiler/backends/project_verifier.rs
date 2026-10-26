@@ -30,6 +30,58 @@ fn scan_verify_sources(directory: &Path, collected: &mut Vec<PathBuf>) -> std::i
     Ok(())
 }
 
+// Prepare every source before modifying anything, to avoid partial changes
+// when one file has invalid lexical content. Symlinks and generated cache
+// directories are excluded by the shared bounded project scanner.
+fn format_source_directory(
+    directory: &Path, compiler: &Compiler, check: bool, write: bool,
+) -> Result<(String, i32)> {
+    if !check && !write {
+        return Err(usage_error(
+            "Directory formatting requires --check or --write; usage: semauri fmt DIRECTORY --check|--write"
+        ));
+    }
+    let directory = fs::canonicalize(directory)
+        .map_err(|error| usage_error(format!("Cannot open directory: {error}")))?;
+    let mut sources = Vec::new();
+    scan_verify_sources(&directory, &mut sources)
+        .map_err(|error| usage_error(format!("Cannot scan directory: {error}")))?;
+    sources.sort();
+    if sources.is_empty() {
+        return Err(usage_error(format!(
+            "No .suri source files under {}", directory.display()
+        )));
+    }
+    let mut changes = Vec::new();
+    let mut total_bytes = 0u64;
+    for path in &sources {
+        let source = fs::read_to_string(path)
+            .map_err(|error| usage_error(format!("Cannot read {}: {error}", path.display())))?;
+        total_bytes = total_bytes.saturating_add(source.len() as u64);
+        if total_bytes > MAX_VERIFY_BYTES {
+            return Err(usage_error("Source directory exceeds the 4 MiB format limit"));
+        }
+        let formatted = compiler.format_source(&source)?;
+        if source != formatted {
+            changes.push((path.to_path_buf(), formatted));
+        }
+    }
+    let total = sources.len();
+    let changed = changes.len();
+    if check {
+        let mut report = changes.iter()
+            .map(|(path, _)| format!("{}: formatting required\n", path.display()))
+            .collect::<String>();
+        report.push_str(&format!("{total} files checked; {changed} need formatting\n"));
+        return Ok((report, if changed == 0 { 0 } else { 1 }));
+    }
+    for (path, content) in changes {
+        fs::write(&path, content).map_err(|error|
+            usage_error(format!("Cannot write {}: {error}", path.display())))?;
+    }
+    Ok((format!("Formatted {changed} of {total} .suri files\n"), 0))
+}
+
 fn verification_usage() -> String {
     "Usage: semauri verify PROJECT [--json] [--allow-console]".to_string()
 }

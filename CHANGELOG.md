@@ -5,6 +5,13 @@
 - Guarantee that project verification does not execute the application or filesystem/network effects; tests continue to use the restricted test runner and require explicit console permission for printing.
 - Provide aggregated diagnostics and machine-readable reports with stable status codes and safety bounds, plus integration tests for invalid projects, formatting, static errors, unsafe test effects and generated project workflows.
 
+## Unreleased
+
+### Safe recursive source formatting
+- Extend `semauri fmt DIRECTORY --check|--write` to recursively check or normalize project sources in one command while preserving the existing single-file behavior.
+- Preflight lexing and formatting of all discovered sources before any write, report all noncanonical file paths and summary counts, and refuse implicit directory output.
+- Reuse bounded, symlink-safe project scanning that excludes build/cache directories; add integration tests for formatting, file preservation, and preflight failure behavior.
+
 ## 0.42.0 — 2026-10-26
 
 ### Practical project initialization
