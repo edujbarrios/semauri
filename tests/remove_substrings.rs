@@ -47,7 +47,7 @@ fn requires_two_string_operands_statically() {
 }
 
 #[test]
-fn folds_literals_and_keeps_contextual_identifiers() {
+fn folds_literals_and_preserves_reserved_action_keywords() {
     let compiler = Compiler::new();
     assert_eq!(compiler.format_source("PRINT REMOVE ALL OF \"a\" FROM \"banana\".").unwrap(),
         "print remove all of \"a\" from \"banana\".");
@@ -57,7 +57,7 @@ fn folds_literals_and_keeps_contextual_identifiers() {
     assert!(!h.contains("text_remove_all"), "{h}");
     assert_eq!(compiler.effect_analysis("print remove all of \"x\" from \"abc\".")
         .unwrap().effects(), vec!["console_write".to_string()]);
-    let result = run(r#"let remove be "ok".
-assert remove is equal to "ok"."#);
+    let result = run(r#"let removable be "ok".
+assert removable is equal to "ok"."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
 }
