@@ -1,3 +1,15 @@
+## 0.33.0 — 2026-10-26
+
+### Executable configuration and local AI runtime
+- Add typed `string config`, `number config`, and `boolean config` runtime reads with an explicit `config_read` capability.
+- Make `semauri run` discover the nearest `.config.suri`; add explicit `--config` selection and declared `--set` overrides. Bindings resolve individually so unused environment secrets are neither required nor loaded.
+- Execute config, AI, and console operations as one typed dependency plan. Add a deterministic `local/*` adapter for offline and CI workflows.
+
+### Safe AI execution controls
+- Add typed request budgets, provider retry policy, and run-scoped response caching. Enforce non-negative integer limits and reject uncached inference after budget exhaustion.
+- Make every checked-in AI example configuration-driven and executable, including a self-contained vision fixture.
+- Document the supported runtime boundary and the prioritized capability roadmap without claiming hosted providers, streaming, structured extraction, or persistent agent state.
+
 ## 0.32.0 — 2026-10-26
 
 ### Agent-first project guide
