@@ -16,7 +16,9 @@ fn visit(path: &Path, compiler: &Compiler, visited: &mut usize) {
         }
         return;
     }
-    if path.extension().is_none_or(|extension| extension != "suri") {
+    if path.extension().is_none_or(|extension| extension != "suri")
+        || path.file_name().is_some_and(|name| name == ".config.suri")
+    {
         return;
     }
     let source = fs::read_to_string(path).unwrap();
