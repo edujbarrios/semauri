@@ -865,6 +865,24 @@ impl<'a> Parser<'a> {
                     span,
                 })
             }
+            TokenKind::Last
+                if self.tokens.get(self.current + 1)
+                    .is_some_and(|next| next.lexeme.eq_ignore_ascii_case("position"))
+                    && self.tokens.get(self.current + 2)
+                        .is_some_and(|next| next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.advance(); // contextual 'position'
+                self.consume(TokenKind::Of, "Expected 'of' after last position", "S242")?;
+                let needle = self.primary()?;
+                self.consume(TokenKind::In, "Expected 'in' before searched text", "S242")?;
+                let searched = self.primary()?;
+                Ok(Expr::Binary {
+                    left: Box::new(needle),
+                    right: Box::new(searched.clone()),
+                    operator: BinaryOperator::TextLastPosition,
+                    span: span_between_spans(start.span, searched.span()),
+                })
+            }
             TokenKind::First | TokenKind::Last
                 if self.tokens.get(self.current + 1)
                     .is_some_and(|next| next.kind != TokenKind::Of) => {
@@ -928,7 +946,7 @@ impl<'a> Parser<'a> {
             // Split is also a registered ML action; the following 'of'\n            // distinguishes this pure expression without changing ML syntax.
             // Pure Unicode text search retains contextual identifier names.
             TokenKind::Word
-                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "occurrences" | "position")
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "occurrences" | "position" | "positions")
                     && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
                 let start = self.advance().clone();
                 self.consume(TokenKind::Of, "Expected 'of' after text search operation", "S242")?;
@@ -936,10 +954,10 @@ impl<'a> Parser<'a> {
                 self.consume(TokenKind::In, "Expected 'in' before searched text", "S242")?;
                 let text = self.primary()?;
                 let span = span_between_spans(start.span, text.span());
-                let operator = if start.lexeme.eq_ignore_ascii_case("occurrences") {
-                    BinaryOperator::TextOccurrences
-                } else {
-                    BinaryOperator::TextPosition
+                let operator = match start.lexeme.to_ascii_lowercase().as_str() {
+                    "occurrences" => BinaryOperator::TextOccurrences,
+                    "positions" => BinaryOperator::TextPositions,
+                    _ => BinaryOperator::TextPosition,
                 };
                 Ok(Expr::Binary {
                     left: Box::new(needle),

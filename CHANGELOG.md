@@ -1,3 +1,11 @@
+## Unreleased
+
+### Unicode substring positions and rightmost search
+- Add contextual `positions of NEEDLE in TEXT` returning a statically typed list of non-overlapping Unicode scalar match indices, bounded to 10,000 matches.
+- Add `last position of NEEDLE in TEXT` returning the rightmost Unicode scalar match position, `-1` when absent, and the text length for an empty needle.
+- Enforce two string operands with `S414` and reject empty or oversized all-position queries with `S415`, preserving deterministic optimizer/runtime behavior and contextual identifiers.
+- Add editor grammar, formatter support, runnable examples, and regression tests.
+
 ## 0.40.0 — 2026-10-26
 
 ### Pure literal substring removal

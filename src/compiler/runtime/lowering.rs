@@ -1994,6 +1994,22 @@ impl<'a> Lowerer<'a> {
                         Some("Check the object, field name, type, and JSON size limits.".into()),
                     ))?
             }
+            (BinaryOperator::TextPositions, ValueData::String(needle), ValueData::String(text)) => {
+                let positions = text_positions(&text, &needle).ok_or_else(||
+                    SemauriError::semantic(
+                        "S415",
+                        "Search term cannot be empty or exceed 10,000 matching positions",
+                        Some(span), None,
+                    ))?;
+                ValueData::List(positions.into_iter()
+                    .map(|index| ValueData::Number(NumberValue::Int(index))).collect())
+            }
+            (BinaryOperator::TextLastPosition, ValueData::String(needle), ValueData::String(text)) => {
+                ValueData::Number(NumberValue::Int(
+                    text_last_position(&text, &needle)
+                        .expect("string character offsets fit in i64"),
+                ))
+            }
             (BinaryOperator::TextOccurrences, ValueData::String(needle), ValueData::String(text)) => {
                 if needle.is_empty() {
                     return Err(SemauriError::semantic(

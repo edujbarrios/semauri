@@ -341,6 +341,30 @@ diagnostic. They are deterministic, case sensitive, require no new effects,
 and support compile-time constant folding. Search results count Unicode
 scalar values, not extended grapheme clusters or locale-sensitive matches.
 
+### Unicode substring positions
+
+`positions of NEEDLE in TEXT` returns a `list<number>` with every
+**non-overlapping** match position, counted in zero-based Unicode scalar
+values. No matches returns a typed empty list. `last position of NEEDLE in
+TEXT` returns the **rightmost** match position as a `number`, or
+`minus 1` when absent. For an empty needle, `last position` returns
+the Unicode scalar length of the text.
+
+```text
+let positions_found be positions of "é" in "café café".
+assert length of positions_found is equal to 2.
+assert (positions_found at 0) is equal to 3.
+assert (positions_found at 1) is equal to 8.
+assert last position of "é" in "café café" is equal to 8.
+```
+
+Both operators require string operands and reject type mismatches at compile
+time (`S414`). `positions of` requires a nonempty needle and permits at
+most 10,000 matches (`S415`). Matching is Unicode-aware, case-sensitive,
+pure and literal (not a regular expression). Constant inputs are folded to
+typed HIR expressions; invalid expressions retain diagnostics. The rightmost
+match may overlap an earlier match, as in Rust's `rfind`.
+
 ### Literal substring removal
 
 `remove all of NEEDLE from TEXT` removes every **non-overlapping literal**
