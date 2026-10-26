@@ -1,11 +1,9 @@
-## Unreleased
+## 0.43.0 — 2026-10-26
 
 ### Project-wide verification and CI readiness
 - Introduce `semauri verify PROJECT [--json] [--allow-console]`, an effect-aware local project quality gate for formatter conformance, static checking of all source files, entry-point effect inspection and assertion-test execution.
 - Guarantee that project verification does not execute the application or filesystem/network effects; tests continue to use the restricted test runner and require explicit console permission for printing.
 - Provide aggregated diagnostics and machine-readable reports with stable status codes and safety bounds, plus integration tests for invalid projects, formatting, static errors, unsafe test effects and generated project workflows.
-
-## Unreleased
 
 ### Safe recursive source formatting
 - Extend `semauri fmt DIRECTORY --check|--write` to recursively check or normalize project sources in one command while preserving the existing single-file behavior.
