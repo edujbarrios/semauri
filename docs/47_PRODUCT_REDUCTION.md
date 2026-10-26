@@ -18,3 +18,5 @@ semauri run --allow console_write examples/product.sema
 ```
 
 This is a concrete-list aggregation in the Rust compiler, not a live tensor multiplication or ML training implementation.
+
+For integer-only input the product is evaluated in list order, and any checked intermediate overflow produces S387 even if a later element would have been zero. Decimal inputs use the existing binary64 representation.
