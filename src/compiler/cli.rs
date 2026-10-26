@@ -17,6 +17,37 @@ fn load_cli_program(
     Ok(source)
 }
 
+// Project setup never executes source code or overwrites existing projects.
+fn initialize_project(directory: &Path) -> Result<()> {
+    fs::create_dir(directory).map_err(|error|
+        usage_error(format!("Cannot create project {}: {error}", directory.display())))?;
+    let result = (|| -> std::io::Result<()> {
+        fs::create_dir(directory.join("lib"))?;
+        fs::create_dir(directory.join("tests"))?;
+        fs::write(directory.join(".semauri-root"), "")?;
+        fs::write(directory.join("lib").join("math.suri"),
+            "define function square taking n as number to (n times n).\n")?;
+        fs::write(directory.join("main.suri"),
+            "# Your first multi-file Semauri program.\n\
+             import \"lib/math.suri\".\n\
+             print invoke square to 7.\n")?;
+        fs::write(directory.join("tests").join("math.suri"),
+            "# Tests can import sources within the project root.\n\
+             import \"../lib/math.suri\".\n\
+             assert invoke square to 7 is equal to 49.\n")?;
+        fs::write(directory.join("README.md"),
+            "# Semauri project\n\n\
+             Run semauri check main.suri to type-check.\n\
+             Run semauri run --allow console_write main.suri to print 49.\n\
+             Run semauri test tests --allow-console to execute tests.\n\n\
+             The .semauri-root file defines the boundary for local imports.\n")?;
+        Ok(())
+    })();
+    result.map_err(|error| usage_error(format!(
+        "Project creation was incomplete in {}: {error}", directory.display()
+    )))
+}
+
 pub fn run_cli(args: &[String]) -> CliResult {
     if args.first().map(String::as_str) == Some("config") {
         return run_config_cli(&args[1..]);
@@ -36,6 +67,17 @@ pub fn run_cli(args: &[String]) -> CliResult {
         match command {
             None | Some("help") | Some("--help") | Some("-h") => {
                 stdout.push_str(&usage());
+                Ok(0)
+            }
+            Some("init") => {
+                if args.len() != 2 || args[1].starts_with('-') || args[1].is_empty() {
+                    return Err(usage_error("Usage: semauri init PROJECT"));
+                }
+                let destination = Path::new(&args[1]);
+                initialize_project(destination)?;
+                stdout.push_str(&format!(
+                    "Created Semauri project at {}\n", destination.display()
+                ));
                 Ok(0)
             }
             Some("version") | Some("--version") | Some("-v") => {
@@ -628,7 +670,7 @@ fn usage_error(message: impl Into<String>) -> SemauriError {
 }
 
 pub fn usage() -> String {
-    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE             Explain semantic decisions\n  fmt FILE [--check|--write]  Lowercase source syntax while preserving strings\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] Execute assertion-based .suri test files\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
+    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  init PROJECT             Create a multi-file Semauri project without overwriting files\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE             Explain semantic decisions\n  fmt FILE [--check|--write]  Lowercase source syntax while preserving strings\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] Execute assertion-based .suri test files\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
         .to_string()
 }
 
