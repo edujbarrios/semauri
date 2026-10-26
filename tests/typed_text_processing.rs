@@ -42,12 +42,12 @@ print cleaned."#;
 
 #[test]
 fn handles_empty_strings_and_whitespace() {
-    let source = r#"let a be trim of "".
-let b be words of " \t\n ".
-let c be lines of "".
-assert a is equal to "".
-assert length of b is equal to 0.
-assert length of c is equal to 0.
+    let source = r#"let empty_trim be trim of "".
+let empty_words be words of " \t\n ".
+let empty_lines be lines of "".
+assert empty_trim is equal to "".
+assert length of empty_words is equal to 0.
+assert length of empty_lines is equal to 0.
 assert length of (words of "é") is equal to 1."#;
     let result = run(source);
     assert_eq!(result.status, 0, "{}", result.stderr);
@@ -83,9 +83,10 @@ fn constant_folding_and_formatter_support_contextual_words() {
     let compiler = Compiler::new();
     let optimized = compiler.optimized_hir(
         "let values be words of \"  uno dos  \". print length of values."
-    ).unwrap().to_json().to_string();
-    assert!(optimized.contains("uno"), "{optimized}");
-    assert!(optimized.contains("dos"), "{optimized}");
+    ).unwrap();
+    assert!(optimized.changes >= 1);
+    let optimized_json = optimized.to_json().to_string();
+    assert!(optimized_json.contains("\\"value\\":2"), "{optimized_json}");
     let text = "PRINT TRIM OF \" Mixed Case \". PRINT WORDS OF \"A B\". PRINT LINES OF \"a\\nb\".";
     let formatted = compiler.format_source(text).unwrap();
     assert_eq!(formatted, "print trim of \" Mixed Case \". print words of \"A B\". print lines of \"a\\nb\".");
