@@ -543,6 +543,26 @@ fn fold_expr(
                     span: *span,
                 };
             }
+            // A list-valued substring search folds to HIR list expressions,
+            // not to unsupported scalar literals.
+            if *operator == BinaryOperator::TextPositions {
+                if let (Some(ValueData::String(needle)), Some(ValueData::String(text))) =
+                    (literal_data(&left), literal_data(&right))
+                {
+                    if let Some(positions) = text_positions(&text, &needle) {
+                        *changes += 1;
+                        return HirExpr::List {
+                            ty: Type::List(Box::new(Type::Number)),
+                            items: positions.into_iter().map(|index| HirExpr::Literal {
+                                ty: Type::Number,
+                                value: LiteralValue::Number(NumberValue::Int(index)),
+                                span: *span,
+                            }).collect(),
+                            span: *span,
+                        };
+                    }
+                }
+            }
             // Fold string-list joins directly: literal_data intentionally does not
             // represent list expressions as scalar literals.
             if *operator == BinaryOperator::Join {
@@ -716,6 +736,10 @@ fn eval_constant_binary(
         }
         (BinaryOperator::CharacterAt, ValueData::Number(index), ValueData::String(text)) => {
             text_character_at(index, text).map(ValueData::String)
+        }
+        (BinaryOperator::TextLastPosition, ValueData::String(needle), ValueData::String(text)) => {
+            text_last_position(text, needle)
+                .map(|index| ValueData::Number(NumberValue::Int(index)))
         }
         (BinaryOperator::TextPosition, ValueData::String(needle), ValueData::String(text)) => {
             Some(ValueData::Number(NumberValue::Int(

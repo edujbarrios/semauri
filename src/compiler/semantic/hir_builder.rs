@@ -1126,6 +1126,28 @@ fn binary_type(
                 ))
             }
         }
+        BinaryOperator::TextPositions => {
+            if left == &Type::String && right == &Type::String {
+                Ok(Type::List(Box::new(Type::Number)))
+            } else {
+                Err(SemauriError::semantic(
+                    "S414",
+                    format!("'positions of ... in ...' requires two strings, received {left} and {right}"),
+                    Some(span), None,
+                ))
+            }
+        }
+        BinaryOperator::TextLastPosition => {
+            if left == &Type::String && right == &Type::String {
+                Ok(Type::Number)
+            } else {
+                Err(SemauriError::semantic(
+                    "S414",
+                    format!("'last position of ... in ...' requires two strings, received {left} and {right}"),
+                    Some(span), None,
+                ))
+            }
+        }
         BinaryOperator::TextOccurrences | BinaryOperator::TextPosition => {
             if left == &Type::String && right == &Type::String {
                 Ok(Type::Number)
