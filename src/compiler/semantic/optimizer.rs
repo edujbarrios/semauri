@@ -582,6 +582,15 @@ fn eval_constant_binary(
         ) => Some(ValueData::Boolean(a.as_f64() <= b.as_f64())),
         (BinaryOperator::Equal, a, b) => Some(ValueData::Boolean(a == b)),
         (BinaryOperator::NotEqual, a, b) => Some(ValueData::Boolean(a != b)),
+        (BinaryOperator::Join, ValueData::List(items), ValueData::String(separator)) => {
+            let parts = items.iter().map(|item| match item {
+                ValueData::String(value) => Some(value.as_str()),
+                _ => None,
+            }).collect::<Option<Vec<_>>>()?;
+            Some(ValueData::String(parts.join(separator)))
+        }
+        // Split returns a list; leave it to normal evaluation to preserve the
+        // existing optimizer's scalar-literal conversion invariant.
         (BinaryOperator::StartsWith, ValueData::String(text), ValueData::String(prefix)) => {
             Some(ValueData::Boolean(text.starts_with(prefix)))
         }

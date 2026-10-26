@@ -1,0 +1,7 @@
+# Build and parse structured text using natural-language expressions.
+let fields be split of "name,role,team" by ",".
+assert length of fields is equal to 3.
+assert (fields at 1) is equal to "role".
+let serialized be join of fields with " / ".
+assert serialized is equal to "name / role / team".
+print serialized.

@@ -129,6 +129,24 @@ assert enabled is equal to "true".
 `json` remains a valid variable name unless immediately followed by `of`.
 Non-serializable types produce the static diagnostic `S390`.
 
+### Text splitting and joining
+
+Use `split of TEXT by DELIMITER` to obtain a typed `list<string>` and
+`join of LIST with DELIMITER` to reconstruct text. Delimiters are treated
+literally (not as regular expressions). Splitting keeps empty fields, including
+at the beginning and end of input. An empty delimiter, or more than 10,000
+parts, produces a source-aware `S393` diagnostic. Incorrect operand types
+are reported as `S392`. Both operations are pure.
+
+```text
+let fields be split of "name,role,team" by ",".
+assert length of fields is equal to 3.
+let row be join of fields with " / ".
+assert row is equal to "name / role / team".
+```
+
+The words `split` and `join` remain legal identifiers outside these phrases.
+
 ### Natural-language string predicates
 
 Use `TEXT starts with PREFIX` and `TEXT ends with SUFFIX` to validate names,

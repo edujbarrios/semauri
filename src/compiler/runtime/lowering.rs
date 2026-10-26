@@ -1865,6 +1865,28 @@ impl<'a> Lowerer<'a> {
             ) => ValueData::Boolean(a.as_f64() <= b.as_f64()),
             (BinaryOperator::Equal, a, b) => ValueData::Boolean(a == b),
             (BinaryOperator::NotEqual, a, b) => ValueData::Boolean(a != b),
+            (BinaryOperator::Split, ValueData::String(text), ValueData::String(separator)) => {
+                if separator.is_empty() {
+                    return Err(SemauriError::semantic(
+                        "S393", "Split delimiter must not be empty", Some(right.span()), None,
+                    ));
+                }
+                let parts = text.split(&separator).take(10_001)
+                    .map(|part| ValueData::String(part.to_string())).collect::<Vec<_>>();
+                if parts.len() > 10_000 {
+                    return Err(SemauriError::semantic(
+                        "S393", "Split exceeds the 10,000-element safety limit", Some(span), None,
+                    ));
+                }
+                ValueData::List(parts)
+            }
+            (BinaryOperator::Join, ValueData::List(items), ValueData::String(separator)) => {
+                let parts: Vec<String> = items.into_iter().map(|item| match item {
+                    ValueData::String(value) => value,
+                    _ => unreachable!("join operand type was checked"),
+                }).collect();
+                ValueData::String(parts.join(&separator))
+            }
             (BinaryOperator::StartsWith, ValueData::String(text), ValueData::String(prefix)) => {
                 ValueData::Boolean(text.starts_with(&prefix))
             }

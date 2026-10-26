@@ -53,8 +53,13 @@ impl Compiler {
                         && index > 0
                         && matches!(tokens[index - 1].lexeme.to_ascii_lowercase().as_str(), "starts" | "ends")));
             let is_text_operation = token.kind == TokenKind::Word
-                && matches!(token.lexeme.to_ascii_lowercase().as_str(), "trim" | "words" | "lines" | "json")
+                && matches!(token.lexeme.to_ascii_lowercase().as_str(), "trim" | "words" | "lines" | "json" | "split" | "join")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
+            let is_join_with = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("with")
+                && tokens[..index].iter().rev()
+                    .take_while(|previous| previous.kind != TokenKind::Dot)
+                    .any(|previous| previous.lexeme.eq_ignore_ascii_case("join"));
             let is_repeat = token.kind == TokenKind::Word
                 && token.lexeme.eq_ignore_ascii_case("repeat")
                 && tokens.get(index + 1).is_some_and(|next|
@@ -62,7 +67,7 @@ impl Compiler {
                         | TokenKind::Minus | TokenKind::LParen));
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute && !is_product && !is_text_operation && !is_text_predicate
+                && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute && !is_product && !is_text_operation && !is_text_predicate && !is_join_with
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count" | "reduce" | "zip" | "partition")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")

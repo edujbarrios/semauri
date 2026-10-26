@@ -925,6 +925,28 @@ impl<'a> Parser<'a> {
                     operand: Box::new(operand),
                 })
             }
+            // Split and join are contextual, readable, and statically typed.
+            TokenKind::Word
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "split" | "join")
+                    && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Of, "Expected 'of' after split/join", "S242")?;
+                let left = self.primary()?;
+                let operator = if start.lexeme.eq_ignore_ascii_case("split") {
+                    self.consume(TokenKind::By, "Expected 'by' after text to split", "S242")?;
+                    BinaryOperator::Split
+                } else {
+                    self.consume_surface("with", "Expected 'with' after list to join", "S242")?;
+                    BinaryOperator::Join
+                };
+                let right = self.primary()?;
+                Ok(Expr::Binary {
+                    span: span_between_spans(start.span, right.span()),
+                    left: Box::new(left),
+                    operator,
+                    right: Box::new(right),
+                })
+            }
             // Contextual text operators do not reserve identifiers such as 'words'.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(), "trim" | "words" | "lines" | "json")
