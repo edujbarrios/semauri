@@ -459,6 +459,26 @@ fn fold_expr(
                     span: *span,
                 };
             }
+            // Fold string-list joins directly: literal_data intentionally does not
+            // represent list expressions as scalar literals.
+            if *operator == BinaryOperator::Join {
+                if let (HirExpr::List { items, .. }, Some(ValueData::String(separator))) =
+                    (&left, literal_data(&right))
+                {
+                    let parts = items.iter().map(|item| match literal_data(item) {
+                        Some(ValueData::String(value)) => Some(value),
+                        _ => None,
+                    }).collect::<Option<Vec<_>>>();
+                    if let Some(parts) = parts {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::String,
+                            value: LiteralValue::String(parts.join(&separator)),
+                            span: *span,
+                        };
+                    }
+                }
+            }
             if let (Some(left_value), Some(right_value)) =
                 (literal_data(&left), literal_data(&right))
             {
