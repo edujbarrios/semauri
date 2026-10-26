@@ -1,0 +1,6 @@
+# Convert external text to checked values before calculations.
+let amount be parse number from " 125.5 ".
+let enabled be parse boolean from "TRUE".
+assert amount is greater than 125.
+assert enabled.
+print amount.

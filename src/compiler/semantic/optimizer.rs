@@ -326,6 +326,26 @@ fn fold_expr(
                         };
                     }
                 }
+                (UnaryOperator::ParseNumber, Some(ValueData::String(value))) => {
+                    if let Some(parsed) = parse_number_text(&value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(parsed),
+                            span: *span,
+                        };
+                    }
+                }
+                (UnaryOperator::ParseBoolean, Some(ValueData::String(value))) => {
+                    if let Some(parsed) = parse_boolean_text(&value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Boolean,
+                            value: LiteralValue::Boolean(parsed),
+                            span: *span,
+                        };
+                    }
+                }
                 (UnaryOperator::Json, Some(value)) => {
                     *changes += 1;
                     return HirExpr::Literal {
