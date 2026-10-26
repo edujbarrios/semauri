@@ -702,6 +702,9 @@ fn eval_constant_binary(
             };
             Some(ValueData::String(selected))
         }
+        (BinaryOperator::JsonPointer, ValueData::String(pointer), ValueData::String(source)) => {
+            extract_json_pointer_text(source, pointer).map(ValueData::String)
+        }
         (BinaryOperator::JsonHasKey, ValueData::String(key), ValueData::String(source)) => {
             json_object_has_key(source, key).map(ValueData::Boolean)
         }
