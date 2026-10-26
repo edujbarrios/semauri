@@ -2,7 +2,7 @@
 
 ### Typed text splitting and joining
 - Add contextual `split of TEXT by DELIMITER` and `join of LIST with DELIMITER`, with strict operand checking, Unicode support, and literal separators.
-- Keep empty fields, reject empty split delimiters and excessive expansion with explicit source-aware diagnostics, and preserve identifiers named `split` or `join`.
+- Keep empty fields, reject empty split delimiters and excessive expansion with explicit source-aware diagnostics, and keep existing ML-domain `split` action compatibility while preserving `join` as an identifier.
 - Add runtime and optimizer support, formatter and editor grammar updates, examples and regression coverage.
 
 ## 0.34.0 — 2026-10-26

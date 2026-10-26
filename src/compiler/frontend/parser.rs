@@ -925,8 +925,8 @@ impl<'a> Parser<'a> {
                     operand: Box::new(operand),
                 })
             }
-            // Split and join are contextual, readable, and statically typed.
-            TokenKind::Word
+            // Split is also a registered ML action; the following 'of'\n            // distinguishes this pure expression without changing ML syntax.
+            TokenKind::Word | TokenKind::DomainAction
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(), "split" | "join")
                     && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
                 let start = self.advance().clone();

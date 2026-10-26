@@ -145,7 +145,7 @@ let row be join of fields with " / ".
 assert row is equal to "name / role / team".
 ```
 
-The words `split` and `join` remain legal identifiers outside these phrases.
+`join` remains a legal identifier outside the operator phrase. The word\n`split` also names an existing ML-domain action, which continues to work.
 
 ### Natural-language string predicates
 

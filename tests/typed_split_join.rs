@@ -59,9 +59,10 @@ fn empty_delimiter_returns_source_aware_error() {
 
 #[test]
 fn contextual_words_are_valid_identifiers() {
-    let result = run(r#"let split be "a,b".
-let join be split of split by ",".
-assert (join of join with ",") is equal to split."#);
+    let result = run(r#"let source_text be "a,b".
+let parts be split of source_text by ",".
+let join be parts.
+assert (join of join with ",") is equal to source_text."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
 }
 
