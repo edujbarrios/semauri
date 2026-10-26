@@ -16,8 +16,8 @@ Deduplication uses Semauri's current **value equality for list membership** (the
 An operand that is not a list is rejected statically with source-located `S360`. The implementation is deterministic, stable, and quadratic in the number of list elements, appropriate for current small compile-time lists; it does not stream or deduplicate external datasets. The word `distinct` becomes reserved in v0.22.0.
 
 ```sh
-semauri check examples/distinct.sema
-semauri run --allow console_write examples/distinct.sema
+semauri check examples/distinct.suri
+semauri run --allow console_write examples/distinct.suri
 ```
 
 See [sorting](29_SORTED.md), [list membership](14_CONTAINS.md), and [the language reference](01_LANGUAGE.md).

@@ -3,8 +3,8 @@
 Semauri can export a **typed, deterministic SSA dependency graph** for its runtime operations:
 
 ```sh
-semauri graph examples/ml_workflow.sema
-semauri graph --json examples/ml_workflow.sema
+semauri graph examples/ml_workflow.suri
+semauri graph --json examples/ml_workflow.suri
 ```
 
 The `Compiler::runtime_graph` API and `RuntimePlan::dataflow_graph` produce the same JSON schema (`runtime_dataflow_graph`, `schema_version: 1`). Nodes include operation ID, domain, operation name, sorted direct dependencies, typed arguments, optional output value, effects and source span. Edges identify the producing and consuming operations, the receiving argument and the SSA value reference.

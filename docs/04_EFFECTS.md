@@ -9,7 +9,7 @@ Semantic-domain operations declare stable effect identifiers in Typed HIR. Compi
 `Compiler::effect_analysis` walks unoptimized HIR and returns a conservative manifest with each effect, domain, operation and source span. This intentionally happens before optimization so capability requirements do not depend on an optimizer rewrite.
 
 ```bash
-semauri effects program.sema
+semauri effects program.suri
 ```
 
 ## Capability policies
@@ -29,11 +29,11 @@ compiler.compile_with_policy(source, None, Some(&policy))?;
 A required effect that is not explicitly allowed reports `S334`.
 
 ```bash
-semauri check program.sema \
+semauri check program.suri \
   --allow filesystem_read \
   --allow filesystem_write
 
-semauri check pure.sema --allow-none
+semauri check pure.suri --allow-none
 ```
 
 ## Compilation versus execution

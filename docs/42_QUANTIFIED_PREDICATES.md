@@ -13,6 +13,6 @@ let all_even be all every n in values if ((n modulo 2) is equal to 0).
 Non-list input raises located `S365`; non-Boolean predicate `S366`. Function calls, outer captured immutable bindings, list operations, and conditional expressions are supported inside predicates. No new effects or runtime ML execution are introduced.
 
 ```sh
-semauri check examples/quantified_predicates.sema
-semauri run --allow console_write examples/quantified_predicates.sema
+semauri check examples/quantified_predicates.suri
+semauri run --allow console_write examples/quantified_predicates.suri
 ```

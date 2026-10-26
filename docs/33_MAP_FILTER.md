@@ -19,6 +19,6 @@ Input must be `list<T>` (type error `S365`). The filter predicate must be `boole
 To avoid precedence surprises, parenthesize LIST when it is an expression and BODY when it contains operations, particularly comparisons. A body may use core-language arithmetic, list operations, Boolean conditions and outer bindings. This is **not a generic lambda/function system**, and the compiler cannot run effects, live dataset handles, arbitrary runtime tensors or model training in map/filter bodies. The operations evaluate concrete core-language lists during compilation, rather than emitting a runtime streaming pipeline. No new capabilities are granted.
 
 ```sh
-semauri check examples/map_filter.sema
-semauri run --allow console_write examples/map_filter.sema
+semauri check examples/map_filter.suri
+semauri run --allow console_write examples/map_filter.suri
 ```

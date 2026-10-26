@@ -23,6 +23,6 @@ A non-list source fails type checking with `S365`, a non-Boolean predicate with 
 This is a transformation on compiler-known homogeneous list values, not a streaming split of a machine-learning dataset, neural-network training execution or an operation granting new capabilities.
 
 ```sh
-semauri check examples/partition_every.sema
-semauri run --allow console_write examples/partition_every.sema
+semauri check examples/partition_every.suri
+semauri run --allow console_write examples/partition_every.suri
 ```

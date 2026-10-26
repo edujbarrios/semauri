@@ -15,8 +15,8 @@ Both operands must have static type `number` (otherwise diagnostic `S367`). Runt
 No new execution capabilities, dataset streaming, runtime model training or tensor implementation is implied.
 
 ```sh
-semauri check examples/range_map_filter.sema
-semauri run --allow console_write examples/range_map_filter.sema
+semauri check examples/range_map_filter.suri
+semauri run --allow console_write examples/range_map_filter.suri
 ```
 
 The input to a generator is evaluated as a pair of concrete integer endpoints. Its result can be passed to nested map/filter expressions without changing the immutability or effect policy of either operator.

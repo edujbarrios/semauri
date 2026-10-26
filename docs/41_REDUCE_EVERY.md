@@ -15,6 +15,6 @@ The syntax `reduce` is contextual only when followed by `every`: previous `reduc
 Non-list operands produce located `S379`, mismatched seed/step types `S380`, and effectful bodies `S381`. Malformed syntax raises `S250`, and duplicate iterator/accumulator names raise `S311`. The evaluator only processes concrete, compiler-known lists; this is not a streaming dataset reduction or executed ML tensor operator.
 
 ```sh
-semauri check examples/reduce_every.sema
-semauri run --allow console_write examples/reduce_every.sema
+semauri check examples/reduce_every.suri
+semauri run --allow console_write examples/reduce_every.suri
 ```

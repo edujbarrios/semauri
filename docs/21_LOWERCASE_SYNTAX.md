@@ -13,9 +13,9 @@ Existing `Let`, `LET`, `Print`, `PRINT` and similar programs remain valid: **the
 ## Formatter
 
 ```sh
-semauri fmt examples/hello_console.sema
-semauri fmt examples/hello_console.sema --check
-semauri fmt examples/hello_console.sema --write
+semauri fmt examples/hello_console.suri
+semauri fmt examples/hello_console.suri --check
+semauri fmt examples/hello_console.suri --write
 ```
 
 - The default writes the formatted source to stdout without changing the file.

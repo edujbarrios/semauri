@@ -31,7 +31,7 @@ The reference compiler is a Rust crate. Rust 1.83+ is required for development:
 ```bash
 cargo test --all-targets
 cargo run -- help
-cargo run -- build examples/shop.sema
+cargo run -- build examples/shop.suri
 ```
 
 Behavior changes require tests. Keep source diagnostics and CLI exit-code contracts stable unless the change explicitly intends to revise them.

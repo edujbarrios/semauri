@@ -19,6 +19,6 @@ Operands of any other type produce located `S359` during type checking. Non-fini
 The same precision-safe comparator also strengthens `median of` when a list mixes large integers and floating-point values. Parentheses combine prefix expressions: `sorted of (reverse of readings)`. The word `sorted` is reserved from Semauri 0.22.0 onward.
 
 ```sh
-semauri check examples/sorted.sema
-semauri run --allow console_write examples/sorted.sema
+semauri check examples/sorted.suri
+semauri run --allow console_write examples/sorted.suri
 ```

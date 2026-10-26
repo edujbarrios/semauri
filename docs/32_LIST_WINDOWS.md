@@ -17,8 +17,8 @@ Type violations raise `S363` at compile time. Negative, decimal or otherwise inv
 All transformations are pure over compiler-known list values. They do not grant permissions or implement streaming ML dataset operations.
 
 ```sh
-semauri check examples/list_windows.sema
-semauri run --allow console_write examples/list_windows.sema
+semauri check examples/list_windows.suri
+semauri run --allow console_write examples/list_windows.suri
 ```
 
 For example, `take 0 from readings` yields a typed empty `list<number>`; a later `first of` on that empty list correctly raises `S362` instead of returning an arbitrary value.

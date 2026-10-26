@@ -26,6 +26,6 @@ The compiler records a typed function-call HIR node, carrying its checked body a
 Pure calls require no new permissions. Any effectful operation invoked from a function is rejected; outer effectful top-level statements are subject to the existing capability policy.
 
 ```sh
-semauri check examples/functions.sema
-semauri run --allow console_write examples/functions.sema
+semauri check examples/functions.suri
+semauri run --allow console_write examples/functions.suri
 ```

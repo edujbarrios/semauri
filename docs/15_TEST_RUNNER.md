@@ -1,14 +1,14 @@
 # Semauri assertion test runner
 
-Use the first-class test command to execute assertion-based `.sema` tests:
+Use the first-class test command to execute assertion-based `.suri` tests:
 
 ```sh
 semauri test examples/test_suite
 semauri test examples/test_suite --allow-console
-semauri test path/to/one_test.sema
+semauri test path/to/one_test.suri
 ```
 
-The command recursively discovers regular `.sema` files in a directory, skips symbolic links, sorts paths deterministically and prints a PASS/FAIL line for each file followed by a summary. Exit status is 0 when all tests pass, 1 when any test fails, and 64 for invalid arguments or an empty path.
+The command recursively discovers regular `.suri` files in a directory, skips symbolic links, sorts paths deterministically and prints a PASS/FAIL line for each file followed by a summary. Exit status is 0 when all tests pass, 1 when any test fails, and 64 for invalid arguments or an empty path.
 
 Each test file must execute at least one `Assert` statement. Other allowed console statements include `Print`, but only if `--allow-console` is explicitly provided. Programs with filesystem, network, ML or other non-console effects are rejected during preflight, even when those operations reside in unreachable source branches. No build artifacts are permitted. A test fails on compilation errors and failed assertions (`S502`).
 

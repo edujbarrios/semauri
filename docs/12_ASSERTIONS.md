@@ -12,7 +12,7 @@ print "All checks passed".
 Run it with permission for the **print** operation:
 
 ```sh
-semauri run --allow console_write examples/assertions.sema
+semauri run --allow console_write examples/assertions.suri
 ```
 
 `Assert` accepts **boolean expressions only**. A non-boolean argument is rejected at compile time (`S329`). A false assertion is an execution failure (`S502`, exit status 70) with a source span. Successful assertions produce no output and require no external capability.

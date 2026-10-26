@@ -14,8 +14,8 @@ This composes with `partition every`: if `groups` has type `list<list<number>>`,
 Non-list and `list<T>` (where T is not itself a list) operands fail during static type checking with source-located **S385**. A malformed nested runtime list is also guarded by S385. The word `flatten` is contextual, so existing variables named `flatten` remain valid.
 
 ```sh
-semauri check examples/flatten_lists.sema
-semauri run --allow console_write examples/flatten_lists.sema
+semauri check examples/flatten_lists.suri
+semauri run --allow console_write examples/flatten_lists.suri
 ```
 
 This is deterministic compilation of concrete typed list values, not a streaming tensor reshaping operation or a live ML data pipeline.

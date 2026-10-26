@@ -18,6 +18,6 @@ Non-numeric operands receive a located `S353` type diagnostic. Empty lists or no
 Run the example:
 
 ```sh
-semauri check examples/numeric_extrema.sema
-semauri run --allow console_write examples/numeric_extrema.sema
+semauri check examples/numeric_extrema.suri
+semauri run --allow console_write examples/numeric_extrema.suri
 ```

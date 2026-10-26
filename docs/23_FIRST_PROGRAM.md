@@ -1,6 +1,6 @@
 # Write and run your first Semauri program
 
-**Semauri is a programming language.** Its programs are written in plain-text files ending with `.sema`. You can create those files in any text editor, compile or check them with the `semauri` command, and run supported programs explicitly.
+**Semauri is a programming language.** Its programs are written in plain-text files ending with `.suri`. You can create those files in any text editor, compile or check them with the `semauri` command, and run supported programs explicitly.
 
 This guide assumes you have never used a terminal before. Choose the section for your operating system.
 
@@ -68,11 +68,11 @@ cd semauri-first
 
 The `cd` command changes directories; `mkdir` creates a directory. Your files now belong to a dedicated folder rather than being scattered through Downloads or your home directory.
 
-## 4. Create a plain-text `.sema` file
+## 4. Create a plain-text `.suri` file
 
-On **Windows**, type `notepad hello.sema` in PowerShell. Accept the prompt to create the file if shown.
+On **Windows**, type `notepad hello.suri` in PowerShell. Accept the prompt to create the file if shown.
 
-On **macOS or Linux**, type `nano hello.sema` if the `nano` editor is installed. Alternatively open the project folder in any editor (such as Visual Studio Code) and create a file named `hello.sema`.
+On **macOS or Linux**, type `nano hello.suri` if the `nano` editor is installed. Alternatively open the project folder in any editor (such as Visual Studio Code) and create a file named `hello.suri`.
 
 Copy this complete Semauri program into the editor:
 
@@ -83,7 +83,7 @@ print "Hello from Semauri".
 print answer.
 ```
 
-Save the file. With `nano`, press **Ctrl+O**, **Enter**, then **Ctrl+X**. In Notepad, use **File → Save**, select **UTF-8** and ensure the filename is exactly `hello.sema`, **not** `hello.sema.txt`.
+Save the file. With `nano`, press **Ctrl+O**, **Enter**, then **Ctrl+X**. In Notepad, use **File → Save**, select **UTF-8** and ensure the filename is exactly `hello.suri`, **not** `hello.suri.txt`.
 
 ## 5. Check, inspect and run the program
 
@@ -92,19 +92,19 @@ The following commands work in PowerShell, macOS Terminal and Linux Terminal whi
 Check syntax and types **without running the program**:
 
 ```sh
-semauri check hello.sema
+semauri check hello.suri
 ```
 
 Inspect the planned execution without printing:
 
 ```sh
-semauri run --dry-run hello.sema
+semauri run --dry-run hello.suri
 ```
 
 Authorize the console output and execute:
 
 ```sh
-semauri run --allow console_write hello.sema
+semauri run --allow console_write hello.suri
 ```
 
 Expected output:
@@ -123,7 +123,7 @@ Change `42` to `43` in the assertion, save, and run it again. The assertion fail
 You can also format your code using canonical lowercase commands:
 
 ```sh
-semauri fmt hello.sema --write
+semauri fmt hello.suri --write
 ```
 
 The formatter changes language keywords, not strings such as `"Hello from Semauri"`.
@@ -143,7 +143,7 @@ The formatter changes language keywords, not strings such as `"Hello from Semaur
 
 **My file is missing.** Verify you are in the right directory with `pwd` on macOS/Linux or `Get-Location` in PowerShell, then list files using `ls` or `dir`.
 
-**My filename ends in `.txt`.** Enable file extensions in Windows File Explorer and rename `hello.sema.txt` to `hello.sema`.
+**My filename ends in `.txt`.** Enable file extensions in Windows File Explorer and rename `hello.suri.txt` to `hello.suri`.
 
 **Do I have to use a particular editor?** No. A Semauri file is plain text. Notepad, nano, VS Code or another editor can create it.
 

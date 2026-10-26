@@ -12,14 +12,14 @@ A source file passes through lexing, recursive-descent parsing, typed HIR, name 
 
 ## Reproducible demo (no external model downloads)
 
-The checked-in [ML example](../examples/ml_versioned_inputs.sema) has revision-qualified inputs and a training seed. Run from the project root after [building Semauri](DEVELOPMENT.md):
+The checked-in [ML example](../examples/ml_versioned_inputs.suri) has revision-qualified inputs and a training seed. Run from the project root after [building Semauri](DEVELOPMENT.md):
 
 ```sh
 cargo test --test ml_portfolio_contract
-cargo run -- check examples/ml_versioned_inputs.sema
-cargo run -- effects examples/ml_versioned_inputs.sema
-cargo run -- graph examples/ml_versioned_inputs.sema
-cargo run -- audit examples/ml_versioned_inputs.sema --strict
+cargo run -- check examples/ml_versioned_inputs.suri
+cargo run -- effects examples/ml_versioned_inputs.suri
+cargo run -- graph examples/ml_versioned_inputs.suri
+cargo run -- audit examples/ml_versioned_inputs.suri --strict
 ```
 
 The integration contract verifies five planned ML operations, typed producer dependencies, deterministic graph generation, revision metadata and a warning-free *declaration* audit. It also verifies that analysis does not confer permission to execute training. CI exercises this contract.

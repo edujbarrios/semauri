@@ -15,6 +15,6 @@ Parameters are immutable, lexically scoped, and bound together in a fresh invoca
 No zero-argument functions, variadic signatures, forward references, recursive calls, first-class callable values, effectful bodies, or general runtime-dependent function execution are added. This remains deterministic compilation of concrete values; it does not train models or execute external datasets.
 
 ```sh
-semauri check examples/multi_parameter_functions.sema
-semauri run --allow console_write examples/multi_parameter_functions.sema
+semauri check examples/multi_parameter_functions.suri
+semauri run --allow console_write examples/multi_parameter_functions.suri
 ```

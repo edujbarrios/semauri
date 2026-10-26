@@ -17,7 +17,7 @@ A non-`unit` operation can produce a typed value consumed by later operations:
 Each result is represented by `RuntimeValueRef` with a stable producer ID, semantic type and source span.
 
 ```bash
-semauri plan program.sema
+semauri plan program.suri
 ```
 
 ## Compile-time/runtime boundary
@@ -52,7 +52,7 @@ print answer.
 ```
 
 ```sh
-semauri run --allow console_write program.sema
+semauri run --allow console_write program.suri
 ```
 
 ## Filesystem deletion semantics

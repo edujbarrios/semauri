@@ -15,8 +15,8 @@ The count is statically typed as `number` (wrong type is `S377`), but must **eva
 The word `repeat` is contextual: it is recognized as a prefix operation only when followed by a count-like token, preserving ordinary uses of `repeat` as a variable name outside this syntax. Parenthesize compound operands, such as `repeat (1 plus 2) of (sorted of values)`.
 
 ```sh
-semauri check examples/repeat_lists.sema
-semauri run --allow console_write examples/repeat_lists.sema
+semauri check examples/repeat_lists.suri
+semauri run --allow console_write examples/repeat_lists.suri
 ```
 
 This constructor is deterministic and evaluates its element only once even when COUNT is greater than one. If a generated typed empty list is later indexed, existing list-index diagnostics still apply; repetition does not silently manufacture missing elements.

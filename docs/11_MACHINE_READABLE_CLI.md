@@ -3,15 +3,15 @@
 Semauri's `tokens`, `ast`, `hir`, `optimize`, `symbols`, `effects` and `plan` commands already print JSON on success. Supply `--json` to those commands to also receive **JSON on errors**:
 
 ```sh
-semauri plan --json examples/shop.sema
-semauri effects examples/filesystem.sema --json
+semauri plan --json examples/shop.suri
+semauri effects examples/filesystem.suri --json
 ```
 
 For `check`, `--json` emits a result envelope on both success and failure:
 
 ```sh
-semauri check examples/shop.sema --json
-semauri check examples/filesystem.sema --allow-none --json
+semauri check examples/shop.suri --json
+semauri check examples/filesystem.suri --allow-none --json
 ```
 
 Successful check:
