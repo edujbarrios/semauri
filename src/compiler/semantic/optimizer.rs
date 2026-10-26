@@ -672,6 +672,15 @@ fn eval_constant_binary(
         }
         // Split returns a list; leave it to normal evaluation to preserve the
         // existing optimizer's scalar-literal conversion invariant.
+        (operator @ (BinaryOperator::JsonPointerString | BinaryOperator::JsonPointerNumber
+            | BinaryOperator::JsonPointerBoolean | BinaryOperator::JsonPointerStrings
+            | BinaryOperator::JsonPointerNumbers | BinaryOperator::JsonPointerBooleans),
+            ValueData::String(pointer), ValueData::String(source)) => {
+            match extract_json_pointer(source, pointer, operator)? {
+                ValueData::List(_) => None,
+                scalar => Some(scalar),
+            }
+        }
         (operator @ (BinaryOperator::JsonFieldString | BinaryOperator::JsonFieldNumber
             | BinaryOperator::JsonFieldBoolean | BinaryOperator::JsonFieldStrings
             | BinaryOperator::JsonFieldNumbers | BinaryOperator::JsonFieldBooleans),

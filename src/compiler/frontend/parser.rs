@@ -960,17 +960,31 @@ impl<'a> Parser<'a> {
                 let start = self.advance().clone();
                 let target = self.advance().clone();
                 self.consume(TokenKind::At, "Expected 'at' after JSON field type", "S242")?;
+                // 'at pointer' selects RFC 6901 navigation; a plain 'at'
+                // continues to select exactly one top-level object key.
+                let is_pointer = self.peek().lexeme.eq_ignore_ascii_case("pointer")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        matches!(next.kind, TokenKind::String | TokenKind::Word | TokenKind::LParen));
+                if is_pointer {
+                    self.advance();
+                }
                 let key = self.primary()?;
                 self.consume(TokenKind::In, "Expected 'in' before JSON document", "S242")?;
                 let document = self.primary()?;
                 let span = span_between_spans(start.span, document.span());
-                let operator = match target.lexeme.to_ascii_lowercase().as_str() {
-                    "string" => BinaryOperator::JsonFieldString,
-                    "number" => BinaryOperator::JsonFieldNumber,
-                    "boolean" => BinaryOperator::JsonFieldBoolean,
-                    "strings" => BinaryOperator::JsonFieldStrings,
-                    "numbers" => BinaryOperator::JsonFieldNumbers,
-                    "booleans" => BinaryOperator::JsonFieldBooleans,
+                let operator = match (is_pointer, target.lexeme.to_ascii_lowercase().as_str()) {
+                    (false, "string") => BinaryOperator::JsonFieldString,
+                    (false, "number") => BinaryOperator::JsonFieldNumber,
+                    (false, "boolean") => BinaryOperator::JsonFieldBoolean,
+                    (false, "strings") => BinaryOperator::JsonFieldStrings,
+                    (false, "numbers") => BinaryOperator::JsonFieldNumbers,
+                    (false, "booleans") => BinaryOperator::JsonFieldBooleans,
+                    (true, "string") => BinaryOperator::JsonPointerString,
+                    (true, "number") => BinaryOperator::JsonPointerNumber,
+                    (true, "boolean") => BinaryOperator::JsonPointerBoolean,
+                    (true, "strings") => BinaryOperator::JsonPointerStrings,
+                    (true, "numbers") => BinaryOperator::JsonPointerNumbers,
+                    (true, "booleans") => BinaryOperator::JsonPointerBooleans,
                     _ => unreachable!(),
                 };
                 Ok(Expr::Binary {

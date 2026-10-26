@@ -1070,6 +1070,18 @@ fn binary_type(
                 ))
             }
         }
+        BinaryOperator::JsonPointerString | BinaryOperator::JsonPointerNumber
+        | BinaryOperator::JsonPointerBoolean | BinaryOperator::JsonPointerStrings
+        | BinaryOperator::JsonPointerNumbers | BinaryOperator::JsonPointerBooleans => {
+            if left != &Type::String || right != &Type::String {
+                return Err(SemauriError::semantic(
+                    "S404",
+                    format!("'json TYPE at pointer POINTER in DOCUMENT' requires two strings, received {left} and {right}"),
+                    Some(span), None,
+                ));
+            }
+            Ok(json_pointer_type(operator).expect("known typed JSON pointer"))
+        }
         BinaryOperator::JsonFieldString | BinaryOperator::JsonFieldNumber
         | BinaryOperator::JsonFieldBoolean | BinaryOperator::JsonFieldStrings
         | BinaryOperator::JsonFieldNumbers | BinaryOperator::JsonFieldBooleans => {

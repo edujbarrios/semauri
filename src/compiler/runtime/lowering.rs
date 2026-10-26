@@ -1963,6 +1963,18 @@ impl<'a> Lowerer<'a> {
                 }).collect();
                 ValueData::String(parts.join(&separator))
             }
+            (operator @ (BinaryOperator::JsonPointerString | BinaryOperator::JsonPointerNumber
+                | BinaryOperator::JsonPointerBoolean | BinaryOperator::JsonPointerStrings
+                | BinaryOperator::JsonPointerNumbers | BinaryOperator::JsonPointerBooleans),
+                ValueData::String(pointer), ValueData::String(source)) => {
+                extract_json_pointer(&source, &pointer, operator).ok_or_else(||
+                    SemauriError::semantic(
+                        "S405",
+                        "JSON pointer is invalid, missing, or does not match the declared type",
+                        Some(span),
+                        Some("Use an RFC 6901 pointer such as '/account/name'; escape '~' as '~0' and '/' as '~1'.".into()),
+                    ))?
+            }
             (operator @ (BinaryOperator::JsonFieldString | BinaryOperator::JsonFieldNumber
                 | BinaryOperator::JsonFieldBoolean | BinaryOperator::JsonFieldStrings
                 | BinaryOperator::JsonFieldNumbers | BinaryOperator::JsonFieldBooleans),

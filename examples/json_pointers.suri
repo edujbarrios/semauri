@@ -1,0 +1,9 @@
+# Safely select typed values from nested JSON documents.
+let document be "{\"users\":[{\"name\":\"Ada\",\"scores\":[1,2,3]}],\"settings\":{\"enabled\":true}}".
+let first_name be json string at pointer "/users/0/name" in document.
+let scores be json numbers at pointer "/users/0/scores" in document.
+let enabled be json boolean at pointer "/settings/enabled" in document.
+assert first_name is equal to "Ada".
+assert sum of scores is equal to 6.
+assert enabled.
+print first_name.

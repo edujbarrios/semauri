@@ -1,3 +1,10 @@
+## Unreleased
+
+### Typed nested JSON pointers
+- Support RFC 6901 navigation through objects and arrays with `json TYPE at pointer POINTER in DOCUMENT`, covering six scalar and homogeneous list types.
+- Validate pointer escapes, array indices, document size, traversal depth, list sizes, and exact target types with located `S404`/`S405` diagnostics.
+- Add constant folding for scalar navigation, formatter and editor support, executable examples, and regression tests.
+
 ## 0.37.0 — 2026-10-26
 
 ### Unicode-aware text searching

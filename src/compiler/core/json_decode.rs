@@ -135,6 +135,78 @@ fn extract_json_field(source: &str, key: &str, operator: &BinaryOperator) -> Opt
     }
 }
 
+// RFC 6901 JSON pointers select nested object keys or array indices, not
+// dot-delimited paths. Limit depth and document size before walking the tree.
+fn json_pointer_type(operator: &BinaryOperator) -> Option<Type> {
+    match operator {
+        BinaryOperator::JsonPointerString => Some(Type::String),
+        BinaryOperator::JsonPointerNumber => Some(Type::Number),
+        BinaryOperator::JsonPointerBoolean => Some(Type::Boolean),
+        BinaryOperator::JsonPointerStrings => Some(Type::List(Box::new(Type::String))),
+        BinaryOperator::JsonPointerNumbers => Some(Type::List(Box::new(Type::Number))),
+        BinaryOperator::JsonPointerBooleans => Some(Type::List(Box::new(Type::Boolean))),
+        _ => None,
+    }
+}
+
+fn json_pointer_segment(raw: &str) -> Option<String> {
+    let mut output = String::with_capacity(raw.len());
+    let mut chars = raw.chars();
+    while let Some(ch) = chars.next() {
+        if ch == '~' {
+            output.push(match chars.next()? {
+                '0' => '~',
+                '1' => '/',
+                _ => return None,
+            });
+        } else {
+            output.push(ch);
+        }
+    }
+    Some(output)
+}
+
+fn extract_json_pointer(source: &str, pointer: &str, operator: &BinaryOperator) -> Option<ValueData> {
+    if source.len() > MAX_JSON_TEXT_BYTES || !json_integer_literals_fit_i64(source) {
+        return None;
+    }
+    let expected = json_pointer_type(operator)?;
+    let document: JsonValue = serde_json::from_str(source).ok()?;
+    let mut current = &document;
+    if !pointer.is_empty() {
+        let mut segments = pointer.strip_prefix('/')?.split('/');
+        // Cap nested traversal even for tiny objects with a very long path.
+        for raw in (&mut segments).take(65) {
+            // Any segment beyond the sixty-fourth is rejected.
+            let depth_part = json_pointer_segment(raw)?;
+            current = match current {
+                JsonValue::Object(object) if object.len() <= MAX_JSON_LIST_ITEMS => object.get(&depth_part)?,
+                JsonValue::Array(array) if array.len() <= MAX_JSON_LIST_ITEMS => {
+                    if depth_part.is_empty() || (depth_part.len() > 1 && depth_part.starts_with('0'))
+                        || !depth_part.bytes().all(|byte| byte.is_ascii_digit()) {
+                        return None;
+                    }
+                    array.get(depth_part.parse::<usize>().ok()?)?
+                }
+                _ => return None,
+            };
+        }
+        if segments.next().is_some() {
+            return None;
+        }
+    }
+    match expected {
+        Type::List(element) => {
+            let values = current.as_array()?;
+            if values.len() > MAX_JSON_LIST_ITEMS { return None; }
+            values.iter().map(|item| json_scalar_to_data(item, &element))
+                .collect::<Option<Vec<_>>>()
+                .map(ValueData::List)
+        }
+        ty => json_scalar_to_data(current, &ty),
+    }
+}
+
 fn json_object_keys(source: &str) -> Option<Vec<String>> {
     let object = parse_json_object_text(source)?;
     let mut keys = object.keys().cloned().collect::<Vec<_>>();

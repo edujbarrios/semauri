@@ -236,6 +236,30 @@ literals, and collections over the 10,000-item limit produce the located
 `S401` diagnostic. Field names are exact and case sensitive. The operation
 is deterministic and pure; it requires no new permissions.
 
+### Typed JSON pointer navigation
+
+Use `json TYPE at pointer POINTER in DOCUMENT` to access nested JSON
+objects and arrays using RFC 6901 paths. The supported type words are
+`string`, `number`, `boolean`, `strings`, `numbers`, and `booleans`.
+The pointer is a string: `/account/name` selects a nested field,
+`/users/0/name` navigates into an array, and `~1` / `~0`
+escape a slash / tilde inside an object key.
+
+```text
+let data be "{\\"users\\":[{\\"name\\":\\"Ada\\"}],\\"total\\":1}".
+let name_value be json string at pointer "/users/0/name" in data.
+let count_value be json number at pointer "/total" in data.
+assert name_value is equal to "Ada".
+assert count_value is equal to 1.
+```
+
+The empty pointer `""` denotes the root value; an absent path, invalid
+escape, wrong target type, malformed document, or excessive traversal reports
+`S405`. Wrong operand types report `S404`. Decoding limits remain
+1 MiB per document and 10,000 items per selected list; pointer navigation is
+limited to 64 segments. This feature is pure and statically typed. Ordinary
+`json TYPE at KEY in DOCUMENT` continues to mean exact top-level key lookup.
+
 ### Unicode text searching
 
 Use `occurrences of NEEDLE in TEXT` to count **non-overlapping** matches,
