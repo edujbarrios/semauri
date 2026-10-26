@@ -1,5 +1,11 @@
 ## Unreleased
 
+### JSON object introspection
+- Add pure `keys of json DOCUMENT` and `has json key KEY in DOCUMENT` expressions with sorted field names and exact membership semantics.
+- Enforce strict string inputs, bounded JSON objects, source-aware diagnostics, constant folding, and editor/formatter support.
+- Preserve JSON `null` as a present key and return an empty list for an empty object.
+
+
 ### Type-directed JSON decoding
 - Add `decode json as TYPE from TEXT` for string, number, boolean, and homogeneous string/number/boolean lists.
 - Validate JSON syntax, strict type correspondence, bounded input and list expansion, integer exactness, and effect-free evaluation, reporting diagnostics `S396`/`S397`.

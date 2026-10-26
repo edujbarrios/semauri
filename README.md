@@ -190,6 +190,29 @@ source produces a static `S396` diagnostic. JSON numeric values are finite,
 and integers larger than signed 64-bit range cannot be silently rounded. This
 is typed scalar and homogeneous-list decoding, not a general records/maps API.
 
+### JSON object inspection
+
+Use `keys of json DOCUMENT` to get a sorted `list<string>` of an object's
+field names, and `has json key KEY in DOCUMENT` to check a field's presence.
+Both operations parse the JSON document without external effects. Presence
+checks distinguish missing fields from fields containing JSON `null`.
+
+```text
+let document be "{\\"name\\":\\"Ada\\",\\"active\\":true}".
+let names be keys of json document.
+assert length of names is equal to 2.
+assert (names at 0) is equal to "active".
+assert has json key "name" in document.
+assert not (has json key "missing" in document).
+```
+
+Each operation requires string operands (`S398`). A malformed JSON value,
+non-object document, document over 1 MiB, or object over 10,000 unique keys
+produces the located diagnostic `S399`. Field names are matched exactly,
+and keys are returned in deterministic Unicode code-point order. These
+operations inspect object structure; they do not introduce mutable maps or
+untyped dynamic values.
+
 ### Natural-language string predicates
 
 Use `TEXT starts with PREFIX` and `TEXT ends with SUFFIX` to validate names,

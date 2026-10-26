@@ -32,6 +32,7 @@ pub enum UnaryOperator {
     DecodeJsonStrings,
     DecodeJsonNumbers,
     DecodeJsonBooleans,
+    JsonKeys,
 }
 
 impl UnaryOperator {
@@ -69,6 +70,7 @@ impl UnaryOperator {
             UnaryOperator::DecodeJsonStrings => "decode_json_strings",
             UnaryOperator::DecodeJsonNumbers => "decode_json_numbers",
             UnaryOperator::DecodeJsonBooleans => "decode_json_booleans",
+            UnaryOperator::JsonKeys => "json_keys",
         }
     }
 }
@@ -87,6 +89,7 @@ pub enum BinaryOperator {
     Equal,
     NotEqual,
     Contains,
+    JsonHasKey,
     Split,
     Join,
     StartsWith,
@@ -114,6 +117,7 @@ impl BinaryOperator {
             BinaryOperator::Equal => "equal",
             BinaryOperator::NotEqual => "not_equal",
             BinaryOperator::Contains => "contains",
+            BinaryOperator::JsonHasKey => "json_has_key",
             BinaryOperator::Split => "split",
             BinaryOperator::Join => "join",
             BinaryOperator::StartsWith => "starts_with",

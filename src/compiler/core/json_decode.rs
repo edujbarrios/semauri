@@ -86,6 +86,30 @@ fn json_integer_literals_fit_i64(source: &str) -> bool {
     true
 }
 
+fn parse_json_object_text(source: &str) -> Option<serde_json::Map<String, JsonValue>> {
+    if source.len() > MAX_JSON_TEXT_BYTES {
+        return None;
+    }
+    let JsonValue::Object(object) = serde_json::from_str::<JsonValue>(source).ok()? else {
+        return None;
+    };
+    if object.len() > MAX_JSON_LIST_ITEMS {
+        return None;
+    }
+    Some(object)
+}
+
+fn json_object_keys(source: &str) -> Option<Vec<String>> {
+    let object = parse_json_object_text(source)?;
+    let mut keys = object.keys().cloned().collect::<Vec<_>>();
+    keys.sort_unstable(); // Deterministic even with an insertion-ordered JSON backend.
+    Some(keys)
+}
+
+fn json_object_has_key(source: &str, key: &str) -> Option<bool> {
+    Some(parse_json_object_text(source)?.contains_key(key))
+}
+
 fn decode_json_text(source: &str, operator: &UnaryOperator) -> Option<ValueData> {
     if source.len() > MAX_JSON_TEXT_BYTES || !json_integer_literals_fit_i64(source) {
         return None;
