@@ -59,4 +59,5 @@ include!("backends/runtime_executor.rs");
 
 include!("cli.rs");
 include!("backends/test_runner.rs");
+include!("backends/project_verifier.rs");
 include!("tests.rs");

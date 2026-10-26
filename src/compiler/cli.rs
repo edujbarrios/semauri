@@ -39,7 +39,7 @@ fn initialize_project(directory: &Path) -> Result<()> {
             "# Semauri project\n\n\
              Run semauri check main.suri to type-check.\n\
              Run semauri run --allow console_write main.suri to print 49.\n\
-             Run semauri test tests --allow-console to execute tests.\n\n\
+             Run semauri test tests --allow-console to execute tests.\nRun semauri verify . to check source, formatting and tests together.\n\n\
              The .semauri-root file defines the boundary for local imports.\n")?;
         Ok(())
     })();
@@ -54,6 +54,9 @@ pub fn run_cli(args: &[String]) -> CliResult {
     }
     if args.first().map(String::as_str) == Some("test") {
         return run_test_cli(&args[1..]);
+    }
+    if args.first().map(String::as_str) == Some("verify") {
+        return run_verify_cli(&args[1..]);
     }
     let compiler = Compiler::new();
     let mut stdout = String::new();
@@ -670,7 +673,7 @@ fn usage_error(message: impl Into<String>) -> SemauriError {
 }
 
 pub fn usage() -> String {
-    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  init PROJECT             Create a multi-file Semauri project without overwriting files\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE             Explain semantic decisions\n  fmt FILE [--check|--write]  Lowercase source syntax while preserving strings\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] Execute assertion-based .suri test files\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
+    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  init PROJECT             Create a multi-file Semauri project without overwriting files\n  verify PROJECT [--json]   Check source, formatting and tests without running the app\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE             Explain semantic decisions\n  fmt FILE [--check|--write]  Lowercase source syntax while preserving strings\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] Execute assertion-based .suri test files\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
         .to_string()
 }
 
