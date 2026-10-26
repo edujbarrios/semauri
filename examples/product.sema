@@ -1,0 +1,7 @@
+# Product of typed lists: exact checked integer arithmetic.
+let factors be a list of 2, 3, 4, 5.
+let result be product of factors.
+assert result is equal to 120.
+let empty be take 0 from factors.
+assert product of empty is equal to 1.
+print result.

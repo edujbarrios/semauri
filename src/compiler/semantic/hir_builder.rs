@@ -610,6 +610,15 @@ impl<'a> HirBuilder<'a> {
                             )),
                         }
                     }
+                    UnaryOperator::Product => {
+                        if operand.ty() != Type::List(Box::new(Type::Number)) {
+                            return Err(SemauriError::semantic(
+                                "S353",
+                                format!("'product of' requires list<number>, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::Number
+                    }
                     UnaryOperator::Absolute => {
                         if operand.ty() != Type::Number {
                             return Err(SemauriError::semantic(
