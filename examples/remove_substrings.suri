@@ -1,9 +1,9 @@
 # Remove non-overlapping literal matches from Unicode text.
-let source be "café café".
-let cleaned be remove all of "é" from source.
+let input_text be "café café".
+let cleaned be remove all of "é" from input_text.
 assert cleaned is equal to "caf caf".
 let compact be remove all of "aa" from "aaaaa".
 assert compact is equal to "a".
-assert (remove all of "missing" from source) is equal to source.
+assert (remove all of "missing" from input_text) is equal to input_text.
 assert (remove all of "!" from "") is equal to "".
 print cleaned.
