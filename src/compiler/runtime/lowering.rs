@@ -1974,7 +1974,6 @@ fn inspect_value(value: &ValueData) -> String {
 /// into f64 would conflate adjacent integers beyond 2^53 and can make
 /// mixed-type sort comparisons inconsistent.
 fn compare_finite_numbers(left: &NumberValue, right: &NumberValue) -> std::cmp::Ordering {
-    use std::cmp::Ordering;
     match (left, right) {
         (NumberValue::Int(a), NumberValue::Int(b)) => a.cmp(b),
         (NumberValue::Float(a), NumberValue::Float(b)) => {

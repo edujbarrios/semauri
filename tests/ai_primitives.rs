@@ -11,11 +11,13 @@ fn language_model_and_bounded_agent_form_a_typed_plan() {
     let compiler = Compiler::new();
     let plan = compiler.runtime_plan(AGENT).unwrap().to_json();
     let operations = plan["operations"].as_array().unwrap();
-    assert_eq!(operations.len(), 3);
-    assert_eq!(operations[0]["name"], "language_model");
-    assert_eq!(operations[1]["name"], "bounded_agent");
-    assert_eq!(operations[2]["name"], "run_agent");
-    assert_eq!(operations[2]["result"]["type"]["domain"], "ai");
+    assert_eq!(operations.len(), 6);
+    assert_eq!(operations[0]["name"], "read_string");
+    assert_eq!(operations[1]["name"], "read_number");
+    assert_eq!(operations[2]["name"], "language_model");
+    assert_eq!(operations[3]["name"], "bounded_agent");
+    assert_eq!(operations[4]["name"], "run_agent");
+    assert_eq!(operations[4]["result"]["type"]["domain"], "ai");
     assert!(compiler
         .effect_analysis(AGENT)
         .unwrap()
@@ -29,6 +31,7 @@ fn vision_input_keeps_file_network_and_inference_effects_explicit() {
     compiler.hir(VISION).unwrap();
     let effects = compiler.effect_analysis(VISION).unwrap().effects();
     for expected in [
+        "config_read",
         "filesystem_read",
         "model_inference",
         "model_load",
@@ -44,7 +47,7 @@ fn vision_input_keeps_file_network_and_inference_effects_explicit() {
 #[test]
 fn model_kinds_are_not_interchangeable() {
     let source = r#"within ai:
-  let model be load vision model "vision".
+  let model be activate vision model "vision".
   let answer be prompt model with "hello".
 end."#;
     let error = Compiler::new().hir(source).unwrap_err();

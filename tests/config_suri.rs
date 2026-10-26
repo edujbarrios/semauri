@@ -55,6 +55,37 @@ fn validates_names_duplicates_syntax_and_overrides() {
 }
 
 #[test]
+fn one_binding_is_resolved_without_reading_unrelated_secrets() {
+    let config = ProgramConfig::parse(
+        "parameter model = \"local/test\".\nenvironment secret = \"MISSING_SECRET\".",
+    )
+    .unwrap();
+    assert_eq!(config.resolve_binding("model").unwrap(), json!("local/test"));
+}
+
+#[test]
+fn ai_example_executes_with_its_nearest_config() {
+    let result = run_cli(&[
+        "run".into(),
+        "examples/ai_agent.suri".into(),
+        "--allow".into(),
+        "config_read".into(),
+        "--allow".into(),
+        "model_load".into(),
+        "--allow".into(),
+        "network".into(),
+        "--allow".into(),
+        "model_inference".into(),
+        "--allow".into(),
+        "tool_execution".into(),
+        "--allow".into(),
+        "console_write".into(),
+    ]);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert!(result.stdout.starts_with("[local/default]"));
+}
+
+#[test]
 fn cli_validates_files_and_applies_declared_overrides() {
     let path = std::env::temp_dir().join(format!("semauri-config-{}.suri", std::process::id()));
     fs::write(

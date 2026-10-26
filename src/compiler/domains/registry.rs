@@ -17,6 +17,7 @@ impl DomainRegistry {
     pub fn builtins() -> Self {
         let mut registry = Self::new();
         for domain in [
+            config_domain(),
             ai_domain(),
             web_domain(),
             structured_data_domain(),

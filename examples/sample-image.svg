@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="80" viewBox="0 0 160 80">
+  <rect width="160" height="80" fill="#121826"/>
+  <circle cx="40" cy="40" r="20" fill="#4fd1c5"/>
+  <text x="72" y="47" fill="white" font-family="sans-serif" font-size="20">Semauri</text>
+</svg>

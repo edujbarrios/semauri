@@ -42,7 +42,7 @@ fn ai_domain() -> DomainSpec {
             ),
             op(
                 "vision_model",
-                &["load"],
+                &["activate"],
                 vec![
                     lit("vision"),
                     lit("model"),

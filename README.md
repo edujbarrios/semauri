@@ -149,6 +149,16 @@ semauri config .config.suri --check-env
 
 `--set` may override only declared parameters and accepts a JSON value. Environment bindings are resolved lazily from the process environment; summaries report only the variable name and whether it is set, never its value. Do not commit credentials.
 
+Programs read declared bindings at runtime with an explicit `config_read` effect:
+
+```text
+let model_identifier be string config "model".
+let max_turns be number config "max_turns".
+let safe_mode be boolean config "safe_mode".
+```
+
+`semauri run` discovers the nearest `.config.suri`, starting beside the source file and walking toward the filesystem root. Use `--config PATH` to select one explicitly or `--set NAME=JSON_VALUE` to override a declared parameter. Each binding is resolved only when the program reads it; unrelated environment secrets are never loaded.
+
 ## Assertions and tests
 
 ```text
@@ -165,27 +175,27 @@ The test runner recursively discovers `.suri` files, does not follow symbolic li
 
 ## LLM and VLM primitives
 
-Semauri provides typed, provider-neutral primitives for language models, vision models, embeddings, tools, and bounded agents. They compile into an inspectable runtime plan; a runtime adapter is responsible for connecting the declared model identifier to a hosted or local provider.
+Semauri provides typed, provider-neutral primitives for language models, vision models, embeddings, tools, and bounded agents. They compile into an inspectable runtime plan. The built-in deterministic adapter executes `local/*` identifiers without network access; hosted identifiers require a provider adapter.
 
 ```text
-within ai:
-  let model be connect language model "local/default".
-  let assistant be compose agent using model system "Answer briefly." max 4 turns.
-  let answer be ask assistant with "Summarize the supplied context.".
-end.
+let model_identifier be string config "language_model".
+let model be connect language model model_identifier.
+let assistant be compose agent using model system "Answer briefly." max 4 turns.
+let answer be ask assistant with "Summarize the supplied context.".
+print answer.
 ```
 
 ```text
-within ai:
-  let model be load vision model "local/vision".
-  let description be inspect image "sample.png" using model with "Describe visible facts.".
-end.
+let model_identifier be string config "vision_model".
+let model be activate vision model model_identifier.
+let description be inspect image "sample.png" using model with "Describe visible facts.".
+print description.
 ```
 
 Available primitives:
 
 - `connect language model IDENTIFIER`
-- `load vision model IDENTIFIER`
+- `activate vision model IDENTIFIER`
 - `prompt MODEL with TEXT`
 - `inspect image PATH using MODEL with TEXT`
 - `embed TEXT using MODEL`
@@ -193,7 +203,7 @@ Available primitives:
 - `compose agent using MODEL system TEXT max NUMBER turns`
 - `ask AGENT with TEXT`
 
-Language-model and vision-model handles are distinct nominal types. Network, model loading, inference, image reads, and tool execution remain explicit effects. Model calls are plans only in this release; compilation never contacts a provider or reads credentials.
+Language-model and vision-model handles are distinct nominal types. Configuration reads, network, model loading, inference, image reads, console output, and tool execution remain explicit effects. Compilation never contacts a provider or reads credentials.
 
 ## Declarative programs
 

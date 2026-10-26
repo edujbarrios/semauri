@@ -124,6 +124,35 @@ impl ProgramConfig {
         self.resolve_with(|name| std::env::var(name).ok())
     }
 
+    pub fn resolve_binding(&self, name: &str) -> Result<Value, ConfigError> {
+        self.resolve_binding_with(name, |variable| std::env::var(variable).ok())
+    }
+
+    pub fn resolve_binding_with<F>(
+        &self,
+        name: &str,
+        mut read_environment: F,
+    ) -> Result<Value, ConfigError>
+    where
+        F: FnMut(&str) -> Option<String>,
+    {
+        if let Some(value) = self.parameters.get(name) {
+            return Ok(value.clone());
+        }
+        if let Some(variable) = self.environment.get(name) {
+            return read_environment(variable)
+                .map(Value::String)
+                .ok_or_else(|| ConfigError {
+                    line: None,
+                    message: format!("required environment variable '{variable}' is not set"),
+                });
+        }
+        Err(ConfigError {
+            line: None,
+            message: format!("configuration binding '{name}' is not declared"),
+        })
+    }
+
     pub fn resolve_with<F>(&self, mut read_environment: F) -> Result<ResolvedConfig, ConfigError>
     where
         F: FnMut(&str) -> Option<String>,
