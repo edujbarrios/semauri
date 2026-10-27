@@ -1,3 +1,18 @@
+## 0.49.0 — 2026-10-27
+
+### Official experimental Jupyter kernel
+- Add `integrations/jupyter/` as an installable Python/ipykernel bridge to the existing Rust `semauri` executable. Register the **Semauri** kernel in Jupyter Notebook or JupyterLab with `semauri-jupyter-install --user`.
+- Execute isolated `.suri` notebook cells with source-located native Semauri diagnostics and a default permission restricted to `console_write`. Additional capabilities require an explicit `SEMAURI_ALLOW_EFFECTS` setting; temporary cell sources are removed after execution.
+- Add `%%check`, `%%explain`, `%%explain --json`, `%%effects`, `%%plan`, keyword completion, a runnable `.ipynb` walkthrough and dedicated Jupyter protocol CI.
+- Document notebook limitations: cells do not share bindings, because replay of earlier sources could duplicate side effects. True incremental sessions remain a future compiler-level feature.
+
+### New typed numeric expressions
+- Add contextual `cube of NUMBER` with exact, checked 64-bit integer multiplication, finite decimal results, static error `S433` and overflow/domain diagnostic `S434`.
+- Add pure `prime of NUMBER` Boolean predicate using deterministic 64-bit Miller–Rabin arithmetic without dependencies. Non-number values report `S435`; invalid fractional, non-finite and out-of-range decimal values report `S436`.
+- Provide typed-HIR, optimizer, execution, formatter, editor highlighting, examples and regression coverage including pseudoprimes and integer boundaries.
+
+This release adds no new Rust dependencies and preserves the existing capability model and bounded collection limits.
+
 ## 0.48.0 — 2026-10-27
 
 ### Nearest-integer rounding
