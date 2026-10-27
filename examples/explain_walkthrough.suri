@@ -1,0 +1,5 @@
+# Inspect semantic decisions without executing or building the program.
+within web:
+  create a web called Example.
+  add a button called Start.
+end.
