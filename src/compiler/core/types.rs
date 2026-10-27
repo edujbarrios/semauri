@@ -78,6 +78,24 @@ fn numeric_round(value: NumberValue, ceiling: bool) -> Option<NumberValue> {
     }
 }
 
+// Round to nearest integer; halfway cases go away from zero. Exact signed
+// integers stay exact. A rounded floating value outside the signed i64 range
+// remains a float instead of saturating to i64::MIN/MAX.
+fn numeric_nearest(value: NumberValue) -> Option<NumberValue> {
+    match value {
+        NumberValue::Int(n) => Some(NumberValue::Int(n)),
+        NumberValue::Float(n) if n.is_finite() => {
+            let rounded = n.round();
+            if rounded >= i64::MIN as f64 && rounded < -(i64::MIN as f64) {
+                Some(NumberValue::Int(rounded as i64))
+            } else {
+                Some(NumberValue::Float(rounded))
+            }
+        }
+        NumberValue::Float(_) => None,
+    }
+}
+
 // Shared by constant folding and evaluation: checked signed 64-bit
 // integer multiplication and finite floating-point results only.
 fn numeric_square(value: NumberValue) -> Option<NumberValue> {
