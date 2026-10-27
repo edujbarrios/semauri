@@ -1,3 +1,20 @@
+## 0.47.0 — 2026-10-27
+
+### Checked numeric squaring
+- Add pure contextual `square of NUMBER`, preserving signed 64-bit integer precision and reporting `S422` on overflow or non-finite decimal results; static `S421` for invalid operands.
+- Enable use in expressions, typed functions, list transformations, optimizer constant folding, CLI inspection, and VS Code highlighting, with tests and an executable example.
+
+### Typed square roots
+- Add `sqrt of NUMBER`, returning exact integer roots for perfect square integer operands (including large values near the 64-bit boundary), and floating-point results for non-perfect roots.
+- Reject non-number operands with `S423` and negative/non-finite roots with `S424`, with shared semantics across runtime and optimizer, plus examples and tests.
+
+### Boolean parity tests
+- Add contextual `even of NUMBER` and `odd of NUMBER` returning `boolean`. Preserve exact parity for signed 64-bit integer operands, including negative and large integers.
+- Accept integral finite decimals within the i64 range; reject fractional/out-of-range/non-finite operands with `S426` instead of performing lossy casts. Non-number inputs raise `S425`.
+- Support functions, list transformations, optimizer folding, formatting, documentation, and editor highlighting.
+
+All new operators are contextual (names stay valid variables when not followed by `of`) and require no additional execution capabilities.
+
 ## 0.46.0 — 2026-10-27
 
 ### Explain Semauri programs for people and coding agents
