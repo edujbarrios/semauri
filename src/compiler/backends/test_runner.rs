@@ -65,28 +65,48 @@ fn test_usage_error(json_mode: bool, message: String) -> CliResult {
 
 fn run_test_cli(args: &[String]) -> CliResult {
     let mut allow_console = false;
-    let mut json_mode = false;
+    // Pre-detect JSON output so even argument errors are structured regardless
+    // of whether --json appears before or after the invalid argument.
+    let json_mode = args.iter().any(|arg| arg == "--json");
     let mut path: Option<&str> = None;
+    let mut filter: Option<&str> = None;
+    let mut index = 0;
 
-    for arg in args {
-        match arg.as_str() {
+    while index < args.len() {
+        match args[index].as_str() {
             "--allow-console" => allow_console = true,
-            "--json" => json_mode = true,
+            "--json" => {},
+            "--filter" => {
+                let value = args.get(index + 1).map(String::as_str)
+                    .filter(|value| !value.is_empty() && !value.starts_with('-'))
+                    .ok_or_else(|| "The --filter option requires a nonempty substring");
+                let value = match value {
+                    Ok(value) => value,
+                    Err(message) => return test_usage_error(json_mode,
+                        format!("{message}\nUsage: semauri test PATH [--allow-console] [--json] [--filter TEXT]\n")),
+                };
+                if filter.replace(value).is_some() {
+                    return test_usage_error(json_mode,
+                        "The --filter option may only be provided once\n".to_string());
+                }
+                index += 1;
+            }
             value if value.starts_with('-') => {
                 return test_usage_error(json_mode,
-                    format!("Unknown test option: {value}\nUsage: semauri test PATH [--allow-console] [--json]\n"));
+                    format!("Unknown test option: {value}\nUsage: semauri test PATH [--allow-console] [--json] [--filter TEXT]\n"));
             }
             value if path.is_none() => path = Some(value),
             value => {
                 return test_usage_error(json_mode,
-                    format!("Unexpected test argument: {value}\nUsage: semauri test PATH [--allow-console] [--json]\n"));
+                    format!("Unexpected test argument: {value}\nUsage: semauri test PATH [--allow-console] [--json] [--filter TEXT]\n"));
             }
         }
+        index += 1;
     }
 
     let Some(path) = path else {
         return test_usage_error(json_mode,
-            "Usage: semauri test PATH [--allow-console] [--json]\n".to_string());
+            "Usage: semauri test PATH [--allow-console] [--json] [--filter TEXT]\n".to_string());
     };
     let target = Path::new(path);
     let mut files = Vec::new();
@@ -98,6 +118,25 @@ fn run_test_cli(args: &[String]) -> CliResult {
     if files.is_empty() {
         return test_usage_error(json_mode,
             format!("No .suri test files found in '{}'\n", target.display()));
+    }
+
+    // Select by a case-sensitive substring of the relative source path, not
+    // of a machine-dependent temporary or absolute project directory.
+    if let Some(pattern) = filter {
+        files.retain(|file| {
+            let relative = if target.is_dir() {
+                file.strip_prefix(target).unwrap_or(file.as_path())
+            } else {
+                file.file_name().map(Path::new).unwrap_or(file.as_path())
+            };
+            relative.to_string_lossy()
+                .replace(std::path::MAIN_SEPARATOR, "/")
+                .contains(pattern)
+        });
+        if files.is_empty() {
+            return test_usage_error(json_mode,
+                format!("No test files matched filter '{pattern}'\n"));
+        }
     }
 
     let compiler = Compiler::new();

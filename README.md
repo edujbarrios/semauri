@@ -573,11 +573,12 @@ assert result is equal to 42.
 semauri test examples/test_suite
 semauri test path/to/tests --allow-console
 semauri test path/to/tests --json
+semauri test path/to/tests --filter module/math
 ```
 
 The test runner recursively discovers `.suri` files, does not follow symbolic links, requires an executable assertion, and rejects non-console effects. Test discovery excludes build caches and configuration files and is limited to 256 sources and 32 directory levels.
 
-Use `--json` for editor and CI integrations: the response contains `ok`, `status`, `passed`, `failed`, and an ordered `tests` array. Each test reports `path`, `ok`, and `error` for failures. Discovery/usage errors return exit status 64 with an `error` field and empty `tests`; failing suites return status 1. JSON output does not relax runtime capability checks.
+Use `--json` for editor and CI integrations: the response contains `ok`, `status`, `passed`, `failed`, and an ordered `tests` array. Each test reports `path`, `ok`, and `error` for failures. Discovery/usage errors return exit status 64 with an `error` field and empty `tests`; failing suites return status 1. JSON output does not relax runtime capability checks. For a focused run, `--filter TEXT` selects test files whose relative path contains that exact, case-sensitive substring (forward slashes on every platform). No matches is a usage error with exit status 64; filtering never authorizes additional effects.
 
 ## LLM and VLM primitives
 
