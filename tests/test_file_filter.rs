@@ -21,7 +21,7 @@ fn suite() -> PathBuf {
     root
 }
 
-fn command(root: &PathBuf, flags: &[&str]) -> semauri::CliResult {
+fn command(root: &std::path::Path, flags: &[&str]) -> semauri::CliResult {
     let mut args = vec!["test".to_string(), root.to_string_lossy().into_owned()];
     args.extend(flags.iter().map(|flag| flag.to_string()));
     run_cli(&args)
