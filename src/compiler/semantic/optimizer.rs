@@ -367,6 +367,17 @@ fn fold_expr(
                     }
                     // Keep invalid factorial inputs to report S432 at evaluation.
                 }
+                (UnaryOperator::Cube, Some(ValueData::Number(value))) => {
+                    if let Some(cube) = numeric_cube(value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(cube),
+                            span: *span,
+                        };
+                    }
+                    // Preserve failed arithmetic for a source-located S434 diagnostic.
+                }
                 (UnaryOperator::Square, Some(ValueData::Number(value))) => {
                     if let Some(square) = numeric_square(value) {
                         *changes += 1;

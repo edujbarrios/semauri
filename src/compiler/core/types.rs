@@ -129,6 +129,18 @@ fn numeric_factorial(value: NumberValue) -> Option<NumberValue> {
     Some(NumberValue::Int(result))
 }
 
+// Exact signed integer cubing; float multiplication is finite-checked.
+fn numeric_cube(value: NumberValue) -> Option<NumberValue> {
+    match value {
+        NumberValue::Int(n) => n.checked_mul(n)?.checked_mul(n).map(NumberValue::Int),
+        NumberValue::Float(n) if n.is_finite() => {
+            let result = n * n * n;
+            if result.is_finite() { Some(NumberValue::Float(result)) } else { None }
+        }
+        NumberValue::Float(_) => None,
+    }
+}
+
 // Shared by constant folding and evaluation: checked signed 64-bit
 // integer multiplication and finite floating-point results only.
 fn numeric_square(value: NumberValue) -> Option<NumberValue> {
