@@ -356,6 +356,18 @@ fn fold_expr(
                     }
                     // Negative or non-finite roots keep a located S424 diagnostic.
                 }
+                (operator @ (UnaryOperator::Even | UnaryOperator::Odd),
+                    Some(ValueData::Number(value))) => {
+                    if let Some(even) = numeric_is_even(value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Boolean,
+                            value: LiteralValue::Boolean(if *operator == UnaryOperator::Even { even } else { !even }),
+                            span: *span,
+                        };
+                    }
+                    // Invalid or out-of-range decimal values remain for S426.
+                }
                 (UnaryOperator::Negate, Some(ValueData::Number(value))) => {
                     let negated = match value {
                         NumberValue::Int(integer) => integer.checked_neg().map(NumberValue::Int),

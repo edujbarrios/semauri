@@ -745,6 +745,15 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::Even | UnaryOperator::Odd => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S425",
+                                format!("'even of' and 'odd of' require number, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::Boolean
+                    }
                     UnaryOperator::Distinct => {
                         match operand.ty() {
                             Type::List(_) => operand.ty(),

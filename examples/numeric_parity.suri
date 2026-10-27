@@ -1,0 +1,6 @@
+# Boolean parity predicates compose with list transformations.
+let values be a list of minus 3, minus 2, 0, 1, 4.
+let odd_flags be map every n in values to (odd of n).
+assert (odd_flags at 0).
+assert not (odd_flags at 1).
+print odd_flags.

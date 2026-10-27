@@ -1879,6 +1879,31 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::Even | UnaryOperator::Odd),
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(value),
+                } => {
+                    let even = numeric_is_even(value).ok_or_else(|| {
+                        SemauriError::semantic(
+                            "S426", "Parity requires a finite integer within the signed 64-bit range",
+                            Some(expression.span()), None,
+                        )
+                    })?;
+                    Ok(BoundValue::Compile {
+                        ty: Type::Boolean,
+                        data: ValueData::Boolean(if *operator == UnaryOperator::Even { even } else { !even }),
+                    })
+                }
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S425", format!("Parity requires number, received {ty}"),
+                    Some(expression.span()), None)),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Negate,
                 operand,
                 ..

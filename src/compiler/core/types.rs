@@ -119,6 +119,19 @@ fn numeric_sqrt(value: NumberValue) -> Option<NumberValue> {
     }
 }
 
+// Parity accepts exact integers and integral finite decimals only when they
+// fit signed i64. Rejecting out-of-range floats avoids saturating casts and
+// meaningless parity tests above the precision range of binary64.
+fn numeric_is_even(value: NumberValue) -> Option<bool> {
+    match value {
+        NumberValue::Int(n) => Some(n % 2 == 0),
+        NumberValue::Float(n) if n.is_finite() && n.fract() == 0.0
+            && n >= i64::MIN as f64 && n < -(i64::MIN as f64) =>
+            Some((n as i64) % 2 == 0),
+        _ => None,
+    }
+}
+
 impl fmt::Display for NumberValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
