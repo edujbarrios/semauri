@@ -359,6 +359,25 @@ and `ceiling` remain valid identifiers unless followed by `of`.
 Non-number operands produce `S419`; non-finite inputs cause `S420`.
 Neither operator requires additional runtime permissions.
 
+### Numeric squares
+
+`square of NUMBER` computes the square without routing integers through
+floating point. Integers use checked signed 64-bit multiplication, including
+exact results larger than 2^53. Finite decimals use floating-point
+multiplication and reject non-finite results.
+
+```text
+assert (square of (minus 4)) is equal to 16.
+let values be a list of 2, 3, 4.
+let squares be map every n in values to (square of n).
+assert (squares at 2) is equal to 16.
+```
+
+`square` remains a normal variable name unless followed by `of`.
+Non-number operands raise `S421` at type checking; numeric overflow or
+non-finite results raise `S422` during evaluation. The expression is pure
+and requires no new runtime permissions.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked
