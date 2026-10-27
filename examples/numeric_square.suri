@@ -1,0 +1,6 @@
+# Checked, exact integer squaring and decimal calculations.
+let values be a list of minus 3, 0, 4.
+let squares be map every value in values to (square of value).
+assert (squares at 0) is equal to 9.
+assert (squares at 2) is equal to 16.
+print squares.

@@ -78,6 +78,19 @@ fn numeric_round(value: NumberValue, ceiling: bool) -> Option<NumberValue> {
     }
 }
 
+// Shared by constant folding and evaluation: checked signed 64-bit
+// integer multiplication and finite floating-point results only.
+fn numeric_square(value: NumberValue) -> Option<NumberValue> {
+    match value {
+        NumberValue::Int(n) => n.checked_mul(n).map(NumberValue::Int),
+        NumberValue::Float(n) if n.is_finite() => {
+            let result = n * n;
+            if result.is_finite() { Some(NumberValue::Float(result)) } else { None }
+        }
+        NumberValue::Float(_) => None,
+    }
+}
+
 impl fmt::Display for NumberValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
