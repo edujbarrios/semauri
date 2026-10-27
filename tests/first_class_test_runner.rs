@@ -18,7 +18,7 @@ fn temp_dir() -> PathBuf {
     root
 }
 
-fn test_run(dir: &PathBuf, allow_console: bool) -> semauri::CliResult {
+fn test_run(dir: &std::path::Path, allow_console: bool) -> semauri::CliResult {
     let mut args = vec!["test".into(), dir.to_string_lossy().to_string()];
     if allow_console {
         args.push("--allow-console".into());
