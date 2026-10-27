@@ -334,6 +334,17 @@ fn fold_expr(
                     }
                     // Let evaluator emit S420 for non-finite values.
                 }
+                (UnaryOperator::Round, Some(ValueData::Number(value))) => {
+                    if let Some(rounded) = numeric_nearest(value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(rounded),
+                            span: *span,
+                        };
+                    }
+                    // Preserve invalid float values for runtime S428.
+                }
                 (UnaryOperator::Square, Some(ValueData::Number(value))) => {
                     if let Some(square) = numeric_square(value) {
                         *changes += 1;
