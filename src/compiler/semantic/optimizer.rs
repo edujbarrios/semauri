@@ -367,6 +367,17 @@ fn fold_expr(
                     }
                     // Keep invalid factorial inputs to report S432 at evaluation.
                 }
+                (UnaryOperator::Prime, Some(ValueData::Number(value))) => {
+                    if let Some(prime) = numeric_prime(value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Boolean,
+                            value: LiteralValue::Boolean(prime),
+                            span: *span,
+                        };
+                    }
+                    // Preserve a source-located S436 for invalid numeric values.
+                }
                 (UnaryOperator::Cube, Some(ValueData::Number(value))) => {
                     if let Some(cube) = numeric_cube(value) {
                         *changes += 1;

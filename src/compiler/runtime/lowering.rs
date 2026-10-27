@@ -1901,6 +1901,28 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::Prime,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(value),
+                } => Ok(BoundValue::Compile {
+                    ty: Type::Boolean,
+                    data: ValueData::Boolean(numeric_prime(value).ok_or_else(|| {
+                        SemauriError::semantic(
+                            "S436", "'prime of' requires an integral number within the signed 64-bit range",
+                            Some(expression.span()), None,
+                        )
+                    })?),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S435", format!("'prime of' requires number, received {ty}"),
+                    Some(expression.span()), None)),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Cube,
                 operand,
                 ..

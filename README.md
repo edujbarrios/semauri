@@ -522,6 +522,23 @@ Non-number inputs raise `S433` at type checking; integer overflow or
 non-finite results raise located `S434`. The contextual identifier
 `cube` remains a valid variable name unless followed by `of`.
 
+### Exact 64-bit prime predicate
+
+`prime of NUMBER` returns a `boolean` for signed 64-bit integral values
+using deterministic Miller–Rabin tests (not lossy floating-point division).
+Zero, one and negative integers return `false`.
+
+```text
+assert prime of 97.
+assert not (prime of 561).
+assert not (prime of 1).
+```
+
+Finite integral decimals within signed 64-bit range are accepted. Non-number
+operands raise `S435`; fractions, non-finite and out-of-range decimals
+produce located `S436`. The identifier `prime` stays usable as a
+variable unless followed by `of`. The predicate is pure.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked
