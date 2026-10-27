@@ -745,6 +745,15 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::Factorial => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S431",
+                                format!("'factorial of' requires number, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::Number
+                    }
                     UnaryOperator::Square => {
                         if operand.ty() != Type::Number {
                             return Err(SemauriError::semantic(
