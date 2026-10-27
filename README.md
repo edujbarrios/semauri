@@ -96,6 +96,31 @@ The `explain` command prints the following **exact output** for that file
 4. Added button 'Start' as button-1.
 ```
 
+Agents and CI tools can request structured explanations without parsing
+the numbered text:
+
+```sh
+semauri explain examples/explain_walkthrough.suri --json
+```
+
+```json
+{
+  "explanations": [
+    "Entered semantic domain scope 'web'.",
+    "'web' resolved to an HTML web document (default web backend).",
+    "Title explicitly set to 'Example'.",
+    "Added button 'Start' as button-1."
+  ],
+  "ok": true,
+  "status": 0
+}
+```
+
+The `explanations` array preserves the order of the human-readable trace,
+without numeric prefixes. JSON failures use the same source-aware
+`diagnostics` envelope as `semauri check FILE --json`. Neither mode
+executes application effects.
+
 This shows that the compiler enters the `web` semantic domain, chooses the
 HTML backend, retains the explicitly specified document title and assigns
 a stable identifier to the new button. The trace describes *compiler
@@ -756,7 +781,7 @@ semauri build page.suri -o page.html
 | `fmt FILE [--check\|--write]` | Enforce canonical lowercase syntax |
 | `tokens`, `ast`, `hir`, `optimize` | Inspect compiler stages |
 | `symbols FILE` | Inspect typed names and symbol metadata |
-| `explain FILE` | Explain compiler/lowering decisions in a numbered trace, without executing |
+| `explain FILE [--json]` | Explain compiler/lowering decisions as numbered text or structured JSON, without executing |
 | `effects`, `plan`, `graph` | Inspect capabilities and runtime dataflow |
 | `build FILE [-o PATH]` | Render build-time artifacts |
 | `run FILE --allow EFFECT` | Execute supported effects explicitly |
