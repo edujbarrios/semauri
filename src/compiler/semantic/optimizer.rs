@@ -334,6 +334,17 @@ fn fold_expr(
                     }
                     // Let evaluator emit S420 for non-finite values.
                 }
+                (UnaryOperator::Square, Some(ValueData::Number(value))) => {
+                    if let Some(square) = numeric_square(value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(square),
+                            span: *span,
+                        };
+                    }
+                    // Preserve overflow to emit S422 at evaluation.
+                }
                 (UnaryOperator::Negate, Some(ValueData::Number(value))) => {
                     let negated = match value {
                         NumberValue::Int(integer) => integer.checked_neg().map(NumberValue::Int),
