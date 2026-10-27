@@ -356,6 +356,17 @@ fn fold_expr(
                     }
                     // Retain S430 validation for invalid inputs.
                 }
+                (UnaryOperator::Factorial, Some(ValueData::Number(value))) => {
+                    if let Some(factorial) = numeric_factorial(value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(factorial),
+                            span: *span,
+                        };
+                    }
+                    // Keep invalid factorial inputs to report S432 at evaluation.
+                }
                 (UnaryOperator::Square, Some(ValueData::Number(value))) => {
                     if let Some(square) = numeric_square(value) {
                         *changes += 1;
