@@ -1,3 +1,11 @@
+macro_rules! trace_explanation {
+    ($this:expr, $message:expr) => {
+        if $this.collect_explanations {
+            $this.explanations.push($message);
+        }
+    };
+}
+
 struct Lowerer<'a> {
     domains: &'a DomainRegistry,
     symbols: Vec<Symbol>,
@@ -9,6 +17,7 @@ struct Lowerer<'a> {
     entities: HashMap<String, Vec<EntityRecord>>,
     kind_counts: HashMap<(String, String), usize>,
     explanations: Vec<String>,
+    collect_explanations: bool,
 }
 
 impl<'a> Lowerer<'a> {
@@ -24,7 +33,13 @@ impl<'a> Lowerer<'a> {
             entities: HashMap::new(),
             kind_counts: HashMap::new(),
             explanations: Vec::new(),
+            collect_explanations: true,
         }
+    }
+
+    fn without_explanations(mut self) -> Self {
+        self.collect_explanations = false;
+        self
     }
 
     fn lower(mut self, hir: &HirResult) -> Result<SemanticResult> {
@@ -57,8 +72,7 @@ impl<'a> Lowerer<'a> {
             HirStmt::DomainScope { domain, body, .. } => {
                 self.domains.fetch(domain)?;
                 self.domain_scope_stack.push(domain.clone());
-                self.explanations
-                    .push(format!("Entered semantic domain scope '{domain}'."));
+                trace_explanation!(self, format!("Entered semantic domain scope '{domain}'."));
                 self.push_environment();
                 let result = self.lower_statements(body);
                 self.pop_environment();
@@ -91,7 +105,7 @@ impl<'a> Lowerer<'a> {
                     .last_mut()
                     .unwrap()
                     .insert(*symbol_id, value.clone());
-                self.explanations.push(format!(
+                trace_explanation!(self, format!(
                     "Bound '{}' as symbol #{} to {}.",
                     source_name,
                     symbol_id,
@@ -119,7 +133,7 @@ impl<'a> Lowerer<'a> {
                         None,
                     ));
                 };
-                self.explanations.push(format!(
+                trace_explanation!(self, format!(
                     "If condition evaluated to {}; selected {} branch.",
                     value,
                     if value {
@@ -169,7 +183,7 @@ impl<'a> Lowerer<'a> {
                     }
                 };
                 let symbol = self.symbol(*iterator_symbol_id, *span)?;
-                self.explanations.push(format!(
+                trace_explanation!(self, format!(
                     "For every '{}' iterates over {} {} value(s) as symbol #{}.",
                     iterator_source_name,
                     values.len(),
@@ -274,8 +288,7 @@ impl<'a> Lowerer<'a> {
                     }
                 };
                 self.program.put(&domain, updated);
-                self.explanations
-                    .push(format!("Title explicitly set to '{title}'."));
+                trace_explanation!(self, format!("Title explicitly set to '{title}'."));
                 Ok(())
             }
             HirStmt::AddElement {
@@ -321,13 +334,11 @@ impl<'a> Lowerer<'a> {
                 } else {
                     ("Untitled".to_string(), "fallback".to_string())
                 };
-                self.explanations
-                    .push("'web' resolved to an HTML web document (default web backend).".to_string());
+                trace_explanation!(self, "'web' resolved to an HTML web document (default web backend).".to_string());
                 if let Some(subject) = &subject {
-                    self.explanations
-                        .push(format!("Subject resolved to '{subject}'."));
+                    trace_explanation!(self, format!("Subject resolved to '{subject}'."));
                 }
-                self.explanations.push(match origin.as_str() {
+                trace_explanation!(self, match origin.as_str() {
                     "explicit" => format!("Title explicitly set to '{title}'."),
                     "subject_default" => format!(
                         "No title was provided, so the web title defaults to its subject: '{title}'."
@@ -347,10 +358,8 @@ impl<'a> Lowerer<'a> {
                     .clone()
                     .or(subject.clone())
                     .unwrap_or_else(|| "Untitled Schema".to_string());
-                self.explanations
-                    .push("'schema' resolved to a structured-data schema.".to_string());
-                self.explanations
-                    .push(format!("Schema title resolved to '{title}'."));
+                trace_explanation!(self, "'schema' resolved to a structured-data schema.".to_string());
+                trace_explanation!(self, format!("Schema title resolved to '{title}'."));
                 Artifact::Schema(SchemaDocument {
                     title,
                     fields: Vec::new(),
@@ -370,7 +379,7 @@ impl<'a> Lowerer<'a> {
                     .clone()
                     .or(subject.clone())
                     .unwrap_or_else(|| format!("Untitled {}", capitalize(kind)));
-                self.explanations.push(format!(
+                trace_explanation!(self, format!(
                     "Created generic '{}' artifact for semantic domain '{}'.",
                     kind, domain
                 ));
@@ -475,8 +484,7 @@ impl<'a> Lowerer<'a> {
                 kind: kind.to_string(),
                 label: label.clone(),
             });
-        self.explanations
-            .push(format!("Added {kind} '{label}' as {id}."));
+        trace_explanation!(self, format!("Added {kind} '{label}' as {id}."));
         Ok(())
     }
 
@@ -614,7 +622,7 @@ impl<'a> Lowerer<'a> {
             }
         };
         self.program.put(domain, updated);
-        self.explanations.push(match reference {
+        trace_explanation!(self, match reference {
             HirReference::Pronoun { pronoun, .. } => format!(
                 "'{}' resolved to {} '{}' ({}).",
                 pronoun, target.kind, target.label, target.id
@@ -624,7 +632,7 @@ impl<'a> Lowerer<'a> {
                 target.kind, target.label, target.id
             ),
         });
-        self.explanations.push(format!(
+        trace_explanation!(self, format!(
             "Set {}.{} to {}.",
             target.id,
             property,
@@ -773,7 +781,7 @@ impl<'a> Lowerer<'a> {
             source_span: span,
         });
         self.program.put("filesystem", Artifact::Filesystem(plan));
-        self.explanations.push(format!(
+        trace_explanation!(self, format!(
             "Planned filesystem operation '{}' with effects {}.",
             operation,
             effects.join(", ")
@@ -792,7 +800,7 @@ impl<'a> Lowerer<'a> {
             } => {
                 let value = self.resolve_bound(*symbol_id, *span)?;
                 let symbol = self.symbol(*symbol_id, *span)?;
-                self.explanations.push(format!(
+                trace_explanation!(self, format!(
                     "Variable '{}' resolved to symbol #{} ({}).",
                     source_name,
                     symbol.id,
@@ -878,13 +886,13 @@ impl<'a> Lowerer<'a> {
             source_span: *span,
         });
         if let Some(reference) = result {
-            self.explanations.push(format!(
+            trace_explanation!(self, format!(
                 "Planned runtime operation '{}.{}' as operation #{}; result is {} ({}).",
                 domain, operation, id, reference.id, reference.ty
             ));
             Ok(BoundValue::Runtime(reference))
         } else {
-            self.explanations.push(format!(
+            trace_explanation!(self, format!(
                 "Planned runtime operation '{}.{}' as operation #{}.",
                 domain, operation, id
             ));
@@ -1215,7 +1223,7 @@ impl<'a> Lowerer<'a> {
                     return Err(self.runtime_value_error(*span));
                 }
                 let symbol = self.symbol(*symbol_id, *span)?;
-                self.explanations.push(format!(
+                trace_explanation!(self, format!(
                     "Variable '{}' resolved to symbol #{} ({}).",
                     source_name,
                     symbol.id,
