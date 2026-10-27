@@ -66,6 +66,7 @@ impl Compiler {
     pub fn runtime_plan(&self, source: &str) -> Result<RuntimePlan> {
         let optimized = self.optimized_hir(source)?;
         Ok(Lowerer::new(&self.domains, &optimized.result.symbols)
+            .without_explanations()
             .lower(&optimized.result)?
             .runtime_plan)
     }
@@ -83,9 +84,23 @@ impl Compiler {
     }
 
     pub fn analyze(&self, source: &str) -> Result<(Program, SemanticResult)> {
+        self.analyze_with_explanations(source, true)
+    }
+
+    /// Perform full semantic analysis without building its explanation trace.
+    /// This is the default for CLI check/symbols; explain retains full traces.
+    pub fn analyze_without_explanations(&self, source: &str) -> Result<(Program, SemanticResult)> {
+        self.analyze_with_explanations(source, false)
+    }
+
+    fn analyze_with_explanations(
+        &self, source: &str, collect_explanations: bool,
+    ) -> Result<(Program, SemanticResult)> {
         let ast = self.parse(source)?;
         let hir = HirBuilder::new(&self.domains).build(&ast)?;
-        let semantic = Lowerer::new(&self.domains, &hir.symbols).lower(&hir)?;
+        let lowerer = Lowerer::new(&self.domains, &hir.symbols);
+        let lowerer = if collect_explanations { lowerer } else { lowerer.without_explanations() };
+        let semantic = lowerer.lower(&hir)?;
         Ok((ast, semantic))
     }
 
@@ -107,7 +122,9 @@ impl Compiler {
         }
         let optimized_hir = optimize_hir(&hir);
         let semantic =
-            Lowerer::new(&self.domains, &optimized_hir.result.symbols).lower(&optimized_hir.result)?;
+            Lowerer::new(&self.domains, &optimized_hir.result.symbols)
+                .without_explanations()
+                .lower(&optimized_hir.result)?;
         let outputs = self.render_program(&semantic.program_ir, backend)?;
         let (output, selected_backend) = if outputs.len() == 1 {
             (
