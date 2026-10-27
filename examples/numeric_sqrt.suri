@@ -1,0 +1,6 @@
+# Statically typed square roots with checked negative inputs.
+let squares be a list of 0, 9, 64, 144.
+let roots be map every n in squares to (sqrt of n).
+assert (roots at 0) is equal to 0.
+assert (roots at 2) is equal to 8.
+print roots.
