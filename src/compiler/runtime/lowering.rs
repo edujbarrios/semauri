@@ -1,3 +1,26 @@
+// Symbol IDs are internal sequential u64s, not attacker-controlled keys.
+// An identity hash avoids SipHash on every loop-iteration binding.
+#[derive(Default)]
+struct SymbolIdHasher(u64);
+
+impl std::hash::Hasher for SymbolIdHasher {
+    fn finish(&self) -> u64 {
+        self.0
+    }
+
+    fn write(&mut self, bytes: &[u8]) {
+        for byte in bytes {
+            self.0 = self.0.wrapping_mul(0x100000001b3) ^ u64::from(*byte);
+        }
+    }
+
+    fn write_u64(&mut self, value: u64) {
+        self.0 = value;
+    }
+}
+
+type Environment = HashMap<u64, BoundValue, std::hash::BuildHasherDefault<SymbolIdHasher>>;
+
 macro_rules! trace_explanation {
     ($this:expr, $message:expr) => {
         if $this.collect_explanations {
@@ -9,7 +32,8 @@ macro_rules! trace_explanation {
 struct Lowerer<'a> {
     domains: &'a DomainRegistry,
     symbols: Vec<Symbol>,
-    environments: Vec<HashMap<u64, BoundValue>>,
+    environments: Vec<Environment>,
+    recycled_environments: Vec<Environment>,
     program: ProgramIr,
     runtime_plan: RuntimePlan,
     focus_domain: Option<String>,
@@ -25,7 +49,8 @@ impl<'a> Lowerer<'a> {
         Self {
             domains,
             symbols: symbols.to_vec(),
-            environments: vec![HashMap::new()],
+            environments: vec![Environment::default()],
+            recycled_environments: Vec::new(),
             program: ProgramIr::default(),
             runtime_plan: RuntimePlan::default(),
             focus_domain: None,
@@ -2378,11 +2403,18 @@ impl<'a> Lowerer<'a> {
     }
 
     fn push_environment(&mut self) {
-        self.environments.push(HashMap::new());
+        self.environments.push(
+            self.recycled_environments.pop().unwrap_or_default(),
+        );
     }
 
     fn pop_environment(&mut self) {
-        self.environments.pop();
+        // Reuse allocated buckets across iterations, but never leak bindings
+        // into a later lexical scope. Retain only empty recycled frames.
+        if let Some(mut frame) = self.environments.pop() {
+            frame.clear();
+            self.recycled_environments.push(frame);
+        }
     }
 
     fn runtime_value_error(&self, span: SourceSpan) -> SemauriError {
