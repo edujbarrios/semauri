@@ -1,3 +1,15 @@
+## 0.45.0 — 2026-10-27
+
+### Typed numeric sign classification
+- Introduce pure, contextual `sign of NUMBER` returning exactly -1, 0 or 1 with integer precision (including the signed 64-bit minimum), finite decimal handling and signed-zero semantics.
+- Add static `S417` operand checking, non-finite evaluation diagnostic `S418`, optimizer folding, formatter and VS Code highlighting support, examples, and regression tests.
+
+### Contextual numeric floor and ceiling
+- Introduce pure `floor of NUMBER` (toward negative infinity) and `ceiling of NUMBER` (toward positive infinity), with both operators statically returning `number`.
+- Preserve exact integers across the full i64 range rather than routing them through f64; round finite floats using IEEE-754 floor/ceiling, retaining floating-point representation.
+- Add static `S419` diagnostic for invalid operand types, `S420` for non-finite evaluation, and comprehensive compiler, optimizer, formatter, execution, example and VS Code coverage.
+- Preserve identifier compatibility: `sign`, `floor` and `ceiling` become operators only when followed by `of`. No new capabilities or runtime effects are required.
+
 ## 0.44.0 — 2026-10-27
 
 ### Safer assertion-suite discovery
