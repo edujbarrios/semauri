@@ -96,6 +96,23 @@ fn numeric_nearest(value: NumberValue) -> Option<NumberValue> {
     }
 }
 
+// Truncate the fractional part toward zero. Preserve exact i64 integers,
+// and only cast finite floats that safely fit the signed 64-bit range.
+fn numeric_truncate(value: NumberValue) -> Option<NumberValue> {
+    match value {
+        NumberValue::Int(n) => Some(NumberValue::Int(n)),
+        NumberValue::Float(n) if n.is_finite() => {
+            let truncated = n.trunc();
+            if truncated >= i64::MIN as f64 && truncated < -(i64::MIN as f64) {
+                Some(NumberValue::Int(truncated as i64))
+            } else {
+                Some(NumberValue::Float(truncated))
+            }
+        }
+        NumberValue::Float(_) => None,
+    }
+}
+
 // Shared by constant folding and evaluation: checked signed 64-bit
 // integer multiplication and finite floating-point results only.
 fn numeric_square(value: NumberValue) -> Option<NumberValue> {
