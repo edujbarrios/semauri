@@ -718,6 +718,15 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::Floor | UnaryOperator::Ceiling => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S419",
+                                format!("'floor of' and 'ceiling of' require number, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::Number
+                    }
                     UnaryOperator::Distinct => {
                         match operand.ty() {
                             Type::List(_) => operand.ty(),
