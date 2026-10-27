@@ -1,0 +1,4 @@
+let numbers be range from 1 to 10000.
+let backwards be reverse of numbers.
+let ordered be sorted of backwards.
+print median of ordered.
