@@ -1,0 +1,4 @@
+let words be repeat 10000 of "semauri".
+let uppercase_words be map every s in words to (uppercase of s).
+let matches be count every s in uppercase_words if (s contains "MAU").
+print matches.
