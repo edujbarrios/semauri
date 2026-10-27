@@ -398,6 +398,25 @@ followed by `of`. Wrong types produce `S423` at compile time. Negative
 or non-finite operands produce a located `S424` evaluation diagnostic.
 Square roots are pure, checked and can be constant-folded.
 
+### Typed even/odd predicates
+
+`even of NUMBER` and `odd of NUMBER` return `boolean`. Both work on
+exact signed 64-bit integers and integral finite decimals within that
+range, retaining correct parity even beyond 2^53 for integer values.
+
+```text
+assert even of 8.
+assert odd of (minus 3).
+let flags be map every n in (a list of 1, 2, 3) to (odd of n).
+assert (flags at 0).
+```
+
+`even` and `odd` remain contextual identifiers; only the `of` form is
+an operator. A non-number produces the located `S425` type diagnostic.
+Fractional or non-finite decimals and out-of-range numeric values produce
+`S426` rather than silently truncating. Both predicates are pure and
+constant-foldable, requiring no runtime permissions.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked
