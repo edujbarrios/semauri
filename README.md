@@ -508,6 +508,20 @@ operands fail static checking with `S431`. The word `factorial` is
 contextual and can still be used as a variable name. Factorials are pure
 and constant-foldable.
 
+### Checked numeric cubes
+
+`cube of NUMBER` computes a pure cube with exact signed 64-bit integer
+arithmetic and finite decimal multiplication.
+
+```text
+assert (cube of 3) is equal to 27.
+assert (cube of (minus 2)) is equal to (minus 8).
+```
+
+Non-number inputs raise `S433` at type checking; integer overflow or
+non-finite results raise located `S434`. The contextual identifier
+`cube` remains a valid variable name unless followed by `of`.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked

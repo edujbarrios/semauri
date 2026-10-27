@@ -1,0 +1,6 @@
+# Checked integer cubes and finite decimals.
+let numbers be a list of minus 3, 0, 4.
+let cubes be map every n in numbers to (cube of n).
+assert (cubes at 0) is equal to (minus 27).
+assert (cubes at 2) is equal to 64.
+print cubes.
