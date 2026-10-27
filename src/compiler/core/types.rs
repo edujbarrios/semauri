@@ -129,6 +129,51 @@ fn numeric_factorial(value: NumberValue) -> Option<NumberValue> {
     Some(NumberValue::Int(result))
 }
 
+// Deterministic modular exponentiation for exact 64-bit prime checks.
+fn prime_mod_pow(mut base: u64, mut exponent: u64, modulus: u64) -> u64 {
+    let mut answer = 1_u64;
+    while exponent != 0 {
+        if exponent & 1 == 1 {
+            answer = ((answer as u128 * base as u128) % modulus as u128) as u64;
+        }
+        base = ((base as u128 * base as u128) % modulus as u128) as u64;
+        exponent >>= 1;
+    }
+    answer
+}
+
+// Deterministic Miller-Rabin witnesses for all unsigned 64-bit integers.
+// Signed Semauri numbers are a strict subset of that domain.
+fn numeric_prime(value: NumberValue) -> Option<bool> {
+    let signed = match value {
+        NumberValue::Int(n) => n,
+        NumberValue::Float(n) if n.is_finite() && n.fract() == 0.0
+            && n >= i64::MIN as f64 && n < -(i64::MIN as f64) => n as i64,
+        _ => return None,
+    };
+    if signed < 2 { return Some(false); }
+    let n = signed as u64;
+    for divisor in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37] {
+        if n == divisor { return Some(true); }
+        if n % divisor == 0 { return Some(false); }
+    }
+    let power_of_two = (n - 1).trailing_zeros();
+    let d = (n - 1) >> power_of_two;
+    for witness in [2_u64, 325, 9375, 28178, 450775, 9780504, 1795265022] {
+        let a = witness % n;
+        if a == 0 { continue; }
+        let mut x = prime_mod_pow(a, d, n);
+        if x == 1 || x == n - 1 { continue; }
+        let mut passed = false;
+        for _ in 1..power_of_two {
+            x = ((x as u128 * x as u128) % n as u128) as u64;
+            if x == n - 1 { passed = true; break; }
+        }
+        if !passed { return Some(false); }
+    }
+    Some(true)
+}
+
 // Exact signed integer cubing; float multiplication is finite-checked.
 fn numeric_cube(value: NumberValue) -> Option<NumberValue> {
     match value {

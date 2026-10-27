@@ -754,6 +754,15 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::Prime => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S435",
+                                format!("'prime of' requires number, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::Boolean
+                    }
                     UnaryOperator::Cube => {
                         if operand.ty() != Type::Number {
                             return Err(SemauriError::semantic(
