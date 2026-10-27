@@ -417,6 +417,24 @@ Fractional or non-finite decimals and out-of-range numeric values produce
 `S426` rather than silently truncating. Both predicates are pure and
 constant-foldable, requiring no runtime permissions.
 
+### Round to nearest integer
+
+`round of NUMBER` rounds to the nearest whole number. Halfway cases are
+rounded **away from zero**, so `round of 2.5` is 3 and
+`round of (minus 2.5)` is -3. Integers remain exact, even above 2^53.
+Finite floating-point values become integers when the rounded value fits in
+signed 64-bit range; otherwise they remain floats without saturating casts.
+
+```text
+assert (round of 2.49) is equal to 2.
+assert (round of 2.5) is equal to 3.
+assert (round of (minus 2.5)) is equal to (minus 3).
+```
+
+The name `round` remains a valid identifier unless followed by `of`.
+Invalid operand types raise `S427` and non-finite values raise `S428`
+at evaluation. Rounding is pure and constant-foldable.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked
