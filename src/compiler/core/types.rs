@@ -60,6 +60,17 @@ fn numeric_sign(value: NumberValue) -> Option<NumberValue> {
     Some(NumberValue::Int(sign))
 }
 
+// Rounding preserves exact integers (including i64 extremes). Floating
+// inputs remain floating point; no lossy f64 -> i64 cast is introduced.
+fn numeric_round(value: NumberValue, ceiling: bool) -> Option<NumberValue> {
+    match value {
+        NumberValue::Int(n) => Some(NumberValue::Int(n)),
+        NumberValue::Float(n) if n.is_finite() =>
+            Some(NumberValue::Float(if ceiling { n.ceil() } else { n.floor() })),
+        NumberValue::Float(_) => None,
+    }
+}
+
 impl fmt::Display for NumberValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
