@@ -1,0 +1,10 @@
+# Pure numeric rounding without implicit string conversions.
+let samples be a list of minus 2.3, 0.0, 1.4, 5.9.
+let floors be map every n in samples to (floor of n).
+let ceilings be map every n in samples to (ceiling of n).
+assert (floors at 0) is equal to (minus 3).
+assert (ceilings at 0) is equal to (minus 2).
+assert (floors at 3) is equal to 5.
+assert (ceilings at 3) is equal to 6.
+print floors.
+print ceilings.

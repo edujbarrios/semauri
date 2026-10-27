@@ -256,6 +256,27 @@ The keyword `sign` is contextual: `let sign be 5.` still defines a normal
 variable. Non-numeric operands cause the located type diagnostic `S417`;
 non-finite numeric values cause `S418` at evaluation. Signed zero returns 0.
 
+### Numeric floor and ceiling
+
+Use `floor of NUMBER` to round toward negative infinity and
+`ceiling of NUMBER` to round toward positive infinity:
+
+```text
+assert (floor of 2.8) is equal to 2.
+assert (ceiling of 2.2) is equal to 3.
+assert (floor of (minus 2.2)) is equal to (minus 3).
+assert (ceiling of (minus 2.8)) is equal to (minus 2).
+```
+
+Both expressions are pure and typed as `number`. Exact integer inputs
+are returned unchanged, including the full signed 64-bit range. Finite
+floating-point inputs are rounded using IEEE-754 floor/ceiling and produce
+exact integers when safely within signed 64-bit bounds; results outside that
+range remain floating point, without saturating casts. The names `floor`
+and `ceiling` remain valid identifiers unless followed by `of`.
+Non-number operands produce `S419`; non-finite inputs cause `S420`.
+Neither operator requires additional runtime permissions.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked
