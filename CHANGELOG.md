@@ -1,3 +1,17 @@
+## 0.49.0 — 2026-10-27
+
+### Faster compile-time evaluation without language changes
+- Construct semantic explanation strings lazily in CLI check/run/plan/codegen pathways. Preserve the original text and JSON byte sequences of `semauri explain`.
+- Make compiler symbol lookups cheaper with borrowed symbols and sequential-ID indexing, reduce unnecessary clones and preallocate transformation buffers.
+- Recycle cleared lexical environments with deterministic fast symbol-ID hashing instead of allocating and rehashing a new map for each scope iteration.
+- Add explicit regression coverage that check-style analysis and compilation never accumulate explanations, while `explain` remains compatible.
+- Include five paired Semauri/Python reproducible benchmarks (50 measured processes, 3 warmups, output checked) and a same-runner pinned v0.48.0 comparison.
+
+### Observed performance
+On an AMD EPYC 7763 Linux GitHub Actions runner, measured end-to-end medians improved from 27.386 to 7.769 ms (3.53x) for map+reduce, from 14.574 to 6.866 ms (2.12x) for filter+count, from 7.381 to 3.229 ms (2.29x) for sort+median, and from 20.224 to 8.387 ms (2.41x) for text processing; startup-dominated hello remained near 1.5 ms. See PR #251 and the performance workflow for measurement context.
+
+No syntax, diagnostics, data types, runtime effects, or safety limits have changed. The optimization adds no dependencies.
+
 ## 0.48.0 — 2026-10-27
 
 ### Nearest-integer rounding
