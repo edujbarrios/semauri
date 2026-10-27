@@ -182,7 +182,7 @@ impl<'a> Lowerer<'a> {
                         return Err(self.runtime_value_error(*span));
                     }
                 };
-                let symbol = self.symbol(*iterator_symbol_id, *span)?;
+                let iterator_type = self.symbol(*iterator_symbol_id, *span)?.ty.clone();
                 trace_explanation!(self, format!(
                     "For every '{}' iterates over {} {} value(s) as symbol #{}.",
                     iterator_source_name,
@@ -195,7 +195,7 @@ impl<'a> Lowerer<'a> {
                     self.environments.last_mut().unwrap().insert(
                         *iterator_symbol_id,
                         BoundValue::Compile {
-                            ty: symbol.ty.clone(),
+                            ty: iterator_type.clone(),
                             data: item,
                         },
                     );
@@ -920,7 +920,7 @@ impl<'a> Lowerer<'a> {
             HirExpr::DomainOperation { .. } => true,
             HirExpr::SymbolRef {
                 symbol_id, span, ..
-            } => matches!(self.resolve_bound(*symbol_id, *span)?, BoundValue::Runtime(_)),
+            } => matches!(self.resolve_bound_ref(*symbol_id, *span)?, BoundValue::Runtime(_)),
             HirExpr::Promote { value, .. } | HirExpr::Unary { operand: value, .. } => {
                 self.runtime_dependent(value)?
             }
@@ -1128,7 +1128,11 @@ impl<'a> Lowerer<'a> {
                     _ => unreachable!("type-checked list transformation"),
                 };
                 let mut selected = Vec::with_capacity(if matches!(kind, ListTransformKind::Count | ListTransformKind::Any | ListTransformKind::All) { 0 } else { input_values.len() });
-                let mut rejected = Vec::new();
+                let mut rejected = Vec::with_capacity(if *kind == ListTransformKind::Partition {
+                    input_values.len()
+                } else {
+                    0
+                });
                 let mut matching_count = 0_i64;
                 for input in input_values {
                     self.push_environment();
@@ -1200,7 +1204,7 @@ impl<'a> Lowerer<'a> {
                 })
             }
             HirExpr::List { ty, items, .. } => {
-                let mut values = Vec::new();
+                let mut values = Vec::with_capacity(items.len());
                 for item in items {
                     match self.evaluate(item)? {
                         BoundValue::Compile { data, .. } => values.push(data),
@@ -2343,10 +2347,10 @@ impl<'a> Lowerer<'a> {
         })
     }
 
-    fn resolve_bound(&self, symbol_id: u64, span: SourceSpan) -> Result<BoundValue> {
+    fn resolve_bound_ref(&self, symbol_id: u64, span: SourceSpan) -> Result<&BoundValue> {
         for environment in self.environments.iter().rev() {
             if let Some(value) = environment.get(&symbol_id) {
-                return Ok(value.clone());
+                return Ok(value);
             }
         }
         Err(SemauriError::semantic(
@@ -2357,19 +2361,20 @@ impl<'a> Lowerer<'a> {
         ))
     }
 
-    fn symbol(&self, id: u64, span: SourceSpan) -> Result<Symbol> {
-        self.symbols
-            .iter()
-            .find(|symbol| symbol.id == id)
-            .cloned()
-            .ok_or_else(|| {
-                SemauriError::semantic(
-                    "S324",
-                    format!("Unknown HIR symbol #{id}"),
-                    Some(span),
-                    None,
-                )
-            })
+    fn resolve_bound(&self, symbol_id: u64, span: SourceSpan) -> Result<BoundValue> {
+        self.resolve_bound_ref(symbol_id, span).cloned()
+    }
+
+    fn symbol(&self, id: u64, span: SourceSpan) -> Result<&Symbol> {
+        // HIR symbols are assigned sequential IDs starting at one.
+        // Index directly rather than scanning and cloning on each lookup.
+        usize::try_from(id).ok()
+            .and_then(|index| index.checked_sub(1))
+            .and_then(|index| self.symbols.get(index))
+            .filter(|symbol| symbol.id == id)
+            .ok_or_else(|| SemauriError::semantic(
+                "S324", format!("Unknown HIR symbol #{id}"), Some(span), None,
+            ))
     }
 
     fn push_environment(&mut self) {
