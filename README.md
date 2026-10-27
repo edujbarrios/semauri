@@ -35,6 +35,41 @@ cargo test
 cargo run -- check examples/hello.suri
 ```
 
+## Semauri in Jupyter Notebook / JupyterLab
+
+This repository includes an official, experimental
+[Semauri Jupyter kernel](integrations/jupyter/README.md).
+After installing the Rust `semauri` executable on your `PATH`:
+
+```sh
+python3 -m pip install -e ./integrations/jupyter
+semauri-jupyter-install --user
+python3 -m pip install jupyterlab
+jupyter lab
+```
+
+Open [the example `.ipynb`](integrations/jupyter/examples/hello_semauri.ipynb)
+and select **Semauri** as the notebook kernel. In a cell, enter:
+
+```text
+let numbers be range from 1 to 5.
+let squares be map every n in numbers to (square of n).
+print squares.
+```
+
+Expected output: `[1, 4, 9, 16, 25]`.
+
+Use `%%check`, `%%explain`, `%%explain --json`, `%%effects` and
+`%%plan` as notebook-only cell directives (first nonblank line).
+
+**Each cell is a standalone Semauri program.** Bindings do not persist
+between cells. Replay would repeat filesystem/AI effects; compiler-backed
+persistent sessions are a separate future feature. Default permission:
+`console_write` only. To grant additional effects set
+`SEMAURI_ALLOW_EFFECTS` explicitly *before* starting Jupyter.
+Set `SEMAURI_BINARY` to the executable's full path if needed.
+No `anywidget` dependency is required for this integration.
+
 ## Start a new Semauri project
 
 Create a ready-to-run project with reusable typed functions and tests:

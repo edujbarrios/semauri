@@ -39,3 +39,23 @@ text, and temporary `.suri` source files are removed after each cell.
 
 Use `python3 -m unittest discover -s integrations/jupyter/tests` after
 installing this package to test the adapter offline.
+
+## Notebook-specific cell directives
+
+The first nonblank line can contain `%%check`, `%%explain`,
+`%%explain --json`, `%%effects`, or `%%plan`. These commands
+inspect Semauri source without granting any additional application effects.
+They are **kernel directives**, not source-language syntax.
+
+```text
+%%explain
+within web:
+  create a web called Example.
+  add a button called Start.
+end.
+```
+
+Open [the example notebook](examples/hello_semauri.ipynb), choose the
+**Semauri** kernel, then execute each independent cell. Keyword
+completion is available. JupyterLab and Notebook work without `anywidget`
+or a separate frontend extension.

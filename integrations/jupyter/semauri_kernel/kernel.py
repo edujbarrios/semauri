@@ -6,6 +6,7 @@ silently repeat filesystem/network/AI effects, so this kernel deliberately
 does NOT pretend to offer persistent mutable sessions.
 """
 import os
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -27,8 +28,34 @@ class SemauriKernel(Kernel):
     }
     banner = "Semauri Jupyter kernel — standalone, capability-checked .suri cells"
 
+    KEYWORDS = ("let", "be", "print", "assert", "range", "from", "to", "of", "number", "string",
+                "boolean", "map", "filter", "count", "reduce", "every", "if", "otherwise",
+                "end", "within", "define", "function", "taking", "invoke", "square", "sqrt",
+                "round", "truncate", "factorial", "even", "odd", "true", "false")
+
     @staticmethod
-    def command_for(code, *, binary=None, effects=None):
+    def parse_cell(code):
+        """Kernel-only directives are not part of Semauri syntax."""
+        lines = code.splitlines(keepends=True)
+        first = next((i for i, line in enumerate(lines) if line.strip()), None)
+        if first is None or not lines[first].strip().startswith("%%"):
+            return "run", False, code
+        words = lines[first].strip().split()
+        commands = {"%%check": "check", "%%explain": "explain",
+                    "%%effects": "effects", "%%plan": "plan"}
+        if words[0] not in commands:
+            raise ValueError(f"Unknown Semauri cell directive: {words[0]}")
+        json_mode = (len(words) == 2 and words[1] == "--json"
+                     and commands[words[0]] in ("check", "explain"))
+        if len(words) != 1 and not json_mode:
+            raise ValueError("Unsupported Semauri cell directive arguments")
+        source = "".join(lines[first + 1:])
+        if not source.strip():
+            raise ValueError("Semauri cell directive requires source code")
+        return commands[words[0]], json_mode, source
+
+    @staticmethod
+    def command_for(code, *, binary=None, effects=None, command="run", json_output=False):
         """Build argv without shell interpolation or implicit extra grants."""
         binary = binary or os.environ.get("SEMAURI_BINARY", "semauri")
         if effects is None:
@@ -38,9 +65,16 @@ class SemauriKernel(Kernel):
         # No user-controlled command-line switches may be smuggled in via effects.
         if any(not part.replace("_", "").isalnum() for part in tokens):
             raise ValueError("SEMAURI_ALLOW_EFFECTS contains an invalid effect name")
-        argv = [binary, "run"]
-        for effect in tokens:
-            argv += ["--allow", effect]
+        if command not in ("run", "check", "explain", "effects", "plan"):
+            raise ValueError("Unsupported Semauri command")
+        if json_output and command not in ("check", "explain"):
+            raise ValueError("JSON diagnostics are not supported for this command")
+        argv = [binary, command]
+        if command == "run":
+            for effect in tokens:
+                argv += ["--allow", effect]
+        if json_output:
+            argv.append("--json")
         return argv + [str(code)]
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None,
@@ -52,17 +86,19 @@ class SemauriKernel(Kernel):
         # retain their expected resolution and .semauri-root boundary.
         path = None
         try:
+            command, json_mode, source = self.parse_cell(code)
             with tempfile.NamedTemporaryFile(
                 mode="w", encoding="utf-8", suffix=".suri", prefix=".semauri-cell-",
                 dir=Path.cwd(), delete=False,
             ) as stream:
                 path = Path(stream.name)
-                stream.write(code)
+                stream.write(source)
             timeout = float(os.environ.get("SEMAURI_CELL_TIMEOUT", "60"))
             if timeout <= 0:
                 raise ValueError("SEMAURI_CELL_TIMEOUT must be positive")
             proc = subprocess.run(
-                self.command_for(path), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                self.command_for(path, command=command, json_output=json_mode),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 text=True, encoding="utf-8", errors="replace", timeout=timeout,
                 check=False,
             )
@@ -100,3 +136,13 @@ class SemauriKernel(Kernel):
         finally:
             if path is not None:
                 path.unlink(missing_ok=True)
+
+    def do_complete(self, code, cursor_pos):
+        match = re.search(r"[A-Za-z_]+$", code[:cursor_pos])
+        if match is None:
+            return {"matches": [], "cursor_start": cursor_pos,
+                    "cursor_end": cursor_pos, "metadata": {}, "status": "ok"}
+        return {"matches": sorted(k for k in self.KEYWORDS
+                                  if k.startswith(match.group().lower())),
+                "cursor_start": match.start(), "cursor_end": cursor_pos,
+                "metadata": {}, "status": "ok"}
