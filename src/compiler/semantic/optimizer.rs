@@ -322,6 +322,18 @@ fn fold_expr(
                     }
                     // Non-finite values retain a runtime S418 diagnostic.
                 }
+                (operator @ (UnaryOperator::Floor | UnaryOperator::Ceiling),
+                    Some(ValueData::Number(value))) => {
+                    if let Some(rounded) = numeric_round(value, *operator == UnaryOperator::Ceiling) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(rounded),
+                            span: *span,
+                        };
+                    }
+                    // Let evaluator emit S420 for non-finite values.
+                }
                 (UnaryOperator::Negate, Some(ValueData::Number(value))) => {
                     let negated = match value {
                         NumberValue::Int(integer) => integer.checked_neg().map(NumberValue::Int),
