@@ -270,8 +270,9 @@ assert (ceiling of (minus 2.8)) is equal to (minus 2).
 
 Both expressions are pure and typed as `number`. Exact integer inputs
 are returned unchanged, including the full signed 64-bit range. Finite
-floating-point inputs are rounded using IEEE-754 floor/ceiling and remain
-floating point; there is no imprecise integer cast. The names `floor`
+floating-point inputs are rounded using IEEE-754 floor/ceiling and produce
+exact integers when safely within signed 64-bit bounds; results outside that
+range remain floating point, without saturating casts. The names `floor`
 and `ceiling` remain valid identifiers unless followed by `of`.
 Non-number operands produce `S419`; non-finite inputs cause `S420`.
 Neither operator requires additional runtime permissions.
