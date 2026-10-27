@@ -1,19 +1,46 @@
 // Assertion-based test discovery is intentionally local and effect-restricted.
 // It does not execute arbitrary project hooks or shell scripts.
 
-fn collect_suri_test_files(path: &Path, output: &mut Vec<PathBuf>) -> std::io::Result<()> {
+// Keep test discovery bounded just like project verification. Ignore generated
+// files and symlinks: test execution must never walk into build artifacts.
+const MAX_TEST_FILES: usize = 256;
+const MAX_TEST_DEPTH: usize = 32;
+
+fn collect_suri_test_files(
+    path: &Path, output: &mut Vec<PathBuf>, depth: usize,
+) -> std::io::Result<()> {
     let metadata = fs::symlink_metadata(path)?;
     if metadata.file_type().is_symlink() {
-        // Do not follow links into unrelated trees or recursive link cycles.
         return Ok(());
     }
     if metadata.is_file() {
-        if path.extension().is_some_and(|ext| ext == "suri") {
+        if path.extension().is_some_and(|ext| ext == "suri")
+            && path.file_name().is_some_and(|name| name != ".config.suri")
+        {
+            if output.len() >= MAX_TEST_FILES {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Test suite exceeds 256 .suri files",
+                ));
+            }
             output.push(path.to_path_buf());
         }
     } else if metadata.is_dir() {
+        if depth > MAX_TEST_DEPTH {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Test directory nesting exceeds 32 levels",
+            ));
+        }
         for entry in fs::read_dir(path)? {
-            collect_suri_test_files(&entry?.path(), output)?;
+            let entry = entry?;
+            let name = entry.file_name();
+            if [".git", "target", "node_modules", ".venv", ".semauri-cache"]
+                .iter().any(|excluded| name == *excluded)
+            {
+                continue;
+            }
+            collect_suri_test_files(&entry.path(), output, depth + 1)?;
         }
     }
     Ok(())
@@ -53,7 +80,7 @@ fn run_test_cli(args: &[String]) -> CliResult {
     };
     let target = Path::new(path);
     let mut files = Vec::new();
-    if let Err(error) = collect_suri_test_files(target, &mut files) {
+    if let Err(error) = collect_suri_test_files(target, &mut files, 0) {
         return CliResult {
             status: 64,
             stdout: String::new(),
