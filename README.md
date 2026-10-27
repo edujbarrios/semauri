@@ -238,6 +238,24 @@ assert row is equal to "name / role / team".
 
 `join` remains a legal identifier outside the operator phrase. The word\n`split` also names an existing ML-domain action, which continues to work.
 
+### Numeric sign
+
+Use `sign of NUMBER` to classify a numeric value as `-1`, `0` or `1`
+without rounding it or converting integers to floating point. It is pure,
+works with signed 64-bit integers (including the minimum integer) and finite
+decimals, and composes with functions and list transformations:
+
+```text
+let measurements be a list of minus 3, 0, 2.5.
+let directions be map every n in measurements to (sign of n).
+assert (directions at 0) is equal to (minus 1).
+assert (directions at 1) is equal to 0.
+```
+
+The keyword `sign` is contextual: `let sign be 5.` still defines a normal
+variable. Non-numeric operands cause the located type diagnostic `S417`;
+non-finite numeric values cause `S418` at evaluation. Signed zero returns 0.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked
