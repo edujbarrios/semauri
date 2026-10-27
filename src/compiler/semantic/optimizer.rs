@@ -345,6 +345,17 @@ fn fold_expr(
                     }
                     // Preserve invalid float values for runtime S428.
                 }
+                (UnaryOperator::Truncate, Some(ValueData::Number(value))) => {
+                    if let Some(truncated) = numeric_truncate(value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(truncated),
+                            span: *span,
+                        };
+                    }
+                    // Retain S430 validation for invalid inputs.
+                }
                 (UnaryOperator::Square, Some(ValueData::Number(value))) => {
                     if let Some(square) = numeric_square(value) {
                         *changes += 1;
