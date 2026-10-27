@@ -99,3 +99,14 @@ fn contextual_identifiers_formatter_optimizer_and_effects_work() {
         );
     }
 }
+
+#[test]
+fn rounded_floats_outside_i64_range_are_not_saturated() {
+    let result = run(r#"let huge be parse number from "9223372036854775808.0".
+let too_negative be parse number from "-9223372036854777856.0".
+assert (floor of huge) is equal to huge.
+assert (ceiling of huge) is equal to huge.
+assert (floor of too_negative) is equal to too_negative.
+assert (ceiling of too_negative) is equal to too_negative."#);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+}
