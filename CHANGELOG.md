@@ -1,3 +1,19 @@
+## 0.44.0 — 2026-10-27
+
+### Safer assertion-suite discovery
+- Bound `semauri test PATH` recursion to 256 source files and 32 directory levels, rejecting excessive suites before executing tests.
+- Exclude generated/cache directories and `.config.suri` from test discovery while preserving symlink isolation, deterministic file ordering and capability enforcement.
+- Add end-to-end regression coverage for limits, cache exclusions and symlink boundaries.
+
+### Machine-readable test reports
+- Introduce `semauri test PATH --json` with `ok`, `status`, `passed`, `failed`, and per-file `tests` entries including error diagnostics on failure.
+- Preserve text output by default and return JSON error envelopes for invalid paths and CLI usage when JSON output is requested.
+
+### Focused test execution
+- Add `semauri test PATH --filter TEXT` to select files by a case-sensitive substring of their relative path, normalizing separators across platforms.
+- Support `--filter` together with `--json` and `--allow-console`, without introducing any new runtime effects or permissions.
+- Add selection, JSON, empty-filter and single-file regression tests.
+
 ## 0.43.0 — 2026-10-26
 
 ### Project-wide verification and CI readiness
