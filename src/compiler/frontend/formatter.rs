@@ -46,6 +46,9 @@ impl Compiler {
             let is_absolute = token.kind == TokenKind::Word
                 && token.lexeme.eq_ignore_ascii_case("absolute")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
+            let is_sign = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("sign")
+                && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
             let is_flatten = token.kind == TokenKind::Word
                 && token.lexeme.eq_ignore_ascii_case("flatten")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
@@ -153,7 +156,7 @@ impl Compiler {
                         | TokenKind::Minus | TokenKind::LParen));
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_import && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute && !is_product && !is_text_operation && !is_text_predicate && !is_join_with && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field && !is_text_search && !is_last_position && !is_json_pointer && !is_character_from && !is_character_at && !is_remove_all
+                && !is_import && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute && !is_sign && !is_product && !is_text_operation && !is_text_predicate && !is_join_with && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field && !is_text_search && !is_last_position && !is_json_pointer && !is_character_from && !is_character_at && !is_remove_all
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count" | "reduce" | "zip" | "partition")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")
