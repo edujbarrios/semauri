@@ -20,7 +20,7 @@ print cube of 2097151."#);
 }
 #[test]
 fn checked_integer_overflow_is_diagnostic() {
-    for code in ["print cube of 2097152.","print cube of (minus 2097152)."] {
+    for code in ["print cube of 2097152.","print cube of (minus 2097153)."] {
         let result=run(code);
         assert_eq!(result.status,65,"{code}: {}",result.stderr);
         assert!(result.stderr.contains("S434"),"{}",result.stderr);
