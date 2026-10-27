@@ -1,0 +1,5 @@
+define function square taking n as number to (n times n).
+let numbers be range from 1 to 10000.
+let squares be map every n in numbers to (invoke square to n).
+let total be reduce every n in squares starting acc as 0 to (acc plus n).
+print total.
