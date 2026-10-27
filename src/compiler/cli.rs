@@ -135,7 +135,7 @@ pub fn run_cli(args: &[String]) -> CliResult {
                         stdout.push_str(&pretty_json(&compiler.optimized_hir(&source)?.to_json()))
                     }
                     "symbols" => {
-                        let (_, semantic) = compiler.analyze(&source)?;
+                        let (_, semantic) = compiler.analyze_without_explanations(&source)?;
                         stdout.push_str(&pretty_json(&JsonValue::Array(
                             semantic.symbols.iter().map(Symbol::to_json).collect(),
                         )));
@@ -286,7 +286,7 @@ pub fn run_cli(args: &[String]) -> CliResult {
                 let path = path.ok_or_else(|| usage_error(usage()))?;
                 let source = load_cli_program(Path::new(&path),
                     &mut current_source, &mut current_loaded)?;
-                compiler.analyze(&source)?;
+                compiler.analyze_without_explanations(&source)?;
                 if let Some(allowed) = allowed {
                     compiler.validate_capabilities(&source, &CapabilityPolicy::new(allowed))?;
                 }
