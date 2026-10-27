@@ -1,3 +1,21 @@
+## 0.48.0 — 2026-10-27
+
+### Nearest-integer rounding
+- Add pure contextual `round of NUMBER` with ties rounded away from zero, preserving exact i64 inputs and safely converting finite floating-point results without saturating overflow.
+- Add statically located `S427` invalid-operand diagnostics and evaluation-time `S428` for non-finite values.
+- Wire through parser, typed HIR, constant folder, evaluator, canonical formatter, VS Code grammar and regression tests.
+
+### Truncation toward zero
+- Add `truncate of NUMBER` to remove fractional parts toward zero (different from `floor of` for negatives), preserving integer precision and avoiding out-of-range integer casts.
+- Introduce diagnostic `S429` for non-number operands and `S430` for non-finite values; add end-to-end tests and examples.
+
+### Exact checked factorials
+- Add `factorial of NUMBER` for non-negative integral inputs from 0 through 20; compute exact signed i64 results using checked arithmetic.
+- Reject invalid operand types with `S431`, and negative/fractional/non-finite/overflow-range operands with `S432` rather than silently truncating or wrapping.
+- Include typed function and list-transform support, static optimizer folding, source formatting, editor grammar support and runnable examples.
+
+All new numeric operators are contextual: ordinary identifiers called `round`, `truncate`, or `factorial` remain compatible unless followed by `of`. No additional runtime permissions are granted.
+
 ## 0.47.0 — 2026-10-27
 
 ### Checked numeric squaring
