@@ -30,7 +30,7 @@ fn ignores_generated_directories_and_configuration_files() {
     fs::write(directory.join("pass.suri"), "assert true.").unwrap();
     fs::write(directory.join("target").join("fail.suri"), "assert false.").unwrap();
     fs::write(directory.join(".git").join("fail.suri"), "assert false.").unwrap();
-    fs::write(directory.join(".config.suri"), "not a test").unwrap();
+    fs::write(directory.join(".config.suri"), "").unwrap();
 
     let result = run(&directory);
     assert_eq!(result.status, 0, "{} {}", result.stdout, result.stderr);
