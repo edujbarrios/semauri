@@ -91,6 +91,34 @@ fn numeric_square(value: NumberValue) -> Option<NumberValue> {
     }
 }
 
+// Square roots preserve perfect integer squares without relying on the
+// rounded f64 representation of a large i64. Non-perfect roots are floats.
+fn numeric_sqrt(value: NumberValue) -> Option<NumberValue> {
+    match value {
+        NumberValue::Int(n) if n >= 0 => {
+            let root = (n as f64).sqrt();
+            let candidate = root as u64;
+            for possible in [candidate, candidate.saturating_add(1)] {
+                let exact = (possible as u128) * (possible as u128);
+                if exact == n as u128 {
+                    return Some(NumberValue::Int(possible as i64));
+                }
+            }
+            Some(NumberValue::Float(root))
+        }
+        NumberValue::Float(n) if n.is_finite() && n >= 0.0 => {
+            let root = n.sqrt();
+            if root.fract() == 0.0
+                && root >= i64::MIN as f64 && root < -(i64::MIN as f64) {
+                Some(NumberValue::Int(root as i64))
+            } else {
+                Some(NumberValue::Float(root))
+            }
+        }
+        _ => None,
+    }
+}
+
 impl fmt::Display for NumberValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

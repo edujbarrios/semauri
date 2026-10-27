@@ -378,6 +378,26 @@ Non-number operands raise `S421` at type checking; numeric overflow or
 non-finite results raise `S422` during evaluation. The expression is pure
 and requires no new runtime permissions.
 
+### Typed square roots
+
+`sqrt of NUMBER` computes a non-negative square root, returning `number`.
+For integer inputs, perfect squares retain an exact integer result—even
+when the square is larger than the exact integer range of f64. Non-perfect
+roots return finite decimals; decimal perfect squares yield integer results.
+
+```text
+assert (sqrt of 81) is equal to 9.
+assert (sqrt of (square of 12)) is equal to 12.
+let estimate be sqrt of 2.
+assert estimate is greater than 1.
+assert estimate is less than 2.
+```
+
+The contextual word `sqrt` remains a valid variable identifier unless
+followed by `of`. Wrong types produce `S423` at compile time. Negative
+or non-finite operands produce a located `S424` evaluation diagnostic.
+Square roots are pure, checked and can be constant-folded.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked

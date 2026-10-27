@@ -345,6 +345,17 @@ fn fold_expr(
                     }
                     // Preserve overflow to emit S422 at evaluation.
                 }
+                (UnaryOperator::SquareRoot, Some(ValueData::Number(value))) => {
+                    if let Some(root) = numeric_sqrt(value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(root),
+                            span: *span,
+                        };
+                    }
+                    // Negative or non-finite roots keep a located S424 diagnostic.
+                }
                 (UnaryOperator::Negate, Some(ValueData::Number(value))) => {
                     let negated = match value {
                         NumberValue::Int(integer) => integer.checked_neg().map(NumberValue::Int),
