@@ -113,6 +113,22 @@ fn numeric_truncate(value: NumberValue) -> Option<NumberValue> {
     }
 }
 
+// A checked, bounded factorial. 20! fits i64 while 21! does not.
+// Integral decimal operands are accepted only in the same finite domain.
+fn numeric_factorial(value: NumberValue) -> Option<NumberValue> {
+    let n = match value {
+        NumberValue::Int(n) if (0..=20).contains(&n) => n as u32,
+        NumberValue::Float(n) if n.is_finite() && n.fract() == 0.0
+            && (0.0..=20.0).contains(&n) => n as u32,
+        _ => return None,
+    };
+    let mut result: i64 = 1;
+    for i in 2..=n {
+        result = result.checked_mul(i as i64)?;
+    }
+    Some(NumberValue::Int(result))
+}
+
 // Shared by constant folding and evaluation: checked signed 64-bit
 // integer multiplication and finite floating-point results only.
 fn numeric_square(value: NumberValue) -> Option<NumberValue> {
