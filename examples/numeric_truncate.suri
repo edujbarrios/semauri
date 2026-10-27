@@ -1,0 +1,6 @@
+# Remove fractional parts toward zero, not toward negative infinity.
+let samples be a list of minus 2.9, 0.7, 3.4.
+let whole be map every n in samples to (truncate of n).
+assert (whole at 0) is equal to (minus 2).
+assert (whole at 2) is equal to 3.
+print whole.
