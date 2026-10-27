@@ -435,6 +435,25 @@ The name `round` remains a valid identifier unless followed by `of`.
 Invalid operand types raise `S427` and non-finite values raise `S428`
 at evaluation. Rounding is pure and constant-foldable.
 
+### Truncate toward zero
+
+`truncate of NUMBER` removes the fractional part without rounding.
+Unlike `floor of`, negative values move **toward zero**:
+`truncate of (minus 2.9)` yields -2, whereas `floor of (minus 2.9)`
+yields -3.
+
+```text
+assert (truncate of 2.9) is equal to 2.
+assert (truncate of (minus 2.9)) is equal to (minus 2).
+```
+
+Exact integers stay unchanged, including signed 64-bit boundary values.
+Finite decimals are converted to integers only when safely representable;
+out-of-range results remain floats. The contextual word `truncate`
+remains a valid identifier unless followed by `of`.
+A wrong operand type raises `S429`; a non-finite operand raises `S430`.
+This is a pure, constant-foldable operation.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked
