@@ -1,3 +1,12 @@
+## 0.46.0 — 2026-10-27
+
+### Explain Semauri programs for people and coding agents
+- Document the existing `semauri explain FILE` semantic trace prominently in the README and agent quick start; distinguish it from `semauri check FILE`, actual execution, effect inspection and runtime plans.
+- Add a runnable `examples/explain_walkthrough.suri` with exact, numbered explanation output and integration coverage to catch stale documentation.
+- Introduce `semauri explain FILE --json` with an ordered `explanations` array plus `ok` and `status`, letting IDEs, CI tools and agents consume semantic decisions without parsing numbered text.
+- Return the established source-aware `diagnostics` JSON envelope on explanation failures; preserve the original human-readable mode and effect-free analysis.
+- Add Rust integration tests for JSON/text parity, diagnostics, argument ordering and default output behavior.
+
 ## 0.45.0 — 2026-10-27
 
 ### Typed numeric sign classification
