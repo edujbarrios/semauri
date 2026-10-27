@@ -6,7 +6,7 @@
 
 ### Contextual numeric floor and ceiling
 - Introduce pure `floor of NUMBER` (toward negative infinity) and `ceiling of NUMBER` (toward positive infinity), with both operators statically returning `number`.
-- Preserve exact integers across the full i64 range rather than routing them through f64; round finite floats using IEEE-754 floor/ceiling, retaining floating-point representation.
+- Preserve exact integers across the full i64 range; round finite floats using IEEE-754 floor/ceiling and convert to integers only when safely in signed 64-bit bounds, without saturating out-of-range floats.
 - Add static `S419` diagnostic for invalid operand types, `S420` for non-finite evaluation, and comprehensive compiler, optimizer, formatter, execution, example and VS Code coverage.
 - Preserve identifier compatibility: `sign`, `floor` and `ceiling` become operators only when followed by `of`. No new capabilities or runtime effects are required.
 
