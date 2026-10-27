@@ -1,0 +1,26 @@
+name: Compiler performance regression
+
+on:
+  push:
+    branches: ["perf/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test compiler invariants
+        run: cargo test --all-targets
+      - name: Build optimized CLI
+        run: cargo build --release
+      - name: Benchmark CLI vs Python, 50 runs each
+        run: bash scripts/bench.sh --runs 50 --warmups 3 --json benches/report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compiler-performance
+          path: benches/report.json
