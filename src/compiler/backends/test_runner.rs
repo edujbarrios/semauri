@@ -79,7 +79,7 @@ fn run_test_cli(args: &[String]) -> CliResult {
             "--filter" => {
                 let value = args.get(index + 1).map(String::as_str)
                     .filter(|value| !value.is_empty() && !value.starts_with('-'))
-                    .ok_or_else(|| "The --filter option requires a nonempty substring");
+                    .ok_or("The --filter option requires a nonempty substring");
                 let value = match value {
                     Ok(value) => value,
                     Err(message) => return test_usage_error(json_mode,
