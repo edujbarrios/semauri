@@ -47,7 +47,7 @@ fn parity_is_pure_and_composes_with_lists_and_functions() {
     let r=run(r#"define function is_even taking n as number to (even of n).
 let values be a list of minus 2, minus 1, 0, 1, 2.
 print map every n in values to (invoke is_even to n).
-assert count every n in values if (odd of n) is equal to 2."#);
+assert (count every n in values if (odd of n)) is equal to 2."#);
     assert_eq!(r.status,0,"{}",r.stderr);
     assert_eq!(r.stdout,"[true, false, true, false, true]\n");
 }
