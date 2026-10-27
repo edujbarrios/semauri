@@ -311,6 +311,17 @@ fn fold_expr(
                         };
                     }
                 }
+                (UnaryOperator::Sign, Some(ValueData::Number(value))) => {
+                    if let Some(sign) = numeric_sign(value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(sign),
+                            span: *span,
+                        };
+                    }
+                    // Non-finite values retain a runtime S418 diagnostic.
+                }
                 (UnaryOperator::Negate, Some(ValueData::Number(value))) => {
                     let negated = match value {
                         NumberValue::Int(integer) => integer.checked_neg().map(NumberValue::Int),
