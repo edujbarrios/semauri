@@ -60,13 +60,20 @@ fn numeric_sign(value: NumberValue) -> Option<NumberValue> {
     Some(NumberValue::Int(sign))
 }
 
-// Rounding preserves exact integers (including i64 extremes). Floating
-// inputs remain floating point; no lossy f64 -> i64 cast is introduced.
+// Rounding preserves exact integers (including i64 extremes). Rounded
+// floats become integers only inside the safely representable i64 range.
+// In particular, f64(i64::MAX) equals 2^63, which does NOT fit in i64.
 fn numeric_round(value: NumberValue, ceiling: bool) -> Option<NumberValue> {
     match value {
         NumberValue::Int(n) => Some(NumberValue::Int(n)),
-        NumberValue::Float(n) if n.is_finite() =>
-            Some(NumberValue::Float(if ceiling { n.ceil() } else { n.floor() })),
+        NumberValue::Float(n) if n.is_finite() => {
+            let rounded = if ceiling { n.ceil() } else { n.floor() };
+            if rounded >= i64::MIN as f64 && rounded < -(i64::MIN as f64) {
+                Some(NumberValue::Int(rounded as i64))
+            } else {
+                Some(NumberValue::Float(rounded))
+            }
+        }
         NumberValue::Float(_) => None,
     }
 }
