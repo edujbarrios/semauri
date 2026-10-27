@@ -1,0 +1,39 @@
+name: Compiler performance comparison
+
+on:
+  pull_request:
+    paths:
+      - "src/compiler/**"
+      - "benches/**"
+      - "scripts/bench*"
+      - ".github/workflows/performance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - name: Rust formatting and lint
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets -- -D warnings
+      - name: Build candidate and pinned 0.48.0 baseline
+        run: |
+          cargo build --release
+          git worktree add --detach /tmp/semauri-048-baseline v0.48.0
+          cargo build --release --manifest-path /tmp/semauri-048-baseline/Cargo.toml --target-dir /tmp/semauri-048-target
+      - name: Compare paired output and timed medians (50 + 3 warmups)
+        run: |
+          SEMAURI_BIN=/tmp/semauri-048-target/release/semauri BENCH_LABEL=baseline BENCH_RESULTS=/tmp/semauri-before.json bash scripts/bench.sh 50
+          SEMAURI_BIN=target/release/semauri BENCH_LABEL=candidate BENCH_RESULTS=/tmp/semauri-after.json bash scripts/bench.sh 50
+          python3 scripts/compare_benches.py /tmp/semauri-before.json /tmp/semauri-after.json
