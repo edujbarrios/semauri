@@ -12,9 +12,10 @@ When generating or changing a Semauri program:
 2. End every statement with a period.
 3. Declare a value before using it. Values are immutable and lexically scoped.
 4. Run `semauri fmt FILE --check`, then `semauri check FILE`.
-5. Inspect `semauri effects FILE` and `semauri plan FILE` before execution.
-6. Grant only the effects the program needs when using `run`.
-7. Use `semauri test PATH` for assertion-based test files.
+5. Run `semauri explain FILE` to understand the compiler's semantic decisions.
+6. Inspect `semauri effects FILE` and `semauri plan FILE` before execution.
+7. Grant only the effects the program needs when using `run`.
+8. Use `semauri test PATH` for assertion-based test files.
 
 Never invent syntax. Prefer a small checked program over a plausible-looking unsupported construct.
 
@@ -51,6 +52,62 @@ The initializer creates `main.suri`, `lib/math.suri`,
 It requires a **new directory** and refuses to overwrite an existing
 project. The entry and test files demonstrate safe imports, typed functions,
 capability checks, and executable assertions.
+
+## Understand programs with `check` and `explain`
+
+Humans and coding agents can inspect **how Semauri interprets source code**
+without running the application. `semauri check FILE` validates syntax,
+types, imports and compiler rules, reporting `OK` when validation succeeds.
+`semauri explain FILE` also performs semantic analysis and prints a numbered,
+human-readable trace of decisions made while lowering the program, such as
+domain selection, artifact defaults, symbol bindings, reference resolution,
+selected branches and planned operations.
+
+For a reproducible walkthrough, open
+[`examples/explain_walkthrough.suri`](examples/explain_walkthrough.suri):
+
+```text
+within web:
+  create a web called Example.
+  add a button called Start.
+end.
+```
+
+Check the file and request its explanation:
+
+```sh
+semauri check examples/explain_walkthrough.suri
+semauri explain examples/explain_walkthrough.suri
+```
+
+The `check` command prints:
+
+```text
+OK
+```
+
+The `explain` command prints the following **exact output** for that file
+(pinned by `tests/explain_walkthrough.rs`):
+
+```text
+1. Entered semantic domain scope 'web'.
+2. 'web' resolved to an HTML web document (default web backend).
+3. Title explicitly set to 'Example'.
+4. Added button 'Start' as button-1.
+```
+
+This shows that the compiler enters the `web` semantic domain, chooses the
+HTML backend, retains the explicitly specified document title and assigns
+a stable identifier to the new button. The trace describes *compiler
+decisions*, **not program stdout** or a complete step-by-step execution
+debugger. `check` and `explain` do not render the HTML or run the program.
+
+For additional machine-readable analysis, use `semauri hir FILE` for typed
+expressions, `semauri optimize FILE` for optimized HIR,
+`semauri effects FILE` to review required permissions and
+`semauri plan FILE` or `semauri graph FILE` to inspect runtime work.
+Inspect effects and grant only the minimum necessary capabilities
+before a separate `run` command.
 
 ## Project verification for local development and CI
 
@@ -698,7 +755,8 @@ semauri build page.suri -o page.html
 | `check FILE` | Type-check and validate source |
 | `fmt FILE [--check\|--write]` | Enforce canonical lowercase syntax |
 | `tokens`, `ast`, `hir`, `optimize` | Inspect compiler stages |
-| `symbols`, `explain` | Inspect names and semantic decisions |
+| `symbols FILE` | Inspect typed names and symbol metadata |
+| `explain FILE` | Explain compiler/lowering decisions in a numbered trace, without executing |
 | `effects`, `plan`, `graph` | Inspect capabilities and runtime dataflow |
 | `build FILE [-o PATH]` | Render build-time artifacts |
 | `run FILE --allow EFFECT` | Execute supported effects explicitly |
