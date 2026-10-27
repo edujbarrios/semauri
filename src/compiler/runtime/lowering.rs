@@ -1879,6 +1879,28 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::Factorial,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(value),
+                } => Ok(BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(numeric_factorial(value).ok_or_else(|| {
+                        SemauriError::semantic(
+                            "S432", "'factorial of' requires an integer from 0 through 20",
+                            Some(expression.span()), None,
+                        )
+                    })?),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S431", format!("'factorial of' requires number, received {ty}"),
+                    Some(expression.span()), None)),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Square,
                 operand,
                 ..
