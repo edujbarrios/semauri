@@ -709,6 +709,15 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::Sign => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S417",
+                                format!("'sign of' requires number, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::Number
+                    }
                     UnaryOperator::Distinct => {
                         match operand.ty() {
                             Type::List(_) => operand.ty(),

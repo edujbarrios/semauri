@@ -1,0 +1,8 @@
+# Classify positive, negative and zero values without coercion.
+let values be a list of minus 10, 0, 4.5, minus 0.75.
+let signs be map every value in values to (sign of value).
+assert (signs at 0) is equal to (minus 1).
+assert (signs at 1) is equal to 0.
+assert (signs at 2) is equal to 1.
+assert (signs at 3) is equal to (minus 1).
+print signs.

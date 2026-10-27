@@ -47,6 +47,19 @@ impl NumberValue {
     }
 }
 
+// Pure numeric sign helper shared by constant folding and runtime evaluation.
+// Signed zero maps to zero, and non-finite floating values are rejected.
+fn numeric_sign(value: NumberValue) -> Option<NumberValue> {
+    let sign = match value {
+        NumberValue::Int(n) => n.signum(),
+        NumberValue::Float(n) if n.is_finite() => {
+            if n > 0.0 { 1 } else if n < 0.0 { -1 } else { 0 }
+        }
+        NumberValue::Float(_) => return None,
+    };
+    Some(NumberValue::Int(sign))
+}
+
 impl fmt::Display for NumberValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
