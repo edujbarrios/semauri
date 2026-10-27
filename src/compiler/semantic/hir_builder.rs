@@ -736,6 +736,15 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::Truncate => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S429",
+                                format!("'truncate of' requires number, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::Number
+                    }
                     UnaryOperator::Square => {
                         if operand.ty() != Type::Number {
                             return Err(SemauriError::semantic(
