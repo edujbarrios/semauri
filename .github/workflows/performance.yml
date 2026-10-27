@@ -38,3 +38,29 @@ jobs:
           SEMAURI_BIN=/tmp/semauri-048-target/release/semauri BENCH_LABEL=baseline BENCH_RESULTS=/tmp/semauri-before.json bash scripts/bench.sh 50
           SEMAURI_BIN=target/release/semauri BENCH_LABEL=candidate BENCH_RESULTS=/tmp/semauri-after.json bash scripts/bench.sh 50
           python3 scripts/compare_benches.py /tmp/semauri-before.json /tmp/semauri-after.json
+      - name: Benchmark distinct optimization phases on the same runner
+        run: |
+          set -euo pipefail
+          for entry in \
+            "phase0:79b81b7a9d40815b0050937c3b898b259373fcd1" \
+            "phase1:df5f702c36b31effef2a1b9f19c821667cb96f79" \
+            "phase2:12cd0de92a9ac653b157075d8fc8bc53969acab6" \
+            "phase3:5f5d95e5cc2599639135785a609a35c8a8652659"; do
+            label="${entry%%:*}"
+            sha="${entry#*:}"
+            git worktree add --detach "/tmp/semauri-$label" "$sha"
+            cargo build --release --manifest-path "/tmp/semauri-$label/Cargo.toml" --target-dir "/tmp/semauri-$label-target"
+            SEMAURI_BIN="/tmp/semauri-$label-target/release/semauri" BENCH_LABEL="$label" BENCH_RESULTS="/tmp/$label.json" bash scripts/bench.sh 50
+          done
+          python3 scripts/compare_phases.py /tmp/phase0.json /tmp/phase1.json /tmp/phase2.json /tmp/phase3.json
+      - name: Final callgrind profile (best effort, no semantic changes)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          if ! command -v valgrind >/dev/null || ! command -v callgrind_annotate >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y valgrind
+          fi
+          CARGO_PROFILE_RELEASE_DEBUG=1 cargo build --release
+          valgrind --tool=callgrind --callgrind-out-file=/tmp/semauri-callgrind.out target/release/semauri check benches/map_reduce.suri
+          callgrind_annotate --inclusive=yes --auto=yes /tmp/semauri-callgrind.out | sed -n '1,90p'
+
