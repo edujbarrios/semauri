@@ -727,6 +727,15 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::Round => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S427",
+                                format!("'round of' requires number, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::Number
+                    }
                     UnaryOperator::Square => {
                         if operand.ty() != Type::Number {
                             return Err(SemauriError::semantic(
