@@ -454,6 +454,25 @@ remains a valid identifier unless followed by `of`.
 A wrong operand type raises `S429`; a non-finite operand raises `S430`.
 This is a pure, constant-foldable operation.
 
+### Checked factorial
+
+`factorial of NUMBER` computes the exact integer factorial for a
+non-negative integer from **0 through 20**, returning `number`. Both integer
+values and finite integral decimals in that range are supported; 20! fits
+signed 64-bit integer precision but 21! does not.
+
+```text
+assert (factorial of 0) is equal to 1.
+assert (factorial of 5) is equal to 120.
+assert (factorial of 20) is equal to 2432902008176640000.
+```
+
+Negative, fractional, non-finite and out-of-range values raise the located
+`S432` diagnostic, rather than overflowing or truncating. Non-number
+operands fail static checking with `S431`. The word `factorial` is
+contextual and can still be used as a variable name. Factorials are pure
+and constant-foldable.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked
