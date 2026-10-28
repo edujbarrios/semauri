@@ -1,0 +1,6 @@
+# Safe numeric inverses with checked zero handling.
+let inputs be a list of 2, 4, 8.
+let inverses be map every n in inputs to (reciprocal of n).
+assert (inverses at 0) is equal to 0.5.
+assert (inverses at 2) is equal to 0.125.
+print inverses.
