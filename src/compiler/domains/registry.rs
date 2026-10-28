@@ -160,7 +160,7 @@ impl DomainRegistry {
     fn infer_property_for_type(&self, value_type: &Type) -> Option<(String, String)> {
         let mut candidates = Vec::new();
         for domain in &self.domains {
-            for (_surface, (kind, ty)) in &domain.properties {
+            for (kind, ty) in domain.properties.values() {
                 if ty == value_type {
                     let candidate = (domain.name.clone(), kind.clone());
                     if !candidates.contains(&candidate) {

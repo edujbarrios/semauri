@@ -19,7 +19,7 @@ fn suite() -> PathBuf {
     directory
 }
 
-fn json_test(directory: &PathBuf, additional: &[&str]) -> (i32, Value, String) {
+fn json_test(directory: &std::path::Path, additional: &[&str]) -> (i32, Value, String) {
     let mut args = vec!["test".to_string(), "--json".to_string(),
         directory.to_string_lossy().into_owned()];
     args.extend(additional.iter().map(|s| s.to_string()));

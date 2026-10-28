@@ -1,7 +1,7 @@
 // Copyright 2026 Eduardo J. Barrios
 // SPDX-License-Identifier: Apache-2.0
 
-use semauri::{Compiler, RuntimeArgument, Type};
+use semauri::{Compiler, RuntimeArgument};
 
 const REPRODUCIBLE_ML_SOURCE: &str = r#"Within ml:
   Let dataset be Source dataset "./images" revision "data-v3".

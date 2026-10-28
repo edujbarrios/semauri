@@ -1,7 +1,39 @@
+// Symbol IDs are internal sequential u64s, not attacker-controlled keys.
+// An identity hash avoids SipHash on every loop-iteration binding.
+#[derive(Default)]
+struct SymbolIdHasher(u64);
+
+impl std::hash::Hasher for SymbolIdHasher {
+    fn finish(&self) -> u64 {
+        self.0
+    }
+
+    fn write(&mut self, bytes: &[u8]) {
+        for byte in bytes {
+            self.0 = self.0.wrapping_mul(0x100000001b3) ^ u64::from(*byte);
+        }
+    }
+
+    fn write_u64(&mut self, value: u64) {
+        self.0 = value;
+    }
+}
+
+type Environment = HashMap<u64, BoundValue, std::hash::BuildHasherDefault<SymbolIdHasher>>;
+
+macro_rules! trace_explanation {
+    ($this:expr, $message:expr) => {
+        if $this.collect_explanations {
+            $this.explanations.push($message);
+        }
+    };
+}
+
 struct Lowerer<'a> {
     domains: &'a DomainRegistry,
     symbols: Vec<Symbol>,
-    environments: Vec<HashMap<u64, BoundValue>>,
+    environments: Vec<Environment>,
+    recycled_environments: Vec<Environment>,
     program: ProgramIr,
     runtime_plan: RuntimePlan,
     focus_domain: Option<String>,
@@ -9,6 +41,7 @@ struct Lowerer<'a> {
     entities: HashMap<String, Vec<EntityRecord>>,
     kind_counts: HashMap<(String, String), usize>,
     explanations: Vec<String>,
+    collect_explanations: bool,
 }
 
 impl<'a> Lowerer<'a> {
@@ -16,7 +49,8 @@ impl<'a> Lowerer<'a> {
         Self {
             domains,
             symbols: symbols.to_vec(),
-            environments: vec![HashMap::new()],
+            environments: vec![Environment::default()],
+            recycled_environments: Vec::new(),
             program: ProgramIr::default(),
             runtime_plan: RuntimePlan::default(),
             focus_domain: None,
@@ -24,7 +58,13 @@ impl<'a> Lowerer<'a> {
             entities: HashMap::new(),
             kind_counts: HashMap::new(),
             explanations: Vec::new(),
+            collect_explanations: true,
         }
+    }
+
+    fn without_explanations(mut self) -> Self {
+        self.collect_explanations = false;
+        self
     }
 
     fn lower(mut self, hir: &HirResult) -> Result<SemanticResult> {
@@ -57,8 +97,7 @@ impl<'a> Lowerer<'a> {
             HirStmt::DomainScope { domain, body, .. } => {
                 self.domains.fetch(domain)?;
                 self.domain_scope_stack.push(domain.clone());
-                self.explanations
-                    .push(format!("Entered semantic domain scope '{domain}'."));
+                trace_explanation!(self, format!("Entered semantic domain scope '{domain}'."));
                 self.push_environment();
                 let result = self.lower_statements(body);
                 self.pop_environment();
@@ -91,7 +130,7 @@ impl<'a> Lowerer<'a> {
                     .last_mut()
                     .unwrap()
                     .insert(*symbol_id, value.clone());
-                self.explanations.push(format!(
+                trace_explanation!(self, format!(
                     "Bound '{}' as symbol #{} to {}.",
                     source_name,
                     symbol_id,
@@ -119,7 +158,7 @@ impl<'a> Lowerer<'a> {
                         None,
                     ));
                 };
-                self.explanations.push(format!(
+                trace_explanation!(self, format!(
                     "If condition evaluated to {}; selected {} branch.",
                     value,
                     if value {
@@ -168,8 +207,8 @@ impl<'a> Lowerer<'a> {
                         return Err(self.runtime_value_error(*span));
                     }
                 };
-                let symbol = self.symbol(*iterator_symbol_id, *span)?;
-                self.explanations.push(format!(
+                let iterator_type = self.symbol(*iterator_symbol_id, *span)?.ty.clone();
+                trace_explanation!(self, format!(
                     "For every '{}' iterates over {} {} value(s) as symbol #{}.",
                     iterator_source_name,
                     values.len(),
@@ -181,7 +220,7 @@ impl<'a> Lowerer<'a> {
                     self.environments.last_mut().unwrap().insert(
                         *iterator_symbol_id,
                         BoundValue::Compile {
-                            ty: symbol.ty.clone(),
+                            ty: iterator_type.clone(),
                             data: item,
                         },
                     );
@@ -274,8 +313,7 @@ impl<'a> Lowerer<'a> {
                     }
                 };
                 self.program.put(&domain, updated);
-                self.explanations
-                    .push(format!("Title explicitly set to '{title}'."));
+                trace_explanation!(self, format!("Title explicitly set to '{title}'."));
                 Ok(())
             }
             HirStmt::AddElement {
@@ -321,13 +359,11 @@ impl<'a> Lowerer<'a> {
                 } else {
                     ("Untitled".to_string(), "fallback".to_string())
                 };
-                self.explanations
-                    .push("'web' resolved to an HTML web document (default web backend).".to_string());
+                trace_explanation!(self, "'web' resolved to an HTML web document (default web backend).".to_string());
                 if let Some(subject) = &subject {
-                    self.explanations
-                        .push(format!("Subject resolved to '{subject}'."));
+                    trace_explanation!(self, format!("Subject resolved to '{subject}'."));
                 }
-                self.explanations.push(match origin.as_str() {
+                trace_explanation!(self, match origin.as_str() {
                     "explicit" => format!("Title explicitly set to '{title}'."),
                     "subject_default" => format!(
                         "No title was provided, so the web title defaults to its subject: '{title}'."
@@ -347,10 +383,8 @@ impl<'a> Lowerer<'a> {
                     .clone()
                     .or(subject.clone())
                     .unwrap_or_else(|| "Untitled Schema".to_string());
-                self.explanations
-                    .push("'schema' resolved to a structured-data schema.".to_string());
-                self.explanations
-                    .push(format!("Schema title resolved to '{title}'."));
+                trace_explanation!(self, "'schema' resolved to a structured-data schema.".to_string());
+                trace_explanation!(self, format!("Schema title resolved to '{title}'."));
                 Artifact::Schema(SchemaDocument {
                     title,
                     fields: Vec::new(),
@@ -370,7 +404,7 @@ impl<'a> Lowerer<'a> {
                     .clone()
                     .or(subject.clone())
                     .unwrap_or_else(|| format!("Untitled {}", capitalize(kind)));
-                self.explanations.push(format!(
+                trace_explanation!(self, format!(
                     "Created generic '{}' artifact for semantic domain '{}'.",
                     kind, domain
                 ));
@@ -475,8 +509,7 @@ impl<'a> Lowerer<'a> {
                 kind: kind.to_string(),
                 label: label.clone(),
             });
-        self.explanations
-            .push(format!("Added {kind} '{label}' as {id}."));
+        trace_explanation!(self, format!("Added {kind} '{label}' as {id}."));
         Ok(())
     }
 
@@ -614,7 +647,7 @@ impl<'a> Lowerer<'a> {
             }
         };
         self.program.put(domain, updated);
-        self.explanations.push(match reference {
+        trace_explanation!(self, match reference {
             HirReference::Pronoun { pronoun, .. } => format!(
                 "'{}' resolved to {} '{}' ({}).",
                 pronoun, target.kind, target.label, target.id
@@ -624,7 +657,7 @@ impl<'a> Lowerer<'a> {
                 target.kind, target.label, target.id
             ),
         });
-        self.explanations.push(format!(
+        trace_explanation!(self, format!(
             "Set {}.{} to {}.",
             target.id,
             property,
@@ -773,7 +806,7 @@ impl<'a> Lowerer<'a> {
             source_span: span,
         });
         self.program.put("filesystem", Artifact::Filesystem(plan));
-        self.explanations.push(format!(
+        trace_explanation!(self, format!(
             "Planned filesystem operation '{}' with effects {}.",
             operation,
             effects.join(", ")
@@ -792,7 +825,7 @@ impl<'a> Lowerer<'a> {
             } => {
                 let value = self.resolve_bound(*symbol_id, *span)?;
                 let symbol = self.symbol(*symbol_id, *span)?;
-                self.explanations.push(format!(
+                trace_explanation!(self, format!(
                     "Variable '{}' resolved to symbol #{} ({}).",
                     source_name,
                     symbol.id,
@@ -878,13 +911,13 @@ impl<'a> Lowerer<'a> {
             source_span: *span,
         });
         if let Some(reference) = result {
-            self.explanations.push(format!(
+            trace_explanation!(self, format!(
                 "Planned runtime operation '{}.{}' as operation #{}; result is {} ({}).",
                 domain, operation, id, reference.id, reference.ty
             ));
             Ok(BoundValue::Runtime(reference))
         } else {
-            self.explanations.push(format!(
+            trace_explanation!(self, format!(
                 "Planned runtime operation '{}.{}' as operation #{}.",
                 domain, operation, id
             ));
@@ -912,7 +945,7 @@ impl<'a> Lowerer<'a> {
             HirExpr::DomainOperation { .. } => true,
             HirExpr::SymbolRef {
                 symbol_id, span, ..
-            } => matches!(self.resolve_bound(*symbol_id, *span)?, BoundValue::Runtime(_)),
+            } => matches!(self.resolve_bound_ref(*symbol_id, *span)?, BoundValue::Runtime(_)),
             HirExpr::Promote { value, .. } | HirExpr::Unary { operand: value, .. } => {
                 self.runtime_dependent(value)?
             }
@@ -1120,7 +1153,11 @@ impl<'a> Lowerer<'a> {
                     _ => unreachable!("type-checked list transformation"),
                 };
                 let mut selected = Vec::with_capacity(if matches!(kind, ListTransformKind::Count | ListTransformKind::Any | ListTransformKind::All) { 0 } else { input_values.len() });
-                let mut rejected = Vec::new();
+                let mut rejected = Vec::with_capacity(if *kind == ListTransformKind::Partition {
+                    input_values.len()
+                } else {
+                    0
+                });
                 let mut matching_count = 0_i64;
                 for input in input_values {
                     self.push_environment();
@@ -1192,7 +1229,7 @@ impl<'a> Lowerer<'a> {
                 })
             }
             HirExpr::List { ty, items, .. } => {
-                let mut values = Vec::new();
+                let mut values = Vec::with_capacity(items.len());
                 for item in items {
                     match self.evaluate(item)? {
                         BoundValue::Compile { data, .. } => values.push(data),
@@ -1215,7 +1252,7 @@ impl<'a> Lowerer<'a> {
                     return Err(self.runtime_value_error(*span));
                 }
                 let symbol = self.symbol(*symbol_id, *span)?;
-                self.explanations.push(format!(
+                trace_explanation!(self, format!(
                     "Variable '{}' resolved to symbol #{} ({}).",
                     source_name,
                     symbol.id,
@@ -2447,10 +2484,10 @@ impl<'a> Lowerer<'a> {
         })
     }
 
-    fn resolve_bound(&self, symbol_id: u64, span: SourceSpan) -> Result<BoundValue> {
+    fn resolve_bound_ref(&self, symbol_id: u64, span: SourceSpan) -> Result<&BoundValue> {
         for environment in self.environments.iter().rev() {
             if let Some(value) = environment.get(&symbol_id) {
-                return Ok(value.clone());
+                return Ok(value);
             }
         }
         Err(SemauriError::semantic(
@@ -2461,27 +2498,35 @@ impl<'a> Lowerer<'a> {
         ))
     }
 
-    fn symbol(&self, id: u64, span: SourceSpan) -> Result<Symbol> {
-        self.symbols
-            .iter()
-            .find(|symbol| symbol.id == id)
-            .cloned()
-            .ok_or_else(|| {
-                SemauriError::semantic(
-                    "S324",
-                    format!("Unknown HIR symbol #{id}"),
-                    Some(span),
-                    None,
-                )
-            })
+    fn resolve_bound(&self, symbol_id: u64, span: SourceSpan) -> Result<BoundValue> {
+        self.resolve_bound_ref(symbol_id, span).cloned()
+    }
+
+    fn symbol(&self, id: u64, span: SourceSpan) -> Result<&Symbol> {
+        // HIR symbols are assigned sequential IDs starting at one.
+        // Index directly rather than scanning and cloning on each lookup.
+        usize::try_from(id).ok()
+            .and_then(|index| index.checked_sub(1))
+            .and_then(|index| self.symbols.get(index))
+            .filter(|symbol| symbol.id == id)
+            .ok_or_else(|| SemauriError::semantic(
+                "S324", format!("Unknown HIR symbol #{id}"), Some(span), None,
+            ))
     }
 
     fn push_environment(&mut self) {
-        self.environments.push(HashMap::new());
+        self.environments.push(
+            self.recycled_environments.pop().unwrap_or_default(),
+        );
     }
 
     fn pop_environment(&mut self) {
-        self.environments.pop();
+        // Reuse allocated buckets across iterations, but never leak bindings
+        // into a later lexical scope. Retain only empty recycled frames.
+        if let Some(mut frame) = self.environments.pop() {
+            frame.clear();
+            self.recycled_environments.push(frame);
+        }
     }
 
     fn runtime_value_error(&self, span: SourceSpan) -> SemauriError {

@@ -18,7 +18,7 @@ fn suite() -> PathBuf {
     directory
 }
 
-fn run(directory: &PathBuf) -> semauri::CliResult {
+fn run(directory: &std::path::Path) -> semauri::CliResult {
     run_cli(&["test".into(), directory.to_string_lossy().into_owned()])
 }
 
