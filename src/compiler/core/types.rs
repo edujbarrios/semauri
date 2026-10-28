@@ -199,6 +199,25 @@ fn numeric_square(value: NumberValue) -> Option<NumberValue> {
     }
 }
 
+// Count base-10 digits of the magnitude of a signed 64-bit integer.
+// The sign is not a digit; zero has one digit. Use unsigned_abs to
+// support i64::MIN without signed overflow or floating-point rounding.
+fn numeric_digits(value: NumberValue) -> Option<NumberValue> {
+    let integer = match value {
+        NumberValue::Int(n) => n,
+        NumberValue::Float(n)
+            if n.is_finite() && n.fract() == 0.0
+                && n >= i64::MIN as f64 && n < -(i64::MIN as f64) => n as i64,
+        _ => return None,
+    };
+    let magnitude = integer.unsigned_abs();
+    Some(NumberValue::Int(if magnitude == 0 {
+        1
+    } else {
+        (magnitude.ilog10() + 1) as i64
+    }))
+}
+
 // Reciprocal is a floating-point operation. Reject zero, non-finite
 // inputs, and any output that overflows to infinity.
 fn numeric_reciprocal(value: NumberValue) -> Option<NumberValue> {

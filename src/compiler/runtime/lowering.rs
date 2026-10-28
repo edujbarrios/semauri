@@ -1967,6 +1967,28 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::Digits,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(value),
+                } => Ok(BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(numeric_digits(value).ok_or_else(|| {
+                        SemauriError::semantic(
+                            "S442", "'digits of' requires an integral number within the signed 64-bit range",
+                            Some(expression.span()), None,
+                        )
+                    })?),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S441", format!("'digits of' requires number, received {ty}"),
+                    Some(expression.span()), None)),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Reciprocal,
                 operand,
                 ..
