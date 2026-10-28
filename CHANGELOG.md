@@ -1,3 +1,18 @@
+## 0.50.0 — 2026-10-28
+
+### Exact real cube roots
+- Add pure contextual `cbrt of NUMBER` with signed real cube roots. Perfect integer cubes return exact i64 roots (including i64::MIN), while non-perfect integers and finite decimals return floats.
+- Type diagnostic `S437` rejects non-numbers; `S438` rejects non-finite numeric inputs. Includes typed HIR, constant folding, evaluation, formatter, editor grammar, example and tests.
+
+### Checked numeric reciprocals
+- Add pure contextual `reciprocal of NUMBER` returning a floating-point inverse, with explicit rejection of zero (including negative zero), non-finite inputs, and non-finite results.
+- Add located diagnostics `S439` for invalid operand types and `S440` for invalid numeric domains; extend parser, typed HIR, constant folding, evaluator, formatter, VS Code highlighting and regression coverage.
+
+### Exact decimal digit counts
+- Add pure contextual `digits of NUMBER` counting base-10 digits in integer magnitudes, including zero and i64::MIN, without rounding via f64 or counting the minus sign.
+- Accept finite integral decimal values only within the signed i64 domain; report `S441` for non-number types and `S442` for fractional, non-finite or out-of-range numbers. Provide runnable example and regression coverage.
+
+All three expressions compose with typed functions and list transformations, are supported by compiler inspection commands, preserve their words as normal identifiers unless followed by `of`, add no Rust dependencies or runtime capabilities, and retain source-located diagnostics.
 ## 0.49.0 — 2026-10-27
 
 ### Official experimental Jupyter kernel
