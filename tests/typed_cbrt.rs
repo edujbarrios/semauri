@@ -16,8 +16,8 @@ fn exact_integer_cubes_and_signed_boundary() {
 assert (cbrt of 1) is equal to 1.
 assert (cbrt of (minus 27)) is equal to (minus 3).
 assert (cbrt of 9223358842721533951) is equal to 2097151.
-let minimum be (minus 9223372036854775807) minus 1.
-assert (cbrt of minimum) is equal to (minus 2097152).
+let boundary_cube be (minus 9223372036854775807) minus 1.
+assert (cbrt of boundary_cube) is equal to (minus 2097152).
 print cbrt of 125."#);
     assert_eq!(r.status,0,"{}",r.stderr);
     assert_eq!(r.stdout,"5\n");
@@ -30,7 +30,7 @@ assert x is less than 2.
 let negative be cbrt of (minus 2).
 assert negative is greater than (minus 2).
 assert negative is less than (minus 1).
-assert (cbrt of (minus 8.0)) is equal to (minus 2)."#);
+assert (cbrt of (minus 8.0)) is equal to (minus 2.0)."#);
     assert_eq!(r.status,0,"{}",r.stderr);
 }
 #[test]
