@@ -41,7 +41,7 @@ print map every item in items to (invoke up to item).
 let capitalize be "unchanged".
 print capitalize."#);
     assert_eq!(r.status, 0, "{}", r.stderr);
-    assert_eq!(r.stdout, "[\"Cat\", \"Été\"]\nunchanged\n");
+    assert_eq!(r.stdout, "[Cat, Été]\nunchanged\n");
     let compiler = Compiler::new();
     assert_eq!(compiler.format_source("PRINT CAPITALIZE OF \"hello\".").unwrap(),
                "print capitalize of \"hello\".");
