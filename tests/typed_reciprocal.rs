@@ -15,7 +15,7 @@ fn returns_fractional_inverses_for_positive_and_negative_numbers() {
     let r = run(r#"assert (reciprocal of 2) is equal to 0.5.
 assert (reciprocal of (minus 4)) is equal to (minus 0.25).
 assert (reciprocal of 0.25) is equal to 4.0.
-assert (reciprocal of 1) is equal to 1.
+assert (reciprocal of 1) is equal to 1.0.
 let quarter be reciprocal of 4.
 assert quarter is greater than 0.
 assert quarter is less than 1."#);
