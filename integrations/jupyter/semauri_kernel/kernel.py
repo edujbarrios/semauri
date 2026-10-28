@@ -31,7 +31,8 @@ class SemauriKernel(Kernel):
     KEYWORDS = ("let", "be", "print", "assert", "range", "from", "to", "of", "number", "string",
                 "boolean", "map", "filter", "count", "reduce", "every", "if", "otherwise",
                 "end", "within", "define", "function", "taking", "invoke", "square", "sqrt",
-                "round", "truncate", "factorial", "even", "odd", "true", "false")
+                "round", "truncate", "factorial", "even", "odd", "true", "false",
+                "cube", "cbrt", "reciprocal", "digits", "prime", "capitalize", "swapcase")
 
     @staticmethod
     def parse_cell(code):
@@ -42,7 +43,10 @@ class SemauriKernel(Kernel):
             return "run", False, code
         words = lines[first].strip().split()
         commands = {"%%check": "check", "%%explain": "explain",
-                    "%%effects": "effects", "%%plan": "plan"}
+                    "%%effects": "effects", "%%plan": "plan",
+                    "%%tokens": "tokens", "%%ast": "ast", "%%hir": "hir",
+                    "%%optimize": "optimize", "%%symbols": "symbols",
+                    "%%graph": "graph", "%%fmt": "fmt"}
         if words[0] not in commands:
             raise ValueError(f"Unknown Semauri cell directive: {words[0]}")
         json_mode = (len(words) == 2 and words[1] == "--json"
@@ -65,7 +69,9 @@ class SemauriKernel(Kernel):
         # No user-controlled command-line switches may be smuggled in via effects.
         if any(not part.replace("_", "").isalnum() for part in tokens):
             raise ValueError("SEMAURI_ALLOW_EFFECTS contains an invalid effect name")
-        if command not in ("run", "check", "explain", "effects", "plan"):
+        if command not in ("run", "check", "explain", "effects", "plan",
+                           "tokens", "ast", "hir", "optimize", "symbols",
+                           "graph", "fmt"):
             raise ValueError("Unsupported Semauri command")
         if json_output and command not in ("check", "explain"):
             raise ValueError("JSON diagnostics are not supported for this command")

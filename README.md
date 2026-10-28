@@ -59,8 +59,11 @@ print squares.
 
 Expected output: `[1, 4, 9, 16, 25]`.
 
-Use `%%check`, `%%explain`, `%%explain --json`, `%%effects` and
-`%%plan` as notebook-only cell directives (first nonblank line).
+Notebook-only directives (on the first nonblank line) include `%%check`,
+`%%explain` (also `--json`), `%%effects`, `%%plan`, `%%tokens`,
+`%%ast`, `%%hir`, `%%optimize`, `%%symbols`, `%%graph` and
+`%%fmt`. These inspect code without executing application effects.
+`%%fmt` displays the canonical source without writing files.
 
 **Each cell is a standalone Semauri program.** Bindings do not persist
 between cells. Replay would repeat filesystem/AI effects; compiler-backed
