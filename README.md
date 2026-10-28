@@ -319,6 +319,24 @@ assert length of rows is equal to 2.
 Non-string operands are rejected (`S351`), literals can be constant-folded, and
 none of these transformations grants or requires runtime capabilities.
 
+### Unicode-aware first-letter capitalization
+
+`capitalize of STRING` uppercases the **first Unicode scalar** while
+leaving the remainder of the text byte-for-byte unchanged. Unicode case
+mapping can expand a character (for example, `ß` becomes `SS`).
+Empty text stays empty, and leading whitespace is not skipped.
+
+```text
+assert (capitalize of "hello WORLD") is equal to "Hello WORLD".
+assert (capitalize of "élève") is equal to "Élève".
+assert (capitalize of "ßeta") is equal to "SSeta".
+```
+
+It is pure, works with functions and `map every`, and is constant-folded
+for literals. Non-strings use the existing located case-transformation
+diagnostic `S351`. The name `capitalize` remains a normal identifier
+unless followed by `of`.
+
 ### Typed JSON serialization
 
 The pure `json of VALUE` operation produces valid JSON text from a number,
