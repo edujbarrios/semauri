@@ -1426,7 +1426,7 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
-                operator: operator @ (UnaryOperator::Uppercase | UnaryOperator::Lowercase | UnaryOperator::Capitalize | UnaryOperator::Swapcase),
+                operator: operator @ (UnaryOperator::Uppercase | UnaryOperator::Lowercase | UnaryOperator::Capitalize | UnaryOperator::Swapcase | UnaryOperator::Uncapitalize),
                 operand,
                 ..
             } => {
@@ -1441,6 +1441,7 @@ impl<'a> Lowerer<'a> {
                         UnaryOperator::Lowercase => value.to_lowercase(),
                         UnaryOperator::Capitalize => text_capitalize(&value),
                         UnaryOperator::Swapcase => text_swapcase(&value),
+                        UnaryOperator::Uncapitalize => text_uncapitalize(&value),
                         _ => unreachable!(),
                     }),
                 }),

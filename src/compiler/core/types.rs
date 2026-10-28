@@ -14,6 +14,15 @@ fn text_swapcase(value: &str) -> String {
     output
 }
 
+// Lowercase the first Unicode scalar without changing the remaining text.
+fn text_uncapitalize(value: &str) -> String {
+    let mut chars = value.chars();
+    match chars.next() {
+        Some(first) => first.to_lowercase().chain(chars).collect(),
+        None => String::new(),
+    }
+}
+
 // Capitalize the first Unicode scalar without altering the remainder.
 // Unicode uppercasing may expand a scalar to multiple characters.
 fn text_capitalize(value: &str) -> String {
