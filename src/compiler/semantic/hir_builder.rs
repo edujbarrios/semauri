@@ -781,6 +781,15 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::Digits => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S441",
+                                format!("'digits of' requires number, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::Number
+                    }
                     UnaryOperator::Reciprocal => {
                         if operand.ty() != Type::Number {
                             return Err(SemauriError::semantic(

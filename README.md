@@ -576,6 +576,26 @@ Non-number operands produce the source-located type error `S439`; invalid
 numeric values produce `S440`. `reciprocal` remains a normal identifier
 when not immediately followed by `of`, and requires no new capabilities.
 
+### Exact decimal digit counts
+
+`digits of NUMBER` returns the count of base-10 digits in an integer's
+absolute value: zero has one digit; the minus sign does not count.
+Unlike converting to floating point, it retains exact results for the full
+signed 64-bit range, including the most negative integer.
+
+```text
+assert (digits of 0) is equal to 1.
+assert (digits of (minus 100)) is equal to 3.
+assert (digits of 9007199254740993) is equal to 16.
+assert (digits of 100.0) is equal to 3.
+```
+
+Finite, integral decimals are allowed only within the signed 64-bit
+range. Non-numeric operands receive `S441`; fractions and out-of-range
+numeric values receive `S442` with a source location. The expression is
+pure, constant-foldable, permission-free, and `digits` remains an ordinary
+identifier unless followed by `of`.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked

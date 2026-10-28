@@ -400,6 +400,17 @@ fn fold_expr(
                     }
                     // Preserve overflow to emit S422 at evaluation.
                 }
+                (UnaryOperator::Digits, Some(ValueData::Number(value))) => {
+                    if let Some(result) = numeric_digits(value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(result),
+                            span: *span,
+                        };
+                    }
+                    // Invalid fractional/out-of-range inputs retain S442.
+                }
                 (UnaryOperator::Reciprocal, Some(ValueData::Number(value))) => {
                     if let Some(result) = numeric_reciprocal(value) {
                         *changes += 1;
