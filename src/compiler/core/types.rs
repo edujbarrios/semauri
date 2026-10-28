@@ -1,3 +1,19 @@
+// Swap Unicode upper/lower case for each scalar. Case mappings can expand;
+// uncased characters, digits, whitespace, and punctuation remain unchanged.
+fn text_swapcase(value: &str) -> String {
+    let mut output = String::with_capacity(value.len());
+    for ch in value.chars() {
+        if ch.is_lowercase() {
+            output.extend(ch.to_uppercase());
+        } else if ch.is_uppercase() {
+            output.extend(ch.to_lowercase());
+        } else {
+            output.push(ch);
+        }
+    }
+    output
+}
+
 // Capitalize the first Unicode scalar without altering the remainder.
 // Unicode uppercasing may expand a scalar to multiple characters.
 fn text_capitalize(value: &str) -> String {

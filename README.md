@@ -337,6 +337,21 @@ for literals. Non-strings use the existing located case-transformation
 diagnostic `S351`. The name `capitalize` remains a normal identifier
 unless followed by `of`.
 
+### Unicode case swapping
+
+`swapcase of STRING` uppercases lowercase Unicode scalars, lowercases
+uppercase scalars, and leaves uncased characters (digits, punctuation,
+spaces) unchanged. Unicode case mappings can expand to multiple scalars.
+
+```text
+assert (swapcase of "HeLLo 123!?") is equal to "hEllO 123!?".
+assert (swapcase of "ßéta") is equal to "SSÉTA".
+```
+
+The expression is pure and constant-foldable, works with typed functions
+and list mapping, uses `S351` for non-string operands, and does not
+reserve the word `swapcase` when it is an ordinary identifier.
+
 ### Typed JSON serialization
 
 The pure `json of VALUE` operation produces valid JSON text from a number,
