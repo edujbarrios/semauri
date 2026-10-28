@@ -1,0 +1,6 @@
+# Exact cube roots for integer perfect cubes, finite decimal otherwise.
+let samples be a list of minus 27, 0, 8, 125.
+let roots be map every n in samples to (cbrt of n).
+assert (roots at 0) is equal to (minus 3).
+assert (roots at 3) is equal to 5.
+print roots.

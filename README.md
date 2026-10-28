@@ -539,6 +539,25 @@ operands raise `S435`; fractions, non-finite and out-of-range decimals
 produce located `S436`. The identifier `prime` stays usable as a
 variable unless followed by `of`. The predicate is pure.
 
+### Exact cube roots
+
+`cbrt of NUMBER` computes a real cube root. Perfect **integer** cubes
+produce exact signed 64-bit integer roots, including the minimum
+signed 64-bit integer; non-perfect integers and finite decimals yield
+floating-point results. Negative inputs are supported.
+
+```text
+assert (cbrt of 125) is equal to 5.
+assert (cbrt of (minus 27)) is equal to (minus 3).
+let estimate be cbrt of 2.
+assert estimate is greater than 1.
+assert estimate is less than 2.
+```
+
+Wrong operand types receive `S437`; non-finite numeric inputs receive
+`S438`. `cbrt` stays an ordinary variable name unless followed by `of`.
+The operation is pure and constant-foldable.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked

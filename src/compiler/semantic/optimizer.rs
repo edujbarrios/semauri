@@ -400,6 +400,17 @@ fn fold_expr(
                     }
                     // Preserve overflow to emit S422 at evaluation.
                 }
+                (UnaryOperator::CubeRoot, Some(ValueData::Number(value))) => {
+                    if let Some(root) = numeric_cbrt(value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(root),
+                            span: *span,
+                        };
+                    }
+                    // Keep non-finite inputs for a source-located S438 diagnostic.
+                }
                 (UnaryOperator::SquareRoot, Some(ValueData::Number(value))) => {
                     if let Some(root) = numeric_sqrt(value) {
                         *changes += 1;
