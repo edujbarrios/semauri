@@ -1078,7 +1078,7 @@ Add `--json` to supported inspection and validation commands when consuming outp
 
 ## Editor and GitHub highlighting
 
-The repository includes a TextMate grammar for `.suri` and `.config.suri` files under `editors/vscode/`. It provides local VS Code highlighting now and is the canonical public grammar for future GitHub Linguist integration.
+The repository includes a TextMate grammar for `.suri` and `.config.suri` files under `editors/vscode/`. It provides local VS Code highlighting now and is also published in the dedicated [semauri-language](https://github.com/edujbarrios/semauri-language) repository as the canonical public grammar for future GitHub Linguist integration.
 
 GitHub only adds a new language after its public-usage threshold is met. Until `.suri` has sufficient independently distributed usage, GitHub will not provide official `semauri` fenced-code highlighting or a Semauri language bar entry. Do not mislabel Semauri as another language in `.gitattributes`; that would make repository statistics inaccurate.
 
