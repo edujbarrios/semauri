@@ -1,3 +1,20 @@
+## 0.51.0 — 2026-10-28
+
+### Unicode text transformations
+- Add `capitalize of STRING` ([#261](https://github.com/edujbarrios/semauri/pull/261)) to uppercase the first Unicode scalar while preserving the rest.
+- Add `swapcase of STRING` ([#262](https://github.com/edujbarrios/semauri/pull/262)) to swap the case of cased Unicode scalars, preserving uncased characters.
+- Add `uncapitalize of STRING` ([#264](https://github.com/edujbarrios/semauri/pull/264)) to lowercase only the first Unicode scalar, preserving all remaining text.
+- Add `titlecase of STRING` ([#265](https://github.com/edujbarrios/semauri/pull/265)) to uppercase first scalars and lowercase remaining scalars in whitespace-delimited words, preserving whitespace.
+- All four operations are contextual and pure, support typed HIR, constant folding, functions and list mapping, and reuse type diagnostic `S351`. Update the formatter, editor grammar, examples, docs and regression coverage.
+
+### Jupyter notebooks and language tooling
+- Add read-only `%%tokens`, `%%ast`, `%%hir`, `%%optimize`, `%%symbols`, `%%graph`, and `%%fmt` notebook directives, plus richer completions ([#263](https://github.com/edujbarrios/semauri/pull/263)).
+- Keep notebook cells standalone and capability-restricted; inspections cannot write files, execute application effects or accept unsafe flags.
+- Update the Jupyter language version to 0.51 and surface the new language operators in completions.
+- Link the separate public grammar from the canonical guide and VS Code extension metadata ([#203](https://github.com/edujbarrios/semauri/pull/203)).
+
+No new Rust dependencies or runtime permissions are introduced. Publication is gated on Rust compiler tests, Jupyter integration tests, six native distribution checks and the version-triggered release workflow.
+
 ## 0.50.0 — 2026-10-28
 
 ### Exact real cube roots
