@@ -1967,6 +1967,28 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: UnaryOperator::CubeRoot,
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(value),
+                } => Ok(BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(numeric_cbrt(value).ok_or_else(|| {
+                        SemauriError::semantic(
+                            "S438", "'cbrt of' requires a finite number",
+                            Some(expression.span()), None,
+                        )
+                    })?),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S437", format!("'cbrt of' requires number, received {ty}"),
+                    Some(expression.span()), None)),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::SquareRoot,
                 operand,
                 ..

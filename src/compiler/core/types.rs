@@ -199,6 +199,36 @@ fn numeric_square(value: NumberValue) -> Option<NumberValue> {
     }
 }
 
+// Perfect integer cube roots are located using exact u128 arithmetic.
+// In particular, i64::MIN = (-2097152)^3 must stay an exact integer.
+// Non-perfect integer inputs and finite floating-point inputs yield floats.
+fn numeric_cbrt(value: NumberValue) -> Option<NumberValue> {
+    match value {
+        NumberValue::Int(n) => {
+            let magnitude = u128::from(n.unsigned_abs());
+            let (mut low, mut high) = (0_u64, 2_097_152_u64);
+            while low <= high {
+                let mid = low + (high - low) / 2;
+                let cube = u128::from(mid).pow(3);
+                if cube == magnitude {
+                    let root = mid as i64;
+                    return Some(NumberValue::Int(if n < 0 { -root } else { root }));
+                }
+                if cube < magnitude {
+                    low = mid + 1;
+                } else if mid == 0 {
+                    break;
+                } else {
+                    high = mid - 1;
+                }
+            }
+            Some(NumberValue::Float((n as f64).cbrt()))
+        }
+        NumberValue::Float(n) if n.is_finite() => Some(NumberValue::Float(n.cbrt())),
+        NumberValue::Float(_) => None,
+    }
+}
+
 // Square roots preserve perfect integer squares without relying on the
 // rounded f64 representation of a large i64. Non-perfect roots are floats.
 fn numeric_sqrt(value: NumberValue) -> Option<NumberValue> {

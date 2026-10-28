@@ -781,6 +781,15 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::CubeRoot => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S437",
+                                format!("'cbrt of' requires number, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::Number
+                    }
                     UnaryOperator::SquareRoot => {
                         if operand.ty() != Type::Number {
                             return Err(SemauriError::semantic(
