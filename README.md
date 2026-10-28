@@ -370,6 +370,23 @@ The expression is pure and constant-foldable, works inside functions and
 list mappings, and rejects non-string operands with `S351`. The name remains
 an ordinary identifier except when followed by `of`.
 
+### Unicode-aware title casing of words
+
+`titlecase of STRING` uppercases the first Unicode scalar and lowercases
+the remaining scalars in **each whitespace-delimited word**, preserving
+original Unicode whitespace and punctuation. This deliberately does not
+split words at hyphens or punctuation; Unicode mappings may expand scalars.
+
+```text
+assert (titlecase of "hELLO wORLD") is equal to "Hello World".
+assert (titlecase of "ßETA ÉTÉ") is equal to "SSeta Été".
+assert (titlecase of "  TWO  WORDS ") is equal to "  Two  Words ".
+```
+
+This pure, typed, constant-foldable expression accepts only strings (`S351`),
+works in functions and list mapping, and leaves `titlecase` usable as an
+ordinary identifier outside `titlecase of`.
+
 ### Typed JSON serialization
 
 The pure `json of VALUE` operation produces valid JSON text from a number,

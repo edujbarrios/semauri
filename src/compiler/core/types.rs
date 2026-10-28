@@ -14,6 +14,25 @@ fn text_swapcase(value: &str) -> String {
     output
 }
 
+// Titlecase whitespace-delimited words by uppercasing the first scalar
+// and lowercasing all subsequent scalars. Whitespace is preserved verbatim.
+fn text_titlecase(value: &str) -> String {
+    let mut result = String::with_capacity(value.len());
+    let mut at_word_start = true;
+    for ch in value.chars() {
+        if ch.is_whitespace() {
+            result.push(ch);
+            at_word_start = true;
+        } else if at_word_start {
+            result.extend(ch.to_uppercase());
+            at_word_start = false;
+        } else {
+            result.extend(ch.to_lowercase());
+        }
+    }
+    result
+}
+
 // Lowercase the first Unicode scalar without changing the remaining text.
 fn text_uncapitalize(value: &str) -> String {
     let mut chars = value.chars();
