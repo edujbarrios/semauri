@@ -1350,7 +1350,7 @@ impl<'a> Parser<'a> {
             }
             // Contextual text operators do not reserve identifiers such as 'words'.
             TokenKind::Word
-                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "trim" | "words" | "lines" | "json" | "characters" | "codepoints" | "codepoint")
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "trim" | "words" | "lines" | "capitalize" | "json" | "characters" | "codepoints" | "codepoint")
                     && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
                 let start = self.advance().clone();
                 self.consume(TokenKind::Of, "Expected 'of' after a text operation", "S242")?;
@@ -1358,6 +1358,7 @@ impl<'a> Parser<'a> {
                 Ok(Expr::Unary {
                     operator: match start.lexeme.to_ascii_lowercase().as_str() {
                         "trim" => UnaryOperator::Trim,
+                        "capitalize" => UnaryOperator::Capitalize,
                         "words" => UnaryOperator::Words,
                         "lines" => UnaryOperator::Lines,
                         "json" => UnaryOperator::Json,

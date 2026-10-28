@@ -1,3 +1,13 @@
+// Capitalize the first Unicode scalar without altering the remainder.
+// Unicode uppercasing may expand a scalar to multiple characters.
+fn text_capitalize(value: &str) -> String {
+    let mut chars = value.chars();
+    match chars.next() {
+        Some(first) => first.to_uppercase().chain(chars).collect(),
+        None => String::new(),
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum NumberValue {
     Int(i64),
