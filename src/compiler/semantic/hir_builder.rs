@@ -781,6 +781,15 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::Reciprocal => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S439",
+                                format!("'reciprocal of' requires number, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::Number
+                    }
                     UnaryOperator::CubeRoot => {
                         if operand.ty() != Type::Number {
                             return Err(SemauriError::semantic(

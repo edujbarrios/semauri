@@ -400,6 +400,17 @@ fn fold_expr(
                     }
                     // Preserve overflow to emit S422 at evaluation.
                 }
+                (UnaryOperator::Reciprocal, Some(ValueData::Number(value))) => {
+                    if let Some(result) = numeric_reciprocal(value) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(result),
+                            span: *span,
+                        };
+                    }
+                    // Keep invalid inputs for a source-located S440 at evaluation.
+                }
                 (UnaryOperator::CubeRoot, Some(ValueData::Number(value))) => {
                     if let Some(root) = numeric_cbrt(value) {
                         *changes += 1;

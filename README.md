@@ -558,6 +558,24 @@ Wrong operand types receive `S437`; non-finite numeric inputs receive
 `S438`. `cbrt` stays an ordinary variable name unless followed by `of`.
 The operation is pure and constant-foldable.
 
+### Numeric reciprocals
+
+`reciprocal of NUMBER` calculates `1 / NUMBER` as a floating-point
+number. It accepts signed integers and finite decimals, rejects positive and
+negative zero, and rejects non-finite inputs/results instead of silently
+returning infinity. The expression is pure and constant-foldable.
+
+```text
+assert (reciprocal of 4) is equal to 0.25.
+assert (reciprocal of (minus 2)) is equal to (minus 0.5).
+let samples be a list of 2, 4, 8.
+let inverses be map every n in samples to (reciprocal of n).
+```
+
+Non-number operands produce the source-located type error `S439`; invalid
+numeric values produce `S440`. `reciprocal` remains a normal identifier
+when not immediately followed by `of`, and requires no new capabilities.
+
 ### Safe typed conversions from text
 
 `parse number from TEXT` and `parse boolean from TEXT` return checked

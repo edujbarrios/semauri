@@ -199,6 +199,20 @@ fn numeric_square(value: NumberValue) -> Option<NumberValue> {
     }
 }
 
+// Reciprocal is a floating-point operation. Reject zero, non-finite
+// inputs, and any output that overflows to infinity.
+fn numeric_reciprocal(value: NumberValue) -> Option<NumberValue> {
+    let number = match value {
+        NumberValue::Int(n) => n as f64,
+        NumberValue::Float(n) => n,
+    };
+    if number == 0.0 || !number.is_finite() {
+        return None;
+    }
+    let inverse = 1.0 / number;
+    inverse.is_finite().then_some(NumberValue::Float(inverse))
+}
+
 // Perfect integer cube roots are located using exact u128 arithmetic.
 // In particular, i64::MIN = (-2097152)^3 must stay an exact integer.
 // Non-perfect integer inputs and finite floating-point inputs yield floats.
