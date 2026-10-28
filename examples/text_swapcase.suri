@@ -1,0 +1,7 @@
+# Swap upper/lower case while preserving digits and punctuation.
+let samples be a list of "Hello", "ßéta", "123!?".
+let inverted be map every entry in samples to (swapcase of entry).
+assert (inverted at 0) is equal to "hELLO".
+assert (inverted at 1) is equal to "SSÉTA".
+assert (inverted at 2) is equal to "123!?".
+print inverted.

@@ -563,7 +563,7 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Boolean
                     }
-                    UnaryOperator::Uppercase | UnaryOperator::Lowercase | UnaryOperator::Capitalize => {
+                    UnaryOperator::Uppercase | UnaryOperator::Lowercase | UnaryOperator::Capitalize | UnaryOperator::Swapcase => {
                         if operand.ty() != Type::String {
                             return Err(SemauriError::semantic(
                                 "S351",
