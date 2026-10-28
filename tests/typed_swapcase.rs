@@ -41,7 +41,7 @@ fn maps_functions_formatter_and_optimizer_use_identical_semantics() {
 let words_list be a list of "Hi", "éTa".
 print map every word in words_list to (invoke invert to word)."#);
     assert_eq!(r.status, 0, "{}", r.stderr);
-    assert_eq!(r.stdout, "[\"hI\", \"ÉtA\"]\n");
+    assert_eq!(r.stdout, "[hI, ÉtA]\n");
     let compiler = Compiler::new();
     assert_eq!(compiler.format_source("PRINT SWAPCASE OF \"A\".").unwrap(),
                "print swapcase of \"A\".");
