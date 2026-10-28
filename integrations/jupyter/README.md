@@ -43,8 +43,11 @@ installing this package to test the adapter offline.
 ## Notebook-specific cell directives
 
 The first nonblank line can contain `%%check`, `%%explain`,
-`%%explain --json`, `%%effects`, or `%%plan`. These commands
-inspect Semauri source without granting any additional application effects.
+`%%explain --json`, `%%effects`, `%%plan`, `%%tokens`, `%%ast`,
+`%%hir`, `%%optimize`, `%%symbols`, `%%graph`, or `%%fmt`.
+These commands inspect Semauri source without granting any additional
+application effects. `%%fmt` prints canonically formatted source but never
+modifies either the original cell or a source file.
 They are **kernel directives**, not source-language syntax.
 
 ```text

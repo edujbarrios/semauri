@@ -19,6 +19,32 @@ class MagicTests(unittest.TestCase):
         self.assertEqual(SemauriKernel.command_for(Path("x.suri"), command="explain", json_output=True),
                          ["semauri", "explain", "--json", "x.suri"])
 
+    def test_new_read_only_inspection_directives(self):
+        parse = SemauriKernel.parse_cell
+        inspection = ("tokens", "ast", "hir", "optimize", "symbols", "graph", "fmt")
+        for command in inspection:
+            with self.subTest(command=command):
+                self.assertEqual(parse("%%" + command + "\nprint 1."),
+                                 (command, False, "print 1."))
+                argv = SemauriKernel.command_for(Path("x.suri"), command=command,
+                                                  effects="filesystem_write,console_write")
+                self.assertEqual(argv, ["semauri", command, "x.suri"])
+                with self.assertRaises(ValueError):
+                    parse("%%" + command + " --write\nprint 1.")
+                with self.assertRaises(ValueError):
+                    parse("%%" + command + " --json\nprint 1.")
+        with self.assertRaises(ValueError):
+            SemauriKernel.command_for(Path("x.suri"), command="fmt", json_output=True)
+        with self.assertRaises(ValueError):
+            SemauriKernel.command_for(Path("x.suri"), command="unknown")
+
+    def test_extended_language_completions(self):
+        kernel = SemauriKernel()
+        for prefix, expected in (("capit", "capitalize"), ("swap", "swapcase"),
+                                 ("recip", "reciprocal"), ("dig", "digits")):
+            result = kernel.do_complete(prefix, len(prefix))
+            self.assertIn(expected, result["matches"])
+
     def test_completion(self):
         result = SemauriKernel().do_complete("pri", 3)
         self.assertIn("print", result["matches"])
