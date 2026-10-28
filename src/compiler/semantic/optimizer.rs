@@ -605,6 +605,14 @@ fn fold_expr(
                         span: *span,
                     };
                 }
+                (UnaryOperator::Uncapitalize, Some(ValueData::String(value))) => {
+                    *changes += 1;
+                    return HirExpr::Literal {
+                        ty: Type::String,
+                        value: LiteralValue::String(text_uncapitalize(&value)),
+                        span: *span,
+                    };
+                }
                 (UnaryOperator::Capitalize, Some(ValueData::String(value))) => {
                     *changes += 1;
                     return HirExpr::Literal {

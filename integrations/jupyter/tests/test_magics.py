@@ -41,7 +41,8 @@ class MagicTests(unittest.TestCase):
     def test_extended_language_completions(self):
         kernel = SemauriKernel()
         for prefix, expected in (("capit", "capitalize"), ("swap", "swapcase"),
-                                 ("recip", "reciprocal"), ("dig", "digits")):
+                                 ("recip", "reciprocal"), ("dig", "digits"),
+                                 ("uncap", "uncapitalize")):
             result = kernel.do_complete(prefix, len(prefix))
             self.assertIn(expected, result["matches"])
 

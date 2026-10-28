@@ -355,6 +355,21 @@ The expression is pure and constant-foldable, works with typed functions
 and list mapping, uses `S351` for non-string operands, and does not
 reserve the word `swapcase` when it is an ordinary identifier.
 
+### Unicode-aware first-letter lowercasing
+
+`uncapitalize of STRING` lowercases the first Unicode scalar, preserving
+all remaining text, including case and whitespace. Empty text stays empty,
+and Unicode lowercase mappings may expand a scalar.
+
+```text
+assert (uncapitalize of "HELLO World") is equal to "hELLO World".
+assert (uncapitalize of "ÉTÉ") is equal to "éTÉ".
+```
+
+The expression is pure and constant-foldable, works inside functions and
+list mappings, and rejects non-string operands with `S351`. The name remains
+an ordinary identifier except when followed by `of`.
+
 ### Typed JSON serialization
 
 The pure `json of VALUE` operation produces valid JSON text from a number,

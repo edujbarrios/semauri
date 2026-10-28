@@ -32,7 +32,7 @@ class SemauriKernel(Kernel):
                 "boolean", "map", "filter", "count", "reduce", "every", "if", "otherwise",
                 "end", "within", "define", "function", "taking", "invoke", "square", "sqrt",
                 "round", "truncate", "factorial", "even", "odd", "true", "false",
-                "cube", "cbrt", "reciprocal", "digits", "prime", "capitalize", "swapcase")
+                "cube", "cbrt", "reciprocal", "digits", "prime", "capitalize", "swapcase", "uncapitalize")
 
     @staticmethod
     def parse_cell(code):

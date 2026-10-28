@@ -165,7 +165,7 @@ impl Compiler {
                         && index > 0 && tokens[index - 1].lexeme.eq_ignore_ascii_case("parse")
                         && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::From)));
             let is_text_operation = token.kind == TokenKind::Word
-                && matches!(token.lexeme.to_ascii_lowercase().as_str(), "trim" | "words" | "lines" | "capitalize" | "swapcase" | "json" | "split" | "join" | "characters" | "codepoints" | "codepoint")
+                && matches!(token.lexeme.to_ascii_lowercase().as_str(), "trim" | "words" | "lines" | "capitalize" | "swapcase" | "uncapitalize" | "json" | "split" | "join" | "characters" | "codepoints" | "codepoint")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
             let is_remove_all = matches!(token.kind, TokenKind::Word | TokenKind::DomainAction)
                 && ((token.lexeme.eq_ignore_ascii_case("remove")
