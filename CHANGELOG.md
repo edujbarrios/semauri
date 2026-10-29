@@ -1,3 +1,16 @@
+## 0.51.1 — 2026-10-29
+
+### Clearer positioning for humans and AI agents
+- Lead the canonical README with **A natural-language-inspired programming language, built for humans and AI agents.** and align the crate description ([#267](https://github.com/edujbarrios/semauri/pull/267)).
+- Preserve the precise contracts: statically typed programs, deterministic compiler behavior, and inspectable AI workflows.
+
+### More reliable Jupyter diagnostics
+- Propagate stdout-only compiler diagnostics (including failed `%%check --json` cells) as Jupyter errors instead of losing the diagnostic when stderr is empty ([#268](https://github.com/edujbarrios/semauri/pull/268)).
+- Avoid duplicate stdout streams for stdout-only failures; retain prior stdout alongside stderr errors.
+- Reject zero, negative, and non-finite notebook cell timeouts before launching the compiler, with regression tests.
+
+This patch release adds no Rust dependencies, syntax changes, or runtime permissions. Existing `.suri` programs remain compatible.
+
 ## 0.51.0 — 2026-10-28
 
 ### Unicode text transformations
