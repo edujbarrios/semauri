@@ -49,6 +49,35 @@ class KernelTests(unittest.TestCase):
         self.assertIn("S417", reply["evalue"])
         self.assertEqual(self.sent[0][0], "error")
 
+    def test_json_failure_uses_stdout_diagnostic_without_duplicate_stream(self):
+        diagnostic = '{"ok":false,"diagnostics":[{"code":"S417"}]}\n'
+        with patch("semauri_kernel.kernel.subprocess.run",
+                   return_value=subprocess.CompletedProcess([], 1, diagnostic, "")):
+            reply = self.kernel.do_execute("%%check --json\nassert false.", silent=False)
+        self.assertEqual(reply["status"], "error")
+        self.assertIn("S417", reply["evalue"])
+        self.assertEqual([kind for kind, _ in self.sent], ["error"])
+        self.assertEqual(self.sent[0][1]["evalue"], diagnostic.strip())
+
+    def test_failure_preserves_stdout_when_stderr_has_diagnostics(self):
+        with patch("semauri_kernel.kernel.subprocess.run",
+                   return_value=subprocess.CompletedProcess([], 65, "before error\n", "S417: invalid\n")):
+            reply = self.kernel.do_execute("print missing.", silent=False)
+        self.assertEqual(reply["status"], "error")
+        self.assertEqual([kind for kind, _ in self.sent], ["stream", "error"])
+        self.assertEqual(self.sent[0][1]["text"], "before error\n")
+        self.assertEqual(reply["evalue"], "S417: invalid")
+
+    def test_invalid_timeout_is_rejected_before_launch(self):
+        for value in ("0", "-1", "nan", "inf", "-inf"):
+            with self.subTest(value=value):
+                with patch.dict(os.environ, {"SEMAURI_CELL_TIMEOUT": value}):
+                    with patch("semauri_kernel.kernel.subprocess.run") as execute:
+                        reply = self.kernel.do_execute("assert true.", silent=True)
+                        self.assertEqual(reply["status"], "error")
+                        self.assertIn("finite positive", reply["evalue"])
+                        execute.assert_not_called()
+
     def test_silent_mode_does_not_publish_messages(self):
         with patch("semauri_kernel.kernel.subprocess.run",
                    return_value=subprocess.CompletedProcess([], 0, "ok\n", "")):
