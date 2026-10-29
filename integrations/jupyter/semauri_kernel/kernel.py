@@ -5,6 +5,7 @@ cells run separately; persisting bindings by replaying old cells would
 silently repeat filesystem/network/AI effects, so this kernel deliberately
 does NOT pretend to offer persistent mutable sessions.
 """
+import math
 import os
 import re
 from pathlib import Path
@@ -100,19 +101,23 @@ class SemauriKernel(Kernel):
                 path = Path(stream.name)
                 stream.write(source)
             timeout = float(os.environ.get("SEMAURI_CELL_TIMEOUT", "60"))
-            if timeout <= 0:
-                raise ValueError("SEMAURI_CELL_TIMEOUT must be positive")
+            if not math.isfinite(timeout) or timeout <= 0:
+                raise ValueError("SEMAURI_CELL_TIMEOUT must be a finite positive number")
             proc = subprocess.run(
                 self.command_for(path, command=command, json_output=json_mode),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 text=True, encoding="utf-8", errors="replace", timeout=timeout,
                 check=False,
             )
-            if not silent and proc.stdout:
-                self.send_response(self.iopub_socket, "stream",
-                                   {"name": "stdout", "text": proc.stdout})
             if proc.returncode:
-                diagnostic = proc.stderr.strip() or f"semauri exited with status {proc.returncode}"
+                # --json diagnostics may be written to stdout instead of
+                # stderr. Surface them as the cell error, not just an exit code.
+                # Preserve separate stdout when stderr carries the diagnostic.
+                if not silent and proc.stdout and proc.stderr:
+                    self.send_response(self.iopub_socket, "stream",
+                                       {"name": "stdout", "text": proc.stdout})
+                diagnostic = (proc.stderr.strip() or proc.stdout.strip()
+                              or f"semauri exited with status {proc.returncode}")
                 if not silent:
                     self.send_response(self.iopub_socket, "error", {
                         "ename": "SemauriError", "evalue": diagnostic,
@@ -121,6 +126,9 @@ class SemauriKernel(Kernel):
                 return {"status": "error", "execution_count": self.execution_count,
                         "ename": "SemauriError", "evalue": diagnostic,
                         "traceback": diagnostic.splitlines()}
+            if not silent and proc.stdout:
+                self.send_response(self.iopub_socket, "stream",
+                                   {"name": "stdout", "text": proc.stdout})
             if not silent and proc.stderr:
                 self.send_response(self.iopub_socket, "stream",
                                    {"name": "stderr", "text": proc.stderr})
