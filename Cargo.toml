@@ -3,7 +3,7 @@ name = "semauri"
 version = "0.51.0"
 edition = "2021"
 rust-version = "1.83"
-description = "Typed programming language with readable syntax and deterministic compilation"
+description = "Natural-language-inspired programming language for humans and AI agents"
 license = "Apache-2.0"
 repository = "https://github.com/edujbarrios/semauri"
 
