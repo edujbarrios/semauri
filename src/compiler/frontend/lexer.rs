@@ -327,6 +327,7 @@ impl<'a> Lexer<'a> {
                 Some('b' | 'B') => Some(2),
                 Some('o' | 'O') => Some(8),
                 Some('x' | 'X') => Some(16),
+                Some('z' | 'Z') => Some(36),
                 _ => None,
             };
             if let Some(radix) = radix {
