@@ -1,6 +1,6 @@
 # Semauri
 
-**A readable, statically typed language for people and AI agents.** Write natural-language-inspired programs in `.suri`; compile with Rust, inspect effects, and run with explicit permissions. Current release: **v0.55.0**.
+**A readable, statically typed language for people and AI agents.** Write natural-language-inspired programs in `.suri`; compile with Rust, inspect effects, and run with explicit permissions. Current release: **v0.56.0**.
 
 ## Quick Start
 
@@ -41,7 +41,7 @@ otherwise:
 end.
 ```
 
-Lists support `map every`, `filter every`, `reduce every`, `zip every`, `sum of`, `average of`, sorting, indexing, and ranges. Files can import typed functions. ML/AI workflows can be **planned and inspected**, but general model training is not yet an executable backend.
+Lists support `map every`, `filter every`, `reduce every`, `zip every`, `sum of`, `average of`, `variance of`, `stdev of`, sorting, indexing, and ranges. Numbers support checked `power of A to B`, `exp of`, `ln of`, `sin of`, and `cos of`. Files can import typed functions. ML/AI workflows can be **planned and inspected**, but general model training is not yet an executable backend.
 
 ## Commands
 
@@ -87,6 +87,6 @@ Prediction for x=6:
 
 Use GitHub's **Cite this repository** feature or [CITATION.cff](CITATION.cff). Suggested citation:
 
-> Barrios, E. J. (2026). *Semauri: A natural-language-inspired programming language for humans and AI agents* (Version 0.55.0) [Computer software]. https://github.com/edujbarrios/semauri
+> Barrios, E. J. (2026). *Semauri: A natural-language-inspired programming language for humans and AI agents* (Version 0.56.0) [Computer software]. https://github.com/edujbarrios/semauri
 
 Apache-2.0 licensed. See [LICENSE](LICENSE).
