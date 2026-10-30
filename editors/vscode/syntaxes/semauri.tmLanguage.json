@@ -2,26 +2,58 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Semauri",
   "scopeName": "source.semauri",
-  "fileTypes": ["suri"],
+  "fileTypes": [
+    "suri"
+  ],
   "patterns": [
-    { "include": "#comments" },
-    { "include": "#strings" },
-    { "include": "#numbers" },
-    { "include": "#config" },
-    { "include": "#constants" },
-    { "include": "#types" },
-    { "include": "#control" },
-    { "include": "#declarations" },
-    { "include": "#ai" },
-    { "include": "#collections" },
-    { "include": "#operators" },
-    { "include": "#domains" }
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#config"
+    },
+    {
+      "include": "#constants"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#control"
+    },
+    {
+      "include": "#declarations"
+    },
+    {
+      "include": "#ai"
+    },
+    {
+      "include": "#collections"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#domains"
+    }
   ],
   "repository": {
     "comments": {
       "patterns": [
-        { "name": "comment.line.number-sign.semauri", "match": "#.*$" },
-        { "name": "comment.line.double-slash.semauri", "match": "//.*$" },
+        {
+          "name": "comment.line.number-sign.semauri",
+          "match": "#.*$"
+        },
+        {
+          "name": "comment.line.double-slash.semauri",
+          "match": "//.*$"
+        },
         {
           "name": "comment.block.semauri",
           "begin": "/\\*",
@@ -38,7 +70,7 @@
           "patterns": [
             {
               "name": "constant.character.escape.semauri",
-              "match": "\\\\(?:[\\\\'\"nrt]|u\\{[0-9A-Fa-f]{1,6}\\})"
+              "match": "\\\\(?:[\\\\'\"nrt0bf]|u\\{[0-9A-Fa-f]{1,6}\\})"
             },
             {
               "name": "invalid.illegal.escape.semauri",
@@ -53,13 +85,23 @@
           "patterns": [
             {
               "name": "constant.character.escape.semauri",
-              "match": "\\\\(?:[\\\\'\"nrt]|u\\{[0-9A-Fa-f]{1,6}\\})"
+              "match": "\\\\(?:[\\\\'\"nrt0bf]|u\\{[0-9A-Fa-f]{1,6}\\})"
             },
             {
               "name": "invalid.illegal.escape.semauri",
               "match": "\\\\."
             }
           ]
+        },
+        {
+          "name": "string.quoted.double.raw.semauri",
+          "begin": "[rR]\"",
+          "end": "\""
+        },
+        {
+          "name": "string.quoted.single.raw.semauri",
+          "begin": "[rR]'",
+          "end": "'"
         }
       ]
     },
@@ -69,8 +111,14 @@
     },
     "config": {
       "patterns": [
-        { "name": "keyword.declaration.config.semauri", "match": "\\b(?:parameter|environment)\\b(?=\\s+[A-Za-z_])" },
-        { "name": "keyword.operator.assignment.config.semauri", "match": "=" }
+        {
+          "name": "keyword.declaration.config.semauri",
+          "match": "\\b(?:parameter|environment)\\b(?=\\s+[A-Za-z_])"
+        },
+        {
+          "name": "keyword.operator.assignment.config.semauri",
+          "match": "="
+        }
       ]
     },
     "constants": {
@@ -87,8 +135,14 @@
     },
     "declarations": {
       "patterns": [
-        { "name": "storage.type.function.semauri", "match": "\\b(?:define\\s+function|taking|invoke)\\b" },
-        { "name": "keyword.declaration.semauri", "match": "\\b(?:let|be|create|make|set|add|called|title|declare|import|as)\\b" }
+        {
+          "name": "storage.type.function.semauri",
+          "match": "\\b(?:define\\s+function|taking|invoke)\\b"
+        },
+        {
+          "name": "keyword.declaration.semauri",
+          "match": "\\b(?:let|be|create|make|set|add|called|title|declare|import|as)\\b"
+        }
       ]
     },
     "ai": {
