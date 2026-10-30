@@ -1,6 +1,6 @@
 [package]
 name = "semauri"
-version = "0.52.0"
+version = "0.53.0"
 edition = "2021"
 rust-version = "1.83"
 description = "Natural-language-inspired programming language for humans and AI agents"
