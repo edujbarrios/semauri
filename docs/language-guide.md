@@ -479,6 +479,25 @@ Non-number operands raise `S421` at type checking; numeric overflow or
 non-finite results raise `S422` during evaluation. The expression is pure
 and requires no new runtime permissions.
 
+### Scientific math: exponential, logarithms and trigonometry
+
+`exp of NUMBER` (e to the power of x), `ln of NUMBER` (natural log),
+`sin of NUMBER` and `cos of NUMBER` are pure numerical operators.
+Angles use **radians**. All results are finite decimals; `ln` requires
+positive input and exponential overflow is rejected with diagnostic `S466`.
+Non-numeric arguments are rejected with `S465`. Operators compose with
+typed functions and list transforms.
+
+```text
+let growth be exp of 1.
+let angle be sin of 0.
+let log_one be ln of 1.
+assert angle is equal to 0.0.
+assert log_one is equal to 0.0.
+```
+
+See [scientific_math.suri](../examples/scientific_math.suri).
+
 ### Typed square roots
 
 `sqrt of NUMBER` computes a non-negative square root, returning `number`.
