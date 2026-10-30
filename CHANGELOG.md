@@ -1,3 +1,16 @@
+## 0.54.0 — 2026-10-30
+
+### Language improvements
+- Add `0z`/`0Z` base-36 integers, underscore separators and signed 64-bit overflow checks ([#279](https://github.com/edujbarrios/semauri/pull/279)).
+- Add two-digit `\xNN` character escapes to both quote styles, preserving located errors for malformed escapes ([#280](https://github.com/edujbarrios/semauri/pull/280)).
+- Add hash-delimited raw strings with embedded quotes, literal backslashes and matching hash suffixes ([#281](https://github.com/edujbarrios/semauri/pull/281)).
+
+### Editor support and reproducibility
+- Highlight base-36 numbers, hex escapes and hash raw-string scopes in the VS Code grammar ([#282](https://github.com/edujbarrios/semauri/pull/282)).
+- Update Rust crate, lockfile, Jupyter language version, README citation and `CITATION.cff` to **0.54.0**.
+
+All additions are backward-compatible and need no new dependencies or runtime permissions.
+
 ## 0.53.0 — 2026-10-30
 
 ### Citable software and reproducible research
