@@ -559,6 +559,26 @@ impl<'a> Lexer<'a> {
                         self.advance();
                         char::from_u32((high << 4) | low).unwrap()
                     }
+                    'U' => {
+                        // The eight-digit form is useful for interoperating with
+                        // existing Unicode-escaped data and code generators.
+                        let mut scalar = 0u32;
+                        for _ in 0..8 {
+                            let digit = self.current().and_then(|ch| ch.to_digit(16))
+                                .ok_or_else(|| SemauriError::lex(
+                                    "S104",
+                                    "Expected eight hexadecimal digits after '\\U'",
+                                    SourceSpan::new(escape_line, escape_column, self.line, self.column),
+                                ))?;
+                            scalar = (scalar << 4) | digit;
+                            self.advance();
+                        }
+                        char::from_u32(scalar).ok_or_else(|| SemauriError::lex(
+                            "S104",
+                            "Unicode escape must be a valid Unicode scalar value",
+                            SourceSpan::new(escape_line, escape_column, self.line, self.column),
+                        ))?
+                    }
                     'u' => {
                         // Unicode scalar escapes require braces and 1-6 hex digits.
                         if self.current() != Some('{') {
