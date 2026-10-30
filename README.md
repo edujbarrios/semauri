@@ -6,6 +6,20 @@ Semauri is statically typed, with deterministic programs and inspectable AI work
 
 Current release: **0.52.0**. The compiler is written in Rust and runs on Windows, macOS, and Linux.
 
+## Citation
+
+If Semauri supports your research, paper, or teaching material, please cite
+the software. GitHub's **Cite this repository** menu uses the
+[CITATION.cff](CITATION.cff) file to generate BibTeX and APA citations.
+
+Suggested human-readable citation (replace the version with the one actually used):
+
+> Barrios, E. J. (2026). *Semauri: A natural-language-inspired programming language for humans and AI agents* (Version 0.52.0) [Computer software]. https://github.com/edujbarrios/semauri
+
+When a specific version matters, cite the matching
+[GitHub release](https://github.com/edujbarrios/semauri/releases)
+and record the version in your reproducibility notes.
+
 ## Agent quick start
 
 When generating or changing a Semauri program:
