@@ -1,3 +1,16 @@
+## 0.55.0 — 2026-10-30
+
+### Expanded language literal syntax
+- Parse leading-dot fractions (`.5`, `.25e+2`) while preserving statement periods and checked numeric diagnostics ([#284](https://github.com/edujbarrios/semauri/pull/284)).
+- Add multiline triple-quoted UTF-8 text blocks with literal newlines, quotes and backslashes for prompts and templates ([#285](https://github.com/edujbarrios/semauri/pull/285)).
+- Decode fixed-width eight-digit `\UXXXXXXXX` Unicode scalar escapes in ordinary strings, checking surrogates and out-of-range values ([#286](https://github.com/edujbarrios/semauri/pull/286)).
+
+### Developer tooling and releases
+- Extend VS Code highlighting for new fractions, Unicode escapes and triple-quoted text; retain grammar regression coverage ([#287](https://github.com/edujbarrios/semauri/pull/287)).
+- Align Rust crate, lockfile, Jupyter language version, README citation and `CITATION.cff` with **0.55.0**.
+
+These changes are backward-compatible and introduce no new dependencies or runtime permission requirements.
+
 ## 0.54.0 — 2026-10-30
 
 ### Language improvements
