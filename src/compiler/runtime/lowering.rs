@@ -1456,6 +1456,28 @@ impl<'a> Lowerer<'a> {
                 }
             }
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::Variance | UnaryOperator::StandardDeviation),
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::List(element),
+                    data: ValueData::List(values),
+                } if *element == Type::Number => Ok(BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(numeric_variance(
+                        &values,
+                        *operator == UnaryOperator::StandardDeviation,
+                        expression.span(),
+                    )?),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S353", format!("Statistical aggregation requires list<number>, received {ty}"),
+                    Some(expression.span()), None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: operator @ (UnaryOperator::Sum | UnaryOperator::Average),
                 operand,
                 ..
@@ -2814,6 +2836,33 @@ fn aggregate_numeric_list(
 /// Multiplication identity is one for empty typed lists. Exact integer-only
 /// products never round through f64. Mixed/decimal products use f64, and all
 /// intermediate results must remain finite; no partial result is returned.
+// Welford population variance avoids subtracting nearly equal raw sums.
+fn numeric_variance(values: &[ValueData], stdev: bool, span: SourceSpan) -> Result<NumberValue> {
+    if values.is_empty() {
+        return Err(SemauriError::semantic("S468", "Variance and standard deviation need at least one value", Some(span), None));
+    }
+    let mut mean = 0.0_f64;
+    let mut m2 = 0.0_f64;
+    for (index, value) in values.iter().enumerate() {
+        let ValueData::Number(number) = value else {
+            return Err(SemauriError::semantic("S353", "Statistical aggregation requires list<number>", Some(span), None));
+        };
+        let delta = number.as_f64() - mean;
+        mean += delta / ((index + 1) as f64);
+        let delta2 = number.as_f64() - mean;
+        m2 += delta * delta2;
+        if !mean.is_finite() || !m2.is_finite() {
+            return Err(SemauriError::semantic("S469", "Variance calculation exceeds finite numeric range", Some(span), None));
+        }
+    }
+    let variance = (m2 / values.len() as f64).max(0.0);
+    let result = if stdev { variance.sqrt() } else { variance };
+    if !result.is_finite() {
+        return Err(SemauriError::semantic("S469", "Variance calculation exceeds finite numeric range", Some(span), None));
+    }
+    Ok(NumberValue::Float(result))
+}
+
 fn product_numeric_list(values: &[ValueData], span: SourceSpan) -> Result<NumberValue> {
     let has_decimals = values.iter().any(|v| matches!(v, ValueData::Number(NumberValue::Float(_))));
     if has_decimals {
