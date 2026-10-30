@@ -1,3 +1,17 @@
+## 0.56.0 — 2026-10-30
+
+### Scientific language features
+- Add finite `exp of`, `ln of`, `sin of`, `cos of` with explicit diagnostics, regression tests and examples ([#291](https://github.com/edujbarrios/semauri/pull/291)).
+- Add checked integer and finite fractional exponentiation, `power of BASE to EXPONENT` ([#292](https://github.com/edujbarrios/semauri/pull/292)).
+- Add numerically stable population `variance of` and `stdev of` over typed numeric lists ([#293](https://github.com/edujbarrios/semauri/pull/293)).
+
+### Packaging
+- Align crate, lockfile, README, citation and Jupyter version with **0.56.0**.
+- Preserve the concise Quick Start and detailed guide; no new runtime permissions or dependencies.
+
+This release broadens numerical programming but does not implement arbitrary
+mutation, complete standard-library I/O or production ML training.
+
 ## 0.55.0 — 2026-10-30
 
 ### Expanded language literal syntax
