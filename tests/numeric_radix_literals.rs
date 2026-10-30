@@ -19,7 +19,7 @@ fn prefixed_integers_keep_exact_values_and_spans() {
     assert_eq!(numbers[0].to_json()["column"], 15);
 
     compiler.analyze(
-        "let binary_value be 0B1010. let octal_value be 0o12. let hex_value be 0XFF.          assert binary_value is equal to octal_value. assert hex_value is equal to 255."
+        "let binary_value be 0B1010. let octal_value be 0o12. let hex_value be 0XFF.          assert binary_value is equal to octal_value. assert hex_value is equal to 255. print hex_value."
     ).unwrap();
     let folded = compiler.optimized_hir("let n be 0x10 plus 0b10. print n.")
         .unwrap().to_json().to_string();
@@ -42,7 +42,7 @@ fn malformed_prefixed_literals_are_lexical_errors() {
 fn decimal_literals_and_statement_periods_stay_unchanged() {
     let compiler = Compiler::new();
     compiler.analyze(
-        "let decimal be 1_000.25e-2. let zero be 0.          assert decimal is equal to 10.0025. assert zero is equal to 0."
+        "let decimal be 1_000.25e-2. let zero be 0.          assert decimal is equal to 10.0025. assert zero is equal to 0. print zero."
     ).unwrap();
     assert_eq!(
         compiler.format_source("LET flags BE 0XFF.").unwrap(),
