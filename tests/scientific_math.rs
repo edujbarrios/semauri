@@ -17,7 +17,7 @@ fn scientific_functions_check_types_and_finite_domains() {
     let compiler = Compiler::new();
     let wrong = compiler.compile("print exp of \"text\".", None).unwrap_err();
     assert_eq!(wrong.code, "S465");
-    for expression in ["ln of 0", "ln of -1", "exp of 1000"] {
+    for expression in ["ln of 0", "ln of (0 minus 1)", "exp of 1000"] {
         let source = format!("print {expression}.");
         let error = compiler.compile(&source, None).unwrap_err();
         assert_eq!(error.code, "S466", "{}", expression);
