@@ -60,7 +60,7 @@ fn raw_string_scopes_and_control_escapes_are_documented_in_grammar() {
     assert_eq!(strings.len(), 4);
     assert_eq!(strings[2]["name"], "string.quoted.double.raw.semauri");
     assert_eq!(strings[3]["name"], "string.quoted.single.raw.semauri");
-    assert_eq!(strings[2]["begin"], "[rR]\\\"");
+    assert_eq!(strings[2]["begin"], "[rR]\"");
     assert_eq!(strings[3]["begin"], "[rR]'");
     assert!(strings[2].get("patterns").is_none(), "raw strings must not decode escapes");
     assert!(strings[3].get("patterns").is_none(), "raw strings must not decode escapes");
