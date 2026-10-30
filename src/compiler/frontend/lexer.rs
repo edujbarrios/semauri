@@ -317,6 +317,19 @@ impl<'a> Lexer<'a> {
     }
 
     fn number_token(&mut self, line: usize, column: usize) -> Result<Token> {
+        // Prefixed literals remain integers; decimal fractions and exponents
+        // continue to use the existing decimal-only parser.
+        if self.current() == Some('0') {
+            let radix = match self.peek_char() {
+                Some('b' | 'B') => Some(2),
+                Some('o' | 'O') => Some(8),
+                Some('x' | 'X') => Some(16),
+                _ => None,
+            };
+            if let Some(radix) = radix {
+                return self.radix_number_token(line, column, radix);
+            }
+        }
         let mut text = String::new();
         self.number_digits(&mut text, line, column)?;
 
@@ -368,6 +381,44 @@ impl<'a> Lexer<'a> {
             kind: TokenKind::Number,
             lexeme: text,
             literal: TokenLiteral::Number(value),
+            span: SourceSpan::new(line, column, self.line, self.column),
+        })
+    }
+
+    fn radix_number_token(&mut self, line: usize, column: usize, radix: u32) -> Result<Token> {
+        let mut text = String::new();
+        text.push(self.advance().unwrap()); // leading zero
+        text.push(self.advance().unwrap()); // radix prefix
+        let mut digits = String::new();
+        while let Some(ch) = self.current() {
+            if ch == '_' {
+                if digits.is_empty()
+                    || !self.peek_char().is_some_and(|next| next.is_digit(radix))
+                {
+                    return Err(self.invalid_number(
+                        line, column, "Digit separators must appear between digits",
+                    ));
+                }
+                text.push(self.advance().unwrap());
+                digits.push('_');
+            } else if ch.is_digit(radix) {
+                text.push(self.advance().unwrap());
+                digits.push(ch);
+            } else if ch.is_ascii_alphanumeric() {
+                return Err(self.invalid_number(line, column, "Invalid digit for integer base"));
+            } else {
+                break;
+            }
+        }
+        if digits.is_empty() {
+            return Err(self.invalid_number(line, column, "Expected digits after integer base prefix"));
+        }
+        let number = i64::from_str_radix(&digits.replace('_', ""), radix)
+            .map_err(|_| self.invalid_number(line, column, "Integer literal is out of range"))?;
+        Ok(Token {
+            kind: TokenKind::Number,
+            lexeme: text,
+            literal: TokenLiteral::Number(NumberValue::Int(number)),
             span: SourceSpan::new(line, column, self.line, self.column),
         })
     }
