@@ -19,7 +19,7 @@ class SemauriKernel(Kernel):
     implementation = "semauri"
     implementation_version = "0.1.0"
     language = "semauri"
-    language_version = "0.52"
+    language_version = "0.53"
     language_info = {
         "name": "semauri",
         "mimetype": "text/x-semauri",
