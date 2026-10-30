@@ -247,6 +247,13 @@ impl<'a> Lexer<'a> {
         let start_column = self.column;
         let current = self.current().unwrap();
 
+        // Fractional literals such as .75 start with a decimal point.
+        // Only a dot directly followed by a digit is numeric; a standalone
+        // period remains a statement terminator.
+        if current == '.' && self.peek_char().is_some_and(|next| next.is_ascii_digit()) {
+            return self.number_token(start_line, start_column);
+        }
+
         let punctuation = match current {
             '.' => Some(TokenKind::Dot),
             ',' => Some(TokenKind::Comma),
@@ -351,10 +358,14 @@ impl<'a> Lexer<'a> {
             }
         }
         let mut text = String::new();
+        let leading_dot = self.current() == Some('.');
+        if leading_dot {
+            text.push(self.advance().unwrap());
+        }
         self.number_digits(&mut text, line, column)?;
 
-        let mut is_float = false;
-        if self.current() == Some('.')
+        let mut is_float = leading_dot;
+        if !leading_dot && self.current() == Some('.')
             && self.peek_char().is_some_and(|ch| ch.is_ascii_digit())
         {
             is_float = true;
