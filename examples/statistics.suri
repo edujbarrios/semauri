@@ -1,0 +1,9 @@
+# Population variance and standard deviation of real data.
+let samples be a list of 0, 2, 4.
+let spread be variance of samples.
+let deviation be stdev of samples.
+assert absolute of (spread minus (8 divided by 3)) is less than 0.00001.
+assert absolute of (deviation minus (sqrt of (8 divided by 3))) is less than 0.00001.
+assert variance of (a list of 2, 2) is equal to 0.0.
+assert stdev of (a list of 2, 2) is equal to 0.0.
+print "variance OK".

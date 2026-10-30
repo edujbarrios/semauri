@@ -781,6 +781,22 @@ impl<'a> Parser<'a> {
     fn primary(&mut self) -> Result<Expr> {
         let token = self.peek().clone();
         match token.kind {
+            TokenKind::Word
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "variance" | "stdev")
+                    && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Of, "Expected 'of' after statistical operator", "S242")?;
+                let operand = self.primary()?;
+                Ok(Expr::Unary {
+                    operator: if start.lexeme.eq_ignore_ascii_case("variance") {
+                        UnaryOperator::Variance
+                    } else {
+                        UnaryOperator::StandardDeviation
+                    },
+                    span: span_between_spans(start.span, operand.span()),
+                    operand: Box::new(operand),
+                })
+            }
             TokenKind::Word if token.lexeme.eq_ignore_ascii_case("power")
                 && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
                 let start = self.advance().clone();
