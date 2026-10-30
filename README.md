@@ -302,7 +302,7 @@ Comments begin with `#`, `//`, or a nestable `/* ... */` block. Keywords are cas
 ### Types
 
 - `number`: checked signed integers and finite decimal values. Integer literals also accept `0b` (binary), `0o` (octal), `0x` (hexadecimal), and `0z` (base 36) prefixes, in either case, with optional `_` separators between digits; e.g. `0b1010_0101`, `0o755`, `0xFF`, `0z1_z` (71). These literals must fit a signed 64-bit integer.
-- `string`: UTF-8 text. Use double quotes (`"text"`) or single quotes (`'text'`); either delimiter can appear unescaped inside the other. Raw literals (`r"text"` or `r'text'`, also `R` prefix) preserve backslashes literally (no escapes), which is useful for paths and prompt templates; their matching quote delimiter and literal newlines are not allowed inside. Escape the active delimiter with a backslash, and use `\n`, `\t`, `\r`, `\0` (null), `\b` (backspace), `\f` (form feed), `\\`, or `\u{HEX}` for escaped content.
+- `string`: UTF-8 text. Use double quotes (`"text"`) or single quotes (`'text'`); either delimiter can appear unescaped inside the other. Raw literals (`r"text"` or `r'text'`, also `R` prefix) preserve backslashes literally (no escapes), which is useful for paths and prompt templates; their matching quote delimiter and literal newlines are not allowed inside. Escape the active delimiter with a backslash, and use `\n`, `\t`, `\r`, `\0` (null), `\b` (backspace), `\f` (form feed), `\\`, or `\u{HEX}` for escaped content. You can also use `\xNN` for exactly two hexadecimal digits representing a Unicode character from U+0000 to U+00FF (for example, `\x41` is `A`).
 - `boolean`: `true` or `false`.
 - `color`: named color values used by declarative programs.
 - `list<T>`: immutable homogeneous lists.

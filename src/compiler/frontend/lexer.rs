@@ -518,6 +518,26 @@ impl<'a> Lexer<'a> {
                     '"' => '"',
                     '\'' => '\'',
                     '\\' => '\\',
+                    'x' => {
+                        // Exactly two hexadecimal digits represent U+0000 through U+00FF.
+                        let high = self.current()
+                            .and_then(|ch| ch.to_digit(16))
+                            .ok_or_else(|| SemauriError::lex(
+                                "S104",
+                                "Expected exactly two hexadecimal digits after '\\x'",
+                                SourceSpan::new(escape_line, escape_column, self.line, self.column),
+                            ))?;
+                        self.advance();
+                        let low = self.current()
+                            .and_then(|ch| ch.to_digit(16))
+                            .ok_or_else(|| SemauriError::lex(
+                                "S104",
+                                "Expected exactly two hexadecimal digits after '\\x'",
+                                SourceSpan::new(escape_line, escape_column, self.line, self.column),
+                            ))?;
+                        self.advance();
+                        char::from_u32((high << 4) | low).unwrap()
+                    }
                     'u' => {
                         // Unicode scalar escapes require braces and 1-6 hex digits.
                         if self.current() != Some('{') {
