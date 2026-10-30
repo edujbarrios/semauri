@@ -870,6 +870,9 @@ fn eval_constant_binary(
                 a.as_f64() / b.as_f64(),
             )))
         }
+        (BinaryOperator::Power, ValueData::Number(a), ValueData::Number(b)) => {
+            numeric_power(a.clone(), b.clone()).map(ValueData::Number)
+        }
         (BinaryOperator::Modulo, ValueData::Number(a), ValueData::Number(b))
             if !b.is_zero() =>
         {

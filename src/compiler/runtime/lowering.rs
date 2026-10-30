@@ -2284,6 +2284,12 @@ impl<'a> Lowerer<'a> {
                 }
                 ValueData::Number(NumberValue::Float(a.as_f64() / b.as_f64()))
             }
+            (BinaryOperator::Power, ValueData::Number(a), ValueData::Number(b)) => {
+                ValueData::Number(numeric_power(a, b).ok_or_else(|| SemauriError::semantic(
+                    "S467", "Power is undefined in the real finite domain or overflows an integer",
+                    Some(span), None,
+                ))?)
+            }
             (BinaryOperator::Modulo, ValueData::Number(a), ValueData::Number(b)) => {
                 if b.is_zero() {
                     return Err(SemauriError::semantic(

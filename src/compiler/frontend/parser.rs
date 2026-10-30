@@ -781,6 +781,20 @@ impl<'a> Parser<'a> {
     fn primary(&mut self) -> Result<Expr> {
         let token = self.peek().clone();
         match token.kind {
+            TokenKind::Word if token.lexeme.eq_ignore_ascii_case("power")
+                && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Of, "Expected 'of' after power", "S252")?;
+                let base = self.numeric_unary()?;
+                self.consume(TokenKind::To, "Expected 'to' after power base", "S252")?;
+                let exponent = self.numeric_unary()?;
+                Ok(Expr::Binary {
+                    left: Box::new(base),
+                    right: Box::new(exponent.clone()),
+                    operator: BinaryOperator::Power,
+                    span: span_between_spans(start.span, exponent.span()),
+                })
+            }
             TokenKind::Word if token.lexeme.eq_ignore_ascii_case("repeat")
                 && self.tokens.get(self.current + 1).is_some_and(|next| matches!(
                     next.kind, TokenKind::Number | TokenKind::Boolean | TokenKind::String | TokenKind::Color | TokenKind::Word | TokenKind::Minus | TokenKind::LParen

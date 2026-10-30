@@ -1124,7 +1124,8 @@ fn binary_type(
         BinaryOperator::Subtract
         | BinaryOperator::Multiply
         | BinaryOperator::Divide
-        | BinaryOperator::Modulo => {
+        | BinaryOperator::Modulo
+        | BinaryOperator::Power => {
             if left == &Type::Number && right == &Type::Number {
                 Ok(Type::Number)
             } else {

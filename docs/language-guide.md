@@ -479,6 +479,24 @@ Non-number operands raise `S421` at type checking; numeric overflow or
 non-finite results raise `S422` during evaluation. The expression is pure
 and requires no new runtime permissions.
 
+### Checked exponentiation
+
+Use `power of BASE to EXPONENT` for exponentiation. Both arguments must
+be numbers. Nonnegative integer powers use **checked 64-bit arithmetic**
+(`S467` on overflow) and retain integer results. Negative or fractional
+exponents use finite real arithmetic; invalid real domains such as negative
+bases with fractional exponents, or zero with a negative exponent, are
+rejected (`S467`). `0` to the `0` power yields `1`.
+
+```text
+let area be power of 3 to 2.
+let inverse be power of 2 to (0 minus 2).
+assert area is equal to 9.
+assert inverse is equal to 0.25.
+```
+
+See [power.suri](../examples/power.suri).
+
 ### Scientific math: exponential, logarithms and trigonometry
 
 `exp of NUMBER` (e to the power of x), `ln of NUMBER` (natural log),

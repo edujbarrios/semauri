@@ -40,6 +40,9 @@ impl Compiler {
                 && tokens[..index].iter().rev()
                     .take_while(|previous| previous.kind != TokenKind::Dot)
                     .any(|previous| previous.kind == TokenKind::If);
+            let is_power = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("power")
+                && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
             let is_product = token.kind == TokenKind::Word
                 && token.lexeme.eq_ignore_ascii_case("product")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
@@ -195,7 +198,7 @@ impl Compiler {
                         | TokenKind::Minus | TokenKind::LParen));
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_import && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_flatten && !is_absolute && !is_sign && !is_numeric_rounding && !is_round && !is_truncate && !is_factorial && !is_prime && !is_cube && !is_square && !is_sqrt && !is_scientific_math && !is_cbrt && !is_reciprocal && !is_digits && !is_parity && !is_product && !is_text_operation && !is_text_predicate && !is_join_with && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field && !is_text_search && !is_last_position && !is_json_pointer && !is_character_from && !is_character_at && !is_remove_all
+                && !is_import && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_power && !is_flatten && !is_absolute && !is_sign && !is_numeric_rounding && !is_round && !is_truncate && !is_factorial && !is_prime && !is_cube && !is_square && !is_sqrt && !is_scientific_math && !is_cbrt && !is_reciprocal && !is_digits && !is_parity && !is_product && !is_text_operation && !is_text_predicate && !is_join_with && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field && !is_text_search && !is_last_position && !is_json_pointer && !is_character_from && !is_character_at && !is_remove_all
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count" | "reduce" | "zip" | "partition")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")
