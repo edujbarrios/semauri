@@ -278,6 +278,7 @@ impl<'a> Lexer<'a> {
                 return self.raw_string_token(start_line, start_column, hashes);
             }
         }
+
         if matches!(current, '"' | '\'') {
             return self.string_token(start_line, start_column, current);
         }
@@ -337,6 +338,7 @@ impl<'a> Lexer<'a> {
                 Some('b' | 'B') => Some(2),
                 Some('o' | 'O') => Some(8),
                 Some('x' | 'X') => Some(16),
+                Some('z' | 'Z') => Some(36),
                 _ => None,
             };
             if let Some(radix) = radix {
@@ -537,6 +539,26 @@ impl<'a> Lexer<'a> {
                     '"' => '"',
                     '\'' => '\'',
                     '\\' => '\\',
+                    'x' => {
+                        // Exactly two hexadecimal digits represent U+0000 through U+00FF.
+                        let high = self.current()
+                            .and_then(|ch| ch.to_digit(16))
+                            .ok_or_else(|| SemauriError::lex(
+                                "S104",
+                                "Expected exactly two hexadecimal digits after '\\x'",
+                                SourceSpan::new(escape_line, escape_column, self.line, self.column),
+                            ))?;
+                        self.advance();
+                        let low = self.current()
+                            .and_then(|ch| ch.to_digit(16))
+                            .ok_or_else(|| SemauriError::lex(
+                                "S104",
+                                "Expected exactly two hexadecimal digits after '\\x'",
+                                SourceSpan::new(escape_line, escape_column, self.line, self.column),
+                            ))?;
+                        self.advance();
+                        char::from_u32((high << 4) | low).unwrap()
+                    }
                     'u' => {
                         // Unicode scalar escapes require braces and 1-6 hex digits.
                         if self.current() != Some('{') {
