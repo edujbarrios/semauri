@@ -1,3 +1,13 @@
+## 0.52.0 — 2026-10-30
+
+### More expressive source literals
+- Add case-insensitive binary (`0b`), octal (`0o`), and hexadecimal (`0x`) integer literals with underscore separators and checked signed 64-bit values ([#270](https://github.com/edujbarrios/semauri/pull/270)).
+- Accept single-quoted UTF-8 strings with the same escapes as double-quoted strings; preserve the original quote style in formatting ([#271](https://github.com/edujbarrios/semauri/pull/271)).
+- Update VS Code syntax highlighting and grammar tests for numeric bases and both quote styles ([#272](https://github.com/edujbarrios/semauri/pull/272)).
+- Bump the Rust package to 0.52.0 and the experimental Jupyter language identifier to 0.52.
+
+These are additive syntax changes. No new Rust dependencies or runtime capabilities are required.
+
 ## 0.51.1 — 2026-10-29
 
 ### Clearer positioning for humans and AI agents
