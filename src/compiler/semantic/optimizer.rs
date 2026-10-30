@@ -433,6 +433,18 @@ fn fold_expr(
                     }
                     // Keep non-finite inputs for a source-located S438 diagnostic.
                 }
+                (operator @ (UnaryOperator::Exponential | UnaryOperator::NaturalLog
+                    | UnaryOperator::Sine | UnaryOperator::Cosine), Some(ValueData::Number(value))) => {
+                    if let Some(result) = numeric_transcendental(value, operator.clone()) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::Number,
+                            value: LiteralValue::Number(result),
+                            span: *span,
+                        };
+                    }
+                    // Keep invalid domains/overflow to emit source-located S466.
+                }
                 (UnaryOperator::SquareRoot, Some(ValueData::Number(value))) => {
                     if let Some(root) = numeric_sqrt(value) {
                         *changes += 1;
