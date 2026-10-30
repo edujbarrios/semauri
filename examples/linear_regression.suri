@@ -1,0 +1,37 @@
+# Linear regression (ordinary least squares), implemented in Semauri itself.
+# Reproduces the elementary one-feature algorithm in edujbarrios-ai.
+# Five observations following y = 2*x + 1; predict the value at x = 6.
+# All calculations are pure, with no ML service, model download or training API.
+let x_values be a list of 0, 1, 2, 3, 4.
+let y_values be a list of 1, 3, 5, 7, 9.
+
+assert length of x_values is equal to length of y_values.
+assert length of x_values is greater than 1.
+
+let x_mean be average of x_values.
+let y_mean be average of y_values.
+let centered_x be map every x in x_values to (x minus x_mean).
+let centered_y be map every y in y_values to (y minus y_mean).
+let squares be map every dx in centered_x to (dx times dx).
+let cross_products be zip every dx in centered_x with dy in centered_y to (dx times dy).
+
+let variance_sum be sum of squares.
+assert variance_sum is greater than 0.
+let covariance_sum be sum of cross_products.
+let slope be covariance_sum divided by variance_sum.
+let intercept be y_mean minus (slope times x_mean).
+let prediction be intercept plus (slope times 6).
+
+assert slope is equal to 2.
+assert intercept is equal to 1.
+assert prediction is equal to 13.
+
+print "Linear regression (ordinary least squares)".
+print "Training observations:".
+print length of x_values.
+print "Learned slope:".
+print slope.
+print "Learned intercept:".
+print intercept.
+print "Prediction for x=6:".
+print prediction.
