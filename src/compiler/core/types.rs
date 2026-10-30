@@ -344,6 +344,20 @@ fn numeric_sqrt(value: NumberValue) -> Option<NumberValue> {
     }
 }
 
+// Finite scientific functions are real-valued and never produce NaN/Infinity.
+fn numeric_transcendental(value: NumberValue, operator: UnaryOperator) -> Option<NumberValue> {
+    let input = value.as_f64();
+    if !input.is_finite() { return None; }
+    let result = match operator {
+        UnaryOperator::Exponential => input.exp(),
+        UnaryOperator::NaturalLog if input > 0.0 => input.ln(),
+        UnaryOperator::Sine => input.sin(),
+        UnaryOperator::Cosine => input.cos(),
+        _ => return None,
+    };
+    result.is_finite().then_some(NumberValue::Float(result))
+}
+
 // Parity accepts exact integers and integral finite decimals only when they
 // fit signed i64. Rejecting out-of-range floats avoids saturating casts and
 // meaningless parity tests above the precision range of binary64.
