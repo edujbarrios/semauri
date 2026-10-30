@@ -32,3 +32,23 @@ fn grammar_is_valid_json_and_covers_core_config_and_ai_syntax() {
         assert!(serialized.contains(expected), "missing {expected}");
     }
 }
+
+#[test]
+fn grammar_highlights_radix_integers_and_both_string_styles() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let strings = &grammar["repository"]["strings"]["patterns"];
+    assert_eq!(strings[0]["name"], "string.quoted.double.semauri");
+    assert_eq!(strings[1]["name"], "string.quoted.single.semauri");
+    assert_eq!(strings[0]["begin"], "\"");
+    assert_eq!(strings[1]["begin"], "'");
+    for quoted in strings.as_array().unwrap() {
+        let escapes = quoted["patterns"][0]["match"].as_str().unwrap();
+        assert!(escapes.contains("nrt"), "{escapes}");
+        assert!(escapes.contains("u"), "{escapes}");
+    }
+    let number = grammar["repository"]["numbers"]["match"].as_str().unwrap();
+    for prefix in ["0[bB]", "0[oO]", "0[xX]", "[0-9A-Fa-f]"] {
+        assert!(number.contains(prefix), "missing {prefix}: {number}");
+    }
+    assert!(number.contains("[eE]"), "decimal exponents must remain supported");
+}
