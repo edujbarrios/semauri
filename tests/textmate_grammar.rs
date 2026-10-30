@@ -57,7 +57,7 @@ fn grammar_highlights_radix_integers_and_both_string_styles() {
 fn raw_string_scopes_and_control_escapes_are_documented_in_grammar() {
     let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
     let strings = grammar["repository"]["strings"]["patterns"].as_array().unwrap();
-    assert_eq!(strings.len(), 4);
+    assert!(strings.len() >= 4);
     assert_eq!(strings[2]["name"], "string.quoted.double.raw.semauri");
     assert_eq!(strings[3]["name"], "string.quoted.single.raw.semauri");
     assert_eq!(strings[2]["begin"], "[rR]\"");
@@ -68,4 +68,28 @@ fn raw_string_scopes_and_control_escapes_are_documented_in_grammar() {
         let escapes = quoted["patterns"][0]["match"].as_str().unwrap();
         assert!(escapes.contains("nrt0bf"), "{escapes}");
     }
+}
+
+#[test]
+fn grammar_highlights_base36_hex_escapes_and_hash_raw_literals() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let numeric = grammar["repository"]["numbers"]["match"].as_str().unwrap();
+    assert!(numeric.contains("0[zZ][0-9A-Za-z]"), "{numeric}");
+    let strings = grammar["repository"]["strings"]["patterns"].as_array().unwrap();
+    assert_eq!(strings.len(), 6);
+    for ordinary in &strings[..2] {
+        let escape = ordinary["patterns"][0]["match"].as_str().unwrap();
+        assert!(escape.contains("x[0-9A-Fa-f]{2}"), "{escape}");
+        assert!(escape.contains("u"), "{escape}");
+    }
+    let double = &strings[4];
+    let single = &strings[5];
+    assert_eq!(double["name"], "string.quoted.double.raw.hash.semauri");
+    assert_eq!(single["name"], "string.quoted.single.raw.hash.semauri");
+    assert_eq!(double["begin"], r#"[rR](#+)""#);
+    assert_eq!(single["begin"], "[rR](#+)'");
+    assert_eq!(double["end"], "\"\\1");
+    assert_eq!(single["end"], "'\\1");
+    assert!(double.get("patterns").is_none());
+    assert!(single.get("patterns").is_none());
 }
