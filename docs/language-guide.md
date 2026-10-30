@@ -479,6 +479,23 @@ Non-number operands raise `S421` at type checking; numeric overflow or
 non-finite results raise `S422` during evaluation. The expression is pure
 and requires no new runtime permissions.
 
+### Population variance and standard deviation
+
+`variance of NUMERIC_LIST` and `stdev of NUMERIC_LIST` calculate the
+**population** variance (divide by N) and standard deviation (its square root).
+They use a numerically stable one-pass Welford update and return finite
+decimal values. An empty list is invalid (`S468`); non-finite intermediate
+values return `S469`; other types are rejected with `S353`.
+
+```text
+let values be a list of 0, 2, 4.
+let spread be variance of values.
+let deviation be stdev of values.
+assert spread is greater than 2.
+```
+
+See [statistics.suri](../examples/statistics.suri).
+
 ### Checked exponentiation
 
 Use `power of BASE to EXPONENT` for exponentiation. Both arguments must
