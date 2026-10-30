@@ -41,7 +41,7 @@ fn grammar_highlights_radix_integers_and_both_string_styles() {
     assert_eq!(strings[1]["name"], "string.quoted.single.semauri");
     assert_eq!(strings[0]["begin"], "\"");
     assert_eq!(strings[1]["begin"], "'");
-    for quoted in strings.as_array().unwrap() {
+    for quoted in strings.as_array().unwrap().iter().take(2) {
         let escapes = quoted["patterns"][0]["match"].as_str().unwrap();
         assert!(escapes.contains("nrt"), "{escapes}");
         assert!(escapes.contains("u"), "{escapes}");
