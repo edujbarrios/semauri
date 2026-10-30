@@ -8,7 +8,7 @@ const SOURCE: &str = include_str!("../examples/linear_regression.suri");
 const EXPECTED_OUTPUT: &str = concat!(
     "Linear regression (ordinary least squares)\n",
     "Training observations:\n5\n",
-    "Learned slope:\n2.0\n"
+    "Learned slope:\n2.0\n",
     "Learned intercept:\n1\n",
     "Prediction for x=6:\n13\n",
 );
