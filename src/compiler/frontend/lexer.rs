@@ -265,8 +265,8 @@ impl<'a> Lexer<'a> {
             });
         }
 
-        if current == '"' {
-            return self.string_token(start_line, start_column);
+        if matches!(current, '"' | '\'') {
+            return self.string_token(start_line, start_column, current);
         }
         if current.is_ascii_digit() {
             return self.number_token(start_line, start_column);
@@ -400,10 +400,10 @@ impl<'a> Lexer<'a> {
         )
     }
 
-    fn string_token(&mut self, line: usize, column: usize) -> Result<Token> {
+    fn string_token(&mut self, line: usize, column: usize, quote: char) -> Result<Token> {
         self.advance();
         let mut value = String::new();
-        while !self.eof() && self.current() != Some('"') {
+        while !self.eof() && self.current() != Some(quote) {
             if matches!(self.current(), Some('\n' | '\r')) {
                 return Err(SemauriError::lex(
                     "S102",
@@ -427,6 +427,7 @@ impl<'a> Lexer<'a> {
                     't' => '\t',
                     'r' => '\r',
                     '"' => '"',
+                    '\'' => '\'',
                     '\\' => '\\',
                     'u' => {
                         // Unicode scalar escapes require braces and 1-6 hex digits.
