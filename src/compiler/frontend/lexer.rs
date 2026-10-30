@@ -287,6 +287,11 @@ impl<'a> Lexer<'a> {
         }
 
         if matches!(current, '"' | '\'') {
+            if self.chars.get(self.index..self.index + 3)
+                .is_some_and(|slice| slice.iter().all(|ch| *ch == current))
+            {
+                return self.multiline_string_token(start_line, start_column, current);
+            }
             return self.string_token(start_line, start_column, current);
         }
         if current.is_ascii_digit() {
@@ -514,6 +519,37 @@ impl<'a> Lexer<'a> {
         Err(SemauriError::lex(
             "S103",
             "Unterminated raw string",
+            SourceSpan::new(line, column, self.line, self.column),
+        ))
+    }
+
+    fn multiline_string_token(&mut self, line: usize, column: usize, quote: char) -> Result<Token> {
+        // Triple quotes create literal multiline UTF-8 blocks. Like raw
+        // strings, backslashes are not decoded, so prompts and templates
+        // can embed code and regular expressions without double escaping.
+        for _ in 0..3 {
+            self.advance();
+        }
+        let mut value = String::new();
+        while !self.eof() {
+            if self.chars.get(self.index..self.index + 3)
+                .is_some_and(|slice| slice.iter().all(|ch| *ch == quote))
+            {
+                for _ in 0..3 {
+                    self.advance();
+                }
+                return Ok(Token {
+                    kind: TokenKind::String,
+                    lexeme: value.clone(),
+                    literal: TokenLiteral::String(value),
+                    span: SourceSpan::new(line, column, self.line, self.column),
+                });
+            }
+            value.push(self.advance().unwrap());
+        }
+        Err(SemauriError::lex(
+            "S103",
+            "Unterminated triple-quoted string",
             SourceSpan::new(line, column, self.line, self.column),
         ))
     }
