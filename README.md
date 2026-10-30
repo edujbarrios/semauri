@@ -288,7 +288,7 @@ Comments begin with `#`, `//`, or a nestable `/* ... */` block. Keywords are cas
 ### Types
 
 - `number`: checked signed integers and finite decimal values.
-- `string`: UTF-8 text.
+- `string`: UTF-8 text. Use double quotes (`"text"`) or single quotes (`'text'`); either delimiter can appear unescaped inside the other. Escape the active delimiter with a backslash, and use `\n`, `\t`, `\r`, `\\`, or `\u{HEX}` for escaped content.
 - `boolean`: `true` or `false`.
 - `color`: named color values used by declarative programs.
 - `list<T>`: immutable homogeneous lists.
