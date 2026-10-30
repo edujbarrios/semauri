@@ -265,6 +265,9 @@ impl<'a> Lexer<'a> {
             });
         }
 
+        if matches!(current, 'r' | 'R') && matches!(self.peek_char(), Some('"' | '\'')) {
+            return self.raw_string_token(start_line, start_column);
+        }
         if matches!(current, '"' | '\'') {
             return self.string_token(start_line, start_column, current);
         }
@@ -449,6 +452,37 @@ impl<'a> Lexer<'a> {
             message,
             SourceSpan::new(line, column, self.line, self.column),
         )
+    }
+
+    fn raw_string_token(&mut self, line: usize, column: usize) -> Result<Token> {
+        self.advance(); // r/R prefix
+        let quote = self.advance().unwrap(); // quote delimiter
+        let mut value = String::new();
+        while !self.eof() && self.current() != Some(quote) {
+            if matches!(self.current(), Some('\n' | '\r')) {
+                return Err(SemauriError::lex(
+                    "S102",
+                    "Literal newlines are not allowed in raw strings",
+                    SourceSpan::new(line, column, self.line, self.column),
+                ));
+            }
+            // Raw strings do not interpret backslashes, including before quotes.
+            value.push(self.advance().unwrap());
+        }
+        if self.eof() {
+            return Err(SemauriError::lex(
+                "S103",
+                "Unterminated raw string",
+                SourceSpan::new(line, column, self.line, self.column),
+            ));
+        }
+        self.advance();
+        Ok(Token {
+            kind: TokenKind::String,
+            lexeme: value.clone(),
+            literal: TokenLiteral::String(value),
+            span: SourceSpan::new(line, column, self.line, self.column),
+        })
     }
 
     fn string_token(&mut self, line: usize, column: usize, quote: char) -> Result<Token> {
