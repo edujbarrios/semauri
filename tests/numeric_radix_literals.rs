@@ -19,7 +19,7 @@ fn prefixed_integers_keep_exact_values_and_spans() {
     assert_eq!(numbers[0].to_json()["column"], 15);
 
     compiler.analyze(
-        "let a be 0B1010. let b be 0o12. let c be 0XFF.          assert a is equal to b. assert c is equal to 255."
+        "let binary_value be 0B1010. let octal_value be 0o12. let hex_value be 0XFF.          assert binary_value is equal to octal_value. assert hex_value is equal to 255."
     ).unwrap();
     let folded = compiler.optimized_hir("let n be 0x10 plus 0b10. print n.")
         .unwrap().to_json().to_string();
