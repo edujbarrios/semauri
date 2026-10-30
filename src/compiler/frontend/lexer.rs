@@ -393,7 +393,7 @@ impl<'a> Lexer<'a> {
         while let Some(ch) = self.current() {
             if ch == '_' {
                 if digits.is_empty()
-                    || !self.peek_char().is_some_and(|next| next.to_digit(radix).is_some())
+                    || !self.peek_char().is_some_and(|next| next.is_digit(radix))
                 {
                     return Err(self.invalid_number(
                         line, column, "Digit separators must appear between digits",
@@ -401,7 +401,7 @@ impl<'a> Lexer<'a> {
                 }
                 text.push(self.advance().unwrap());
                 digits.push('_');
-            } else if ch.to_digit(radix).is_some() {
+            } else if ch.is_digit(radix) {
                 text.push(self.advance().unwrap());
                 digits.push(ch);
             } else if ch.is_ascii_alphanumeric() {
