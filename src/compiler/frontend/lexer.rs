@@ -265,9 +265,20 @@ impl<'a> Lexer<'a> {
             });
         }
 
-        if matches!(current, 'r' | 'R') && matches!(self.peek_char(), Some('"' | '\'')) {
-            return self.raw_string_token(start_line, start_column);
+        if matches!(current, 'r' | 'R') {
+            // Hash delimiters let raw strings contain their quote character.
+            // Without hashes this is the existing r"..." / r'...' syntax.
+            let hashes = self.chars[self.index + 1..]
+                .iter()
+                .take_while(|ch| **ch == '#')
+                .count();
+            if self.chars.get(self.index + 1 + hashes)
+                .is_some_and(|quote| matches!(*quote, '"' | '\''))
+            {
+                return self.raw_string_token(start_line, start_column, hashes);
+            }
         }
+
         if matches!(current, '"' | '\'') {
             return self.string_token(start_line, start_column, current);
         }
@@ -455,11 +466,31 @@ impl<'a> Lexer<'a> {
         )
     }
 
-    fn raw_string_token(&mut self, line: usize, column: usize) -> Result<Token> {
+    fn raw_string_token(&mut self, line: usize, column: usize, hashes: usize) -> Result<Token> {
         self.advance(); // r/R prefix
-        let quote = self.advance().unwrap(); // quote delimiter
+        for _ in 0..hashes {
+            self.advance(); // opening hash delimiters
+        }
+        let quote = self.advance().unwrap();
         let mut value = String::new();
-        while !self.eof() && self.current() != Some(quote) {
+        while !self.eof() {
+            // The closing quote must be followed by precisely enough hashes.
+            // A quote within a hash-delimited string is ordinary content.
+            let closing = self.current() == Some(quote)
+                && self.chars.get(self.index + 1..self.index + 1 + hashes)
+                    .is_some_and(|suffix| suffix.iter().all(|ch| *ch == '#'));
+            if closing {
+                self.advance();
+                for _ in 0..hashes {
+                    self.advance();
+                }
+                return Ok(Token {
+                    kind: TokenKind::String,
+                    lexeme: value.clone(),
+                    literal: TokenLiteral::String(value),
+                    span: SourceSpan::new(line, column, self.line, self.column),
+                });
+            }
             if matches!(self.current(), Some('\n' | '\r')) {
                 return Err(SemauriError::lex(
                     "S102",
@@ -467,23 +498,13 @@ impl<'a> Lexer<'a> {
                     SourceSpan::new(line, column, self.line, self.column),
                 ));
             }
-            // Raw strings do not interpret backslashes, including before quotes.
             value.push(self.advance().unwrap());
         }
-        if self.eof() {
-            return Err(SemauriError::lex(
-                "S103",
-                "Unterminated raw string",
-                SourceSpan::new(line, column, self.line, self.column),
-            ));
-        }
-        self.advance();
-        Ok(Token {
-            kind: TokenKind::String,
-            lexeme: value.clone(),
-            literal: TokenLiteral::String(value),
-            span: SourceSpan::new(line, column, self.line, self.column),
-        })
+        Err(SemauriError::lex(
+            "S103",
+            "Unterminated raw string",
+            SourceSpan::new(line, column, self.line, self.column),
+        ))
     }
 
     fn string_token(&mut self, line: usize, column: usize, quote: char) -> Result<Token> {
