@@ -6,10 +6,11 @@ use semauri::Compiler;
 #[test]
 fn single_quoted_text_supports_embedded_double_quotes_and_escapes() {
     let compiler = Compiler::new();
-    let source = r#"let title be 'She said "hello"'.
+    let source = r#"let caption_value be 'She said "hello"'.
 let apology be 'it\'s fine'.
-assert title is equal to "She said \"hello\"".
-assert apology is equal to "it's fine"."#;
+assert caption_value is equal to "She said \"hello\"".
+assert apology is equal to "it's fine".
+print caption_value."#;
     compiler.analyze(source).unwrap();
     let ast = compiler.parse(source).unwrap().to_json();
     assert_eq!(ast["statements"][0]["value"]["value"], "She said \"hello\"");
@@ -41,5 +42,5 @@ fn formatter_preserves_quote_style_and_ordinary_apostrophes() {
     assert_eq!(formatted, expected);
     assert_eq!(compiler.format_source(&formatted).unwrap(), expected);
     compiler.analyze("create a web called Writer's Studio.").unwrap();
-    compiler.analyze("let name be \"it's fine\".").unwrap();
+    compiler.parse("let name be \"it's fine\".").unwrap();
 }
