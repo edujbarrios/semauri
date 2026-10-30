@@ -1,3 +1,15 @@
+## 0.53.0 — 2026-10-30
+
+### Citable software and reproducible research
+- Add canonical GitHub `CITATION.cff` and README citation instructions based on the author credit in `NOTICE`, with automated crate-version consistency checks ([#274](https://github.com/edujbarrios/semauri/pull/274)).
+
+### More expressive text literals
+- Accept `\\0`, `\\b`, and `\\f` escapes in both quote styles, preserving diagnostics and parsing semantics ([#275](https://github.com/edujbarrios/semauri/pull/275)).
+- Accept literal-backslash raw strings using `r"..."`, `r'...'`, and uppercase `R` prefixes ([#276](https://github.com/edujbarrios/semauri/pull/276)).
+- Highlight raw string scopes and expanded escapes in the VS Code TextMate grammar ([#277](https://github.com/edujbarrios/semauri/pull/277)).
+
+Release 0.53.0 updates the Jupyter language identifier and CFF citation version. All changes are additive with no new dependencies or runtime permissions.
+
 ## 0.52.0 — 2026-10-30
 
 ### More expressive source literals
