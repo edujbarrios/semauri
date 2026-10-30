@@ -52,3 +52,20 @@ fn grammar_highlights_radix_integers_and_both_string_styles() {
     }
     assert!(number.contains("[eE]"), "decimal exponents must remain supported");
 }
+
+#[test]
+fn raw_string_scopes_and_control_escapes_are_documented_in_grammar() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let strings = grammar["repository"]["strings"]["patterns"].as_array().unwrap();
+    assert_eq!(strings.len(), 4);
+    assert_eq!(strings[2]["name"], "string.quoted.double.raw.semauri");
+    assert_eq!(strings[3]["name"], "string.quoted.single.raw.semauri");
+    assert_eq!(strings[2]["begin"], "[rR]\\\"");
+    assert_eq!(strings[3]["begin"], "[rR]'");
+    assert!(strings[2].get("patterns").is_none(), "raw strings must not decode escapes");
+    assert!(strings[3].get("patterns").is_none(), "raw strings must not decode escapes");
+    for quoted in &strings[..2] {
+        let escapes = quoted["patterns"][0]["match"].as_str().unwrap();
+        assert!(escapes.contains("nrt0bf"), "{escapes}");
+    }
+}
