@@ -22,7 +22,7 @@ let slope be covariance_sum divided by variance_sum.
 let intercept be y_mean minus (slope times x_mean).
 let prediction be intercept plus (slope times 6).
 
-assert slope is equal to 2.
+assert slope is equal to 2.0.
 assert intercept is equal to 1.
 assert prediction is equal to 13.
 
