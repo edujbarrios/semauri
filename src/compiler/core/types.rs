@@ -344,6 +344,20 @@ fn numeric_sqrt(value: NumberValue) -> Option<NumberValue> {
     }
 }
 
+// Checked exponentiation: integer powers stay exact; overflow and real-domain errors fail.
+fn numeric_power(base: NumberValue, exponent: NumberValue) -> Option<NumberValue> {
+    if let (NumberValue::Int(value), NumberValue::Int(exp)) = (&base, &exponent) {
+        if *exp >= 0 {
+            let power = u32::try_from(*exp).ok()?;
+            return value.checked_pow(power).map(NumberValue::Int);
+        }
+    }
+    let a = base.as_f64();
+    let b = exponent.as_f64();
+    let result = a.powf(b);
+    (a.is_finite() && b.is_finite() && result.is_finite()).then_some(NumberValue::Float(result))
+}
+
 // Finite scientific functions are real-valued and never produce NaN/Infinity.
 fn numeric_transcendental(value: NumberValue, operator: UnaryOperator) -> Option<NumberValue> {
     let input = value.as_f64();
