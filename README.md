@@ -4,7 +4,7 @@
 
 Semauri is statically typed, with deterministic programs and inspectable AI workflows. Source files use `.suri`. This README is the canonical language guide for humans and coding agents.
 
-Current release: **0.51.1**. The compiler is written in Rust and runs on Windows, macOS, and Linux.
+Current release: **0.52.0**. The compiler is written in Rust and runs on Windows, macOS, and Linux.
 
 ## Agent quick start
 
