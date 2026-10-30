@@ -1,0 +1,11 @@
+# Real scientific functions with checked finite domains, in radians for sin/cos.
+let values be a list of 0, 1, 2.
+let exponentials be map every x in values to (exp of x).
+let logarithms be map every x in (a list of 1, 2, 4) to (ln of x).
+assert exp of 0 is equal to 1.0.
+assert ln of 1 is equal to 0.0.
+assert sin of 0 is equal to 0.0.
+assert cos of 0 is equal to 1.0.
+assert length of exponentials is equal to 3.
+assert length of logarithms is equal to 3.
+print "scientific math OK".
