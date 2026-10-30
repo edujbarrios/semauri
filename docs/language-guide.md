@@ -1,0 +1,1124 @@
+# Semauri — language and tooling guide
+
+Full reference for the [short Quick Start](../README.md). Commands and examples refer to Semauri v0.55.0; consult the current release for changes.
+
+## Agent quick start
+
+When generating or changing a Semauri program:
+
+1. Use a `.suri` filename and lowercase language keywords.
+2. End every statement with a period.
+3. Declare a value before using it. Values are immutable and lexically scoped.
+4. Run `semauri fmt FILE --check`, then `semauri check FILE`.
+5. Run `semauri explain FILE` to understand the compiler's semantic decisions.
+6. Inspect `semauri effects FILE` and `semauri plan FILE` before execution.
+7. Grant only the effects the program needs when using `run`.
+8. Use `semauri test PATH` for assertion-based test files.
+
+Never invent syntax. Prefer a small checked program over a plausible-looking unsupported construct.
+
+## Install and verify
+
+Download the archive for your platform from the [latest release](https://github.com/edujbarrios/semauri/releases/latest), extract it, and put the binary on `PATH`.
+
+```sh
+semauri version
+```
+
+From a source checkout:
+
+```sh
+cargo build --release
+cargo test
+cargo run -- check examples/hello.suri
+```
+
+## Semauri in Jupyter Notebook / JupyterLab
+
+This repository includes an official, experimental
+[Semauri Jupyter kernel](../integrations/jupyter/README.md).
+After installing the Rust `semauri` executable on your `PATH`:
+
+```sh
+python3 -m pip install -e ./integrations/jupyter
+semauri-jupyter-install --user
+python3 -m pip install jupyterlab
+jupyter lab
+```
+
+Open [the example `.ipynb`](../integrations/jupyter/examples/hello_semauri.ipynb)
+and select **Semauri** as the notebook kernel. In a cell, enter:
+
+```text
+let numbers be range from 1 to 5.
+let squares be map every n in numbers to (square of n).
+print squares.
+```
+
+Expected output: `[1, 4, 9, 16, 25]`.
+
+Notebook-only directives (on the first nonblank line) include `%%check`,
+`%%explain` (also `--json`), `%%effects`, `%%plan`, `%%tokens`,
+`%%ast`, `%%hir`, `%%optimize`, `%%symbols`, `%%graph` and
+`%%fmt`. These inspect code without executing application effects.
+`%%fmt` displays the canonical source without writing files.
+
+**Each cell is a standalone Semauri program.** Bindings do not persist
+between cells. Replay would repeat filesystem/AI effects; compiler-backed
+persistent sessions are a separate future feature. Default permission:
+`console_write` only. To grant additional effects set
+`SEMAURI_ALLOW_EFFECTS` explicitly *before* starting Jupyter.
+Set `SEMAURI_BINARY` to the executable's full path if needed.
+No `anywidget` dependency is required for this integration.
+
+## Start a new Semauri project
+
+Create a ready-to-run project with reusable typed functions and tests:
+
+```sh
+semauri init my-project
+cd my-project
+semauri check main.suri
+semauri run --allow console_write main.suri
+semauri test tests --allow-console
+```
+
+The initializer creates `main.suri`, `lib/math.suri`,
+`tests/math.suri`, `.semauri-root`, and a project `README.md`.
+It requires a **new directory** and refuses to overwrite an existing
+project. The entry and test files demonstrate safe imports, typed functions,
+capability checks, and executable assertions.
+
+## Understand programs with `check` and `explain`
+
+Humans and coding agents can inspect **how Semauri interprets source code**
+without running the application. `semauri check FILE` validates syntax,
+types, imports and compiler rules, reporting `OK` when validation succeeds.
+`semauri explain FILE` also performs semantic analysis and prints a numbered,
+human-readable trace of decisions made while lowering the program, such as
+domain selection, artifact defaults, symbol bindings, reference resolution,
+selected branches and planned operations.
+
+For a reproducible walkthrough, open
+[`examples/explain_walkthrough.suri`](../examples/explain_walkthrough.suri):
+
+```text
+within web:
+  create a web called Example.
+  add a button called Start.
+end.
+```
+
+Check the file and request its explanation:
+
+```sh
+semauri check examples/explain_walkthrough.suri
+semauri explain examples/explain_walkthrough.suri
+```
+
+The `check` command prints:
+
+```text
+OK
+```
+
+The `explain` command prints the following **exact output** for that file
+(pinned by `tests/explain_walkthrough.rs`):
+
+```text
+1. Entered semantic domain scope 'web'.
+2. 'web' resolved to an HTML web document (default web backend).
+3. Title explicitly set to 'Example'.
+4. Added button 'Start' as button-1.
+```
+
+Agents and CI tools can request structured explanations without parsing
+the numbered text:
+
+```sh
+semauri explain examples/explain_walkthrough.suri --json
+```
+
+```json
+{
+  "explanations": [
+    "Entered semantic domain scope 'web'.",
+    "'web' resolved to an HTML web document (default web backend).",
+    "Title explicitly set to 'Example'.",
+    "Added button 'Start' as button-1."
+  ],
+  "ok": true,
+  "status": 0
+}
+```
+
+The `explanations` array preserves the order of the human-readable trace,
+without numeric prefixes. JSON failures use the same source-aware
+`diagnostics` envelope as `semauri check FILE --json`. Neither mode
+executes application effects.
+
+This shows that the compiler enters the `web` semantic domain, chooses the
+HTML backend, retains the explicitly specified document title and assigns
+a stable identifier to the new button. The trace describes *compiler
+decisions*, **not program stdout** or a complete step-by-step execution
+debugger. `check` and `explain` do not render the HTML or run the program.
+
+For additional machine-readable analysis, use `semauri hir FILE` for typed
+expressions, `semauri optimize FILE` for optimized HIR,
+`semauri effects FILE` to review required permissions and
+`semauri plan FILE` or `semauri graph FILE` to inspect runtime work.
+Inspect effects and grant only the minimum necessary capabilities
+before a separate `run` command.
+
+## Project verification for local development and CI
+
+`semauri verify PROJECT` is a single quality gate for multi-file projects.
+It requires a normal `.semauri-root` marker, `main.suri`, and a
+`tests/` directory, such as those generated by `semauri init`.
+
+```sh
+semauri verify .                  # check formatting, compile all sources and run assertions
+semauri verify . --json           # machine-readable CI report
+semauri verify . --allow-console  # explicitly allow test prints
+```
+
+Verification checks **all** project `.suri` files for canonical formatting
+and type/compile errors (including imported files), inspects the entry-point
+effect list, and runs the existing assertion-only test runner. The application
+itself is **never executed**. Tests cannot require filesystem, network, or
+other non-console effects; console output in tests needs `--allow-console`.
+The command returns `0` on success, `1` on verification failures, and `64`
+on incorrect usage or invalid project layouts. The `--json` output contains
+a success flag, file count, effect list, test results, and diagnosed issues.
+
+The verifier skips symlinks and build/cache directories, refuses a project
+larger than 256 source files or 4 MiB of total source, and does not modify
+any files. Use `semauri fmt PROJECT --check` to list all formatting problems or
+`semauri fmt PROJECT --write` to format every source in one operation.
+Directory formatting validates all sources before writing the first file,
+excludes symlinks and generated/cache directories, and is limited to 256
+files and 4 MiB total source. Single-file formatting remains unchanged.
+
+Rerun
+verification. This is a local project quality gate, not a dependency/package
+manager or a substitute for full integration and deployment tests.
+
+## Multi-file programs and imports
+
+Semauri projects can share statically typed functions and other definitions
+across local `.suri` files. Write imports at the start of your entry file:
+
+```text
+# lib/math.suri
+define function square taking n as number to (n times n).
+
+# main.suri
+import "lib/math.suri".
+assert invoke square to 7 is equal to 49.
+```
+
+File-based CLI compilation resolves imports recursively with each path
+relative to the **importing file**: `semauri check main.suri`,
+`semauri run main.suri --allow console_write`, `semauri test main.suri`,
+and inspection commands such as `hir`, `effects`, and `plan`.
+`fmt` formats only the original file and preserves import strings.
+
+Imports are compile-time source dependencies, not runtime filesystem reads.
+Every imported declaration and effect is type-checked and permission-checked
+within the final program. Files are imported only once by canonical path.
+Cycles, imports after executable statements, absolute paths, paths outside
+the active project root (even through symlinks), and files without a
+`.suri` extension are rejected with `S416`. Maximums are
+**64 files**, **32 import levels**, and **4 MiB** of total UTF-8 source.
+Diagnostics report the original file and line when available.
+
+For a project with tests or modules in nested directories, create a regular
+empty `.semauri-root` file at the project root. The compiler uses the
+**nearest ancestor** with this marker to define its import boundary.
+Without a marker, the entry file's own directory is the boundary.
+This allows test files to import `../lib/math.suri` within a marked project
+without opening unrestricted access to unrelated directories.
+
+Imports currently share one symbol namespace: duplicate definitions are
+errors. Only CLI commands that take a file path resolve imports; in-memory
+`Compiler::parse` and `Compiler::hir` expect expanded source text.
+
+## Smallest program
+
+Create `hello.suri`:
+
+```text
+print "Hello from Semauri".
+```
+
+Then check and run it:
+
+```sh
+semauri check hello.suri
+semauri run --allow console_write hello.suri
+```
+
+## Core syntax
+
+```text
+# immutable values and exact arithmetic
+let name be "Semauri".
+let answer be (6 times 7).
+let values be a list of 1, 2, 3, 4.
+
+# typed control flow
+if answer is equal to 42:
+  print name plus " works".
+otherwise:
+  print "unexpected".
+end.
+
+# pure typed function
+define function double taking value as number to (value times 2).
+let doubled be invoke double to 21.
+assert doubled is equal to 42.
+```
+
+Comments begin with `#`, `//`, or a nestable `/* ... */` block. Keywords are case-insensitive, but lowercase is canonical. Strings preserve their case.
+
+### Types
+
+- `number`: checked signed integers and finite decimal values. Fractions may omit the leading zero (for example, `.5`, `.25e+2`); a standalone `.` still ends a statement. Integer literals also accept `0b` (binary), `0o` (octal), `0x` (hexadecimal), and `0z` (base 36) prefixes, in either case, with optional `_` separators between digits; e.g. `0b1010_0101`, `0o755`, `0xFF`, `0z1_z` (71). These literals must fit a signed 64-bit integer.
+- `string`: UTF-8 text. Triple-quoted blocks (`"""text"""` or `'''text'''`) can span multiple lines and preserve embedded newlines, quote characters, and backslashes *literally* (no escape processing); the closing three quotes must match. Use double quotes (`"text"`) or single quotes (`'text'`); either delimiter can appear unescaped inside the other. Raw literals (`r"text"` or `r'text'`, also `R` prefix) preserve backslashes literally (no escapes), which is useful for paths and prompt templates. Add matching hash markers (`r#"He said \"hi\""#` or `r##'It's fine'##`) to include the quote delimiter inside the raw value; the closing quote must have the same number of hashes. Literal newlines remain disallowed. Escape the active delimiter with a backslash, and use `\n`, `\t`, `\r`, `\0` (null), `\b` (backspace), `\f` (form feed), `\\`, `\u{HEX}` or `\UXXXXXXXX` (exactly eight hexadecimal digits, for example `\U0001F600`) for escaped content. You can also use `\xNN` for exactly two hexadecimal digits representing a Unicode character from U+0000 to U+00FF (for example, `\x41` is `A`).
+- `boolean`: `true` or `false`.
+- `color`: named color values used by declarative programs.
+- `list<T>`: immutable homogeneous lists.
+- nominal runtime types: typed handles produced by operations.
+
+Semauri does not silently coerce unrelated types.
+
+### Expressions
+
+Supported expression families include arithmetic, comparisons, Boolean operators, string concatenation, list indexing and concatenation, `length of`, `contains`, `uppercase of`, `lowercase of`, `reverse of`, numeric reductions, extrema, median, sorting, distinct values, bounded list operations, ranges, map/filter/count/reduce, pairwise zip, partition, flatten, repetition, conditional expressions, and pure function calls.
+
+Use parentheses whenever generated code could be ambiguous.
+
+### Natural-language text processing
+
+The following pure, Unicode-aware, statically checked operations are contextual
+phrases. Names such as `words` and `lines` still work as identifiers:
+
+```text
+let title be trim of "  Useful information  ".
+let tokens be words of "one   two\\tthree".
+let rows be lines of "a\\r\\nb\\n".
+assert title is equal to "Useful information".
+assert length of tokens is equal to 3.
+assert (tokens at 2) is equal to "three".
+assert length of rows is equal to 2.
+```
+
+- `trim of STRING` removes leading/trailing Unicode whitespace, returning `string`.
+- `words of STRING` splits on Unicode whitespace, omitting empty fields, returning `list<string>`.
+- `lines of STRING` splits on LF/CRLF, preserving interior blank lines and omitting a trailing empty field, returning `list<string>`.
+
+Non-string operands are rejected (`S351`), literals can be constant-folded, and
+none of these transformations grants or requires runtime capabilities.
+
+### Unicode-aware first-letter capitalization
+
+`capitalize of STRING` uppercases the **first Unicode scalar** while
+leaving the remainder of the text byte-for-byte unchanged. Unicode case
+mapping can expand a character (for example, `ß` becomes `SS`).
+Empty text stays empty, and leading whitespace is not skipped.
+
+```text
+assert (capitalize of "hello WORLD") is equal to "Hello WORLD".
+assert (capitalize of "élève") is equal to "Élève".
+assert (capitalize of "ßeta") is equal to "SSeta".
+```
+
+It is pure, works with functions and `map every`, and is constant-folded
+for literals. Non-strings use the existing located case-transformation
+diagnostic `S351`. The name `capitalize` remains a normal identifier
+unless followed by `of`.
+
+### Unicode case swapping
+
+`swapcase of STRING` uppercases lowercase Unicode scalars, lowercases
+uppercase scalars, and leaves uncased characters (digits, punctuation,
+spaces) unchanged. Unicode case mappings can expand to multiple scalars.
+
+```text
+assert (swapcase of "HeLLo 123!?") is equal to "hEllO 123!?".
+assert (swapcase of "ßéta") is equal to "SSÉTA".
+```
+
+The expression is pure and constant-foldable, works with typed functions
+and list mapping, uses `S351` for non-string operands, and does not
+reserve the word `swapcase` when it is an ordinary identifier.
+
+### Unicode-aware first-letter lowercasing
+
+`uncapitalize of STRING` lowercases the first Unicode scalar, preserving
+all remaining text, including case and whitespace. Empty text stays empty,
+and Unicode lowercase mappings may expand a scalar.
+
+```text
+assert (uncapitalize of "HELLO World") is equal to "hELLO World".
+assert (uncapitalize of "ÉTÉ") is equal to "éTÉ".
+```
+
+The expression is pure and constant-foldable, works inside functions and
+list mappings, and rejects non-string operands with `S351`. The name remains
+an ordinary identifier except when followed by `of`.
+
+### Unicode-aware title casing of words
+
+`titlecase of STRING` uppercases the first Unicode scalar and lowercases
+the remaining scalars in **each whitespace-delimited word**, preserving
+original Unicode whitespace and punctuation. This deliberately does not
+split words at hyphens or punctuation; Unicode mappings may expand scalars.
+
+```text
+assert (titlecase of "hELLO wORLD") is equal to "Hello World".
+assert (titlecase of "ßETA ÉTÉ") is equal to "SSeta Été".
+assert (titlecase of "  TWO  WORDS ") is equal to "  Two  Words ".
+```
+
+This pure, typed, constant-foldable expression accepts only strings (`S351`),
+works in functions and list mapping, and leaves `titlecase` usable as an
+ordinary identifier outside `titlecase of`.
+
+### Typed JSON serialization
+
+The pure `json of VALUE` operation produces valid JSON text from a number,
+boolean, string, color, or a nested homogeneous list of supported values.
+It is safe for generating JSON payloads and correctly escapes strings; it does
+not decode JSON, serialize runtime handles, or perform network requests.
+
+```text
+let labels be a list of "alpha", "beta".
+let payload be json of labels.
+assert payload is equal to "[\"alpha\",\"beta\"]".
+let enabled be json of true.
+assert enabled is equal to "true".
+```
+
+`json` remains a valid variable name unless immediately followed by `of`.
+Non-serializable types produce the static diagnostic `S390`.
+
+### Text splitting and joining
+
+Use `split of TEXT by DELIMITER` to obtain a typed `list<string>` and
+`join of LIST with DELIMITER` to reconstruct text. Delimiters are treated
+literally (not as regular expressions). Splitting keeps empty fields, including
+at the beginning and end of input. An empty delimiter, or more than 10,000
+parts, produces a source-aware `S393` diagnostic. Incorrect operand types
+are reported as `S392`. Both operations are pure.
+
+```text
+let fields be split of "name,role,team" by ",".
+assert length of fields is equal to 3.
+let row be join of fields with " / ".
+assert row is equal to "name / role / team".
+```
+
+`join` remains a legal identifier outside the operator phrase. The word\n`split` also names an existing ML-domain action, which continues to work.
+
+### Numeric sign
+
+Use `sign of NUMBER` to classify a numeric value as `-1`, `0` or `1`
+without rounding it or converting integers to floating point. It is pure,
+works with signed 64-bit integers (including the minimum integer) and finite
+decimals, and composes with functions and list transformations:
+
+```text
+let measurements be a list of minus 3, 0, 2.5.
+let directions be map every n in measurements to (sign of n).
+assert (directions at 0) is equal to (minus 1).
+assert (directions at 1) is equal to 0.
+```
+
+The keyword `sign` is contextual: `let sign be 5.` still defines a normal
+variable. Non-numeric operands cause the located type diagnostic `S417`;
+non-finite numeric values cause `S418` at evaluation. Signed zero returns 0.
+
+### Numeric floor and ceiling
+
+Use `floor of NUMBER` to round toward negative infinity and
+`ceiling of NUMBER` to round toward positive infinity:
+
+```text
+assert (floor of 2.8) is equal to 2.
+assert (ceiling of 2.2) is equal to 3.
+assert (floor of (minus 2.2)) is equal to (minus 3).
+assert (ceiling of (minus 2.8)) is equal to (minus 2).
+```
+
+Both expressions are pure and typed as `number`. Exact integer inputs
+are returned unchanged, including the full signed 64-bit range. Finite
+floating-point inputs are rounded using IEEE-754 floor/ceiling and produce
+exact integers when safely within signed 64-bit bounds; results outside that
+range remain floating point, without saturating casts. The names `floor`
+and `ceiling` remain valid identifiers unless followed by `of`.
+Non-number operands produce `S419`; non-finite inputs cause `S420`.
+Neither operator requires additional runtime permissions.
+
+### Numeric squares
+
+`square of NUMBER` computes the square without routing integers through
+floating point. Integers use checked signed 64-bit multiplication, including
+exact results larger than 2^53. Finite decimals use floating-point
+multiplication and reject non-finite results.
+
+```text
+assert (square of (minus 4)) is equal to 16.
+let values be a list of 2, 3, 4.
+let squares be map every n in values to (square of n).
+assert (squares at 2) is equal to 16.
+```
+
+`square` remains a normal variable name unless followed by `of`.
+Non-number operands raise `S421` at type checking; numeric overflow or
+non-finite results raise `S422` during evaluation. The expression is pure
+and requires no new runtime permissions.
+
+### Typed square roots
+
+`sqrt of NUMBER` computes a non-negative square root, returning `number`.
+For integer inputs, perfect squares retain an exact integer result—even
+when the square is larger than the exact integer range of f64. Non-perfect
+roots return finite decimals; decimal perfect squares yield integer results.
+
+```text
+assert (sqrt of 81) is equal to 9.
+assert (sqrt of (square of 12)) is equal to 12.
+let estimate be sqrt of 2.
+assert estimate is greater than 1.
+assert estimate is less than 2.
+```
+
+The contextual word `sqrt` remains a valid variable identifier unless
+followed by `of`. Wrong types produce `S423` at compile time. Negative
+or non-finite operands produce a located `S424` evaluation diagnostic.
+Square roots are pure, checked and can be constant-folded.
+
+### Typed even/odd predicates
+
+`even of NUMBER` and `odd of NUMBER` return `boolean`. Both work on
+exact signed 64-bit integers and integral finite decimals within that
+range, retaining correct parity even beyond 2^53 for integer values.
+
+```text
+assert even of 8.
+assert odd of (minus 3).
+let flags be map every n in (a list of 1, 2, 3) to (odd of n).
+assert (flags at 0).
+```
+
+`even` and `odd` remain contextual identifiers; only the `of` form is
+an operator. A non-number produces the located `S425` type diagnostic.
+Fractional or non-finite decimals and out-of-range numeric values produce
+`S426` rather than silently truncating. Both predicates are pure and
+constant-foldable, requiring no runtime permissions.
+
+### Round to nearest integer
+
+`round of NUMBER` rounds to the nearest whole number. Halfway cases are
+rounded **away from zero**, so `round of 2.5` is 3 and
+`round of (minus 2.5)` is -3. Integers remain exact, even above 2^53.
+Finite floating-point values become integers when the rounded value fits in
+signed 64-bit range; otherwise they remain floats without saturating casts.
+
+```text
+assert (round of 2.49) is equal to 2.
+assert (round of 2.5) is equal to 3.
+assert (round of (minus 2.5)) is equal to (minus 3).
+```
+
+The name `round` remains a valid identifier unless followed by `of`.
+Invalid operand types raise `S427` and non-finite values raise `S428`
+at evaluation. Rounding is pure and constant-foldable.
+
+### Truncate toward zero
+
+`truncate of NUMBER` removes the fractional part without rounding.
+Unlike `floor of`, negative values move **toward zero**:
+`truncate of (minus 2.9)` yields -2, whereas `floor of (minus 2.9)`
+yields -3.
+
+```text
+assert (truncate of 2.9) is equal to 2.
+assert (truncate of (minus 2.9)) is equal to (minus 2).
+```
+
+Exact integers stay unchanged, including signed 64-bit boundary values.
+Finite decimals are converted to integers only when safely representable;
+out-of-range results remain floats. The contextual word `truncate`
+remains a valid identifier unless followed by `of`.
+A wrong operand type raises `S429`; a non-finite operand raises `S430`.
+This is a pure, constant-foldable operation.
+
+### Checked factorial
+
+`factorial of NUMBER` computes the exact integer factorial for a
+non-negative integer from **0 through 20**, returning `number`. Both integer
+values and finite integral decimals in that range are supported; 20! fits
+signed 64-bit integer precision but 21! does not.
+
+```text
+assert (factorial of 0) is equal to 1.
+assert (factorial of 5) is equal to 120.
+assert (factorial of 20) is equal to 2432902008176640000.
+```
+
+Negative, fractional, non-finite and out-of-range values raise the located
+`S432` diagnostic, rather than overflowing or truncating. Non-number
+operands fail static checking with `S431`. The word `factorial` is
+contextual and can still be used as a variable name. Factorials are pure
+and constant-foldable.
+
+### Checked numeric cubes
+
+`cube of NUMBER` computes a pure cube with exact signed 64-bit integer
+arithmetic and finite decimal multiplication.
+
+```text
+assert (cube of 3) is equal to 27.
+assert (cube of (minus 2)) is equal to (minus 8).
+```
+
+Non-number inputs raise `S433` at type checking; integer overflow or
+non-finite results raise located `S434`. The contextual identifier
+`cube` remains a valid variable name unless followed by `of`.
+
+### Exact 64-bit prime predicate
+
+`prime of NUMBER` returns a `boolean` for signed 64-bit integral values
+using deterministic Miller–Rabin tests (not lossy floating-point division).
+Zero, one and negative integers return `false`.
+
+```text
+assert prime of 97.
+assert not (prime of 561).
+assert not (prime of 1).
+```
+
+Finite integral decimals within signed 64-bit range are accepted. Non-number
+operands raise `S435`; fractions, non-finite and out-of-range decimals
+produce located `S436`. The identifier `prime` stays usable as a
+variable unless followed by `of`. The predicate is pure.
+
+### Exact cube roots
+
+`cbrt of NUMBER` computes a real cube root. Perfect **integer** cubes
+produce exact signed 64-bit integer roots, including the minimum
+signed 64-bit integer; non-perfect integers and finite decimals yield
+floating-point results. Negative inputs are supported.
+
+```text
+assert (cbrt of 125) is equal to 5.
+assert (cbrt of (minus 27)) is equal to (minus 3).
+let estimate be cbrt of 2.
+assert estimate is greater than 1.
+assert estimate is less than 2.
+```
+
+Wrong operand types receive `S437`; non-finite numeric inputs receive
+`S438`. `cbrt` stays an ordinary variable name unless followed by `of`.
+The operation is pure and constant-foldable.
+
+### Numeric reciprocals
+
+`reciprocal of NUMBER` calculates `1 / NUMBER` as a floating-point
+number. It accepts signed integers and finite decimals, rejects positive and
+negative zero, and rejects non-finite inputs/results instead of silently
+returning infinity. The expression is pure and constant-foldable.
+
+```text
+assert (reciprocal of 4) is equal to 0.25.
+assert (reciprocal of (minus 2)) is equal to (minus 0.5).
+let samples be a list of 2, 4, 8.
+let inverses be map every n in samples to (reciprocal of n).
+```
+
+Non-number operands produce the source-located type error `S439`; invalid
+numeric values produce `S440`. `reciprocal` remains a normal identifier
+when not immediately followed by `of`, and requires no new capabilities.
+
+### Exact decimal digit counts
+
+`digits of NUMBER` returns the count of base-10 digits in an integer's
+absolute value: zero has one digit; the minus sign does not count.
+Unlike converting to floating point, it retains exact results for the full
+signed 64-bit range, including the most negative integer.
+
+```text
+assert (digits of 0) is equal to 1.
+assert (digits of (minus 100)) is equal to 3.
+assert (digits of 9007199254740993) is equal to 16.
+assert (digits of 100.0) is equal to 3.
+```
+
+Finite, integral decimals are allowed only within the signed 64-bit
+range. Non-numeric operands receive `S441`; fractions and out-of-range
+numeric values receive `S442` with a source location. The expression is
+pure, constant-foldable, permission-free, and `digits` remains an ordinary
+identifier unless followed by `of`.
+
+### Safe typed conversions from text
+
+`parse number from TEXT` and `parse boolean from TEXT` return checked
+`number` and `boolean` values. Surrounding whitespace is ignored. Boolean
+values must be `true` or `false`, case-insensitively. Numbers accept signed
+64-bit integers, finite decimals and exponent notation. Integer overflow
+is rejected rather than rounded to a floating-point value.
+
+```text
+let amount be parse number from " 125.5 ".
+let enabled be parse boolean from "TRUE".
+assert amount is greater than 125.
+assert enabled.
+```
+
+Non-string inputs are rejected during type checking (`S394`); invalid text
+produces a source-aware `S395` error during evaluation. Parsing is pure,
+does not silently coerce values, and `parse` remains an ordinary identifier.
+
+### Typed JSON decoding
+
+The `decode json as TYPE from TEXT` family reads a JSON document into a
+statically checked Semauri value. Supported types are `string`, `number`,
+`boolean`, `strings`, `numbers`, and `booleans` (the plural forms are
+homogeneous lists). JSON strings are unescaped by the decoder; JSON numbers,
+booleans, and arrays must match the requested type exactly.
+
+```text
+let names be decode json as strings from "[\\"Ada\\",\\"Grace\\"]".
+assert length of names is equal to 2.
+let threshold be decode json as number from "12.5".
+assert threshold is greater than 12.
+let flag be decode json as boolean from "true".
+assert flag.
+```
+
+Decoding is pure and uses a 1 MiB JSON text limit and a 10,000-item list limit.
+Malformed documents, unexpected JSON types, and unsupported shapes such as
+objects or nested arrays produce a located `S397` diagnostic. A non-string
+source produces a static `S396` diagnostic. JSON numeric values are finite,
+and integers larger than signed 64-bit range cannot be silently rounded. This
+is typed scalar and homogeneous-list decoding, not a general records/maps API.
+
+### JSON object inspection
+
+Use `keys of json DOCUMENT` to get a sorted `list<string>` of an object's
+field names, and `has json key KEY in DOCUMENT` to check a field's presence.
+Both operations parse the JSON document without external effects. Presence
+checks distinguish missing fields from fields containing JSON `null`.
+
+```text
+let document be "{\\"name\\":\\"Ada\\",\\"active\\":true}".
+let names be keys of json document.
+assert length of names is equal to 2.
+assert (names at 0) is equal to "active".
+assert has json key "name" in document.
+assert not (has json key "missing" in document).
+```
+
+Each operation requires string operands (`S398`). A malformed JSON value,
+non-object document, document over 1 MiB, or object over 10,000 unique keys
+produces the located diagnostic `S399`. Field names are matched exactly,
+and keys are returned in deterministic Unicode code-point order. These
+operations inspect object structure; they do not introduce mutable maps or
+untyped dynamic values.
+
+### Typed JSON field extraction
+
+Use `json TYPE at KEY in DOCUMENT` to read a field from a JSON object without
+introducing dynamic maps or implicit coercion. The six supported field types
+are `string`, `number`, `boolean`, `strings`, `numbers`, and `booleans`.
+Plural forms produce homogeneous lists with stable element types.
+
+```text
+let document be "{\\"name\\":\\"Ada\\",\\"score\\":42,\\"tags\\":[\\"compiler\\",\\"typed\\"]}".
+let name_value be json string at "name" in document.
+let score be json number at "score" in document.
+let tags be json strings at "tags" in document.
+assert name_value is equal to "Ada".
+assert score is greater than 40.
+assert (tags at 1) is equal to "typed".
+```
+
+The key and document must both be strings (`S400`). Missing fields, explicit
+JSON `null`, mismatched types, oversized documents, overflowing integer
+literals, and collections over the 10,000-item limit produce the located
+`S401` diagnostic. Field names are exact and case sensitive. The operation
+is deterministic and pure; it requires no new permissions.
+
+### Unicode characters and code points
+
+Pure conversions work with Unicode **scalar values**, not UTF-8 bytes:
+
+- `characters of TEXT` gives a `list<string>` of one-scalar strings.
+- `codepoints of TEXT` gives a `list<number>` of Unicode scalar numbers.
+- `codepoint of TEXT` reads the scalar value of a string containing exactly
+  one character.
+- `character from NUMBER` constructs a single-character string from a valid
+  signed integer code point.
+
+```text
+let glyphs be characters of "Aé🙂".
+let numbers be codepoints of "Aé🙂".
+assert length of glyphs is equal to 3.
+assert (numbers at 1) is equal to 233.
+let emoji be character from 128578.
+assert codepoint of emoji is equal to 128578.
+```
+
+The compiler reports `S408` for incorrect operand types. Invalid Unicode
+values (including surrogates, non-integer numbers, or numbers above U+10FFFF),
+empty/multi-character input to `codepoint of`, and lists over 10,000
+characters report `S409` at evaluation. No extra capabilities or dependencies
+are needed. Multi-codepoint grapheme clusters may produce multiple list entries.
+
+### Direct Unicode character indexing
+
+`character at INDEX in TEXT` extracts a single Unicode scalar from a string.
+The index is zero based, and indexing counts Unicode scalars rather than UTF-8
+bytes. The result is a new `string`.
+
+```text
+let text be "Aé🙂".
+assert (character at 0 in text) is equal to "A".
+assert (character at 1 in text) is equal to "é".
+assert (character at 2 in text) is equal to "🙂".
+```
+
+The compiler requires a `number` and a `string` (`S410`).
+Fractional, negative or out-of-range indices produce a located `S411`
+diagnostic during evaluation. No implicit rounding is allowed, and no
+new effects are required. Valid literal lookups are constant-folded.
+
+### Unicode string slicing with take and drop
+
+The existing list operations `take COUNT from COLLECTION` and
+`drop COUNT from COLLECTION` now accept strings. They return a new
+string containing the first `COUNT` Unicode scalar values, or the
+characters after the first `COUNT`, respectively.
+
+```text
+let name be "café".
+assert take 3 from name is equal to "caf".
+assert drop 3 from name is equal to "é".
+assert take 100 from name is equal to name.
+```
+
+Counts must be nonnegative integers; invalid values produce `S364`.
+Out-of-range counts clamp to the string length. Existing typed-list
+behavior is unchanged. These pure operators count Unicode scalar values,
+not bytes or extended grapheme clusters.
+
+### Nested JSON pointer extraction
+
+The pure expression `json at pointer POINTER in DOCUMENT` selects a
+nested JSON value using an RFC 6901 pointer and returns a `string`
+containing the **serialized JSON value**. Pair it with existing
+`decode json as TYPE from` for a statically checked scalar or list.
+
+```text
+let document be "{\\"users\\":[{\\"name\\":\\"Ada\\"}]}".
+let selected be json at pointer "/users/0/name" in document.
+let name_value be decode json as string from selected.
+assert name_value is equal to "Ada".
+```
+
+Paths start with `/`; an empty pointer selects the whole document.
+Segments use `~1` to escape `/` and `~0` to escape `~`.
+Array indexes are zero-based with no leading zeroes; missing or invalid
+paths produce `S407`. Both operands must be strings (`S406`).
+The JSON input is capped at 1 MiB and path depth at 64 segments.
+This expression does not grant network or filesystem permissions, and
+does not change the existing exact top-level `json TYPE at KEY` syntax.
+
+### Unicode text searching
+
+Use `occurrences of NEEDLE in TEXT` to count **non-overlapping** matches,
+or `position of NEEDLE in TEXT` to find the **first match**. Positions are
+zero-based Unicode scalar-value indices, not UTF-8 byte offsets. A missing
+match returns `-1`, and an empty position needle returns `0`.
+
+```text
+let text be "café café".
+assert occurrences of "café" in text is equal to 2.
+assert position of "é" in text is equal to 3.
+assert position of "missing" in text is equal to minus 1.
+```
+
+Both operations return `number` and statically require two strings (`S402`).
+Counting occurrences of an empty needle is rejected with a located `S403`
+diagnostic. They are deterministic, case sensitive, require no new effects,
+and support compile-time constant folding. Search results count Unicode
+scalar values, not extended grapheme clusters or locale-sensitive matches.
+
+### Unicode substring positions
+
+`positions of NEEDLE in TEXT` returns a `list<number>` with every
+**non-overlapping** match position, counted in zero-based Unicode scalar
+values. No matches returns a typed empty list. `last position of NEEDLE in
+TEXT` returns the **rightmost** match position as a `number`, or
+`minus 1` when absent. For an empty needle, `last position` returns
+the Unicode scalar length of the text.
+
+```text
+let positions_found be positions of "é" in "café café".
+assert length of positions_found is equal to 2.
+assert (positions_found at 0) is equal to 3.
+assert (positions_found at 1) is equal to 8.
+assert last position of "é" in "café café" is equal to 8.
+```
+
+Both operators require string operands and reject type mismatches at compile
+time (`S414`). `positions of` requires a nonempty needle and permits at
+most 10,000 matches (`S415`). Matching is Unicode-aware, case-sensitive,
+pure and literal (not a regular expression). Constant inputs are folded to
+typed HIR expressions; invalid expressions retain diagnostics. The rightmost
+match may overlap an earlier match, as in Rust's `rfind`.
+
+### Literal substring removal
+
+`remove all of NEEDLE from TEXT` removes every **non-overlapping literal**
+match of `NEEDLE` from `TEXT`, returning a new string. Search is
+case-sensitive, Unicode-aware, and does not interpret the needle as a regular
+expression. If the needle is missing, the input text is unchanged.
+
+```text
+let cleaned be remove all of "é" from "café café".
+assert cleaned is equal to "caf caf".
+let compact be remove all of "aa" from "aaaaa".
+assert compact is equal to "a".
+```
+
+Both operands must be strings (`S412`). Empty needles produce a located
+`S413` error. Valid literal expressions can be constant-folded, the
+operation has no external effects, and the existing `remove` domain action
+remains reserved for its established operation syntax.
+
+### Natural-language string predicates
+
+Use `TEXT starts with PREFIX` and `TEXT ends with SUFFIX` to validate names,
+file extensions, routing paths, and other structured text. Both expressions
+return `boolean`, compare Unicode strings without locale-dependent coercion,
+and accept empty prefixes or suffixes. Type mismatches report `S391`.
+
+```text
+let filename be "report.json".
+let is_json be filename ends with ".json".
+let is_report be filename starts with "report".
+assert is_json and is_report.
+```
+
+These are pure operations; no new effect grants are required. Their words remain
+ordinary identifiers when they are not used as the complete operator phrase.
+
+### Control flow and scope
+
+```text
+let score be 91.
+
+if score is greater than or equal to 90:
+  print "excellent".
+otherwise if score is greater than or equal to 70:
+  print "pass".
+otherwise:
+  print "retry".
+end.
+
+unless false:
+  print "runs".
+end.
+```
+
+Branches and iteration bodies have lexical scope. Functions are pure, must be declared before use, accept 1–16 typed parameters, and have inferred return types.
+
+## Effects and safe execution
+
+Compilation is deterministic and does not grant capabilities. Inspect requirements explicitly:
+
+```sh
+semauri effects program.suri
+semauri plan program.suri
+semauri graph program.suri
+```
+
+Execution requires named grants:
+
+```sh
+semauri run --allow console_write program.suri
+semauri run --allow filesystem_read --allow filesystem_write program.suri
+```
+
+Use `--dry-run` when you need the output plan without performing effects.
+
+## `.config.suri`
+
+Project configuration uses typed JSON parameters and named environment bindings:
+
+```text
+parameter model = "local/default".
+parameter max_tokens = 1024.
+parameter temperature = 0.2.
+environment model_api_key = "SEMAURI_MODEL_API_KEY".
+```
+
+Validate it without exposing environment values:
+
+```sh
+semauri config
+semauri config .config.suri --set temperature=0.0
+semauri config .config.suri --check-env
+```
+
+`--set` may override only declared parameters and accepts a JSON value. Environment bindings are resolved lazily from the process environment; summaries report only the variable name and whether it is set, never its value. Do not commit credentials.
+
+Programs read declared bindings at runtime with an explicit `config_read` effect:
+
+```text
+let model_identifier be string config "model".
+let max_turns be number config "max_turns".
+let safe_mode be boolean config "safe_mode".
+```
+
+`semauri run` discovers the nearest `.config.suri`, starting beside the source file and walking toward the filesystem root. Use `--config PATH` to select one explicitly or `--set NAME=JSON_VALUE` to override a declared parameter. Each binding is resolved only when the program reads it; unrelated environment secrets are never loaded.
+
+## Assertions and tests
+
+```text
+let result be (6 times 7).
+assert result is equal to 42.
+```
+
+```sh
+semauri test examples/test_suite
+semauri test path/to/tests --allow-console
+semauri test path/to/tests --json
+semauri test path/to/tests --filter module/math
+```
+
+The test runner recursively discovers `.suri` files, does not follow symbolic links, requires an executable assertion, and rejects non-console effects. Test discovery excludes build caches and configuration files and is limited to 256 sources and 32 directory levels.
+
+Use `--json` for editor and CI integrations: the response contains `ok`, `status`, `passed`, `failed`, and an ordered `tests` array. Each test reports `path`, `ok`, and `error` for failures. Discovery/usage errors return exit status 64 with an `error` field and empty `tests`; failing suites return status 1. JSON output does not relax runtime capability checks. For a focused run, `--filter TEXT` selects test files whose relative path contains that exact, case-sensitive substring (forward slashes on every platform). No matches is a usage error with exit status 64; filtering never authorizes additional effects.
+
+## LLM and VLM primitives
+
+Semauri provides typed, provider-neutral primitives for language models, vision models, embeddings, tools, and bounded agents. They compile into an inspectable runtime plan. The built-in deterministic adapter executes `local/*` identifiers without network access; hosted identifiers require a provider adapter.
+
+```text
+let model_identifier be string config "language_model".
+let request_budget be number config "request_budget".
+cap ai requests to request_budget.
+reattempt ai requests 2 attempts.
+memoize ai response cache.
+let model be connect language model model_identifier.
+let assistant be compose agent using model system "Answer briefly." max 4 turns.
+let answer be ask assistant with "Summarize the supplied context.".
+print answer.
+```
+
+```text
+let model_identifier be string config "vision_model".
+let model be activate vision model model_identifier.
+let description be inspect image "sample.png" using model with "Describe visible facts.".
+print description.
+```
+
+Available primitives:
+
+- `connect language model IDENTIFIER`
+- `activate vision model IDENTIFIER`
+- `cap ai requests to NUMBER`
+- `reattempt ai requests NUMBER attempts`
+- `memoize ai response cache`
+- `prompt MODEL with TEXT`
+- `inspect image PATH using MODEL with TEXT`
+- `embed TEXT using MODEL`
+- `declare tool NAME schema JSON_SCHEMA`
+- `compose agent using MODEL system TEXT max NUMBER turns`
+- `ask AGENT with TEXT`
+
+Language-model and vision-model handles are distinct nominal types. Configuration reads, network, model loading, inference, image reads, console output, and tool execution remain explicit effects. Compilation never contacts a provider or reads credentials.
+
+Request limits reject additional uncached inference once exhausted. The response cache is in-memory and scoped to one program run. Retry policy is stored by the runtime for provider adapters; the deterministic local adapter does not manufacture transient failures.
+
+## Capability roadmap
+
+Semauri is useful today for deterministic programs and inspectable local AI workflows. The larger runtime is intentionally being built in layers. Important capabilities not yet claimed as complete are:
+
+- hosted-provider adapters with streaming, timeouts, rate limits, retry backoff, and fallback chains;
+- structured records/maps, JSON decoding, typed extraction, classification, and schema validation;
+- multi-turn conversation values, tool dispatch with validated arguments, execution traces, and cost accounting;
+- HTTP, general file I/O, command-line input, persistent key-value storage, vector search, and text chunking;
+- recoverable errors, modules/imports, packages, macros, pattern matching, and richer numeric types;
+- formatter/editor services, debugger integration, a REPL, standalone builds, and WebAssembly tooling.
+
+New runtime features should preserve the existing rules: typed inputs, immutable values, explicit capabilities, deterministic local tests, inspectable plans, and no secret values in diagnostics.
+
+## Declarative programs
+
+Semauri can build checked web, structured-data, and filesystem artifacts. Use a domain scope when operations need one:
+
+```text
+within web:
+  create a web called Example.
+  add a button called Start.
+  set its color to blue.
+end.
+```
+
+```sh
+semauri build page.suri
+semauri build page.suri -o page.html
+```
+
+## Compiler commands
+
+| Command | Purpose |
+| --- | --- |
+| `config [PATH]` | Validate parameters and environment bindings |
+| `check FILE` | Type-check and validate source |
+| `fmt FILE [--check\|--write]` | Enforce canonical lowercase syntax |
+| `tokens`, `ast`, `hir`, `optimize` | Inspect compiler stages |
+| `symbols FILE` | Inspect typed names and symbol metadata |
+| `explain FILE [--json]` | Explain compiler/lowering decisions as numbered text or structured JSON, without executing |
+| `effects`, `plan`, `graph` | Inspect capabilities and runtime dataflow |
+| `build FILE [-o PATH]` | Render build-time artifacts |
+| `run FILE --allow EFFECT` | Execute supported effects explicitly |
+| `test PATH` | Run assertion suites |
+| `domains` | Print registered operation metadata |
+| `version` | Print the compiler version |
+
+Add `--json` to supported inspection and validation commands when consuming output programmatically.
+
+## Repository map
+
+- `src/compiler/frontend/`: tokens, parser, AST, and formatting.
+- `src/compiler/semantic/`: typed HIR and semantic analysis.
+- `src/compiler/runtime/`: lowering, effects, dataflow, and execution plans.
+- `src/compiler/domains/`: registered declarative and runtime operations.
+- `src/compiler/backends/`: renderers, CLI execution, and test runner.
+- `examples/`: checked runnable programs.
+- `learn_to_code/`: English and Spanish courses.
+- `tests/`: compiler and language contracts.
+- `editors/vscode/`: installable VS Code metadata and the canonical `source.semauri` TextMate grammar.
+
+## Editor and GitHub highlighting
+
+The repository includes a TextMate grammar for `.suri` and `.config.suri` files under `editors/vscode/`. It provides local VS Code highlighting now and is also published in the dedicated [semauri-language](https://github.com/edujbarrios/semauri-language) repository as the canonical public grammar for future GitHub Linguist integration.
+
+GitHub only adds a new language after its public-usage threshold is met. Until `.suri` has sufficient independently distributed usage, GitHub will not provide official `semauri` fenced-code highlighting or a Semauri language bar entry. Do not mislabel Semauri as another language in `.gitattributes`; that would make repository statistics inaccurate.
+
+## Contribution contract
+
+Every language change should include parser/type/runtime coverage as applicable, a runnable `.suri` example, updates to the appropriate language guide or Quick Start, and passing tests. Preserve stable diagnostic codes and source spans. Keep effects explicit and never make compilation perform network, filesystem, model, or process work.
+
+```sh
+cargo test
+cargo fmt --check
+```
+
+Licensed under Apache-2.0. See [LICENSE](../LICENSE).
