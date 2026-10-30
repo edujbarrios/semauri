@@ -16,7 +16,7 @@ import time
 EXPECTED = (
     "Linear regression (ordinary least squares)\n"
     "Training observations:\n5\n"
-    "Learned slope:\n2\n"
+    "Learned slope:\n2.0\n"
     "Learned intercept:\n1\n"
     "Prediction for x=6:\n13\n"
 )
