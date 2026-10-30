@@ -1,6 +1,7 @@
 [package]
 name = "semauri"
 version = "0.56.0"
+# Retain version: this metadata change re-triggers the corrected six-platform release build.
 edition = "2021"
 rust-version = "1.83"
 description = "Natural-language-inspired programming language for humans and AI agents"
