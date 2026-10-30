@@ -287,7 +287,7 @@ Comments begin with `#`, `//`, or a nestable `/* ... */` block. Keywords are cas
 
 ### Types
 
-- `number`: checked signed integers and finite decimal values.
+- `number`: checked signed integers and finite decimal values. Integer literals also accept `0b` (binary), `0o` (octal), and `0x` (hexadecimal) prefixes, in either case, with optional `_` separators between digits; e.g. `0b1010_0101`, `0o755`, `0xFF`. These literals must fit a signed 64-bit integer.
 - `string`: UTF-8 text.
 - `boolean`: `true` or `false`.
 - `color`: named color values used by declarative programs.
