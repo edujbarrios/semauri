@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use Semauri in research, please cite the software using the metadata in this file."
+type: software
+title: "Semauri: A natural-language-inspired programming language for humans and AI agents"
+abstract: "Semauri is a statically typed, natural-language-inspired programming language with deterministic compiler behavior and inspectable AI workflows."
+authors:
+  - family-names: Barrios
+    given-names: "Eduardo J."
+repository-code: "https://github.com/edujbarrios/semauri"
+url: "https://github.com/edujbarrios/semauri"
+license: Apache-2.0
+version: 0.52.0
+date-released: 2026-10-30
