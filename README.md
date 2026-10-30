@@ -6,6 +6,73 @@ Semauri is statically typed, with deterministic programs and inspectable AI work
 
 Current release: **0.55.0**. The compiler is written in Rust and runs on Windows, macOS, and Linux.
 
+## See Semauri run a real AI algorithm: linear regression
+
+**A recognizable ML algorithm, implemented from scratch in Semauri.**
+Using five training samples from the line **y = 2x + 1**, the program
+computes ordinary least-squares (OLS) coefficients and predicts the value at x = 6.
+No Python ML library, pretrained model, provider API, or hidden training runtime:
+the computation uses Semauri's typed lists, `map every`, `zip every`, numeric
+reductions, and arithmetic. The full, executable program is
+[`examples/linear_regression.suri`](examples/linear_regression.suri), adapted from
+the [linear regression algorithm in edujbarrios-ai](https://github.com/edujbarrios/edujbarrios-ai/tree/main/algorithms/02_classical_ml/linear_regression).
+
+Core of the fitted model:
+
+```text
+let x_values be a list of 0, 1, 2, 3, 4.
+let y_values be a list of 1, 3, 5, 7, 9.
+let x_mean be average of x_values.
+let y_mean be average of y_values.
+let centered_x be map every x in x_values to (x minus x_mean).
+let centered_y be map every y in y_values to (y minus y_mean).
+let squares be map every dx in centered_x to (dx times dx).
+let cross_products be zip every dx in centered_x with dy in centered_y to (dx times dy).
+let variance_sum be sum of squares.
+let covariance_sum be sum of cross_products.
+let slope be covariance_sum divided by variance_sum.
+let intercept be y_mean minus (slope times x_mean).
+let prediction be intercept plus (slope times 6).
+```
+
+**Verified program output** (`cargo build --release --locked` followed by
+`target/release/semauri run --allow console_write examples/linear_regression.suri`):
+
+```console
+$ semauri run --allow console_write examples/linear_regression.suri
+Linear regression (ordinary least squares)
+Training observations:
+5
+Learned slope:
+2.0
+Learned intercept:
+1
+Prediction for x=6:
+13
+```
+
+**Measured execution time (not estimated):** **2.159 ms** for the first
+invocation; **1.802 ms median** over 101 subsequent invocations, following
+3 warmups. Measured on a GitHub-hosted **Ubuntu 24.04 / Linux x86_64** runner
+using the optimized Rust binary on **2026-10-30**.
+Wall time includes CLI startup, parsing/type-checking, program evaluation and
+process exit; **compilation time is excluded**. These small-program results
+vary with host load and are not a cross-language performance comparison.
+See the [successful GitHub Actions benchmark run](https://github.com/edujbarrios/semauri/actions/runs/41132112869)
+for the measured stdout, methodology and timing.
+
+To reproduce the check and timing on your machine:
+
+```bash
+cargo build --release --locked
+python3 scripts/benchmark_linear_regression.py --samples 101
+```
+
+The benchmark verifies stdout on **every** measured run; Rust tests also
+verify the predicted coefficients and that console effects require explicit
+permission. This is a one-feature, illustrative OLS fit—not a claim of
+a general-purpose neural-network training engine.
+
 ## Citation
 
 If Semauri supports your research, paper, or teaching material, please cite
