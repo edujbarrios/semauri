@@ -17,9 +17,9 @@ from ipykernel.kernelbase import Kernel
 
 class SemauriKernel(Kernel):
     implementation = "semauri"
-    implementation_version = "0.1.0"
+    implementation_version = "0.2.0"
     language = "semauri"
-    language_version = "0.56"
+    language_version = "0.57"
     language_info = {
         "name": "semauri",
         "mimetype": "text/x-semauri",
@@ -29,11 +29,39 @@ class SemauriKernel(Kernel):
     }
     banner = "Semauri Jupyter kernel — standalone, capability-checked .suri cells"
 
-    KEYWORDS = ("let", "be", "print", "assert", "range", "from", "to", "of", "number", "string",
-                "boolean", "map", "filter", "count", "reduce", "every", "if", "otherwise",
-                "end", "within", "define", "function", "taking", "invoke", "square", "sqrt",
-                "round", "truncate", "factorial", "even", "odd", "true", "false",
-                "cube", "cbrt", "reciprocal", "digits", "prime", "capitalize", "swapcase", "uncapitalize", "titlecase")
+    # Completes names from this cell only; it never executes previous cells.
+    KEYWORDS = (
+        "let", "be", "print", "assert", "range", "from", "to", "of", "number",
+        "string", "boolean", "map", "filter", "count", "reduce", "every",
+        "if", "otherwise", "unless", "end", "within", "define", "function",
+        "taking", "invoke", "import", "square", "sqrt", "round", "truncate",
+        "factorial", "even", "odd", "true", "false", "cube", "cbrt",
+        "reciprocal", "digits", "prime", "capitalize", "swapcase",
+        "uncapitalize", "titlecase", "sum", "average", "variance", "stdev",
+        "power", "exp", "ln", "sin", "cos", "minimum", "maximum", "median",
+        "sorted", "distinct", "flatten", "partition", "split", "join",
+        "floor", "ceiling", "length", "reverse", "take", "drop", "json", "parse",
+    )
+
+    # Offline help for frequently used Semauri expressions and notebook magics.
+    # This is deliberately descriptive, never a runtime evaluation.
+    KEYWORD_HELP = {
+        "let": "let name be EXPRESSION. Create an immutable binding.",
+        "print": "print EXPRESSION. Requires the console_write capability.",
+        "assert": "assert CONDITION. Stop when a condition is false.",
+        "define": "define function NAME taking x as number to EXPRESSION.",
+        "invoke": "invoke FUNCTION to ARGUMENT. Call a defined function.",
+        "import": 'import "lib/module.suri". Load functions from a local module.',
+        "map": "map every item in ITEMS to EXPRESSION. Transform a list.",
+        "filter": "filter every item in ITEMS where CONDITION. Filter a list.",
+        "variance": "variance of VALUES. Population variance of numeric values.",
+        "stdev": "stdev of VALUES. Population standard deviation.",
+        "power": "power of BASE to EXPONENT. Checked numeric exponentiation.",
+        "%%check": "%%check\nSOURCE. Check source without executing effects.",
+        "%%audit": "%%audit\nSOURCE. Show the compiler's ML audit report.",
+        "%%fmt": "%%fmt\nSOURCE. Print formatting without changing the cell.",
+        "%%effects": "%%effects\nSOURCE. Inspect required capabilities.",
+    }
 
     @staticmethod
     def parse_cell(code):
@@ -47,7 +75,8 @@ class SemauriKernel(Kernel):
                     "%%effects": "effects", "%%plan": "plan",
                     "%%tokens": "tokens", "%%ast": "ast", "%%hir": "hir",
                     "%%optimize": "optimize", "%%symbols": "symbols",
-                    "%%graph": "graph", "%%fmt": "fmt"}
+                    "%%graph": "graph", "%%fmt": "fmt",
+                    "%%audit": "audit"}
         if words[0] not in commands:
             raise ValueError(f"Unknown Semauri cell directive: {words[0]}")
         json_mode = (len(words) == 2 and words[1] == "--json"
@@ -72,7 +101,7 @@ class SemauriKernel(Kernel):
             raise ValueError("SEMAURI_ALLOW_EFFECTS contains an invalid effect name")
         if command not in ("run", "check", "explain", "effects", "plan",
                            "tokens", "ast", "hir", "optimize", "symbols",
-                           "graph", "fmt"):
+                           "graph", "fmt", "audit"):
             raise ValueError("Unsupported Semauri command")
         if json_output and command not in ("check", "explain"):
             raise ValueError("JSON diagnostics are not supported for this command")
@@ -152,11 +181,38 @@ class SemauriKernel(Kernel):
                 path.unlink(missing_ok=True)
 
     def do_complete(self, code, cursor_pos):
-        match = re.search(r"[A-Za-z_]+$", code[:cursor_pos])
+        before = code[:cursor_pos]
+        match = re.search(r"[A-Za-z_][A-Za-z0-9_]*$", before)
         if match is None:
             return {"matches": [], "cursor_start": cursor_pos,
                     "cursor_end": cursor_pos, "metadata": {}, "status": "ok"}
-        return {"matches": sorted(k for k in self.KEYWORDS
-                                  if k.startswith(match.group().lower())),
+        prefix = match.group().lower()
+        candidates = set(self.KEYWORDS)
+        # Scope suggestions to this cell. No replay of previous cells, imports,
+        # external process, permissions or background compiler execution.
+        for line in before.splitlines():
+            if line.lstrip().startswith(("#", "//", "%%")):
+                continue
+            declarations = re.finditer(
+                r"\blet\s+([A-Za-z_][A-Za-z0-9_]*)\s+be\b"
+                r"|\bdefine\s+function\s+([A-Za-z_][A-Za-z0-9_]*)\b",
+                line, flags=re.IGNORECASE,
+            )
+            for declaration in declarations:
+                candidates.add(declaration.group(1) or declaration.group(2))
+        return {"matches": sorted(
+                    (name for name in candidates if name.lower().startswith(prefix)),
+                    key=lambda name: (name.lower(), name)),
                 "cursor_start": match.start(), "cursor_end": cursor_pos,
                 "metadata": {}, "status": "ok"}
+
+    def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
+        # Jupyter requests contextual help at the cursor. Never execute code
+        # just to display help or request capabilities on a hover.
+        word = re.search(r"(?:%%)?[A-Za-z_][A-Za-z0-9_]*$", code[:cursor_pos])
+        description = (self.KEYWORD_HELP.get(word.group().lower())
+                       if word else None)
+        if not description:
+            return {"status": "ok", "found": False, "data": {}, "metadata": {}}
+        return {"status": "ok", "found": True,
+                "data": {"text/plain": description}, "metadata": {}}

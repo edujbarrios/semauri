@@ -8,6 +8,7 @@ class MagicTests(unittest.TestCase):
         self.assertEqual(parse("%%check\nassert true."), ("check", False, "assert true."))
         self.assertEqual(parse("%%explain --json\nprint 1."), ("explain", True, "print 1."))
         self.assertEqual(parse("%%effects\nprint 1."), ("effects", False, "print 1."))
+        self.assertEqual(parse("%%audit\nassert true."), ("audit", False, "assert true."))
         self.assertEqual(parse("print 1."), ("run", False, "print 1."))
         for text in ("%%sh\necho unsafe", "%%explain --unsafe\nprint 1."):
             with self.assertRaises(ValueError):
@@ -21,7 +22,7 @@ class MagicTests(unittest.TestCase):
 
     def test_new_read_only_inspection_directives(self):
         parse = SemauriKernel.parse_cell
-        inspection = ("tokens", "ast", "hir", "optimize", "symbols", "graph", "fmt")
+        inspection = ("tokens", "ast", "hir", "optimize", "symbols", "graph", "fmt", "audit")
         for command in inspection:
             with self.subTest(command=command):
                 self.assertEqual(parse("%%" + command + "\nprint 1."),
