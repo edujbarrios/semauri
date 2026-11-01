@@ -17,9 +17,9 @@ from ipykernel.kernelbase import Kernel
 
 class SemauriKernel(Kernel):
     implementation = "semauri"
-    implementation_version = "0.4.0"
+    implementation_version = "0.5.0"
     language = "semauri"
-    language_version = "0.59"
+    language_version = "0.60"
     language_info = {
         "name": "semauri",
         "mimetype": "text/x-semauri",
@@ -33,14 +33,14 @@ class SemauriKernel(Kernel):
     KEYWORDS = (
         "let", "be", "print", "assert", "range", "from", "to", "of", "number",
         "string", "boolean", "map", "filter", "count", "reduce", "every",
-        "if", "otherwise", "unless", "end", "within", "define", "function",
+        "if", "when", "otherwise", "unless", "end", "within", "define", "function",
         "taking", "invoke", "import", "square", "sqrt", "round", "truncate",
         "factorial", "even", "odd", "true", "false", "cube", "cbrt",
         "reciprocal", "digits", "prime", "capitalize", "swapcase",
         "uncapitalize", "titlecase", "sum", "average", "variance", "stdev",
         "power", "exp", "ln", "log2", "log10", "sin", "cos",
         "asin", "acos", "atan", "sinh", "cosh", "tanh", "minimum", "maximum", "median",
-        "sorted", "distinct", "flatten", "partition", "split", "join",
+        "sorted", "distinct", "flatten", "partition", "split", "join", "joined", "different",
         "floor", "ceiling", "length", "reverse", "take", "drop", "json", "parse",
     )
 
@@ -48,6 +48,9 @@ class SemauriKernel(Kernel):
     # This is deliberately descriptive, never a runtime evaluation.
     KEYWORD_HELP = {
         "let": "let name be EXPRESSION. Create an immutable binding.",
+        "when": "when CONDITION: ... otherwise: ... end. Synonym for if.",
+        "joined": "LEFT joined with RIGHT. Concatenate two strings only.",
+        "different": "LEFT is different from RIGHT. Strict inequality.",
         "print": "print EXPRESSION. Requires the console_write capability.",
         "assert": "assert CONDITION. Stop when a condition is false.",
         "define": "define function NAME taking x as number to EXPRESSION.",

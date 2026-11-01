@@ -1,3 +1,12 @@
+## 0.60.0 — 2026-11-01
+
+### Natural language and typed expressions
+- Resolve the historical PR #109 against the Rust compiler, preserving already-existing typed `is not equal to`.
+- Add `joined with` as left-associative, string-only concatenation, type diagnostics `S343`, optimized folding and formatter support.
+- Introduce `when` / `otherwise when` for conditionals and `is different from` for strictly typed inequality.
+- Expand VS Code syntax, Jupyter completions/help, examples, tests and reference docs.
+- Include Python-like `for item in values` and `for each item in values` from merged PR #299.
+
 ## 0.59.0 — 2026-11-01
 
 - Add checked, pure `sinh of`, `cosh of` and `tanh of` numeric operators with type diagnostics, optimizer support and regression tests.

@@ -1124,6 +1124,15 @@ fn binary_type(
                 ))
             }
         }
+        BinaryOperator::Concat => {
+            if left == &Type::String && right == &Type::String {
+                Ok(Type::String)
+            } else {
+                Err(SemauriError::semantic("S343",
+                    format!("'joined with' requires string operands, got {left} and {right}"),
+                    Some(span), None))
+            }
+        }
         BinaryOperator::Subtract
         | BinaryOperator::Multiply
         | BinaryOperator::Divide

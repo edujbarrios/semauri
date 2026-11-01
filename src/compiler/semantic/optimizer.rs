@@ -853,7 +853,7 @@ fn eval_constant_binary(
                 a.as_f64() + b.as_f64(),
             )))
         }
-        (BinaryOperator::Add, ValueData::String(a), ValueData::String(b)) => {
+        (BinaryOperator::Add | BinaryOperator::Concat, ValueData::String(a), ValueData::String(b)) => {
             Some(ValueData::String(format!("{a}{b}")))
         }
         (BinaryOperator::Subtract, ValueData::Number(a), ValueData::Number(b)) => {

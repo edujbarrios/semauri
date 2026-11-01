@@ -786,7 +786,7 @@ fn keyword_kind(word: &str) -> Option<TokenKind> {
         "let" => TokenKind::Let,
         "be" => TokenKind::Be,
         "set" => TokenKind::Set,
-        "if" => TokenKind::If,
+        "if" | "when" => TokenKind::If,
         "unless" => TokenKind::Unless,
         "otherwise" | "else" => TokenKind::Otherwise,
         "end" => TokenKind::End,

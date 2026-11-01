@@ -152,6 +152,7 @@ impl UnaryOperator {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BinaryOperator {
     Add,
+    Concat,
     Subtract,
     Multiply,
     Divide,
@@ -194,6 +195,7 @@ impl BinaryOperator {
     fn as_str(&self) -> &'static str {
         match self {
             BinaryOperator::Add => "add",
+            BinaryOperator::Concat => "concat",
             BinaryOperator::Subtract => "subtract",
             BinaryOperator::Multiply => "multiply",
             BinaryOperator::Divide => "divide",

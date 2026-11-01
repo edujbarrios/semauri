@@ -577,7 +577,7 @@ impl<'a> Parser<'a> {
     }
 
     fn comparison(&mut self) -> Result<Expr> {
-        let left = self.additive()?;
+        let left = self.concatenative()?;
         // Natural-language predicates are contextual pairs, not reserved words.
         if self.check(TokenKind::Word)
             && matches!(self.peek().lexeme.to_ascii_lowercase().as_str(), "starts" | "ends")
@@ -590,7 +590,7 @@ impl<'a> Parser<'a> {
                 BinaryOperator::EndsWith
             };
             self.advance(); // contextual 'with'
-            let right = self.additive()?;
+            let right = self.concatenative()?;
             return Ok(Expr::Binary {
                 span: span_between_spans(left.span(), right.span()),
                 left: Box::new(left),
@@ -604,7 +604,7 @@ impl<'a> Parser<'a> {
             } else {
                 BinaryOperator::AtIndex
             };
-            let right = self.additive()?;
+            let right = self.concatenative()?;
             let span = span_between_spans(left.span(), right.span());
             return Ok(Expr::Binary {
                 left: Box::new(left),
@@ -666,6 +666,12 @@ impl<'a> Parser<'a> {
                 "S224",
             )?;
             BinaryOperator::Equal
+        } else if self.check(TokenKind::Word)
+            && self.peek().lexeme.eq_ignore_ascii_case("different")
+        {
+            self.advance();
+            self.consume(TokenKind::From, "Expected 'from' after 'is different'", "S224")?;
+            BinaryOperator::NotEqual
         } else if self.matches(&[TokenKind::Not]) {
             self.consume(
                 TokenKind::Equal,
@@ -690,7 +696,7 @@ impl<'a> Parser<'a> {
             ));
         };
 
-        let right = self.additive()?;
+        let right = self.concatenative()?;
         let span = span_between_spans(left.span(), right.span());
         Ok(Expr::Binary {
             left: Box::new(left),
@@ -698,6 +704,28 @@ impl<'a> Parser<'a> {
             right: Box::new(right),
             span,
         })
+    }
+
+    // Contextual natural-language concatenation, left associative.
+    fn concatenative(&mut self) -> Result<Expr> {
+        let mut expression = self.additive()?;
+        while self.check(TokenKind::Word)
+            && self.peek().lexeme.eq_ignore_ascii_case("joined")
+            && self.tokens.get(self.current + 1).is_some_and(|next|
+                next.kind == TokenKind::Word && next.lexeme.eq_ignore_ascii_case("with"))
+        {
+            self.advance(); // joined
+            self.advance(); // with
+            let right = self.additive()?;
+            let span = span_between_spans(expression.span(), right.span());
+            expression = Expr::Binary {
+                left: Box::new(expression),
+                operator: BinaryOperator::Concat,
+                right: Box::new(right),
+                span,
+            };
+        }
+        Ok(expression)
     }
 
     fn additive(&mut self) -> Result<Expr> {
