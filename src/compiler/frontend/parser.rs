@@ -476,11 +476,9 @@ impl<'a> Parser<'a> {
     }
 
     fn for_statement(&mut self, start: &Token) -> Result<Stmt> {
-        self.consume(
-            TokenKind::Every,
-            "Expected 'every' after 'For'",
-            "S228",
-        )?;
+        // Natural shorthand: both 'for every item in items' and
+        // Python-like 'for item in items' bind the same typed iterator.
+        self.matches(&[TokenKind::Every]);
         let variable = self.consume(
             TokenKind::Word,
             "Expected an iteration variable after 'For every'",
