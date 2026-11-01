@@ -61,7 +61,9 @@ end.
 
 Open [the example notebook](examples/hello_semauri.ipynb), choose the
 **Semauri** kernel, then execute each independent cell. Keyword
-completion includes locally declared names and scientific operators.
+completion includes locally declared names and scientific operators, including
+`log2`, `log10`, `asin`, `acos` and `atan`. These numerical functions use
+real-valued domains and radians for inverse trigonometry.
 Use Shift+Tab for offline contextual help on common keywords and directives;
 completion and inspection never run a cell or grant capabilities.
 JupyterLab and Notebook work without `anywidget`

@@ -41,7 +41,7 @@ otherwise:
 end.
 ```
 
-Lists support `map every`, `filter every`, `reduce every`, `zip every`, `sum of`, `average of`, `variance of`, `stdev of`, sorting, indexing, and ranges. Numbers support checked `power of A to B`, `exp of`, `ln of`, `sin of`, and `cos of`. Ordinary strings now recognize `\\a` (bell) and `\\v` (vertical tab) along with existing escapes; raw strings keep literal backslashes. Files can import typed functions. ML/AI workflows can be **planned and inspected**, but general model training is not yet an executable backend.
+Lists support `map every`, `filter every`, `reduce every`, `zip every`, `sum of`, `average of`, `variance of`, `stdev of`, sorting, indexing, and ranges. Numbers support checked `power of A to B`, `exp of`, `ln of`, `log2 of`, `log10 of`, `sin of`, `cos of`, `asin of`, `acos of`, and `atan of`. Ordinary strings now recognize `\\a` (bell) and `\\v` (vertical tab) along with existing escapes; raw strings keep literal backslashes. Files can import typed functions. ML/AI workflows can be **planned and inspected**, but general model training is not yet an executable backend.
 
 ## Commands
 

@@ -43,7 +43,9 @@ class MagicTests(unittest.TestCase):
         kernel = SemauriKernel()
         for prefix, expected in (("capit", "capitalize"), ("swap", "swapcase"),
                                  ("recip", "reciprocal"), ("dig", "digits"),
-                                 ("uncap", "uncapitalize"), ("title", "titlecase")):
+                                 ("uncap", "uncapitalize"), ("title", "titlecase"),
+                                 ("log10", "log10"), ("log2", "log2"),
+                                 ("asin", "asin"), ("acos", "acos"), ("atan", "atan")):
             result = kernel.do_complete(prefix, len(prefix))
             self.assertIn(expected, result["matches"])
 

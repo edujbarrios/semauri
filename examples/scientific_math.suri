@@ -1,4 +1,4 @@
-# Real scientific functions with checked finite domains, in radians for sin/cos.
+# Real scientific functions with checked finite domains; all angles use radians.
 let values be a list of 0, 1, 2.
 let exponentials be map every x in values to (exp of x).
 let logarithms be map every x in (a list of 1, 2, 4) to (ln of x).
@@ -6,6 +6,16 @@ assert exp of 0 is equal to 1.0.
 assert ln of 1 is equal to 0.0.
 assert sin of 0 is equal to 0.0.
 assert cos of 0 is equal to 1.0.
+assert log2 of 8 is equal to 3.0.
+assert log10 of 100 is equal to 2.0.
+assert asin of 0 is equal to 0.0.
+assert acos of 1 is equal to 0.0.
+assert atan of 0 is equal to 0.0.
 assert length of exponentials is equal to 3.
 assert length of logarithms is equal to 3.
+let probabilities be a list of 0, 0.5, 1.
+let angles be map every p in probabilities to (asin of p).
+assert length of angles is equal to 3.
+assert (angles at 2) is greater than 1.5.
+assert (angles at 2) is less than 1.6.
 print "scientific math OK".
