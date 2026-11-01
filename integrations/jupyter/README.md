@@ -68,3 +68,8 @@ Use Shift+Tab for offline contextual help on common keywords and directives;
 completion and inspection never run a cell or grant capabilities.
 JupyterLab and Notebook work without `anywidget`
 or a separate frontend extension.
+
+## Natural-language programming
+
+Completions include `when`, `joined` and `different`.
+For example: `let greeting be "Hello, " joined with "Ada".`

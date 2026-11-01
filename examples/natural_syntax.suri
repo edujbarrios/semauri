@@ -1,0 +1,16 @@
+# Natural-language constructs consolidated in v0.60.
+let name be "Ada".
+let greeting be "Hello, " joined with name.
+assert greeting is equal to "Hello, Ada".
+assert "Hi" joined with ", " joined with name is equal to "Hi, Ada".
+when name is different from "Grace":
+    print greeting.
+otherwise when name is not equal to "Ada":
+    print "A different name".
+otherwise:
+    print "Welcome back".
+end.
+let values be a list of 1, 2, 3.
+for each value in values:
+    assert value is greater than 0.
+end.

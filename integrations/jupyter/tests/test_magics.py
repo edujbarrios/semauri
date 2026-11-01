@@ -45,7 +45,8 @@ class MagicTests(unittest.TestCase):
                                  ("recip", "reciprocal"), ("dig", "digits"),
                                  ("uncap", "uncapitalize"), ("title", "titlecase"),
                                  ("log10", "log10"), ("log2", "log2"),
-                                 ("asin", "asin"), ("acos", "acos"), ("atan", "atan")):
+                                 ("asin", "asin"), ("acos", "acos"), ("atan", "atan"),
+                                 ("whe", "when"), ("join", "joined"), ("differ", "different")):
             result = kernel.do_complete(prefix, len(prefix))
             self.assertIn(expected, result["matches"])
 

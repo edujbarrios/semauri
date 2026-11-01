@@ -125,3 +125,12 @@ fn grammar_recognizes_leading_dot_fractions_triple_strings_and_unicode_escapes()
         assert!(escape.contains("u"), "{escape}");
     }
 }
+
+#[test]
+fn grammar_highlights_natural_conditional_and_join_syntax() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let control = grammar["repository"]["control"]["match"].as_str().unwrap();
+    for word in ["when", "each"] { assert!(control.contains(word), "{control}"); }
+    let operators = grammar["repository"]["operators"]["match"].as_str().unwrap();
+    for word in ["joined", "different"] { assert!(operators.contains(word), "{operators}"); }
+}

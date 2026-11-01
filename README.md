@@ -1,6 +1,6 @@
 # Semauri
 
-**A readable, statically typed language for people and AI agents.** Write natural-language-inspired programs in `.suri`; compile with Rust, inspect effects, and run with explicit permissions. Current release: **v0.59.0**.
+**A readable, statically typed language for people and AI agents.** Write natural-language-inspired programs in `.suri`; compile with Rust, inspect effects, and run with explicit permissions. Current release: **v0.60.0**.
 
 ## Quick Start
 
@@ -90,3 +90,11 @@ Use GitHub's **Cite this repository** feature or [CITATION.cff](CITATION.cff). S
 > Barrios, E. J. (2026). *Semauri: A natural-language-inspired programming language for humans and AI agents* (Version 0.59.0) [Computer software]. https://github.com/edujbarrios/semauri
 
 Apache-2.0 licensed. See [LICENSE](LICENSE).
+
+## Natural syntax in v0.60.0
+
+Use `"Hello, " joined with name` for strictly typed text concatenation,
+`when condition: ... otherwise: ... end.` for readable branches,
+and `is different from` for strict inequality. Python-like
+`for item in items:` and `for each item in items:` also work.
+See [the example](examples/natural_syntax.suri).

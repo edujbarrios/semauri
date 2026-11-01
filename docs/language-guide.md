@@ -1195,3 +1195,25 @@ A typed for-each loop can now be written as `for item in values:`,
 `for every item in values:`, or `for each item in values:`.
 All forms use the same compiler semantics and end with `end.`.
 This is a syntax convenience toward Python-like readability, not mutable Python iteration.
+
+## Natural language and Python-like conditionals (v0.60.0)
+
+Use `when` instead of `if`, `otherwise when` to chain alternative
+conditions, and `is different from` as a synonym for `is not equal to`.
+These are statically typed and do not relax the language's safety checks.
+
+```text
+let name be "Ada".
+let greeting be "Hello, " joined with name.
+when name is different from "Grace":
+    print greeting.
+otherwise:
+    print "Welcome back".
+end.
+```
+
+`joined with` joins two strings only and binds more weakly than arithmetic.
+It is left-associative and will not silently convert numbers to text.
+The three supported loop spellings are `for item in items:`,
+`for each item in items:`, and `for every item in items:`,
+with the customary `end.` terminator. Semauri is not Python itself.
