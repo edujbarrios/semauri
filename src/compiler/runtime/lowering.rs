@@ -2099,7 +2099,8 @@ impl<'a> Lowerer<'a> {
                 operator: operator @ (UnaryOperator::Exponential | UnaryOperator::NaturalLog
                     | UnaryOperator::CommonLog | UnaryOperator::BinaryLog
                     | UnaryOperator::Sine | UnaryOperator::Cosine
-                    | UnaryOperator::ArcSine | UnaryOperator::ArcCosine | UnaryOperator::ArcTangent),
+                    | UnaryOperator::ArcSine | UnaryOperator::ArcCosine | UnaryOperator::ArcTangent
+                    | UnaryOperator::HyperbolicSine | UnaryOperator::HyperbolicCosine | UnaryOperator::HyperbolicTangent),
                 operand,
                 ..
             } => match self.evaluate(operand)? {
