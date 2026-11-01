@@ -1,3 +1,16 @@
+## 0.58.0 — 2026-11-01
+
+### Scientific language enhancements
+- Introduce pure, statically typed `log2 of NUMBER` and `log10 of NUMBER` operations for binary and decimal logarithms.
+- Add inverse trigonometric functions `asin of NUMBER`, `acos of NUMBER`, and `atan of NUMBER` (all angle results expressed in radians).
+- Guard real domains and finite results: logarithms require strictly positive arguments; arcsine and arccosine require values between -1 and 1; invalid values report compiler evaluation error `S466`. Nonnumeric operands report `S465`.
+- Integrate new expressions into AST serialization, HIR analysis, constant folding, runtime evaluation, formatter, VS Code highlighting, Jupyter completion and contextual help.
+
+### Quality and release
+- Add executable examples, positive/negative boundary tests, type error checks, contextual-name compatibility tests, formatter and effect-analysis tests.
+- Extend the language guide, editor tests, Jupyter tests and packaging metadata; Jupyter kernel adapter version 0.3.0.
+- No new dependencies or implicit runtime effects. Keep a deliberately bounded scientific numerics domain, not arbitrary-precision or complex arithmetic.
+
 ## 0.57.0 — 2026-11-01
 
 ### Language and numerical safety
