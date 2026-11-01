@@ -93,7 +93,7 @@ impl NumberValue {
     }
 
     fn from_f64(value: f64) -> Self {
-        if value.fract() == 0.0 && value >= i64::MIN as f64 && value <= i64::MAX as f64 {
+        if value.fract() == 0.0 && value >= i64::MIN as f64 && value < -(i64::MIN as f64) {
             NumberValue::Int(value as i64)
         } else {
             NumberValue::Float(value)
@@ -553,3 +553,17 @@ impl ValueData {
     }
 }
 
+
+#[cfg(test)]
+mod number_value_conversion_tests {
+    use super::NumberValue;
+
+    #[test]
+    fn floating_i64_boundary_does_not_saturate() {
+        // f64(i64::MAX) rounds to 2^63, which is not representable by i64.
+        let beyond_max = 9_223_372_036_854_775_808.0;
+        assert_eq!(NumberValue::from_f64(beyond_max), NumberValue::Float(beyond_max));
+        assert_eq!(NumberValue::from_f64(i64::MIN as f64), NumberValue::Int(i64::MIN));
+        assert_eq!(NumberValue::from_f64(42.0), NumberValue::Int(42));
+    }
+}
