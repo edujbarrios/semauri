@@ -44,10 +44,11 @@ installing this package to test the adapter offline.
 
 The first nonblank line can contain `%%check`, `%%explain`,
 `%%explain --json`, `%%effects`, `%%plan`, `%%tokens`, `%%ast`,
-`%%hir`, `%%optimize`, `%%symbols`, `%%graph`, or `%%fmt`.
+`%%hir`, `%%optimize`, `%%symbols`, `%%graph`, `%%audit`, or `%%fmt`.
 These commands inspect Semauri source without granting any additional
 application effects. `%%fmt` prints canonically formatted source but never
 modifies either the original cell or a source file.
+The `%%audit` directive reports the compiler's ML reproducibility audit.
 They are **kernel directives**, not source-language syntax.
 
 ```text
@@ -60,5 +61,8 @@ end.
 
 Open [the example notebook](examples/hello_semauri.ipynb), choose the
 **Semauri** kernel, then execute each independent cell. Keyword
-completion is available. JupyterLab and Notebook work without `anywidget`
+completion includes locally declared names and scientific operators.
+Use Shift+Tab for offline contextual help on common keywords and directives;
+completion and inspection never run a cell or grant capabilities.
+JupyterLab and Notebook work without `anywidget`
 or a separate frontend extension.

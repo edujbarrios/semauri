@@ -94,5 +94,31 @@ class KernelTests(unittest.TestCase):
         self.assertEqual(self.sent[0][0], "error")
 
 
+    def test_local_symbol_completion_and_scientific_keywords(self):
+        source = "let prediction be power of 2 to 3.\nlet pre"
+        result = self.kernel.do_complete(source, len(source))
+        self.assertIn("prediction", result["matches"])
+        self.assertEqual(result["cursor_start"], len(source) - 3)
+        self.assertIn("power", self.kernel.do_complete("pow", 3)["matches"])
+        self.assertIn("variance", self.kernel.do_complete("var", 3)["matches"])
+        function_code = "define function squared taking n as number to (n times n).\nsqu"
+        self.assertIn("squared", self.kernel.do_complete(function_code, len(function_code))["matches"])
+        self.assertNotIn("hidden", self.kernel.do_complete("hid", 3)["matches"])
+
+    def test_inspect_is_pure_and_handles_unknown_names(self):
+        result = self.kernel.do_inspect("variance", len("variance"))
+        self.assertTrue(result["found"])
+        self.assertIn("Population variance", result["data"]["text/plain"])
+        magic = self.kernel.do_inspect("%%audit", len("%%audit"))
+        self.assertTrue(magic["found"])
+        self.assertIn("audit", magic["data"]["text/plain"])
+        unknown = self.kernel.do_inspect("something_else", len("something_else"))
+        self.assertFalse(unknown["found"])
+        with patch("semauri_kernel.kernel.subprocess.run") as execute:
+            self.kernel.do_inspect("print", 5)
+            code = "let local be 5.\nloc"
+            self.kernel.do_complete(code, len(code))
+            execute.assert_not_called()
+
 if __name__ == "__main__":
     unittest.main()

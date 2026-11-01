@@ -66,7 +66,7 @@ fn raw_string_scopes_and_control_escapes_are_documented_in_grammar() {
     assert!(strings[5].get("patterns").is_none(), "raw strings must not decode escapes");
     for quoted in &strings[2..4] {
         let escapes = quoted["patterns"][0]["match"].as_str().unwrap();
-        assert!(escapes.contains("nrt0bf"), "{escapes}");
+        assert!(escapes.contains("nrt0bfav"), "{escapes}");
     }
 }
 
