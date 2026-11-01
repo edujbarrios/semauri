@@ -19,3 +19,7 @@ assert length of angles is equal to 3.
 assert (angles at 2) is greater than 1.5.
 assert (angles at 2) is less than 1.6.
 print "scientific math OK".
+
+assert sinh of 0 is equal to 0.0.
+assert cosh of 0 is equal to 1.0.
+assert tanh of 0 is equal to 0.0.

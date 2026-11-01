@@ -520,6 +520,8 @@ See [power.suri](../examples/power.suri).
 `log2 of NUMBER` (base-2 log), `log10 of NUMBER` (base-10 log),
 `sin of NUMBER`, `cos of NUMBER`, `asin of NUMBER`, `acos of NUMBER`
 and `atan of NUMBER` are pure numerical operators.
+` sinh of NUMBER`, `cosh of NUMBER`, and `tanh of NUMBER` add hyperbolic
+sine, cosine and tangent with checked finite results.
 Angles use **radians**, including results of inverse trigonometry.
 All results are finite decimals; logarithms require positive inputs,
 `asin` and `acos` require input in [-1, 1], and exponential overflow

@@ -1,3 +1,7 @@
+## 0.59.0 — 2026-11-01
+
+- Add checked, pure `sinh of`, `cosh of` and `tanh of` numeric operators with type diagnostics, optimizer support and regression tests.
+
 ## 0.58.0 — 2026-11-01
 
 ### Scientific language enhancements

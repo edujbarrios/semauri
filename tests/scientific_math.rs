@@ -65,3 +65,13 @@ assert upper is greater than 3.
 assert (atan of (minus 1)) is less than 0.
 "#, None).unwrap();
 }
+
+#[test]
+fn hyperbolic_math_checks_domains_and_types() {
+    let compiler = Compiler::new();
+    for name in ["sinh", "cosh", "tanh"] {
+        assert_eq!(compiler.compile(&format!("print {name} of true."), None).unwrap_err().code, "S465");
+        if name != "tanh" { assert_eq!(compiler.compile(&format!("print {name} of 1000."), None).unwrap_err().code, "S466"); }
+    }
+    compiler.compile("assert sinh of 0 is equal to 0.0. assert cosh of 0 is equal to 1.0. assert tanh of 0 is equal to 0.0.", None).unwrap();
+}
