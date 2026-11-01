@@ -1188,3 +1188,10 @@ cargo fmt --check
 ```
 
 Licensed under Apache-2.0. See [LICENSE](../LICENSE).
+
+### Natural-language loop variants
+
+A typed for-each loop can now be written as `for item in values:`,
+`for every item in values:`, or `for each item in values:`.
+All forms use the same compiler semantics and end with `end.`.
+This is a syntax convenience toward Python-like readability, not mutable Python iteration.

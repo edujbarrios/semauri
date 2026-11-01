@@ -75,3 +75,12 @@ fn hyperbolic_math_checks_domains_and_types() {
     }
     compiler.compile("assert sinh of 0 is equal to 0.0. assert cosh of 0 is equal to 1.0. assert tanh of 0 is equal to 0.0.", None).unwrap();
 }
+
+#[test]
+fn natural_for_loops_accept_optional_every_and_each() {
+    let compiler = Compiler::new();
+    for quantifier in ["", "every ", "each "] {
+        let source = format!("let values be a list of 1, 2, 3. for {quantifier}n in values: assert n is greater than 0. end.");
+        compiler.compile(&source, None).expect("natural iteration should compile");
+    }
+}
