@@ -2097,7 +2097,9 @@ impl<'a> Lowerer<'a> {
             },
             HirExpr::Unary {
                 operator: operator @ (UnaryOperator::Exponential | UnaryOperator::NaturalLog
-                    | UnaryOperator::Sine | UnaryOperator::Cosine),
+                    | UnaryOperator::CommonLog | UnaryOperator::BinaryLog
+                    | UnaryOperator::Sine | UnaryOperator::Cosine
+                    | UnaryOperator::ArcSine | UnaryOperator::ArcCosine | UnaryOperator::ArcTangent),
                 operand,
                 ..
             } => match self.evaluate(operand)? {

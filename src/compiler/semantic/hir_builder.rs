@@ -809,7 +809,9 @@ impl<'a> HirBuilder<'a> {
                         Type::Number
                     }
                     UnaryOperator::Exponential | UnaryOperator::NaturalLog
-                    | UnaryOperator::Sine | UnaryOperator::Cosine => {
+                    | UnaryOperator::CommonLog | UnaryOperator::BinaryLog
+                    | UnaryOperator::Sine | UnaryOperator::Cosine
+                    | UnaryOperator::ArcSine | UnaryOperator::ArcCosine | UnaryOperator::ArcTangent => {
                         if operand.ty() != Type::Number {
                             return Err(SemauriError::semantic(
                                 "S465", format!("Scientific math requires number, received {}", operand.ty()),

@@ -365,8 +365,13 @@ fn numeric_transcendental(value: NumberValue, operator: UnaryOperator) -> Option
     let result = match operator {
         UnaryOperator::Exponential => input.exp(),
         UnaryOperator::NaturalLog if input > 0.0 => input.ln(),
+        UnaryOperator::CommonLog if input > 0.0 => input.log10(),
+        UnaryOperator::BinaryLog if input > 0.0 => input.log2(),
         UnaryOperator::Sine => input.sin(),
         UnaryOperator::Cosine => input.cos(),
+        UnaryOperator::ArcSine if (-1.0..=1.0).contains(&input) => input.asin(),
+        UnaryOperator::ArcCosine if (-1.0..=1.0).contains(&input) => input.acos(),
+        UnaryOperator::ArcTangent => input.atan(),
         _ => return None,
     };
     result.is_finite().then_some(NumberValue::Float(result))

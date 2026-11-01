@@ -1101,7 +1101,7 @@ impl<'a> Parser<'a> {
                 })
             }
             TokenKind::Word
-                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "exp" | "ln" | "sin" | "cos")
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "exp" | "ln" | "log10" | "log2" | "sin" | "cos" | "asin" | "acos" | "atan")
                     && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
                 let start = self.advance().clone();
                 self.consume(TokenKind::Of, "Expected 'of' after scientific math operator", "S242")?;
@@ -1109,8 +1109,15 @@ impl<'a> Parser<'a> {
                 let operator = match start.lexeme.to_ascii_lowercase().as_str() {
                     "exp" => UnaryOperator::Exponential,
                     "ln" => UnaryOperator::NaturalLog,
+                    "log10" => UnaryOperator::CommonLog,
+                    "log2" => UnaryOperator::BinaryLog,
                     "sin" => UnaryOperator::Sine,
-                    _ => UnaryOperator::Cosine,
+                    "cos" => UnaryOperator::Cosine,
+                    "asin" => UnaryOperator::ArcSine,
+                    "acos" => UnaryOperator::ArcCosine,
+                    "atan" => UnaryOperator::ArcTangent,
+                    _ => unreachable!("guard guarantees a scientific function"),
+
                 };
                 Ok(Expr::Unary {
                     operator,
