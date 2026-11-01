@@ -17,9 +17,9 @@ from ipykernel.kernelbase import Kernel
 
 class SemauriKernel(Kernel):
     implementation = "semauri"
-    implementation_version = "0.3.0"
+    implementation_version = "0.4.0"
     language = "semauri"
-    language_version = "0.58"
+    language_version = "0.59"
     language_info = {
         "name": "semauri",
         "mimetype": "text/x-semauri",
@@ -39,7 +39,7 @@ class SemauriKernel(Kernel):
         "reciprocal", "digits", "prime", "capitalize", "swapcase",
         "uncapitalize", "titlecase", "sum", "average", "variance", "stdev",
         "power", "exp", "ln", "log2", "log10", "sin", "cos",
-        "asin", "acos", "atan", "minimum", "maximum", "median",
+        "asin", "acos", "atan", "sinh", "cosh", "tanh", "minimum", "maximum", "median",
         "sorted", "distinct", "flatten", "partition", "split", "join",
         "floor", "ceiling", "length", "reverse", "take", "drop", "json", "parse",
     )
@@ -63,6 +63,9 @@ class SemauriKernel(Kernel):
         "asin": "asin of X. Inverse sine in radians; X must be between -1 and 1.",
         "acos": "acos of X. Inverse cosine in radians; X must be between -1 and 1.",
         "atan": "atan of X. Inverse tangent in radians.",
+        "sinh": "sinh of X. Hyperbolic sine.",
+        "cosh": "cosh of X. Hyperbolic cosine.",
+        "tanh": "tanh of X. Hyperbolic tangent.",
         "%%check": "%%check\nSOURCE. Check source without executing effects.",
         "%%audit": "%%audit\nSOURCE. Show the compiler's ML audit report.",
         "%%fmt": "%%fmt\nSOURCE. Print formatting without changing the cell.",

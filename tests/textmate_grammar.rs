@@ -98,7 +98,7 @@ fn grammar_highlights_base36_hex_escapes_and_hash_raw_literals() {
 fn grammar_highlights_scientific_math_operators() {
     let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
     let keywords = grammar["repository"]["collections"]["match"].as_str().unwrap();
-    for name in ["exp", "ln", "log2", "log10", "sin", "cos", "asin", "acos", "atan"] {
+    for name in ["exp", "ln", "log2", "log10", "sin", "cos", "asin", "acos", "atan", "sinh", "cosh", "tanh"] {
         assert!(keywords.contains(name), "missing {name} in {keywords}");
     }
 }
