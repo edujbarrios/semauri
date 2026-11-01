@@ -1,3 +1,21 @@
+## 0.57.0 — 2026-11-01
+
+### Language and numerical safety
+- Accept ASCII bell (`\\a`) and vertical tab (`\\v`) escapes in ordinary single- and double-quoted string literals; keep raw strings literal, invalid-escape diagnostics and the canonical formatter consistent.
+- Fix a numeric conversion boundary: a floating-point value of 2^63 is not silently saturated to `i64::MAX`. Add regression coverage for both signed 64-bit bounds.
+- Extend VS Code escape highlighting and tests for the new language literals.
+
+### Notebook usability
+- Add cell-local identifier completion (immutable bindings and defined functions) and completion of scientific/numeric operators.
+- Add offline contextual keyword help, plus a read-only `%%audit` directive for the compiler ML audit.
+- Extend Jupyter adapter tests, keeping cells independent and effect grants unchanged; adapter package version 0.2.0.
+
+### Compatibility and release
+- Align crate, lockfile, citation, README and Jupyter language version with **0.57.0**.
+- No new Rust dependencies, I/O privileges or implicit cross-cell state.
+
+The interpreter remains a statically typed language with explicit effects, not yet a complete replacement for general-purpose languages. AI training declarations remain inspectable plans rather than actual model training.
+
 ## 0.56.0 — 2026-10-30
 
 ### Scientific language features
