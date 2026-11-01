@@ -1,0 +1,7 @@
+let subtotal be 10 plus 5 times 2.
+let agrupado be (10 plus 5) times 2.
+let resto be 17 modulo 3.
+
+print subtotal.
+print agrupado.
+print resto.

@@ -1,0 +1,7 @@
+within ml:
+  let dataset be source dataset "./images" revision "dataset-v3".
+  let model be resolve model "resnet18" revision "weights-v2".
+  let device be select device "cpu".
+  let config be configure training for 3 epochs using optimizer "adamw" learning rate 0.0003 batch size 16 seed 42.
+  let run be fit model using dataset on device with config.
+end.

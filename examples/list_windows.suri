@@ -1,0 +1,10 @@
+# Select typed subsequences without mutating the input.
+let values be a list of 9, 3, 3, 1, 8.
+let sorted_unique be sorted of (distinct of values).
+let top_two be take 2 from (reverse of sorted_unique).
+let rest be drop 2 from (reverse of sorted_unique).
+assert length of top_two is equal to 2.
+assert (top_two at 0) is equal to 9.
+assert (rest at 0) is equal to 3.
+print top_two.
+print rest.

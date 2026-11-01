@@ -1,0 +1,8 @@
+# Fully typed deterministic list generation and transformation.
+let values be range from 1 to 8.
+let squares be map every n in values to (n times n).
+let even_squares be filter every n in squares if ((n modulo 2) is equal to 0).
+assert length of even_squares is equal to 4.
+assert first of even_squares is equal to 4.
+assert last of even_squares is equal to 64.
+print even_squares.

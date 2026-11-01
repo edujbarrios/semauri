@@ -1,0 +1,5 @@
+# A robust center for a concrete numeric list, without mutating its input.
+let readings be a list of 12, 3, 100, 9, 7.
+let midpoint be median of readings.
+assert midpoint is equal to 9.
+print midpoint.

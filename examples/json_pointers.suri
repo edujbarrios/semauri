@@ -1,0 +1,13 @@
+# Extract nested JSON values without dynamic untyped records.
+let document be "{\"users\":[{\"name\":\"Ada\",\"scores\":[1,2,3]}],\"settings\":{\"active\":true},\"a/b\":{\"~key\":true}}".
+let name_value be decode json as string from (json at pointer "/users/0/name" in document).
+let score be decode json as number from (json at pointer "/users/0/scores/1" in document).
+let scores be decode json as numbers from (json at pointer "/users/0/scores" in document).
+let active be decode json as boolean from (json at pointer "/settings/active" in document).
+let escaped_key be decode json as boolean from (json at pointer "/a~1b/~0key" in document).
+assert name_value is equal to "Ada".
+assert score is equal to 2.
+assert sum of scores is equal to 6.
+assert active.
+assert escaped_key.
+print name_value.

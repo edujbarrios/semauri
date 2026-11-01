@@ -1,0 +1,6 @@
+# Sorting creates a fresh typed list, leaving the source untouched.
+let values be a list of 8, 3, 5, 1.
+let ordered be sorted of values.
+assert (ordered at 0) is equal to 1.
+assert (values at 0) is equal to 8.
+print ordered.

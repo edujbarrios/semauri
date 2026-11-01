@@ -1,0 +1,7 @@
+let nombre be "Ana".
+let edad be 18.
+let aprendiendo be true.
+
+print nombre.
+print edad.
+print aprendiendo.

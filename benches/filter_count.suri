@@ -1,0 +1,4 @@
+let values be range from 1 to 9999.
+let selected be filter every n in values if (((n modulo 3) is equal to 0) or ((n modulo 5) is equal to 0)).
+let total be count every n in selected if true.
+print total.

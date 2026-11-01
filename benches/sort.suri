@@ -1,0 +1,4 @@
+let values be range from 1 to 10000.
+let reversed be reverse of values.
+let ordered be sorted of reversed.
+print median of ordered.

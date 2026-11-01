@@ -1,0 +1,11 @@
+# A chained conditional checks its branches from top to bottom.
+create a web called Grades.
+let score be 82.
+
+if score is greater than or equal to 90:
+  add a button called Excellent.
+otherwise if score is greater than or equal to 70:
+  add a button called Passed.
+otherwise:
+  add a button called Retry.
+end.

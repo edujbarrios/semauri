@@ -1,0 +1,6 @@
+# Nearest integer rounding with halfway ties away from zero.
+let samples be a list of minus 2.5, minus 1.2, 0.5, 4.7.
+let rounded be map every n in samples to (round of n).
+assert (rounded at 0) is equal to (minus 3).
+assert (rounded at 2) is equal to 1.
+print rounded.

@@ -1,0 +1,9 @@
+# Pure, scoped list processing without mutable variables.
+let readings be a list of 9, 1, 5, 3, 8.
+let above_three be filter every reading in readings if (reading is greater than 3).
+let doubled be map every reading in above_three to (reading times 2).
+let sorted_doubled be sorted of doubled.
+assert length of sorted_doubled is equal to 3.
+assert (sorted_doubled at 0) is equal to 10.
+assert (readings at 0) is equal to 9.
+print sorted_doubled.

@@ -1,0 +1,6 @@
+create a schema called Pet.
+add a field called Name.
+set the datatype of the field called Name to "string".
+set the required of the field called Name to true.
+add a field called Age.
+set the datatype of the field called Age to "integer".

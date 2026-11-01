@@ -1,0 +1,7 @@
+# Unicode-aware first-scalar uppercase. The tail remains unchanged.
+let values be a list of "hello", "élève", "ßeta".
+let headings be map every item in values to (capitalize of item).
+assert (headings at 0) is equal to "Hello".
+assert (headings at 1) is equal to "Élève".
+assert (headings at 2) is equal to "SSeta".
+print headings.

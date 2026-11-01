@@ -1,0 +1,8 @@
+# Inspect an object without runtime type coercion.
+let document be "{\"name\":\"Ada\",\"active\":true}".
+let names be keys of json document.
+assert length of names is equal to 2.
+assert (names at 0) is equal to "active".
+assert has json key "name" in document.
+assert not (has json key "missing" in document).
+print "JSON object validated".

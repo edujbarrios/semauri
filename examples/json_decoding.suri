@@ -1,0 +1,11 @@
+# Decode typed JSON without network or filesystem effects.
+let names be decode json as strings from "[\"Ada\",\"Grace\"]".
+assert length of names is equal to 2.
+assert (names at 1) is equal to "Grace".
+let amount be decode json as number from "12.5".
+assert amount is greater than 12.
+let enabled be decode json as boolean from "true".
+assert enabled.
+let flags be decode json as booleans from "[true,false,true]".
+assert length of flags is equal to 3.
+print amount.

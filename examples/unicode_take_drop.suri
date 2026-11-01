@@ -1,0 +1,9 @@
+# Take and drop Unicode scalar characters without slicing UTF-8 bytes.
+let text be "café 🍵".
+assert take 4 from text is equal to "café".
+assert drop 5 from text is equal to "🍵".
+assert take 100 from text is equal to text.
+assert drop 100 from text is equal to "".
+assert take 0 from text is equal to "".
+assert drop 0 from text is equal to text.
+print take 4 from text.

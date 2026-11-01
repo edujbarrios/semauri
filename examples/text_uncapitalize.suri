@@ -1,0 +1,7 @@
+# Lowercase only the first Unicode scalar in each value.
+let values be a list of "HELLO", "ÉTÉ", "WORLD".
+let headings be map every item in values to (uncapitalize of item).
+assert (headings at 0) is equal to "hELLO".
+assert (headings at 1) is equal to "éTÉ".
+assert (headings at 2) is equal to "wORLD".
+print headings.

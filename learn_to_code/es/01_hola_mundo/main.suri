@@ -1,0 +1,3 @@
+# Un programa puede tener comentarios.
+print "Hola desde Semauri".
+print 2026.

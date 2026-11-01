@@ -1,0 +1,7 @@
+let subtotal be 10 plus 5 times 2.
+let grouped be (10 plus 5) times 2.
+let remainder be 17 modulo 3.
+
+print subtotal.
+print grouped.
+print remainder.

@@ -1,0 +1,12 @@
+# Pure, Unicode-scalar conversion (not UTF-8 byte indexing).
+let glyphs be characters of "Aé🙂".
+let numbers be codepoints of "Aé🙂".
+assert length of glyphs is equal to 3.
+assert (glyphs at 1) is equal to "é".
+assert (numbers at 0) is equal to 65.
+assert (numbers at 1) is equal to 233.
+assert (numbers at 2) is equal to 128578.
+let emoji be character from 128578.
+assert codepoint of emoji is equal to 128578.
+assert join of glyphs with "|" is equal to "A|é|🙂".
+print emoji.

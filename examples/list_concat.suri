@@ -1,0 +1,5 @@
+let first be a list of 10, 20.
+let second be a list of 30, 40.
+let joined be first plus second.
+print joined.
+print length of joined.

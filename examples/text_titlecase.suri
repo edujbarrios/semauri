@@ -1,0 +1,7 @@
+# Convert Unicode whitespace-delimited words to title case.
+let values be a list of "hELLO wORLD", "ßETA ÉTÉ", "a-b".
+let headings be map every item in values to (titlecase of item).
+assert (headings at 0) is equal to "Hello World".
+assert (headings at 1) is equal to "SSeta Été".
+assert (headings at 2) is equal to "A-b".
+print headings.

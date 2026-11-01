@@ -1,0 +1,7 @@
+# Repeat any typed value safely, then transform the generated list.
+let readings be repeat 4 of 3.
+let squared be map every n in readings to (n times n).
+let empty be repeat 0 of "unused".
+assert length of squared is equal to 4.
+assert length of empty is equal to 0.
+print squared.

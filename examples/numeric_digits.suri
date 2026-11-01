@@ -1,0 +1,8 @@
+# Decimal digit counts are exact even above 2^53.
+let values be a list of 0, 42, minus 90210, 9007199254740993.
+let widths be map every n in values to (digits of n).
+assert (widths at 0) is equal to 1.
+assert (widths at 1) is equal to 2.
+assert (widths at 2) is equal to 5.
+assert (widths at 3) is equal to 16.
+print widths.

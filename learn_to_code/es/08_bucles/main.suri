@@ -1,0 +1,7 @@
+let niveles be a list of 1, 2, 3.
+
+for every nivel in niveles:
+  print nivel.
+end.
+
+print "Fin".

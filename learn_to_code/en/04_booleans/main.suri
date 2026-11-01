@@ -1,0 +1,6 @@
+let age be 20.
+let adult be age is greater than or equal to 18.
+let allowed be adult and not false.
+
+print adult.
+print allowed.

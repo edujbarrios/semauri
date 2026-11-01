@@ -1,0 +1,6 @@
+let language be "Semauri".
+let uppercase_name be uppercase of language.
+let lowercase_name be lowercase of uppercase_name.
+assert lowercase_name is equal to "semauri".
+print uppercase_name.
+print lowercase_name.

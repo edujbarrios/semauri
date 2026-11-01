@@ -1,0 +1,5 @@
+# Import a local typed library.
+import "lib/math.suri".
+let result be invoke square to (invoke increment to 6).
+assert result is equal to 49.
+print result.

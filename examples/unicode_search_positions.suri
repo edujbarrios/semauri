@@ -1,0 +1,10 @@
+# Unicode scalar match positions are independent of UTF-8 byte widths.
+let found be positions of "é" in "café café".
+assert length of found is equal to 2.
+assert (found at 0) is equal to 3.
+assert (found at 1) is equal to 8.
+assert last position of "é" in "café café" is equal to 8.
+assert last position of "missing" in "café" is equal to minus 1.
+assert last position of "" in "café" is equal to 4.
+assert length of (positions of "x" in "é") is equal to 0.
+print "Unicode positions passed".

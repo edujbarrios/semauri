@@ -1,0 +1,7 @@
+let nota be 7.
+
+if nota is greater than or equal to 5:
+  print "Aprobado".
+otherwise:
+  print "Hay que practicar".
+end.

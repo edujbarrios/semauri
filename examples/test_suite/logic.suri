@@ -1,0 +1,2 @@
+assert true and not false.
+assert 10 modulo 3 is equal to 1.

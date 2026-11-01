@@ -1,0 +1,6 @@
+# Exact bounded 64-bit prime predicate, pure and constant-foldable.
+let numbers be range from 1 to 20.
+let flags be map every n in numbers to (prime of n).
+assert (flags at 1).
+assert (flags at 3) is equal to false.
+print flags.

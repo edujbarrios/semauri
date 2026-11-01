@@ -1,147 +1,92 @@
 # Semauri
 
-**SEMAURI — Semantic Expression Mapping and Unified Runtime Interpretation**
+**A readable, statically typed language for people and AI agents.** Write natural-language-inspired programs in `.suri`; compile with Rust, inspect effects, and run with explicit permissions. Current release: **v0.59.0**.
 
-**Natural to write. Deterministic to run.**
+## Quick Start
 
-> Status: **0.13.0 / experimental**
+Install the [latest binary for Windows, macOS or Linux](https://github.com/edujbarrios/semauri/releases/latest), or build from source with Rust:
 
-## What is Semauri?
+```sh
+cargo install --path . --locked
+semauri version
+```
 
-Semauri is an experimental open-source programming language based on **controlled natural language**. It combines an explicit grammar, typed HIR, lexical scopes, deterministic resolution, effects and semantic domains. It is not unrestricted English and it is not an LLM wrapper.
+Create `hello.suri` (also available as [`examples/quickstart.suri`](examples/quickstart.suri)):
 
-## What can it do today?
+```text
+let numbers be a list of 1, 2, 3.
+let doubled be map every n in numbers to (n times 2).
+assert sum of doubled is equal to 12.
+print doubled.
+```
 
-| Area | Current capability |
+```sh
+semauri check hello.suri
+semauri run --allow console_write hello.suri
+```
+
+Output: `[2, 4, 6]`.
+
+**Rules for humans and coding agents:** write lowercase keywords; finish each statement with `.`; declare immutable values before use; use `number`, `string`, `boolean`, and typed lists; declare pure functions with `define function ...`; use `if ... otherwise ... end.` for branches. Check generated code with `fmt` and `check` before running it. **No effects run unless explicitly allowed.** See the [complete language guide](docs/language-guide.md) for exact grammar and examples.
+
+## Language at a glance
+
+```text
+define function square taking n as number to (n times n).
+let value be invoke square to 7.
+if value is equal to 49:
+  print "Correct".
+otherwise:
+  print "Try again".
+end.
+```
+
+Lists support `map every`, `filter every`, `reduce every`, `zip every`, `sum of`, `average of`, `variance of`, `stdev of`, sorting, indexing, and ranges. Numbers support checked `power of A to B`, `exp of`, `ln of`, `log2 of`, `log10 of`, `sin of`, `cos of`, `asin of`, `acos of`, and `atan of`. Ordinary strings now recognize `\\a` (bell) and `\\v` (vertical tab) along with existing escapes; raw strings keep literal backslashes. Files can import typed functions. ML/AI workflows can be **planned and inspected**, but general model training is not yet an executable backend.
+
+## Commands
+
+| Command | Purpose |
 | --- | --- |
-| Core | immutable bindings, arithmetic, booleans, comparisons, lists, lexical scopes, `If`, static `For every`, `#` comments, escaped strings |
-| Web | build typed web documents and render HTML |
-| Structured data | build typed schemas and render JSON Schema |
-| Filesystem | plan and explicitly execute write/append/copy/move/mkdir/touch/delete workflows |
-| ML | plan typed datasets, models, devices, training, inference, LoRA/QLoRA and training configuration |
-| Tooling | inspect HIR, symbols, effects, optimization and runtime plans; capability-gated `run` |
+| `semauri init PROJECT` | Scaffold a project |
+| `semauri check FILE` | Validate syntax and types |
+| `semauri fmt FILE --check` / `--write` | Check or apply formatting |
+| `semauri run --allow console_write FILE` | Run and print (effect explicitly allowed) |
+| `semauri test PATH [--allow-console]` | Execute assertion tests |
+| `semauri verify PROJECT` | Check project formatting and tests |
+| `semauri explain FILE` | Explain compiler decisions |
+| `semauri effects FILE` / `plan FILE` / `graph FILE` | Inspect permissions and execution plan |
+| `semauri build FILE [-o PATH]` | Generate build-time artifacts |
+| `semauri config [PATH]` / `domains` / `version` | Inspect configuration, operations, or version |
 
-Compilation remains effect-free. Execution is a separate opt-in step and effectful programs must be authorized explicitly.
+Machine-readable output: `--json` on supported commands. Other inspection commands: `tokens`, `ast`, `hir`, `optimize`, `symbols`, `audit`. Run `semauri` for CLI help. [Reference and advanced operations](docs/language-guide.md).
 
-### Source usability in 0.13
+## Real ML demo: linear regression
 
-Programs can now contain line comments and escaped text without preprocessing:
+[`examples/linear_regression.suri`](examples/linear_regression.suri) implements **ordinary least squares from scratch**, adapted from [edujbarrios-ai](https://github.com/edujbarrios/edujbarrios-ai/tree/main/algorithms/02_classical_ml/linear_regression). Given `y = 2x + 1`, it learns the coefficients and predicts `y = 13` for `x = 6`.
 
-```text
-# Strings support newline, tab, quote and backslash escapes.
-Let message be "hello\nfrom Semauri".
+```console
+$ semauri run --allow console_write examples/linear_regression.suri
+Linear regression (ordinary least squares)
+Training observations:
+5
+Learned slope:
+2.0
+Learned intercept:
+1
+Prediction for x=6:
+13
 ```
 
-Supported escapes are `\n`, `\t`, `\r`, `\"` and `\\`. Unknown escapes are rejected with a source diagnostic instead of being silently accepted.
+**Measured CLI wall time:** **1.802 ms median** (101 executions, 3 warmups); **2.159 ms** on the first run. GitHub Actions Ubuntu 24.04 / Linux x86_64, optimized binary, 2026-10-30. Includes startup, checking and execution; **excludes compilation**. Hardware and runner load affect results; this is *not* a cross-language performance comparison. [Verified benchmark and raw output](https://github.com/edujbarrios/semauri/actions/runs/41132112869). Reproduce with `cargo build --release --locked` and `python3 scripts/benchmark_linear_regression.py --samples 101`.
 
-## Example: Semauri to HTML
+## Learn, extend, cite
 
-The repository includes this example as `examples/shop.sema`:
+[Full language guide](docs/language-guide.md) · [Examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter kernel with local completion and help](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Contributing](CONTRIBUTING.md)
 
-```text
-Let price be 18.
-Let tax be 4.
-Let total be price plus tax.
+## Citation
 
-Create a web called Pet Shop.
-Add a button called Buy.
+Use GitHub's **Cite this repository** feature or [CITATION.cff](CITATION.cff). Suggested citation:
 
-If total is greater than 20:
-  Set the color of the button called Buy to red.
-Otherwise:
-  Set the color of the button called Buy to green.
-End.
-```
+> Barrios, E. J. (2026). *Semauri: A natural-language-inspired programming language for humans and AI agents* (Version 0.59.0) [Computer software]. https://github.com/edujbarrios/semauri
 
-Build it with:
-
-```sh
-semauri build examples/shop.sema
-```
-
-Semauri evaluates the deterministic control flow (`18 + 4 > 20`) and generates this HTML:
-
-```html
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pet Shop</title>
-</head>
-<body>
-  <h1>Pet Shop</h1>
-    <button style="color: red">Buy</button>
-</body>
-</html>
-```
-
-## Example: practical filesystem automation
-
-```text
-Within filesystem:
-  Mkdir "build".
-  Write "hello from Semauri" to "build/notes.txt".
-  Append " - deterministic automation" to "build/notes.txt".
-  Copy "build/notes.txt" to "build/backup.txt".
-  Move "build/backup.txt" to "build/archive.txt".
-  Touch "build/complete.marker".
-  Delete "build/old.tmp".
-End.
-```
-
-Compile without effects:
-
-```sh
-semauri build examples/filesystem.sema
-```
-
-Or explicitly execute it after authorizing capabilities:
-
-```sh
-semauri run --allow filesystem_read --allow filesystem_write examples/filesystem.sema
-```
-
-Use `--dry-run` to inspect the executable plan without performing effects, and `--cwd PATH` to choose the execution directory.
-
-## Direction
-
-Semauri is not yet a complete general-purpose runtime language. The next major milestones are user-defined typed procedures/functions, runtime-dependent control flow, structured record/map values, HTTP/process domains, richer filesystem reads/queries, modules and a small standard library.
-
-The design rule remains: add useful power without giving up deterministic semantics, inspectable effects or the compiler/runtime boundary.
-
-## Architecture
-
-```text
-Semauri source
-    ↓
-vocabulary + lexer
-    ↓
-recursive-descent parser
-    ↓
-syntax AST
-    ↓
-name resolution + type checking
-    ↓
-typed HIR
-    ↓
-optimization
-    ↓
-semantic/domain IR or RuntimePlan
-    ↓
-backend / explicit capability-gated runtime
-```
-
-## Documentation
-
-Start with `docs/00_INSTALLATION.md`, then `docs/01_LANGUAGE.md`, `docs/02_TYPES.md`, `docs/03_DOMAINS.md`, `docs/04_EFFECTS.md`, `docs/05_RUNTIME.md` and `docs/06_ML.md`. Architecture, distribution and roadmap documents continue under `docs/`.
-
-## Contributing
-
-Contributions are welcome. See `CONTRIBUTING.md`.
-
-## License
-
-Copyright 2026 Eduardo J. Barrios.
-
-Licensed under the **Apache License 2.0**. See `LICENSE` and `NOTICE`.
+Apache-2.0 licensed. See [LICENSE](LICENSE).

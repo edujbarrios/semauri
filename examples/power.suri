@@ -1,0 +1,10 @@
+# Exact integer exponentiation plus checked real-valued powers.
+let squares be map every n in (a list of 1, 2, 3, 4) to (power of n to 2).
+assert squares is equal to (a list of 1, 4, 9, 16).
+let cube be power of 2 to 10.
+assert cube is equal to 1024.
+let root be power of 9 to 0.5.
+assert root is equal to 3.0.
+let inverse be power of 2 to (0 minus 2).
+assert inverse is equal to 0.25.
+print "power OK".

@@ -1,0 +1,7 @@
+let levels be a list of 1, 2, 3.
+
+for every level in levels:
+  print level.
+end.
+
+print "Done".

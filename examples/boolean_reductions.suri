@@ -1,0 +1,8 @@
+# Boolean aggregations return a boolean without mutating the source.
+let validations be a list of true, false, true.
+let has_success be any of validations.
+let all_pass be all of validations.
+assert has_success is equal to true.
+assert all_pass is equal to false.
+print has_success.
+print all_pass.

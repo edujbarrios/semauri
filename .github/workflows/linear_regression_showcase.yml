@@ -1,0 +1,32 @@
+name: Semauri linear regression showcase
+
+on:
+  pull_request:
+    paths:
+      - "examples/linear_regression.suri"
+      - "tests/linear_regression_showcase.rs"
+      - "scripts/benchmark_linear_regression.py"
+      - ".github/workflows/linear_regression_showcase.yml"
+  push:
+    branches: [main]
+    paths:
+      - "examples/linear_regression.suri"
+      - "tests/linear_regression_showcase.rs"
+      - "scripts/benchmark_linear_regression.py"
+      - ".github/workflows/linear_regression_showcase.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-and-benchmark:
+    name: Verified stdout and real CLI timing
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Compile release-mode Semauri
+        run: cargo build --release --locked
+      - name: Verify output and time 101 CLI executions
+        run: python3 scripts/benchmark_linear_regression.py --samples 101

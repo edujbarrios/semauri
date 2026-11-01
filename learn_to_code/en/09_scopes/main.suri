@@ -1,0 +1,8 @@
+let message be "outside".
+
+if true:
+  let message be "inside".
+  print message.
+end.
+
+print message.

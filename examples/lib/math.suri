@@ -1,0 +1,3 @@
+# Reusable typed, pure math functions.
+define function square taking n as number to (n times n).
+define function increment taking n as number to (n plus 1).

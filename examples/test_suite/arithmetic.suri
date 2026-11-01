@@ -1,0 +1,2 @@
+let answer be 6 times 7.
+assert answer is equal to 42.

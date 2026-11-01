@@ -1,0 +1,11 @@
+let score be 82.
+
+unless score is greater than or equal to 50:
+  print "Try again".
+otherwise if score is greater than or equal to 90:
+  print "Excellent".
+otherwise if score is greater than or equal to 70:
+  print "Great".
+otherwise:
+  print "Passed".
+end.
