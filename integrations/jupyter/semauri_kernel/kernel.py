@@ -17,9 +17,9 @@ from ipykernel.kernelbase import Kernel
 
 class SemauriKernel(Kernel):
     implementation = "semauri"
-    implementation_version = "0.2.0"
+    implementation_version = "0.3.0"
     language = "semauri"
-    language_version = "0.57"
+    language_version = "0.58"
     language_info = {
         "name": "semauri",
         "mimetype": "text/x-semauri",
@@ -38,7 +38,8 @@ class SemauriKernel(Kernel):
         "factorial", "even", "odd", "true", "false", "cube", "cbrt",
         "reciprocal", "digits", "prime", "capitalize", "swapcase",
         "uncapitalize", "titlecase", "sum", "average", "variance", "stdev",
-        "power", "exp", "ln", "sin", "cos", "minimum", "maximum", "median",
+        "power", "exp", "ln", "log2", "log10", "sin", "cos",
+        "asin", "acos", "atan", "minimum", "maximum", "median",
         "sorted", "distinct", "flatten", "partition", "split", "join",
         "floor", "ceiling", "length", "reverse", "take", "drop", "json", "parse",
     )
@@ -57,6 +58,11 @@ class SemauriKernel(Kernel):
         "variance": "variance of VALUES. Population variance of numeric values.",
         "stdev": "stdev of VALUES. Population standard deviation.",
         "power": "power of BASE to EXPONENT. Checked numeric exponentiation.",
+        "log2": "log2 of X. Base-2 logarithm; X must be positive.",
+        "log10": "log10 of X. Base-10 logarithm; X must be positive.",
+        "asin": "asin of X. Inverse sine in radians; X must be between -1 and 1.",
+        "acos": "acos of X. Inverse cosine in radians; X must be between -1 and 1.",
+        "atan": "atan of X. Inverse tangent in radians.",
         "%%check": "%%check\nSOURCE. Check source without executing effects.",
         "%%audit": "%%audit\nSOURCE. Show the compiler's ML audit report.",
         "%%fmt": "%%fmt\nSOURCE. Print formatting without changing the cell.",

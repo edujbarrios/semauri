@@ -517,9 +517,13 @@ See [power.suri](../examples/power.suri).
 ### Scientific math: exponential, logarithms and trigonometry
 
 `exp of NUMBER` (e to the power of x), `ln of NUMBER` (natural log),
-`sin of NUMBER` and `cos of NUMBER` are pure numerical operators.
-Angles use **radians**. All results are finite decimals; `ln` requires
-positive input and exponential overflow is rejected with diagnostic `S466`.
+`log2 of NUMBER` (base-2 log), `log10 of NUMBER` (base-10 log),
+`sin of NUMBER`, `cos of NUMBER`, `asin of NUMBER`, `acos of NUMBER`
+and `atan of NUMBER` are pure numerical operators.
+Angles use **radians**, including results of inverse trigonometry.
+All results are finite decimals; logarithms require positive inputs,
+`asin` and `acos` require input in [-1, 1], and exponential overflow
+is rejected with diagnostic `S466`.
 Non-numeric arguments are rejected with `S465`. Operators compose with
 typed functions and list transforms.
 
@@ -527,8 +531,14 @@ typed functions and list transforms.
 let growth be exp of 1.
 let angle be sin of 0.
 let log_one be ln of 1.
+let base_two be log2 of 8.
+let base_ten be log10 of 100.
+let inverse be asin of 1.
 assert angle is equal to 0.0.
 assert log_one is equal to 0.0.
+assert base_two is equal to 3.0.
+assert base_ten is equal to 2.0.
+assert inverse is greater than 1.5.
 ```
 
 See [scientific_math.suri](../examples/scientific_math.suri).
