@@ -31,7 +31,7 @@ let normalized be map every x in xs to (abs of x).
 assert len of normalized is equal to 3."#;
     let result = run(source);
     assert_eq!(result.status, 0, "{}", result.stderr);
-    assert_eq!(result.stdout, "2\\n3\\n4\\n2\\n6\\nhi\\nHELLO\\nworld\\n".replace("\\\\n", "\\n"));
+    assert_eq!(result.stdout, "2\n3\n4\n2\n6\nhi\nHELLO\nworld\n");
 }
 
 #[test]
@@ -74,5 +74,5 @@ assert len is equal to 7. assert abs is equal to 9. assert mean is equal to 4."#
 fn example_is_runnable_without_new_capabilities() {
     let result = run(include_str!("../examples/python_function_aliases.suri"));
     assert_eq!(result.status, 0, "{}", result.stderr);
-    assert_eq!(result.stdout, "Python-style functions OK\\n".replace("\\\\n", "\\n"));
+    assert_eq!(result.stdout, "Python-style functions OK\n");
 }
