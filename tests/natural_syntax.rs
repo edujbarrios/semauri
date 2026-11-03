@@ -81,7 +81,7 @@ fn ast_optimizer_formatter_and_effects_support_new_syntax() {
 fn example_compiles_and_runs() {
     let result = run(include_str!("../examples/natural_syntax.suri"));
     assert_eq!(result.status, 0, "{}", result.stderr);
-    assert_eq!(result.stdout, "Hello, Ada\n");
+    assert_eq!(result.stdout, "Hello, Ada\nThree is prime\n");
 }
 
 #[test]
