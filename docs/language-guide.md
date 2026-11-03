@@ -1245,7 +1245,7 @@ A `for` loop can optionally use `do:`, e.g.
 `for each number in numbers do: ... end.`.
 These forms preserve Semauri's existing typed branch and loop semantics.
 
-## Additional pure scientific math functions (unreleased)
+## Additional pure scientific math functions (v0.62.0)
 
 Five typed expressions use `FUNCTION of NUMBER` without granting any new
 capabilities: `asinh` (inverse hyperbolic sine), `acosh` (inverse
@@ -1267,7 +1267,7 @@ assert (acosh of 1) is equal to 0.0.
 assert (atanh of 0) is equal to 0.0.
 ```
 
-## Compact Python-style functions (unreleased)
+## Compact Python-style functions (v0.62.0)
 
 The contextual functions `len of`, `abs of`, `mean of`, `min of`,
 `max of`, `strip of`, `upper of`, and `lower of` are aliases for
@@ -1275,7 +1275,7 @@ Semauri's existing strict, pure operators. See the
 [Python-style function guide](python-style-functions.md) and
 [executable example](../examples/python_function_aliases.suri).
 
-## Natural emptiness and blank-text predicates (unreleased)
+## Natural emptiness and blank-text predicates (v0.62.0)
 
 Use `value is empty` or `value is not empty` to check if a typed list or
 Unicode text has zero elements/characters. Use `text is blank` or

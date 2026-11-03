@@ -24,7 +24,7 @@ assert sinh of 0 is equal to 0.0.
 assert cosh of 0 is equal to 1.0.
 assert tanh of 0 is equal to 0.0.
 
-# Stable near-zero math and inverse hyperbolic functions (unreleased).
+# Stable near-zero math and inverse hyperbolic functions (v0.62.0).
 assert log1p of 0 is equal to 0.0.
 assert expm1 of 0 is equal to 0.0.
 assert asinh of 0 is equal to 0.0.
