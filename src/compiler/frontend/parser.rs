@@ -647,6 +647,24 @@ impl<'a> Parser<'a> {
             return self.membership_expression(left, true);
         }
 
+        // Natural emptiness and whitespace predicates. Lower them to
+        // existing typed Trim, Length, Equal and NotEqual operators so
+        // their type safety, effects and optimizer remain unchanged.
+        let negated = self.check(TokenKind::Not)
+            && self.tokens.get(self.current + 1).is_some_and(|next|
+                next.kind == TokenKind::Word
+                && matches!(next.lexeme.to_ascii_lowercase().as_str(), "empty" | "blank"));
+        let positive = self.check(TokenKind::Word)
+            && matches!(self.peek().lexeme.to_ascii_lowercase().as_str(), "empty" | "blank");
+        if negated || positive {
+            if negated { self.advance(); }
+            let predicate = self.advance().clone();
+            return Ok(self.empty_predicate_expression(
+                left, predicate.lexeme.eq_ignore_ascii_case("blank"), negated,
+                predicate.span,
+            ));
+        }
+
         let operator = if self.matches(&[TokenKind::Greater]) {
             self.consume(
                 TokenKind::Than,
@@ -756,6 +774,43 @@ impl<'a> Parser<'a> {
             };
         }
         Ok(expression)
+    }
+
+    // Desugar natural predicates through the existing typed operations.
+    // 'empty' accepts strings/lists; 'blank' accepts only strings and ignores
+    // surrounding Unicode whitespace through the existing trim operator.
+    fn empty_predicate_expression(
+        &self,
+        value: Expr,
+        trim_first: bool,
+        negated: bool,
+        end: SourceSpan,
+    ) -> Expr {
+        let span = span_between_spans(value.span(), end);
+        let operand = if trim_first {
+            Expr::Unary {
+                operator: UnaryOperator::Trim,
+                operand: Box::new(value),
+                span,
+            }
+        } else {
+            value
+        };
+        let length = Expr::Unary {
+            operator: UnaryOperator::Length,
+            operand: Box::new(operand),
+            span,
+        };
+        Expr::Binary {
+            left: Box::new(length),
+            operator: if negated { BinaryOperator::NotEqual } else { BinaryOperator::Equal },
+            right: Box::new(Expr::Literal {
+                ty: Type::Number,
+                value: LiteralValue::Number(NumberValue::Int(0)),
+                span: end,
+            }),
+            span,
+        }
     }
 
     // No new runtime operator: membership reuses typed Contains and Not.

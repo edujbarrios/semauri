@@ -9,6 +9,10 @@
 - Add contextual shorthand `len of`, `abs of`, `mean of`, `min of`, `max of`, `strip of`, `upper of` and `lower of` for existing typed, pure operators.
 - Document short-form semantics and preserve legacy operators, type errors, evaluation, and optimization without changing released version metadata.
 
+### Natural empty and blank predicates
+- Add `is empty`, `is not empty`, `is blank`, and `is not blank`. Reuse existing typed Length/Trim/Equal operators and preserve compile-time diagnostics.
+- Cover Unicode whitespace, typed list and string inputs, source formatting and Jupyter/VS Code tooling.
+
 ## 0.61.0 — 2026-11-03
 
 ### Natural-language and Python-like syntax

@@ -1,0 +1,12 @@
+# Type-safe natural emptiness predicates for lists and text.
+let values be a list of 1, 2, 3.
+let nothing be take 0 from values.
+assert nothing is empty.
+assert values is not empty.
+assert "" is empty.
+assert "ñ" is not empty.
+assert "  \t  " is blank.
+assert "hello" is not blank.
+when values is not empty and "   " is blank then:
+    print "Natural predicates OK".
+end.
