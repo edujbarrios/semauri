@@ -106,10 +106,3 @@ Typed Python-like membership: `item in collection`, `item not in collection`,
 More conversational control flow: `when condition then:`,
 `elif other_condition then:`, and `for each item in items do:`.
 See [the updated natural-syntax example](examples/natural_syntax.suri).
-
-## Upcoming functions on `main` (not yet released)
-
-Five additional checked, pure math functions are available when building
-from the repository's `main` branch: `asinh of`, `acosh of`, `atanh of`,
-`log1p of`, and `expm1 of`. The latest **published** version remains
-v0.61.0 until an explicit future release.
