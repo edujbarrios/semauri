@@ -83,3 +83,43 @@ fn example_compiles_and_runs() {
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert_eq!(result.stdout, "Hello, Ada\n");
 }
+
+#[test]
+fn elif_then_and_do_support_readable_control_flow() {
+    let source = r#"let numbers be a list of 1, 2, 3.
+when 2 is in numbers then:
+    print "first".
+elif 3 not in numbers then:
+    print "second".
+else:
+    print "third".
+end.
+if false then:
+    print "never".
+elif 2 in numbers then:
+    print "elif".
+else:
+    print "not reached".
+end.
+for each n in numbers do:
+    assert n is greater than 0.
+end."#;
+    let result = run(source);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "first\\nelif\\n".replace("\\\\n", "\\n"));
+}
+
+#[test]
+fn existing_else_if_and_for_syntax_stays_compatible() {
+    let result = run(r#"if false:
+    print "never".
+otherwise if true:
+    print "old spelling".
+end.
+let values be a list of 2, 4.
+for n in values:
+    assert n is greater than 0.
+end."#);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "old spelling\\n".replace("\\\\n", "\\n"));
+}

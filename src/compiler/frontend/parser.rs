@@ -404,6 +404,8 @@ impl<'a> Parser<'a> {
         } else {
             condition
         };
+        // In plain-English conditionals, "then" is an optional delimiter.
+        self.matches_surface("then");
         self.consume(
             TokenKind::Colon,
             "Expected ':' after the if condition",
@@ -416,9 +418,12 @@ impl<'a> Parser<'a> {
         // Chained conditionals share one End. Lower the chain into nested
         // If nodes so existing type checks, scopes and optimizer rules apply.
         while self.matches(&[TokenKind::Otherwise]) {
-            if self.matches(&[TokenKind::If]) {
+            // 'elif' is a single-token spelling of 'otherwise if'.
+            let is_elif = self.previous().lexeme.eq_ignore_ascii_case("elif");
+            if is_elif || self.matches(&[TokenKind::If]) {
                 let branch_start = self.previous().span;
                 let condition = self.expression()?;
+                self.matches_surface("then");
                 self.consume(
                     TokenKind::Colon,
                     "Expected ':' after the if condition",
@@ -490,6 +495,8 @@ impl<'a> Parser<'a> {
             "S230",
         )?;
         let iterable = self.expression()?;
+        // Optional 'do' makes the loop read as an English sentence.
+        self.matches_surface("do");
         self.consume(
             TokenKind::Colon,
             "Expected ':' after the iterable expression",
