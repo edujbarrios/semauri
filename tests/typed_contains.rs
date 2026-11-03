@@ -100,7 +100,7 @@ when 5 in nums and "abc" not in "hello":
 end."#;
     let result = run(source);
     assert_eq!(result.status, 0, "{}", result.stderr);
-    assert_eq!(result.stdout, "true\\ntrue\\ntrue\\ntrue\\ntrue\\ntrue\\nmatched\\n".replace("\\\\n","\\n"));
+    assert_eq!(result.stdout, "true\ntrue\ntrue\ntrue\ntrue\ntrue\nmatched\n");
 }
 
 #[test]
