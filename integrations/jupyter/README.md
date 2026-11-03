@@ -80,7 +80,7 @@ Completions and contextual help include `elif`, `then`, `do` and
 `in`. Typed membership uses `item in list` or `item not in list`,
 and branches support `elif CONDITION then:`.
 
-## Unreleased scientific functions on main
+## Additional scientific functions in v0.62.0
 
 Offline completion and help now include `asinh`, `acosh`, `atanh`,
 `log1p`, and `expm1` for pure, typed numerical expressions.

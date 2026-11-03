@@ -1,4 +1,4 @@
-# Python-friendly function aliases (unreleased)
+# Python-friendly function aliases (v0.62.0)
 
 Semauri retains its natural-language expression form `FUNCTION of OPERAND`.
 These shorter names reuse the same statically typed operators and optimizer
@@ -28,5 +28,4 @@ and so on still work when not immediately followed by `of`.
 As with existing prefix functions, parenthesize a compound operand.
 See [the executable example](../examples/python_function_aliases.suri).
 
-This capability is currently on the `main` development branch, not in an
-independently tagged release; the latest published release remains v0.61.0.
+These aliases are included in Semauri v0.62.0.

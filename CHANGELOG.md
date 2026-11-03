@@ -1,13 +1,13 @@
-## Unreleased (not tagged or published)
+## 0.62.0 — 2026-11-03
 
 ### Typed math expressions
 - Add pure `asinh of`, `acosh of`, `atanh of`, `log1p of`, and `expm1 of` with finite results, mathematical domain checks, and typed diagnostics.
 - Extend AST/HIR, constant folding, evaluation, formatter, VS Code, Jupyter and the language guide with regression tests and examples.
-- No new dependencies, capability grants or version changes; v0.61.0 remains the latest release.
+- Preserve finite-domain diagnostics S465/S466 without new dependency or capability grants.
 
 ### Python-friendly function aliases
 - Add contextual shorthand `len of`, `abs of`, `mean of`, `min of`, `max of`, `strip of`, `upper of` and `lower of` for existing typed, pure operators.
-- Document short-form semantics and preserve legacy operators, type errors, evaluation, and optimization without changing released version metadata.
+- Document short-form semantics while preserving legacy operators, type errors, evaluation, and optimization.
 
 ### Natural empty and blank predicates
 - Add `is empty`, `is not empty`, `is blank`, and `is not blank`. Reuse existing typed Length/Trim/Equal operators and preserve compile-time diagnostics.
