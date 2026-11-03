@@ -727,6 +727,20 @@ impl<'a> Parser<'a> {
             } else {
                 BinaryOperator::LessThan
             }
+        } else if self.check(TokenKind::At) && self.tokens.get(self.current + 1)
+            .is_some_and(|next| next.kind == TokenKind::Word && matches!(
+                next.lexeme.to_ascii_lowercase().as_str(), "least" | "most")) {
+            // 'is at least' / 'is at most' map directly to checked inclusive
+            // ordering comparisons, without evaluating the left side twice.
+            self.advance(); // at
+            let bound = self.advance().lexeme.to_ascii_lowercase();
+            if bound == "least" { BinaryOperator::GreaterThanOrEqual }
+            else { BinaryOperator::LessThanOrEqual }
+        } else if self.check(TokenKind::Word) && matches!(
+            self.peek().lexeme.to_ascii_lowercase().as_str(), "above" | "below") {
+            if self.advance().lexeme.eq_ignore_ascii_case("above") {
+                BinaryOperator::GreaterThan
+            } else { BinaryOperator::LessThan }
         } else if self.matches(&[TokenKind::Equal]) {
             self.consume(
                 TokenKind::To,
@@ -755,7 +769,7 @@ impl<'a> Parser<'a> {
         } else {
             return Err(self.parse_error(
                 self.peek(),
-                "Expected 'greater than', 'less than', 'equal to', or 'not equal to' after 'is'",
+                "Expected a comparison after 'is' (greater than, less than, at least, at most, above, below, equal to, or not equal to)",
                 "S225",
                 Some(
                     "Ordering comparisons may add 'or equal to', for example 'is greater than or equal to'."

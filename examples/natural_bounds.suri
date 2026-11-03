@@ -1,0 +1,13 @@
+# Readable bounds checked by Semauri's existing numeric comparisons.
+let temperature be 21.
+assert temperature is at least 0.
+assert temperature is at most 30.
+assert temperature is above 20.
+assert temperature is below 22.
+assert 3 is at least 3.
+assert 3 is at most 3.
+assert 0.5 is above 0.
+assert (minus 1) is below 0.
+when temperature is at least 18 and temperature is at most 25 then:
+    print "Natural bounds OK".
+end.

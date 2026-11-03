@@ -1314,3 +1314,21 @@ assert 4 is even.
 assert 7 is not even.
 assert 3.5 is not negative.
 ```
+
+## Natural comparison boundaries (v0.63.0)
+
+You can express numeric bounds using `value is at least minimum` (inclusive
+`>=`), `value is at most maximum` (inclusive `<=`), `value is above
+limit` (`>`), and `value is below limit` (`<`). These are contextual
+spellings of Semauri's existing type-checked comparison operators. Unlike a
+repeated range check, the left-hand expression is only evaluated once per
+comparison. Non-number operands produce the same compile-time diagnostic as
+ordinary greater-than/less-than operations.
+
+```text
+let age be 21.
+assert age is at least 18.
+assert age is at most 65.
+assert age is above 20.
+assert age is below 25.
+```
