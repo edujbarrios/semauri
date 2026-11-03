@@ -1,8 +1,12 @@
-## Unreleased
+## 0.63.0 — 2026-11-03
 
 ### Readable numeric conditions
 - Add statically typed `is zero`, `is positive`, `is negative`, `is even`, and `is odd`, including `is not` variants.
 - Reuse existing sign, parity, comparison, finite-domain checks and optimizer paths; preserve contextual identifiers.
+
+### English-like numeric bounds
+- Add `is at least`, `is at most`, `is above`, and `is below` with existing inclusive/strict numeric ordering checks.
+- Preserve strict type checking and single evaluation, and extend formatter, docs, notebook and VS Code support.
 
 ## 0.62.0 — 2026-11-03
 

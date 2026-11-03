@@ -179,3 +179,12 @@ fn grammar_highlights_natural_numeric_predicates() {
         assert!(operators.contains(word), "missing {word} in {operators}");
     }
 }
+
+#[test]
+fn grammar_highlights_natural_comparison_bounds() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let operators = grammar["repository"]["operators"]["match"].as_str().unwrap();
+    for word in ["least", "most", "above", "below"] {
+        assert!(operators.contains(word), "missing {word} in {operators}");
+    }
+}

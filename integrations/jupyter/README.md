@@ -84,3 +84,9 @@ and branches support `elif CONDITION then:`.
 
 Offline completion and help now include `asinh`, `acosh`, `atanh`,
 `log1p`, and `expm1` for pure, typed numerical expressions.
+
+## Natural predicates and boundaries (v0.63.0)
+
+Notebook completions include `zero`, `positive`, `negative`, `even`,
+`odd`, `least`, `most`, `above`, and `below`. They support
+natural source such as `assert 3 is positive.` and `assert 3 is at least 2.`.

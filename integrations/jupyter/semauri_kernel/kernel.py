@@ -17,9 +17,9 @@ from ipykernel.kernelbase import Kernel
 
 class SemauriKernel(Kernel):
     implementation = "semauri"
-    implementation_version = "0.7.0"
+    implementation_version = "0.8.0"
     language = "semauri"
-    language_version = "0.62"
+    language_version = "0.63"
     language_info = {
         "name": "semauri",
         "mimetype": "text/x-semauri",
@@ -44,6 +44,7 @@ class SemauriKernel(Kernel):
         "floor", "ceiling", "length", "reverse", "take", "drop", "json", "parse",
         "len", "abs", "mean", "min", "max", "strip", "upper", "lower",
         "empty", "blank", "zero", "positive", "negative", "even", "odd",
+        "least", "most", "above", "below",
     )
 
     # Offline help for frequently used Semauri expressions and notebook magics.
@@ -70,6 +71,10 @@ class SemauriKernel(Kernel):
         "negative": "NUMBER is negative / is not negative. Strictly less than zero.",
         "even": "INTEGER is even / is not even. Checked parity predicate.",
         "odd": "INTEGER is odd / is not odd. Checked parity predicate.",
+        "least": "NUMBER is at least LIMIT. Inclusive >= numeric comparison.",
+        "most": "NUMBER is at most LIMIT. Inclusive <= numeric comparison.",
+        "above": "NUMBER is above LIMIT. Strict > numeric comparison.",
+        "below": "NUMBER is below LIMIT. Strict < numeric comparison.",
         "joined": "LEFT joined with RIGHT. Concatenate two strings only.",
         "different": "LEFT is different from RIGHT. Strict inequality.",
         "print": "print EXPRESSION. Requires the console_write capability.",
