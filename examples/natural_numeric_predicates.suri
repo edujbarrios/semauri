@@ -1,0 +1,15 @@
+# Checked English-like numerical predicates.
+let value be minus 4.
+assert value is negative.
+assert value is not positive.
+assert 0 is zero.
+assert 0.0 is zero.
+assert 7 is positive.
+assert 7 is odd.
+assert 8 is even.
+assert 9 is not even.
+assert 12 is not negative.
+assert 3.25 is positive.
+when value is negative and 10 is even then:
+    print "Natural numeric predicates OK".
+end.

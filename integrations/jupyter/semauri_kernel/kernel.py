@@ -43,7 +43,7 @@ class SemauriKernel(Kernel):
         "sorted", "distinct", "flatten", "partition", "split", "join", "joined", "different",
         "floor", "ceiling", "length", "reverse", "take", "drop", "json", "parse",
         "len", "abs", "mean", "min", "max", "strip", "upper", "lower",
-        "empty", "blank",
+        "empty", "blank", "zero", "positive", "negative", "even", "odd",
     )
 
     # Offline help for frequently used Semauri expressions and notebook magics.
@@ -65,6 +65,11 @@ class SemauriKernel(Kernel):
         "in": "ITEM in COLLECTION. Typed list membership or text substring.",
         "empty": "VALUE is empty / is not empty. Typed empty list or string predicate.",
         "blank": "TEXT is blank / is not blank. Text is whitespace-only or empty.",
+        "zero": "NUMBER is zero / is not zero. Checked numeric zero predicate.",
+        "positive": "NUMBER is positive / is not positive. Strictly greater than zero.",
+        "negative": "NUMBER is negative / is not negative. Strictly less than zero.",
+        "even": "INTEGER is even / is not even. Checked parity predicate.",
+        "odd": "INTEGER is odd / is not odd. Checked parity predicate.",
         "joined": "LEFT joined with RIGHT. Concatenate two strings only.",
         "different": "LEFT is different from RIGHT. Strict inequality.",
         "print": "print EXPRESSION. Requires the console_write capability.",
