@@ -854,6 +854,31 @@ impl<'a> Parser<'a> {
     fn primary(&mut self) -> Result<Expr> {
         let token = self.peek().clone();
         match token.kind {
+            // Python-friendly contextual functions; keep the strict existing HIR operators.
+            TokenKind::Word
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                    "len" | "abs" | "mean" | "min" | "max" | "strip" | "upper" | "lower")
+                    && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Of, "Expected 'of' after function alias", "S242")?;
+                let operand = self.primary()?;
+                let operator = match start.lexeme.to_ascii_lowercase().as_str() {
+                    "len" => UnaryOperator::Length,
+                    "abs" => UnaryOperator::Absolute,
+                    "mean" => UnaryOperator::Average,
+                    "min" => UnaryOperator::Minimum,
+                    "max" => UnaryOperator::Maximum,
+                    "strip" => UnaryOperator::Trim,
+                    "upper" => UnaryOperator::Uppercase,
+                    "lower" => UnaryOperator::Lowercase,
+                    _ => unreachable!("guard restricts aliases"),
+                };
+                Ok(Expr::Unary {
+                    operator,
+                    span: span_between_spans(start.span, operand.span()),
+                    operand: Box::new(operand),
+                })
+            }
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(), "variance" | "stdev")
                     && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {

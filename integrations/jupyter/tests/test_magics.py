@@ -49,7 +49,10 @@ class MagicTests(unittest.TestCase):
                                  ("asin", "asinh"), ("acos", "acosh"), ("atan", "atanh"),
                                  ("log1", "log1p"), ("expm", "expm1"),
                                  ("whe", "when"), ("join", "joined"), ("differ", "different"),
-                                 ("eli", "elif"), ("the", "then"), ("do", "do")):
+                                 ("eli", "elif"), ("the", "then"), ("do", "do"),
+                                 ("len", "len"), ("abs", "abs"), ("mea", "mean"),
+                                 ("min", "min"), ("max", "max"), ("stri", "strip"),
+                                 ("upp", "upper"), ("low", "lower")):
             result = kernel.do_complete(prefix, len(prefix))
             self.assertIn(expected, result["matches"])
 

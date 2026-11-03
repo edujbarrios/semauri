@@ -1266,3 +1266,11 @@ let stable_logs be map every x in values to (log1p of x).
 assert (acosh of 1) is equal to 0.0.
 assert (atanh of 0) is equal to 0.0.
 ```
+
+## Compact Python-style functions (unreleased)
+
+The contextual functions `len of`, `abs of`, `mean of`, `min of`,
+`max of`, `strip of`, `upper of`, and `lower of` are aliases for
+Semauri's existing strict, pure operators. See the
+[Python-style function guide](python-style-functions.md) and
+[executable example](../examples/python_function_aliases.suri).

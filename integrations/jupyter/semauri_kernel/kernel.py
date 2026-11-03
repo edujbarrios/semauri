@@ -42,12 +42,21 @@ class SemauriKernel(Kernel):
         "asin", "acos", "atan", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "log1p", "expm1", "minimum", "maximum", "median",
         "sorted", "distinct", "flatten", "partition", "split", "join", "joined", "different",
         "floor", "ceiling", "length", "reverse", "take", "drop", "json", "parse",
+        "len", "abs", "mean", "min", "max", "strip", "upper", "lower",
     )
 
     # Offline help for frequently used Semauri expressions and notebook magics.
     # This is deliberately descriptive, never a runtime evaluation.
     KEYWORD_HELP = {
         "let": "let name be EXPRESSION. Create an immutable binding.",
+        "len": "len of VALUE. Alias for length of text or list (Unicode characters).",
+        "abs": "abs of NUMBER. Alias for checked absolute of NUMBER.",
+        "mean": "mean of LIST. Alias for average of a number list.",
+        "min": "min of LIST. Alias for minimum of a typed list.",
+        "max": "max of LIST. Alias for maximum of a typed list.",
+        "strip": "strip of TEXT. Alias for trim of TEXT.",
+        "upper": "upper of TEXT. Alias for uppercase of TEXT.",
+        "lower": "lower of TEXT. Alias for lowercase of TEXT.",
         "when": "when CONDITION: ... otherwise: ... end. Synonym for if.",
         "elif": "elif CONDITION: ... end. Shorthand for otherwise if.",
         "then": "Optional delimiter in if/when/elif CONDITION then: ... end.",
