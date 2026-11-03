@@ -1,0 +1,14 @@
+# Compact Python-style function names with natural-language 'of' syntax.
+let numbers be a list of 2, 4, 6.
+assert len of numbers is equal to 3.
+assert mean of numbers is equal to 4.
+assert min of numbers is equal to 2.
+assert max of numbers is equal to 6.
+assert abs of (minus 12) is equal to 12.
+assert len of "ñ🌍" is equal to 2.
+assert strip of "  hello  " is equal to "hello".
+assert upper of "hello" is equal to "HELLO".
+assert lower of "WORLD" is equal to "world".
+let absolute_values be map every n in numbers to (abs of n).
+assert len of absolute_values is equal to 3.
+print "Python-style functions OK".

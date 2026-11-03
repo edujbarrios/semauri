@@ -143,3 +143,12 @@ fn grammar_highlights_python_like_conditionals_and_membership() {
         assert!(control.contains(word), "missing {word} in {control}");
     }
 }
+
+#[test]
+fn grammar_highlights_python_friendly_function_aliases() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let words = grammar["repository"]["collections"]["match"].as_str().unwrap();
+    for word in ["len", "abs", "mean", "min", "max", "strip", "upper", "lower"] {
+        assert!(words.contains(word), "{word} missing from {words}");
+    }
+}
