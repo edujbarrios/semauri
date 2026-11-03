@@ -17,9 +17,9 @@ from ipykernel.kernelbase import Kernel
 
 class SemauriKernel(Kernel):
     implementation = "semauri"
-    implementation_version = "0.7.0"
+    implementation_version = "0.8.0"
     language = "semauri"
-    language_version = "0.62"
+    language_version = "0.63"
     language_info = {
         "name": "semauri",
         "mimetype": "text/x-semauri",

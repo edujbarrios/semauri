@@ -1,4 +1,4 @@
-## Unreleased
+## 0.63.0 — 2026-11-03
 
 ### Readable numeric conditions
 - Add statically typed `is zero`, `is positive`, `is negative`, `is even`, and `is odd`, including `is not` variants.
