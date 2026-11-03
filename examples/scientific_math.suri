@@ -23,3 +23,15 @@ print "scientific math OK".
 assert sinh of 0 is equal to 0.0.
 assert cosh of 0 is equal to 1.0.
 assert tanh of 0 is equal to 0.0.
+
+# Stable near-zero math and inverse hyperbolic functions (unreleased).
+assert log1p of 0 is equal to 0.0.
+assert expm1 of 0 is equal to 0.0.
+assert asinh of 0 is equal to 0.0.
+assert acosh of 1 is equal to 0.0.
+assert atanh of 0 is equal to 0.0.
+let fractions be a list of 0, 0.25, 0.5.
+let stable_logs be map every n in fractions to (log1p of n).
+let stable_exps be map every n in fractions to (expm1 of n).
+assert length of stable_logs is equal to 3.
+assert length of stable_exps is equal to 3.

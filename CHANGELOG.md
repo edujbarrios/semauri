@@ -1,3 +1,10 @@
+## Unreleased (not tagged or published)
+
+### Typed math expressions
+- Add pure `asinh of`, `acosh of`, `atanh of`, `log1p of`, and `expm1 of` with finite results, mathematical domain checks, and typed diagnostics.
+- Extend AST/HIR, constant folding, evaluation, formatter, VS Code, Jupyter and the language guide with regression tests and examples.
+- No new dependencies, capability grants or version changes; v0.61.0 remains the latest release.
+
 ## 0.61.0 — 2026-11-03
 
 ### Natural-language and Python-like syntax

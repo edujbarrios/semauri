@@ -79,3 +79,8 @@ For example: `let greeting be "Hello, " joined with "Ada".`
 Completions and contextual help include `elif`, `then`, `do` and
 `in`. Typed membership uses `item in list` or `item not in list`,
 and branches support `elif CONDITION then:`.
+
+## Unreleased scientific functions on main
+
+Offline completion and help now include `asinh`, `acosh`, `atanh`,
+`log1p`, and `expm1` for pure, typed numerical expressions.

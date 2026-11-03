@@ -84,3 +84,55 @@ fn natural_for_loops_accept_optional_every_and_each() {
         compiler.compile(&source, None).expect("natural iteration should compile");
     }
 }
+
+#[test]
+fn extended_scientific_math_checks_safe_values_and_typed_lists() {
+    let c = Compiler::new();
+    let source = r#"
+assert (asinh of 0) is equal to 0.0.
+assert (acosh of 1) is equal to 0.0.
+assert (atanh of 0) is equal to 0.0.
+assert (log1p of 0) is equal to 0.0.
+assert (expm1 of 0) is equal to 0.0.
+assert (asinh of (minus 2)) is less than (minus 1).
+assert (acosh of 2) is greater than 1.
+assert (atanh of 0.5) is greater than 0.5.
+let xs be a list of 0, 0.1, 0.2.
+let ys be map every x in xs to (log1p of x).
+let zs be map every x in xs to (expm1 of x).
+assert length of ys is equal to 3.
+assert length of zs is equal to 3.
+"#;
+    c.compile(source, None).unwrap();
+    assert!(c.optimized_hir(source).is_ok());
+    assert!(c.hir(source).is_ok());
+}
+
+#[test]
+fn extended_scientific_math_checks_errors_and_contextual_formatting() {
+    let c = Compiler::new();
+    for name in ["asinh", "acosh", "atanh", "log1p", "expm1"] {
+        let source = format!("print {name} of true.");
+        let error = c.hir(&source).unwrap_err();
+        assert_eq!(error.code, "S465", "{name}");
+        assert!(error.span.is_some());
+        let uppercase = format!("PRINT {} OF 0.", name.to_uppercase());
+        assert_eq!(c.format_source(&uppercase).unwrap(), format!("print {name} of 0."));
+        assert_eq!(c.effect_analysis(&format!("print {name} of 1.")).unwrap().effects(),
+            vec!["console_write".to_string()]);
+    }
+    for expr in [
+        "acosh of 0",
+        "acosh of (minus 2)",
+        "atanh of 1",
+        "atanh of (minus 1)",
+        "atanh of 2",
+        "log1p of (minus 1)",
+        "log1p of (minus 2)",
+        "expm1 of 1000",
+    ] {
+        let error = c.compile(&format!("print {expr}."), None).unwrap_err();
+        assert_eq!(error.code, "S466", "{expr}");
+    }
+    c.compile("let atanh be 7. let log1p be 8. assert atanh is equal to 7. assert log1p is equal to 8.", None).unwrap();
+}
