@@ -14,3 +14,11 @@ let values be a list of 1, 2, 3.
 for each value in values:
     assert value is greater than 0.
 end.
+
+# Python-like typed membership
+let primes be a list of 2, 3, 5, 7.
+assert 3 in primes.
+assert 9 not in primes.
+assert 5 is in primes.
+assert 8 is not in primes.
+assert "aur" in "Semauri".

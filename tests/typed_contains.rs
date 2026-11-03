@@ -85,3 +85,38 @@ fn contains_is_an_explicit_ast_operator_and_safe_to_fold() {
         vec!["console_write".to_string()]
     );
 }
+
+#[test]
+fn natural_membership_supports_lists_strings_and_negative_forms() {
+    let source = r#"let nums be a list of 2, 3, 5.
+print 3 in nums.
+print 4 not in nums.
+print 2 is in nums.
+print 6 is not in nums.
+print "aur" in "Semauri".
+print "xyz" not in "Semauri".
+when 5 in nums and "abc" not in "hello":
+    print "matched".
+end."#;
+    let result = run(source);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "true\\ntrue\\ntrue\\ntrue\\ntrue\\ntrue\\nmatched\\n".replace("\\\\n","\\n"));
+}
+
+#[test]
+fn natural_membership_preserves_type_errors_and_compiler_passes() {
+    let compiler = Compiler::new();
+    for source in [r#"print "3" in (a list of 3, 4)."#, "print 3 in 42.",
+                   "print 3 not in true.", r#"print 1 in "123"."#] {
+        let err = compiler.hir(source).unwrap_err();
+        assert_eq!(err.code, "S344", "{source}: {err}");
+    }
+    let ast = compiler.parse("print 2 not in (a list of 1, 2).").unwrap().to_json().to_string();
+    assert!(ast.contains("contains") && ast.contains("not"), "{ast}");
+    let optimized = compiler.optimized_hir(r#"print "a" in "cat"."#).unwrap().to_json().to_string();
+    assert!(optimized.contains("true"), "{optimized}");
+    assert_eq!(compiler.effect_analysis("print 3 in (a list of 3, 4).").unwrap().effects(),
+        vec!["console_write".to_string()]);
+    assert_eq!(compiler.format_source("PRINT 3 NOT IN (a list of 3, 4).").unwrap(),
+        "print 3 not in (a list of 3, 4).");
+}

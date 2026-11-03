@@ -1217,3 +1217,20 @@ It is left-associative and will not silently convert numbers to text.
 The three supported loop spellings are `for item in items:`,
 `for each item in items:`, and `for every item in items:`,
 with the customary `end.` terminator. Semauri is not Python itself.
+
+## Membership in natural language (v0.61)
+
+Use `item in collection`, `item not in collection`,
+`item is in collection`, or `item is not in collection`.
+These read like Python membership tests and reuse Semauri's existing
+strictly typed `collection contains item` semantics. Lists require their
+own element type, and strings support substring matching. The operators
+also work inside `when` and `if` conditions. The `not in` form
+negates a boolean result and retains short-circuiting of outer conditions.
+
+```text
+let names be a list of "Ada", "Grace".
+assert "Ada" in names.
+assert "Alan" not in names.
+assert "aur" is in "Semauri".
+```

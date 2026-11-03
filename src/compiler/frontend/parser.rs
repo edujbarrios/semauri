@@ -613,8 +613,31 @@ impl<'a> Parser<'a> {
                 span,
             });
         }
+        // Python-style membership, with an English "is in" variant.
+        // Keep the existing 'contains' semantic and optimizer paths by
+        // reversing operands: item in collection => collection contains item.
+        if self.matches(&[TokenKind::In]) {
+            return self.membership_expression(left, false);
+        }
+        if self.check(TokenKind::Not)
+            && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::In)
+        {
+            self.advance(); // not
+            self.advance(); // in
+            return self.membership_expression(left, true);
+        }
         if !self.matches(&[TokenKind::Is]) {
             return Ok(left);
+        }
+        if self.matches(&[TokenKind::In]) {
+            return self.membership_expression(left, false);
+        }
+        if self.check(TokenKind::Not)
+            && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::In)
+        {
+            self.advance(); // not
+            self.advance(); // in
+            return self.membership_expression(left, true);
         }
 
         let operator = if self.matches(&[TokenKind::Greater]) {
@@ -726,6 +749,23 @@ impl<'a> Parser<'a> {
             };
         }
         Ok(expression)
+    }
+
+    // No new runtime operator: membership reuses typed Contains and Not.
+    fn membership_expression(&mut self, item: Expr, negated: bool) -> Result<Expr> {
+        let collection = self.concatenative()?;
+        let span = span_between_spans(item.span(), collection.span());
+        let contains = Expr::Binary {
+            left: Box::new(collection),
+            operator: BinaryOperator::Contains,
+            right: Box::new(item),
+            span,
+        };
+        if negated {
+            Ok(Expr::Unary { operator: UnaryOperator::Not, operand: Box::new(contains), span })
+        } else {
+            Ok(contains)
+        }
     }
 
     fn additive(&mut self) -> Result<Expr> {
