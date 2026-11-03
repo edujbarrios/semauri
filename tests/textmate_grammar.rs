@@ -170,3 +170,12 @@ fn grammar_highlights_natural_empty_and_blank_predicates() {
         assert!(operators.contains(word), "{word} missing in {operators}");
     }
 }
+
+#[test]
+fn grammar_highlights_natural_numeric_predicates() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let operators = grammar["repository"]["operators"]["match"].as_str().unwrap();
+    for word in ["zero", "positive", "negative", "even", "odd"] {
+        assert!(operators.contains(word), "missing {word} in {operators}");
+    }
+}

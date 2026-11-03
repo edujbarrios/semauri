@@ -53,7 +53,9 @@ class MagicTests(unittest.TestCase):
                                  ("len", "len"), ("abs", "abs"), ("mea", "mean"),
                                  ("min", "min"), ("max", "max"), ("stri", "strip"),
                                  ("upp", "upper"), ("low", "lower"),
-                                 ("empt", "empty"), ("blan", "blank")):
+                                 ("empt", "empty"), ("blan", "blank"),
+                                 ("zer", "zero"), ("posit", "positive"),
+                                 ("negat", "negative"), ("eve", "even"), ("od", "odd")):
             result = kernel.do_complete(prefix, len(prefix))
             self.assertIn(expected, result["matches"])
 
