@@ -81,5 +81,45 @@ fn ast_optimizer_formatter_and_effects_support_new_syntax() {
 fn example_compiles_and_runs() {
     let result = run(include_str!("../examples/natural_syntax.suri"));
     assert_eq!(result.status, 0, "{}", result.stderr);
-    assert_eq!(result.stdout, "Hello, Ada\n");
+    assert_eq!(result.stdout, "Hello, Ada\nThree is prime\n");
+}
+
+#[test]
+fn elif_then_and_do_support_readable_control_flow() {
+    let source = r#"let numbers be a list of 1, 2, 3.
+when 2 is in numbers then:
+    print "first".
+elif 3 not in numbers then:
+    print "second".
+else:
+    print "third".
+end.
+if false then:
+    print "never".
+elif 2 in numbers then:
+    print "elif".
+else:
+    print "not reached".
+end.
+for each n in numbers do:
+    assert n is greater than 0.
+end."#;
+    let result = run(source);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "first\nelif\n");
+}
+
+#[test]
+fn existing_else_if_and_for_syntax_stays_compatible() {
+    let result = run(r#"if false:
+    print "never".
+otherwise if true:
+    print "old spelling".
+end.
+let values be a list of 2, 4.
+for n in values:
+    assert n is greater than 0.
+end."#);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "old spelling\n");
 }

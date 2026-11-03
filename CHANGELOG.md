@@ -1,3 +1,11 @@
+## 0.61.0 — 2026-11-03
+
+### Natural-language and Python-like syntax
+- Add `item in collection` / `item not in collection` with optional `is` for typed list membership and Unicode substring search. Existing `contains` semantics and `S344` diagnostics are preserved.
+- Add `elif` as a natural Python-style conditional branch, optional `then:` after conditions, and optional `do:` in for-each loops.
+- Preserve `otherwise if`, `if`, `when`, and conventional `for` loop spellings.
+- Include compiler and runtime regression tests, examples, docs, editor highlighting, and notebook completion/help updates.
+
 ## 0.60.0 — 2026-11-01
 
 ### Natural language and typed expressions

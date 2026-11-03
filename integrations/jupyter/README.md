@@ -73,3 +73,9 @@ or a separate frontend extension.
 
 Completions include `when`, `joined` and `different`.
 For example: `let greeting be "Hello, " joined with "Ada".`
+
+## Semauri 0.61.0 additions
+
+Completions and contextual help include `elif`, `then`, `do` and
+`in`. Typed membership uses `item in list` or `item not in list`,
+and branches support `elif CONDITION then:`.
