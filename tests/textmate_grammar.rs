@@ -161,3 +161,12 @@ fn grammar_highlights_python_friendly_function_aliases() {
         assert!(words.contains(word), "{word} missing from {words}");
     }
 }
+
+#[test]
+fn grammar_highlights_natural_empty_and_blank_predicates() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let operators = grammar["repository"]["operators"]["match"].as_str().unwrap();
+    for word in ["empty", "blank"] {
+        assert!(operators.contains(word), "{word} missing in {operators}");
+    }
+}
