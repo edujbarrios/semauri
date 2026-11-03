@@ -854,8 +854,7 @@ impl<'a> Parser<'a> {
     fn primary(&mut self) -> Result<Expr> {
         let token = self.peek().clone();
         match token.kind {
-            // Python-inspired abbreviations that preserve the existing checked
-            // operators. Only a following 'of' makes these function names.
+            // Python-friendly contextual functions; keep the strict existing HIR operators.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),
                     "len" | "abs" | "mean" | "min" | "max" | "strip" | "upper" | "lower")
@@ -1200,7 +1199,7 @@ impl<'a> Parser<'a> {
                 })
             }
             TokenKind::Word
-                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "exp" | "ln" | "log10" | "log2" | "sin" | "cos" | "asin" | "acos" | "atan" | "sinh" | "cosh" | "tanh")
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "exp" | "ln" | "log10" | "log2" | "sin" | "cos" | "asin" | "acos" | "atan" | "sinh" | "cosh" | "tanh" | "asinh" | "acosh" | "atanh" | "log1p" | "expm1")
                     && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
                 let start = self.advance().clone();
                 self.consume(TokenKind::Of, "Expected 'of' after scientific math operator", "S242")?;
@@ -1218,6 +1217,11 @@ impl<'a> Parser<'a> {
                     "sinh" => UnaryOperator::HyperbolicSine,
                     "cosh" => UnaryOperator::HyperbolicCosine,
                     "tanh" => UnaryOperator::HyperbolicTangent,
+                    "asinh" => UnaryOperator::HyperbolicArcSine,
+                    "acosh" => UnaryOperator::HyperbolicArcCosine,
+                    "atanh" => UnaryOperator::HyperbolicArcTangent,
+                    "log1p" => UnaryOperator::LogOnePlus,
+                    "expm1" => UnaryOperator::ExpMinusOne,
                     _ => unreachable!("guard guarantees a scientific function"),
 
                 };

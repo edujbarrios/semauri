@@ -1244,3 +1244,33 @@ Conditions may end with optional `then` before `:`, for example
 A `for` loop can optionally use `do:`, e.g.
 `for each number in numbers do: ... end.`.
 These forms preserve Semauri's existing typed branch and loop semantics.
+
+## Additional pure scientific math functions (unreleased)
+
+Five typed expressions use `FUNCTION of NUMBER` without granting any new
+capabilities: `asinh` (inverse hyperbolic sine), `acosh` (inverse
+hyperbolic cosine), `atanh` (inverse hyperbolic tangent), `log1p` (natural
+logarithm of 1 + X, numerically accurate near zero), and `expm1`
+(exp(X) - 1, also accurate near zero).
+
+`acosh` requires X >= 1; `atanh` requires -1 < X < 1; `log1p`
+requires X > -1. All five require finite numeric input and finite output.
+Incorrect operand types raise `S465` and domain errors / overflow raise
+`S466`. They are pure and constant-foldable and can be used with typed
+`map every` lists; their names remain usable as variables except when
+followed by `of`.
+
+```text
+let values be a list of 0, 0.1, 0.2.
+let stable_logs be map every x in values to (log1p of x).
+assert (acosh of 1) is equal to 0.0.
+assert (atanh of 0) is equal to 0.0.
+```
+
+## Compact Python-style functions (unreleased)
+
+The contextual functions `len of`, `abs of`, `mean of`, `min of`,
+`max of`, `strip of`, `upper of`, and `lower of` are aliases for
+Semauri's existing strict, pure operators. See the
+[Python-style function guide](python-style-functions.md) and
+[executable example](../examples/python_function_aliases.suri).

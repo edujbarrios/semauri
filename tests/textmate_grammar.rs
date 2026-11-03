@@ -145,6 +145,15 @@ fn grammar_highlights_python_like_conditionals_and_membership() {
 }
 
 #[test]
+fn grammar_highlights_new_pure_math_functions() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let keywords = grammar["repository"]["collections"]["match"].as_str().unwrap();
+    for name in ["asinh", "acosh", "atanh", "log1p", "expm1"] {
+        assert!(keywords.contains(name), "{name} should be highlighted");
+    }
+}
+
+#[test]
 fn grammar_highlights_python_friendly_function_aliases() {
     let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
     let words = grammar["repository"]["collections"]["match"].as_str().unwrap();
