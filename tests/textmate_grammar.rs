@@ -134,3 +134,12 @@ fn grammar_highlights_natural_conditional_and_join_syntax() {
     let operators = grammar["repository"]["operators"]["match"].as_str().unwrap();
     for word in ["joined", "different"] { assert!(operators.contains(word), "{operators}"); }
 }
+
+#[test]
+fn grammar_highlights_python_like_conditionals_and_membership() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let control = grammar["repository"]["control"]["match"].as_str().unwrap();
+    for word in ["elif", "then", "do", "in"] {
+        assert!(control.contains(word), "missing {word} in {control}");
+    }
+}

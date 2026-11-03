@@ -22,3 +22,15 @@ assert 9 not in primes.
 assert 5 is in primes.
 assert 8 is not in primes.
 assert "aur" in "Semauri".
+
+# 'elif', optional 'then' and optional 'do' make branches and loops conversational.
+when 10 in primes then:
+    print "unexpected".
+elif 3 in primes then:
+    print "Three is prime".
+else:
+    print "not found".
+end.
+for each n in primes do:
+    assert n is greater than 0.
+end.

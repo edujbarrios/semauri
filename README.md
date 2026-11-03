@@ -1,6 +1,6 @@
 # Semauri
 
-**A readable, statically typed language for people and AI agents.** Write natural-language-inspired programs in `.suri`; compile with Rust, inspect effects, and run with explicit permissions. Current release: **v0.60.0**.
+**A readable, statically typed language for people and AI agents.** Write natural-language-inspired programs in `.suri`; compile with Rust, inspect effects, and run with explicit permissions. Current release: **v0.61.0**.
 
 ## Quick Start
 
@@ -98,3 +98,11 @@ Use `"Hello, " joined with name` for strictly typed text concatenation,
 and `is different from` for strict inequality. Python-like
 `for item in items:` and `for each item in items:` also work.
 See [the example](examples/natural_syntax.suri).
+
+### New in v0.61.0
+
+Typed Python-like membership: `item in collection`, `item not in collection`,
+`item is in collection`, and `item is not in collection`.
+More conversational control flow: `when condition then:`,
+`elif other_condition then:`, and `for each item in items do:`.
+See [the updated natural-syntax example](examples/natural_syntax.suri).

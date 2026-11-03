@@ -1234,3 +1234,13 @@ assert "Ada" in names.
 assert "Alan" not in names.
 assert "aur" is in "Semauri".
 ```
+
+## More conversational control flow (v0.61.0)
+
+Conditions may end with optional `then` before `:`, for example
+`when ready then:` or `if ready then:`. `elif condition:`
+(and `elif condition then:`) is a shorter alternative to
+`otherwise if condition:`. Both spellings share one `end.`
+A `for` loop can optionally use `do:`, e.g.
+`for each number in numbers do: ... end.`.
+These forms preserve Semauri's existing typed branch and loop semantics.

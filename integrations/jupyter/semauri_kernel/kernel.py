@@ -17,9 +17,9 @@ from ipykernel.kernelbase import Kernel
 
 class SemauriKernel(Kernel):
     implementation = "semauri"
-    implementation_version = "0.5.0"
+    implementation_version = "0.6.0"
     language = "semauri"
-    language_version = "0.60"
+    language_version = "0.61"
     language_info = {
         "name": "semauri",
         "mimetype": "text/x-semauri",
@@ -31,9 +31,9 @@ class SemauriKernel(Kernel):
 
     # Completes names from this cell only; it never executes previous cells.
     KEYWORDS = (
-        "let", "be", "print", "assert", "range", "from", "to", "of", "number",
+        "let", "be", "then", "do", "print", "assert", "range", "from", "to", "of", "number",
         "string", "boolean", "map", "filter", "count", "reduce", "every",
-        "if", "when", "otherwise", "unless", "end", "within", "define", "function",
+        "if", "when", "otherwise", "elif", "unless", "end", "within", "define", "function",
         "taking", "invoke", "import", "square", "sqrt", "round", "truncate",
         "factorial", "even", "odd", "true", "false", "cube", "cbrt",
         "reciprocal", "digits", "prime", "capitalize", "swapcase",
@@ -49,6 +49,10 @@ class SemauriKernel(Kernel):
     KEYWORD_HELP = {
         "let": "let name be EXPRESSION. Create an immutable binding.",
         "when": "when CONDITION: ... otherwise: ... end. Synonym for if.",
+        "elif": "elif CONDITION: ... end. Shorthand for otherwise if.",
+        "then": "Optional delimiter in if/when/elif CONDITION then: ... end.",
+        "do": "Optional loop delimiter: for item in items do: ... end.",
+        "in": "ITEM in COLLECTION. Typed list membership or text substring.",
         "joined": "LEFT joined with RIGHT. Concatenate two strings only.",
         "different": "LEFT is different from RIGHT. Strict inequality.",
         "print": "print EXPRESSION. Requires the console_write capability.",
