@@ -118,7 +118,8 @@ fn extended_scientific_math_checks_errors_and_contextual_formatting() {
         assert!(error.span.is_some());
         let uppercase = format!("PRINT {} OF 0.", name.to_uppercase());
         assert_eq!(c.format_source(&uppercase).unwrap(), format!("print {name} of 0."));
-        assert_eq!(c.effect_analysis(&format!("print {name} of 1.")).unwrap().effects(),
+        let valid = if name == "acosh" { 1 } else { 0 };
+        assert_eq!(c.effect_analysis(&format!("print {name} of {valid}.")).unwrap().effects(),
             vec!["console_write".to_string()]);
     }
     for expr in [
