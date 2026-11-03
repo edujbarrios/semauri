@@ -665,6 +665,26 @@ impl<'a> Parser<'a> {
             ));
         }
 
+        // Numeric and parity predicates are read like English, and desugar
+        // to the already checked Sign/Even/Odd and comparison expressions.
+        // In particular Sign gives an exact integer zero for decimal 0.0.
+        let is_not_predicate = self.check(TokenKind::Not)
+            && self.tokens.get(self.current + 1).is_some_and(|next|
+                next.kind == TokenKind::Word && matches!(
+                    next.lexeme.to_ascii_lowercase().as_str(),
+                    "zero" | "positive" | "negative" | "even" | "odd"));
+        let is_predicate = self.check(TokenKind::Word) && matches!(
+            self.peek().lexeme.to_ascii_lowercase().as_str(),
+            "zero" | "positive" | "negative" | "even" | "odd");
+        if is_not_predicate || is_predicate {
+            if is_not_predicate { self.advance(); }
+            let keyword = self.advance().clone();
+            return Ok(self.numeric_predicate_expression(
+                left, keyword.lexeme.to_ascii_lowercase().as_str(),
+                is_not_predicate, keyword.span,
+            ));
+        }
+
         let operator = if self.matches(&[TokenKind::Greater]) {
             self.consume(
                 TokenKind::Than,
@@ -774,6 +794,52 @@ impl<'a> Parser<'a> {
             };
         }
         Ok(expression)
+    }
+
+    // Reuse the typed sign and parity operations; this also avoids
+    // loss of precision and Int-vs-Float equality differences at zero.
+    fn numeric_predicate_expression(
+        &self,
+        value: Expr,
+        predicate: &str,
+        negated: bool,
+        end: SourceSpan,
+    ) -> Expr {
+        let span = span_between_spans(value.span(), end);
+        if matches!(predicate, "even" | "odd") {
+            let parity = Expr::Unary {
+                operator: if predicate == "even" { UnaryOperator::Even } else { UnaryOperator::Odd },
+                operand: Box::new(value),
+                span,
+            };
+            return if negated {
+                Expr::Unary { operator: UnaryOperator::Not, operand: Box::new(parity), span }
+            } else { parity };
+        }
+        let sign = Expr::Unary {
+            operator: UnaryOperator::Sign,
+            operand: Box::new(value),
+            span,
+        };
+        let operator = match (predicate, negated) {
+            ("zero", false) => BinaryOperator::Equal,
+            ("zero", true) => BinaryOperator::NotEqual,
+            ("positive", false) => BinaryOperator::GreaterThan,
+            ("positive", true) => BinaryOperator::LessThanOrEqual,
+            ("negative", false) => BinaryOperator::LessThan,
+            ("negative", true) => BinaryOperator::GreaterThanOrEqual,
+            _ => unreachable!("guard selects numeric predicates"),
+        };
+        Expr::Binary {
+            left: Box::new(sign),
+            operator,
+            right: Box::new(Expr::Literal {
+                ty: Type::Number,
+                value: LiteralValue::Number(NumberValue::Int(0)),
+                span: end,
+            }),
+            span,
+        }
     }
 
     // Desugar natural predicates through the existing typed operations.

@@ -1,3 +1,9 @@
+## Unreleased
+
+### Readable numeric conditions
+- Add statically typed `is zero`, `is positive`, `is negative`, `is even`, and `is odd`, including `is not` variants.
+- Reuse existing sign, parity, comparison, finite-domain checks and optimizer paths; preserve contextual identifiers.
+
 ## 0.62.0 — 2026-11-03
 
 ### Typed math expressions

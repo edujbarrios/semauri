@@ -1293,3 +1293,24 @@ assert "" is empty.
 assert "  " is blank.
 assert "  hello  " is not blank.
 ```
+
+## Natural numeric and parity predicates (unreleased)
+
+Natural-language comparisons include `number is zero`, `number is
+positive`, `number is negative`, `number is even`, and `number is odd`.
+All five also accept `is not`. They reuse checked numeric `sign of`
+(returns an exact integer sign for both integer and decimal values), and
+`even of` / `odd of` (accept integral numbers in the signed 64-bit range).
+Thus `0.0 is zero` and `minus 0.5 is negative` work as expected.
+Non-number operands remain compile-time errors, and non-integral parity
+values still produce `S426`. The predicate words are contextual and are
+not reserved as variable names. This is a source-level spelling only; it
+does not change Python-style numeric conversion rules or execute new effects.
+
+```text
+assert 0.0 is zero.
+assert (minus 3) is negative.
+assert 4 is even.
+assert 7 is not even.
+assert 3.5 is not negative.
+```
