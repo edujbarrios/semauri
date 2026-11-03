@@ -2100,7 +2100,9 @@ impl<'a> Lowerer<'a> {
                     | UnaryOperator::CommonLog | UnaryOperator::BinaryLog
                     | UnaryOperator::Sine | UnaryOperator::Cosine
                     | UnaryOperator::ArcSine | UnaryOperator::ArcCosine | UnaryOperator::ArcTangent
-                    | UnaryOperator::HyperbolicSine | UnaryOperator::HyperbolicCosine | UnaryOperator::HyperbolicTangent),
+                    | UnaryOperator::HyperbolicSine | UnaryOperator::HyperbolicCosine | UnaryOperator::HyperbolicTangent
+                    | UnaryOperator::HyperbolicArcSine | UnaryOperator::HyperbolicArcCosine | UnaryOperator::HyperbolicArcTangent
+                    | UnaryOperator::LogOnePlus | UnaryOperator::ExpMinusOne),
                 operand,
                 ..
             } => match self.evaluate(operand)? {

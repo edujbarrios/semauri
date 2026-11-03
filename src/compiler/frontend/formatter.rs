@@ -86,7 +86,7 @@ impl Compiler {
                 && token.lexeme.eq_ignore_ascii_case("cbrt")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
             let is_scientific_math = token.kind == TokenKind::Word
-                && matches!(token.lexeme.to_ascii_lowercase().as_str(), "exp" | "ln" | "log10" | "log2" | "sin" | "cos" | "asin" | "acos" | "atan" | "sinh" | "cosh" | "tanh")
+                && matches!(token.lexeme.to_ascii_lowercase().as_str(), "exp" | "ln" | "log10" | "log2" | "sin" | "cos" | "asin" | "acos" | "atan" | "sinh" | "cosh" | "tanh" | "asinh" | "acosh" | "atanh" | "log1p" | "expm1")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
             let is_sqrt = token.kind == TokenKind::Word
                 && token.lexeme.eq_ignore_ascii_case("sqrt")
