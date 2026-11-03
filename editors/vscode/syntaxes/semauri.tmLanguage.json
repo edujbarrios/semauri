@@ -175,7 +175,7 @@
     },
     "operators": {
       "name": "keyword.operator.word.semauri",
-      "match": "\\b(?:is|greater|less|than|equal|different|joined|starts|ends|with|and|or|not|plus|minus|times|divided|modulo|by|of|to|from|at)\\b"
+      "match": "\\b(?:is|greater|less|than|equal|empty|blank|different|joined|starts|ends|with|and|or|not|plus|minus|times|divided|modulo|by|of|to|from|at)\\b"
     },
     "domains": {
       "name": "support.namespace.semauri",

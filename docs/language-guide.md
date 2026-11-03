@@ -1274,3 +1274,22 @@ The contextual functions `len of`, `abs of`, `mean of`, `min of`,
 Semauri's existing strict, pure operators. See the
 [Python-style function guide](python-style-functions.md) and
 [executable example](../examples/python_function_aliases.suri).
+
+## Natural emptiness and blank-text predicates (unreleased)
+
+Use `value is empty` or `value is not empty` to check if a typed list or
+Unicode text has zero elements/characters. Use `text is blank` or
+`text is not blank` to check whether a string consists only of whitespace
+(including an empty string). The compiler translates these forms into the
+existing typed `length of`, `trim of` and comparison expressions; there
+is no implicit type conversion or new effect. A numeric or boolean value
+is not a supported input. The contextual words `empty` and `blank`
+remain usable as variable names outside these predicates.
+
+```text
+let names be a list of "Ada", "Grace".
+assert names is not empty.
+assert "" is empty.
+assert "  " is blank.
+assert "  hello  " is not blank.
+```

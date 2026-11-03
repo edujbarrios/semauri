@@ -43,6 +43,7 @@ class SemauriKernel(Kernel):
         "sorted", "distinct", "flatten", "partition", "split", "join", "joined", "different",
         "floor", "ceiling", "length", "reverse", "take", "drop", "json", "parse",
         "len", "abs", "mean", "min", "max", "strip", "upper", "lower",
+        "empty", "blank",
     )
 
     # Offline help for frequently used Semauri expressions and notebook magics.
@@ -62,6 +63,8 @@ class SemauriKernel(Kernel):
         "then": "Optional delimiter in if/when/elif CONDITION then: ... end.",
         "do": "Optional loop delimiter: for item in items do: ... end.",
         "in": "ITEM in COLLECTION. Typed list membership or text substring.",
+        "empty": "VALUE is empty / is not empty. Typed empty list or string predicate.",
+        "blank": "TEXT is blank / is not blank. Text is whitespace-only or empty.",
         "joined": "LEFT joined with RIGHT. Concatenate two strings only.",
         "different": "LEFT is different from RIGHT. Strict inequality.",
         "print": "print EXPRESSION. Requires the console_write capability.",
