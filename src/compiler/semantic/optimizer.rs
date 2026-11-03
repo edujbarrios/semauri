@@ -437,7 +437,9 @@ fn fold_expr(
                     | UnaryOperator::CommonLog | UnaryOperator::BinaryLog
                     | UnaryOperator::Sine | UnaryOperator::Cosine
                     | UnaryOperator::ArcSine | UnaryOperator::ArcCosine | UnaryOperator::ArcTangent
-                    | UnaryOperator::HyperbolicSine | UnaryOperator::HyperbolicCosine | UnaryOperator::HyperbolicTangent), Some(ValueData::Number(value))) => {
+                    | UnaryOperator::HyperbolicSine | UnaryOperator::HyperbolicCosine | UnaryOperator::HyperbolicTangent
+                    | UnaryOperator::HyperbolicArcSine | UnaryOperator::HyperbolicArcCosine | UnaryOperator::HyperbolicArcTangent
+                    | UnaryOperator::LogOnePlus | UnaryOperator::ExpMinusOne), Some(ValueData::Number(value))) => {
                     if let Some(result) = numeric_transcendental(value, operator.clone()) {
                         *changes += 1;
                         return HirExpr::Literal {

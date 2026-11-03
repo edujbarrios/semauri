@@ -46,6 +46,8 @@ class MagicTests(unittest.TestCase):
                                  ("uncap", "uncapitalize"), ("title", "titlecase"),
                                  ("log10", "log10"), ("log2", "log2"),
                                  ("asin", "asin"), ("acos", "acos"), ("atan", "atan"),
+                                 ("asin", "asinh"), ("acos", "acosh"), ("atan", "atanh"),
+                                 ("log1", "log1p"), ("expm", "expm1"),
                                  ("whe", "when"), ("join", "joined"), ("differ", "different"),
                                  ("eli", "elif"), ("the", "then"), ("do", "do")):
             result = kernel.do_complete(prefix, len(prefix))

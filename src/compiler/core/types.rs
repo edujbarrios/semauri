@@ -375,6 +375,11 @@ fn numeric_transcendental(value: NumberValue, operator: UnaryOperator) -> Option
         UnaryOperator::HyperbolicSine => input.sinh(),
         UnaryOperator::HyperbolicCosine => input.cosh(),
         UnaryOperator::HyperbolicTangent => input.tanh(),
+        UnaryOperator::HyperbolicArcSine => input.asinh(),
+        UnaryOperator::HyperbolicArcCosine if input >= 1.0 => input.acosh(),
+        UnaryOperator::HyperbolicArcTangent if input > -1.0 && input < 1.0 => input.atanh(),
+        UnaryOperator::LogOnePlus if input > -1.0 => input.ln_1p(),
+        UnaryOperator::ExpMinusOne => input.exp_m1(),
         _ => return None,
     };
     result.is_finite().then_some(NumberValue::Float(result))
