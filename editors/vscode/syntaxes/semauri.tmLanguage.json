@@ -151,7 +151,7 @@
     },
     "control": {
       "name": "keyword.control.semauri",
-      "match": "\\b(?:if|when|unless|otherwise|end|for|every|each|in|within)\\b"
+      "match": "\\b(?:if|when|unless|otherwise|elif|then|do|end|for|every|each|in|within)\\b"
     },
     "declarations": {
       "patterns": [

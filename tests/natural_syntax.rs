@@ -106,7 +106,7 @@ for each n in numbers do:
 end."#;
     let result = run(source);
     assert_eq!(result.status, 0, "{}", result.stderr);
-    assert_eq!(result.stdout, "first\\nelif\\n".replace("\\\\n", "\\n"));
+    assert_eq!(result.stdout, "first\nelif\n");
 }
 
 #[test]
@@ -121,5 +121,5 @@ for n in values:
     assert n is greater than 0.
 end."#);
     assert_eq!(result.status, 0, "{}", result.stderr);
-    assert_eq!(result.stdout, "old spelling\\n".replace("\\\\n", "\\n"));
+    assert_eq!(result.stdout, "old spelling\n");
 }

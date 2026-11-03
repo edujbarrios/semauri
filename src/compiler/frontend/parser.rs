@@ -2019,6 +2019,16 @@ impl<'a> Parser<'a> {
         Err(self.parse_error(self.peek(), message, code, None))
     }
 
+    // Consume a contextual English delimiter without reserving its name.
+    fn matches_surface(&mut self, word: &str) -> bool {
+        if self.peek().kind == TokenKind::Word && self.peek().lexeme.eq_ignore_ascii_case(word) {
+            self.advance();
+            true
+        } else {
+            false
+        }
+    }
+
     fn matches(&mut self, kinds: &[TokenKind]) -> bool {
         if kinds.iter().any(|kind| self.check(*kind)) {
             self.advance();
