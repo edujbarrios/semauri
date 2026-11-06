@@ -1,0 +1,15 @@
+# Readable primality and concise, statically typed collection functions.
+assert 13 is prime.
+assert 21 is not prime.
+assert 1 is not prime.
+assert 2 is prime.
+let values be a list of 3, 5, 5, 7.
+assert (avg of values) is greater than 4.
+assert (var of values) is greater than 0.
+assert (stddev of values) is greater than 0.
+assert (total of values) is equal to 20.
+assert (size of values) is equal to 4.
+assert (size of (unique of values)) is equal to 3.
+assert (head of values) is equal to 3.
+assert (final of values) is equal to 7.
+print "Prime and shorthand functions OK".
