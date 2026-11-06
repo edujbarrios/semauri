@@ -222,3 +222,14 @@ fn grammar_highlights_integer_radix_functions() {
         assert!(names.contains(name), "{name} missing from {names}");
     }
 }
+
+#[test]
+fn grammar_supports_prime_predicates_and_short_function_aliases() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let ops = grammar["repository"]["operators"]["match"].as_str().unwrap();
+    assert!(ops.contains("prime"));
+    let functions = grammar["repository"]["collections"]["match"].as_str().unwrap();
+    for name in ["avg", "var", "stddev", "total", "size", "unique", "head", "final"] {
+        assert!(functions.contains(name), "{name} missing from {functions}");
+    }
+}

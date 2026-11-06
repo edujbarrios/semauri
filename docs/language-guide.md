@@ -1441,3 +1441,39 @@ assert (octal of 64) is equal to "100".
 assert (hex of 255) is equal to "ff".
 assert (hexadecimal of (minus 42)) is equal to "-2a".
 ```
+
+## Concise collection and statistics functions (unreleased)
+
+Eight additional contextual `of` functions reuse the existing fully
+checked operators and optimizer paths, without changing runtime semantics:
+
+| Short form | Canonical form |
+| --- | --- |
+| `avg of nums` | `average of nums` |
+| `var of nums` | `variance of nums` |
+| `stddev of nums` | `stdev of nums` |
+| `total of nums` | `sum of nums` |
+| `size of value` | `length of value` |
+| `unique of list` | `distinct of list` |
+| `head of list` | `first of list` |
+| `final of list` | `last of list` |
+
+Each name is still a normal identifier unless followed by `of`; existing
+static typing, effect restrictions and source-aware errors are unchanged.
+For example, `unique of` preserves the original order, and a numerical
+list's standard deviation remains subject to the existing list checks.
+
+## Natural primality predicates (unreleased)
+
+Use `number is prime` or `number is not prime`. These are source-level
+alternatives to `prime of number` and `not (prime of number)`, and share
+the strict numeric type check (`S435`) and checked integral-domain errors
+(`S436`). This does not introduce implicit coercions or additional effects.
+
+```text
+assert 13 is prime.
+assert 21 is not prime.
+let values be a list of 3, 5, 5, 7.
+assert (size of (unique of values)) is equal to 3.
+assert (total of values) is equal to 20.
+```

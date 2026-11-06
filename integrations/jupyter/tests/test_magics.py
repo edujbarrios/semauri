@@ -60,6 +60,9 @@ class MagicTests(unittest.TestCase):
                                  ("one", "one"), ("divis", "divisible"), ("mult", "multiple"),
                                  ("incl", "includes"), ("excl", "excludes"),
                                  ("doe", "does"),
+                                 ("avg", "avg"), ("var", "var"), ("stdde", "stddev"),
+                                 ("tota", "total"), ("size", "size"),
+                                 ("uniqu", "unique"), ("head", "head"), ("fina", "final"),
                                  ("bina", "binary"), ("octa", "octal"),
                                  ("hexa", "hexadecimal"), ("hex", "hex"),
                                  ("abov", "above"), ("belo", "below")):
