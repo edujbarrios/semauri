@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Typed mathematical divisibility
+- Add `is divisible by`, `is not divisible by`, `is a multiple of`, and `is not a multiple of` as English-like numeric predicates.
+- Preserve exact i64 modulo arithmetic in optimizer and runtime rather than rounding integers through binary64; retain zero-divisor diagnostic `S317`.
+- Add tests for signed boundaries, high-precision integer parity, contextual identifiers, and strict numeric types.
+
 ### Natural Boolean and typed membership tests
 - Add `is true`, `is false`, `is not true` and `is not false` as strict Boolean comparisons.
 - Add `is one of` and `is not one of` as contextual, type-checked membership aliases, preserving existing `S344` diagnostics.

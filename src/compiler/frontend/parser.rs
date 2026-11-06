@@ -686,6 +686,44 @@ impl<'a> Parser<'a> {
             });
         }
 
+        // Natural mathematical divisibility predicates, which reuse checked
+        // Modulo and typed numeric equality. Keep the words contextual.
+        let negated_divisibility = self.check(TokenKind::Not);
+        let offset = usize::from(negated_divisibility);
+        let divisible = self.tokens.get(self.current + offset).is_some_and(|next|
+            next.kind == TokenKind::Word && next.lexeme.eq_ignore_ascii_case("divisible"))
+            && self.tokens.get(self.current + offset + 1)
+                .is_some_and(|next| next.kind == TokenKind::By);
+        let multiple = self.tokens.get(self.current + offset)
+            .is_some_and(|next| next.kind == TokenKind::Article)
+            && self.tokens.get(self.current + offset + 1).is_some_and(|next|
+                next.kind == TokenKind::Word && next.lexeme.eq_ignore_ascii_case("multiple"))
+            && self.tokens.get(self.current + offset + 2)
+                .is_some_and(|next| next.kind == TokenKind::Of);
+        if divisible || multiple {
+            if negated_divisibility { self.advance(); } // not
+            if divisible { self.advance(); self.advance(); } // divisible by
+            else { self.advance(); self.advance(); self.advance(); } // a multiple of
+            let divisor = self.concatenative()?;
+            let span = span_between_spans(left.span(), divisor.span());
+            let remainder = Expr::Binary {
+                left: Box::new(left),
+                operator: BinaryOperator::Modulo,
+                right: Box::new(divisor),
+                span,
+            };
+            return Ok(Expr::Binary {
+                left: Box::new(remainder),
+                operator: if negated_divisibility { BinaryOperator::NotEqual } else { BinaryOperator::Equal },
+                right: Box::new(Expr::Literal {
+                    ty: Type::Number,
+                    value: LiteralValue::Number(NumberValue::Int(0)),
+                    span,
+                }),
+                span,
+            });
+        }
+
         // Natural emptiness and whitespace predicates. Lower them to
         // existing typed Trim, Length, Equal and NotEqual operators so
         // their type safety, effects and optimizer remain unchanged.

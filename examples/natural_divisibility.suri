@@ -1,0 +1,13 @@
+# Natural mathematical predicates, with exact 64-bit integer remainder.
+let amount be 12.
+assert amount is divisible by 3.
+assert amount is a multiple of 4.
+assert amount is not divisible by 5.
+assert amount is not a multiple of 7.
+assert 0 is divisible by 7.
+assert (minus 12) is divisible by 3.
+assert 9007199254740993 is not divisible by 2.
+assert 9007199254740993 is a multiple of 3.
+when amount is divisible by 3 and amount is a multiple of 4 then:
+    print "Natural divisibility OK".
+end.
