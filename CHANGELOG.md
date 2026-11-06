@@ -1,3 +1,10 @@
+## Unreleased
+
+### Exact numerical equality and ordering
+- Compare signed 64-bit integers exactly, including values beyond 2^53, without silently rounding through binary64.
+- Make integers and equivalent integral floats numerically equal, including typed-list membership and deduplication; preserve nonnumeric strict typing.
+- Share one comparison implementation between constant folding, runtime and collection equality, with regression tests for signed boundaries.
+
 ## 0.64.0 — 2026-11-06
 
 ### Typed mathematical divisibility

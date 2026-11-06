@@ -891,21 +891,23 @@ fn eval_constant_binary(
             Some(ValueData::Number(value))
         }
         (BinaryOperator::GreaterThan, ValueData::Number(a), ValueData::Number(b)) => {
-            Some(ValueData::Boolean(a.as_f64() > b.as_f64()))
+            Some(ValueData::Boolean(numeric_compare(a, b) == Some(std::cmp::Ordering::Greater)))
         }
         (BinaryOperator::LessThan, ValueData::Number(a), ValueData::Number(b)) => {
-            Some(ValueData::Boolean(a.as_f64() < b.as_f64()))
+            Some(ValueData::Boolean(numeric_compare(a, b) == Some(std::cmp::Ordering::Less)))
         }
         (
             BinaryOperator::GreaterThanOrEqual,
             ValueData::Number(a),
             ValueData::Number(b),
-        ) => Some(ValueData::Boolean(a.as_f64() >= b.as_f64())),
+        ) => Some(ValueData::Boolean(matches!(numeric_compare(a, b),
+            Some(std::cmp::Ordering::Greater | std::cmp::Ordering::Equal)))),
         (
             BinaryOperator::LessThanOrEqual,
             ValueData::Number(a),
             ValueData::Number(b),
-        ) => Some(ValueData::Boolean(a.as_f64() <= b.as_f64())),
+        ) => Some(ValueData::Boolean(matches!(numeric_compare(a, b),
+            Some(std::cmp::Ordering::Less | std::cmp::Ordering::Equal)))),
         (BinaryOperator::Equal, a, b) => Some(ValueData::Boolean(a == b)),
         (BinaryOperator::NotEqual, a, b) => Some(ValueData::Boolean(a != b)),
         (BinaryOperator::Join, ValueData::List(items), ValueData::String(separator)) => {

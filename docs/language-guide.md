@@ -1372,3 +1372,22 @@ assert 12 is a multiple of 4.
 assert 13 is not divisible by 2.
 assert 9007199254740993 is not a multiple of 2.
 ```
+
+## Exact numerical comparison across integer and decimal values (unreleased)
+
+Semauri compares signed 64-bit integer values without converting them to
+binary64 floating point. This preserves exact equality and ordering beyond
+2^53, including adjacent values near the signed 64-bit limits. Integer and
+decimal values remain interoperable: `1 is equal to 1.0` is true, whereas
+`9007199254740993 is equal to 9007199254740992.0` is false. Mixed
+integer/decimal comparisons use exact checks of the representable integral
+part and any fractional part; no implicit string or Boolean conversions are
+added. The same equivalence applies to typed numeric-list membership,
+including lists processed with `distinct of`. The compiler optimizer and
+runtime use the same comparison algorithm.
+
+```text
+assert 9007199254740993 is greater than 9007199254740992.
+assert 1 is equal to 1.0.
+assert 1.0 is one of (a list of 1, 2, 3).
+```

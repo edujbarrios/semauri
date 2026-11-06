@@ -52,7 +52,7 @@ fn text_capitalize(value: &str) -> String {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum NumberValue {
     Int(i64),
     Float(f64),
@@ -98,6 +98,41 @@ impl NumberValue {
         } else {
             NumberValue::Float(value)
         }
+    }
+}
+
+// Compare signed 64-bit integers and binary64 floats without rounding an
+// integer through f64. Casting i64::MAX to f64 yields 2^63, which lies
+// outside the integer domain; the exclusive upper bound matters here.
+// The result is None for NaN, just as with standard floating comparison.
+fn numeric_compare(left: &NumberValue, right: &NumberValue) -> Option<std::cmp::Ordering> {
+    use std::cmp::Ordering;
+    match (left, right) {
+        (NumberValue::Int(a), NumberValue::Int(b)) => Some(a.cmp(b)),
+        (NumberValue::Float(a), NumberValue::Float(b)) => a.partial_cmp(b),
+        (NumberValue::Int(a), NumberValue::Float(b)) => {
+            if b.is_nan() { return None; }
+            if *b < i64::MIN as f64 { return Some(Ordering::Greater); }
+            if *b >= -(i64::MIN as f64) { return Some(Ordering::Less); }
+            let whole = b.trunc();
+            match a.cmp(&(whole as i64)) {
+                Ordering::Equal if *b > whole => Some(Ordering::Less),
+                Ordering::Equal if *b < whole => Some(Ordering::Greater),
+                comparison => Some(comparison),
+            }
+        }
+        (NumberValue::Float(a), NumberValue::Int(b)) =>
+            numeric_compare(&NumberValue::Int(*b), &NumberValue::Float(*a))
+                .map(Ordering::reverse),
+    }
+}
+
+// Keep equality, list membership and distinct-list processing consistent
+// with numerical ordering: 1 and 1.0 are the same number, but two adjacent
+// integers larger than 2^53 remain distinguishable.
+impl PartialEq for NumberValue {
+    fn eq(&self, other: &Self) -> bool {
+        numeric_compare(self, other) == Some(std::cmp::Ordering::Equal)
     }
 }
 

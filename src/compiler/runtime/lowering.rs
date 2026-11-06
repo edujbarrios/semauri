@@ -2336,21 +2336,23 @@ impl<'a> Lowerer<'a> {
                 ValueData::Number(value)
             }
             (BinaryOperator::GreaterThan, ValueData::Number(a), ValueData::Number(b)) => {
-                ValueData::Boolean(a.as_f64() > b.as_f64())
+                ValueData::Boolean(numeric_compare(&a, &b) == Some(std::cmp::Ordering::Greater))
             }
             (BinaryOperator::LessThan, ValueData::Number(a), ValueData::Number(b)) => {
-                ValueData::Boolean(a.as_f64() < b.as_f64())
+                ValueData::Boolean(numeric_compare(&a, &b) == Some(std::cmp::Ordering::Less))
             }
             (
                 BinaryOperator::GreaterThanOrEqual,
                 ValueData::Number(a),
                 ValueData::Number(b),
-            ) => ValueData::Boolean(a.as_f64() >= b.as_f64()),
+            ) => ValueData::Boolean(matches!(numeric_compare(&a, &b),
+                Some(std::cmp::Ordering::Greater | std::cmp::Ordering::Equal))),
             (
                 BinaryOperator::LessThanOrEqual,
                 ValueData::Number(a),
                 ValueData::Number(b),
-            ) => ValueData::Boolean(a.as_f64() <= b.as_f64()),
+            ) => ValueData::Boolean(matches!(numeric_compare(&a, &b),
+                Some(std::cmp::Ordering::Less | std::cmp::Ordering::Equal))),
             (BinaryOperator::Equal, a, b) => ValueData::Boolean(a == b),
             (BinaryOperator::NotEqual, a, b) => ValueData::Boolean(a != b),
             (BinaryOperator::Split, ValueData::String(text), ValueData::String(separator)) => {
