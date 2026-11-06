@@ -42,7 +42,7 @@ print (minus 9223372036854775807) is greater than (minus 9223372036854775807) mi
 print 9007199254740993 is less than 9007199254740992.0."#;
     let r=run(src);
     assert_eq!(r.status, 0, "{}", r.stderr);
-    assert_eq!(r.stdout, "true\\ntrue\\ntrue\\ntrue\\ntrue\\ntrue\\ntrue\\nfalse\\n");
+    assert_eq!(r.stdout, "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\nfalse\n");
 }
 
 #[test]
@@ -56,7 +56,7 @@ print 1.0 in (a list of 1, 2, 3).
 print 9007199254740993 in (a list of 9007199254740992, 9007199254740993)."#;
     let r=run(src);
     assert_eq!(r.status, 0, "{}", r.stderr);
-    assert_eq!(r.stdout, "false\\ntrue\\ntrue\\n4\\nfalse\\ntrue\\n");
+    assert_eq!(r.stdout, "false\ntrue\ntrue\n4\nfalse\ntrue\n");
 }
 
 #[test]
