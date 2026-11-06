@@ -1372,3 +1372,24 @@ assert 12 is a multiple of 4.
 assert 13 is not divisible by 2.
 assert 9007199254740993 is not a multiple of 2.
 ```
+
+## Exact numerical ordering across integer and decimal values (unreleased)
+
+Semauri compares signed 64-bit integer values without converting them to
+binary64 floating point in ordering operations. This preserves exact
+`greater than`, `less than` and inclusive ordering beyond 2^53,
+including adjacent values near the signed 64-bit limits. Mixed integer /
+decimal ordering compares the integer's exact value with the decimal's
+integral and fractional parts; there is no rounding of the integer.
+
+For backward compatibility, `is equal to`, `in`, `distinct of` and
+other equality-based collection operations **retain Semauri's established
+integer-versus-decimal storage distinction**: `1 is equal to 1.0` remains
+false. This update intentionally changes numerical *ordering only*.
+The optimizer and runtime use the same exact ordering algorithm.
+
+```text
+assert 9007199254740993 is greater than 9007199254740992.
+assert 9007199254740993 is greater than 9007199254740992.0.
+assert 1 is not equal to 1.0.
+```

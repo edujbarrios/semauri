@@ -101,6 +101,32 @@ impl NumberValue {
     }
 }
 
+// Compare signed 64-bit integers and binary64 floats for ordering without rounding an
+// integer through f64. Casting i64::MAX to f64 yields 2^63, which lies
+// outside the integer domain; the exclusive upper bound matters here.
+// The result is None for NaN, just as with standard floating comparison.
+fn numeric_compare(left: &NumberValue, right: &NumberValue) -> Option<std::cmp::Ordering> {
+    use std::cmp::Ordering;
+    match (left, right) {
+        (NumberValue::Int(a), NumberValue::Int(b)) => Some(a.cmp(b)),
+        (NumberValue::Float(a), NumberValue::Float(b)) => a.partial_cmp(b),
+        (NumberValue::Int(a), NumberValue::Float(b)) => {
+            if b.is_nan() { return None; }
+            if *b < i64::MIN as f64 { return Some(Ordering::Greater); }
+            if *b >= -(i64::MIN as f64) { return Some(Ordering::Less); }
+            let whole = b.trunc();
+            match a.cmp(&(whole as i64)) {
+                Ordering::Equal if *b > whole => Some(Ordering::Less),
+                Ordering::Equal if *b < whole => Some(Ordering::Greater),
+                comparison => Some(comparison),
+            }
+        }
+        (NumberValue::Float(a), NumberValue::Int(b)) =>
+            numeric_compare(&NumberValue::Int(*b), &NumberValue::Float(*a))
+                .map(Ordering::reverse),
+    }
+}
+
 // Pure numeric sign helper shared by constant folding and runtime evaluation.
 // Signed zero maps to zero, and non-finite floating values are rejected.
 fn numeric_sign(value: NumberValue) -> Option<NumberValue> {
