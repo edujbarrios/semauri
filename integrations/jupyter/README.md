@@ -90,3 +90,9 @@ Offline completion and help now include `asinh`, `acosh`, `atanh`,
 Notebook completions include `zero`, `positive`, `negative`, `even`,
 `odd`, `least`, `most`, `above`, and `below`. They support
 natural source such as `assert 3 is positive.` and `assert 3 is at least 2.`.
+
+## Natural predicates in Semauri 0.64.0
+
+Notebook completion and offline help now support `one`, `divisible`
+and `multiple` expressions, including `value is one of items`,
+`value is divisible by divisor`, and `value is a multiple of divisor`.
