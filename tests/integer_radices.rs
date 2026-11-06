@@ -24,8 +24,8 @@ print hexadecimal of (minus 42).
 print binary of 0.
 print hex of 9007199254740993.
 print hex of 9223372036854775807.
-let minimum be (minus 9223372036854775807) minus 1.
-print hex of minimum.
+let lowest be (minus 9223372036854775807) minus 1.
+print hex of lowest.
 print binary of (minus 5).
 print hex of 42.0."#;
     let r = run(source);
