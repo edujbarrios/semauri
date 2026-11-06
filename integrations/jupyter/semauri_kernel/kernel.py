@@ -43,6 +43,7 @@ class SemauriKernel(Kernel):
         "sorted", "distinct", "flatten", "partition", "split", "join", "joined", "different",
         "floor", "ceiling", "length", "reverse", "take", "drop", "json", "parse",
         "len", "abs", "mean", "min", "max", "strip", "upper", "lower",
+        "avg", "var", "stddev", "total", "size", "unique", "head", "final",
         "empty", "blank", "zero", "positive", "negative", "even", "odd",
         "least", "most", "above", "below", "one", "divisible", "multiple",
         "includes", "excludes", "does", "contain", "include",
@@ -52,6 +53,15 @@ class SemauriKernel(Kernel):
     # This is deliberately descriptive, never a runtime evaluation.
     KEYWORD_HELP = {
         "let": "let name be EXPRESSION. Create an immutable binding.",
+        "avg": "avg of NUMBERS. Alias for checked average of numeric list.",
+        "var": "var of NUMBERS. Alias for variance of numeric list.",
+        "stddev": "stddev of NUMBERS. Alias for stdev of numeric list.",
+        "total": "total of NUMBERS. Alias for sum of numeric list.",
+        "size": "size of VALUE. Alias for length of typed list or Unicode string.",
+        "unique": "unique of LIST. Alias for distinct of typed list.",
+        "head": "head of LIST. Alias for first of typed list.",
+        "final": "final of LIST. Alias for last of typed list.",
+        "prime": "prime of NUMBER, or NUMBER is prime / is not prime. Checked integral primality.",
         "len": "len of VALUE. Alias for length of text or list (Unicode characters).",
         "abs": "abs of NUMBER. Alias for checked absolute of NUMBER.",
         "mean": "mean of LIST. Alias for average of a number list.",
