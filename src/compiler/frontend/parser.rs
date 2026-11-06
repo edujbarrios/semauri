@@ -818,6 +818,28 @@ impl<'a> Parser<'a> {
             ));
         }
 
+        // Natural prime predicates delegate to the existing checked pure
+        // prime operator. In particular, invalid fractional inputs still
+        // report the same S436 diagnostic as 'prime of'.
+        let is_not_prime = self.check(TokenKind::Not)
+            && self.tokens.get(self.current + 1).is_some_and(|next|
+                next.kind == TokenKind::Word && next.lexeme.eq_ignore_ascii_case("prime"));
+        let is_prime = self.check(TokenKind::Word)
+            && self.peek().lexeme.eq_ignore_ascii_case("prime");
+        if is_not_prime || is_prime {
+            if is_not_prime { self.advance(); }
+            let word = self.advance().clone();
+            let span = span_between_spans(left.span(), word.span);
+            let checked = Expr::Unary {
+                operator: UnaryOperator::Prime,
+                operand: Box::new(left), span,
+            };
+            return Ok(if is_not_prime {
+                Expr::Unary { operator: UnaryOperator::Not,
+                    operand: Box::new(checked), span }
+            } else { checked });
+        }
+
         let operator = if self.matches(&[TokenKind::Greater]) {
             self.consume(
                 TokenKind::Than,
@@ -1125,7 +1147,8 @@ impl<'a> Parser<'a> {
             // Python-friendly contextual functions; keep the strict existing HIR operators.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),
-                    "len" | "abs" | "mean" | "min" | "max" | "strip" | "upper" | "lower")
+                    "len" | "abs" | "mean" | "min" | "max" | "strip" | "upper" | "lower"
+                    | "avg" | "var" | "stddev" | "total" | "size" | "unique" | "head" | "final")
                     && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
                 let start = self.advance().clone();
                 self.consume(TokenKind::Of, "Expected 'of' after function alias", "S242")?;
@@ -1139,6 +1162,14 @@ impl<'a> Parser<'a> {
                     "strip" => UnaryOperator::Trim,
                     "upper" => UnaryOperator::Uppercase,
                     "lower" => UnaryOperator::Lowercase,
+                    "avg" => UnaryOperator::Average,
+                    "var" => UnaryOperator::Variance,
+                    "stddev" => UnaryOperator::StandardDeviation,
+                    "total" => UnaryOperator::Sum,
+                    "size" => UnaryOperator::Length,
+                    "unique" => UnaryOperator::Distinct,
+                    "head" => UnaryOperator::First,
+                    "final" => UnaryOperator::Last,
                     _ => unreachable!("guard restricts aliases"),
                 };
                 Ok(Expr::Unary {

@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Compact collections, statistics and primality
+- Add contextual `avg of`, `var of`, `stddev of`, `total of`, `size of`, `unique of`, `head of`, and `final of` as typed aliases of existing pure operations.
+- Add `is prime` / `is not prime`, reusing checked `prime of` and negation; retain S435/S436 diagnostics.
+- Extend VS Code, Jupyter completion and help, and add runnable examples and type/format/optimizer regression coverage.
+
+
 ### Checked integer radix conversions
 - Add `binary of`, `octal of`, `hex of`, and `hexadecimal of` to format signed 64-bit integers as typed strings without losing precision.
 - Support zero, signed negatives (including i64::MIN), integral decimal inputs and source-aware `S468`/`S469` errors for invalid operands.
