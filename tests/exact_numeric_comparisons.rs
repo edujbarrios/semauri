@@ -31,32 +31,32 @@ print 9007199254740993 is less than 9007199254740992."#;
 }
 
 #[test]
-fn number_equality_is_numerical_across_int_and_float() {
-    let src = r#"print 1 is equal to 1.0.
-print 1.0 is equal to 1.
-print 1 is not equal to 1.0.
-print 9007199254740993 is equal to 9007199254740992.0.
-print 9007199254740993 is greater than 9007199254740992.0.
-print 0 is equal to (minus 0.0).
-print (minus 1) is less than (minus 0.5).
+fn ordering_handles_mixed_integer_and_decimal_without_rounding() {
+    let src = r#"print 9007199254740993 is greater than 9007199254740992.0.
+print 9007199254740993 is at least 9007199254740992.0.
+print 9223372036854775807 is below 9223372036854775807.0.
 print 0 is greater than (minus 0.5).
-print (minus 9223372036854775807) is greater than (minus 9223372036854775807) minus 1."#;
-    let r = run(src);
+print 1 is less than 1.5.
+print (minus 1) is less than (minus 0.5).
+print (minus 9223372036854775807) is greater than (minus 9223372036854775807) minus 1.
+print 9007199254740993 is less than 9007199254740992.0."#;
+    let r=run(src);
     assert_eq!(r.status, 0, "{}", r.stderr);
-    assert_eq!(r.stdout, "true\ntrue\nfalse\nfalse\ntrue\ntrue\ntrue\ntrue\ntrue\n");
+    assert_eq!(r.stdout, "true\\ntrue\\ntrue\\ntrue\\ntrue\\ntrue\\ntrue\\nfalse\\n");
 }
 
 #[test]
-fn list_membership_and_distinct_use_numeric_value_equality() {
-    let src = r#"let data be a list of 1, 1.0, 2, 2.0.
-let deduped be distinct of data.
-print length of deduped.
+fn existing_storage_sensitive_equality_and_distinct_stay_compatible() {
+    let src = r#"print 1 is equal to 1.0.
+print 1 is not equal to 1.0.
+print 9007199254740993 is not equal to 9007199254740992.
+let data be a list of 1, 1.0, 2, 2.0.
+print length of (distinct of data).
 print 1.0 in (a list of 1, 2, 3).
-print 9007199254740992.0 in (a list of 9007199254740993, 7).
-print 9007199254740993 in (a list of 9007199254740992.0, 7)."#;
+print 9007199254740993 in (a list of 9007199254740992, 9007199254740993)."#;
     let r=run(src);
     assert_eq!(r.status, 0, "{}", r.stderr);
-    assert_eq!(r.stdout, "2\ntrue\nfalse\nfalse\n");
+    assert_eq!(r.stdout, "false\\ntrue\\ntrue\\n4\\nfalse\\ntrue\\n");
 }
 
 #[test]

@@ -1,9 +1,9 @@
 ## Unreleased
 
-### Exact numerical equality and ordering
-- Compare signed 64-bit integers exactly, including values beyond 2^53, without silently rounding through binary64.
-- Make integers and equivalent integral floats numerically equal, including typed-list membership and deduplication; preserve nonnumeric strict typing.
-- Share one comparison implementation between constant folding, runtime and collection equality, with regression tests for signed boundaries.
+### Exact numerical ordering
+- Compare signed 64-bit integers exactly in greater-than, less-than and inclusive ordering, including adjacent values above 2^53, without silently rounding through binary64.
+- Compare integer/decimal ordering without losing integer precision at signed boundaries.
+- Preserve established storage-sensitive equality, collection membership and distinct semantics; test optimizer/runtime agreement.
 
 ## 0.64.0 — 2026-11-06
 

@@ -1373,21 +1373,23 @@ assert 13 is not divisible by 2.
 assert 9007199254740993 is not a multiple of 2.
 ```
 
-## Exact numerical comparison across integer and decimal values (unreleased)
+## Exact numerical ordering across integer and decimal values (unreleased)
 
 Semauri compares signed 64-bit integer values without converting them to
-binary64 floating point. This preserves exact equality and ordering beyond
-2^53, including adjacent values near the signed 64-bit limits. Integer and
-decimal values remain interoperable: `1 is equal to 1.0` is true, whereas
-`9007199254740993 is equal to 9007199254740992.0` is false. Mixed
-integer/decimal comparisons use exact checks of the representable integral
-part and any fractional part; no implicit string or Boolean conversions are
-added. The same equivalence applies to typed numeric-list membership,
-including lists processed with `distinct of`. The compiler optimizer and
-runtime use the same comparison algorithm.
+binary64 floating point in ordering operations. This preserves exact
+`greater than`, `less than` and inclusive ordering beyond 2^53,
+including adjacent values near the signed 64-bit limits. Mixed integer /
+decimal ordering compares the integer's exact value with the decimal's
+integral and fractional parts; there is no rounding of the integer.
+
+For backward compatibility, `is equal to`, `in`, `distinct of` and
+other equality-based collection operations **retain Semauri's established
+integer-versus-decimal storage distinction**: `1 is equal to 1.0` remains
+false. This update intentionally changes numerical *ordering only*.
+The optimizer and runtime use the same exact ordering algorithm.
 
 ```text
 assert 9007199254740993 is greater than 9007199254740992.
-assert 1 is equal to 1.0.
-assert 1.0 is one of (a list of 1, 2, 3).
+assert 9007199254740993 is greater than 9007199254740992.0.
+assert 1 is not equal to 1.0.
 ```

@@ -52,7 +52,7 @@ fn text_capitalize(value: &str) -> String {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum NumberValue {
     Int(i64),
     Float(f64),
@@ -101,7 +101,7 @@ impl NumberValue {
     }
 }
 
-// Compare signed 64-bit integers and binary64 floats without rounding an
+// Compare signed 64-bit integers and binary64 floats for ordering without rounding an
 // integer through f64. Casting i64::MAX to f64 yields 2^63, which lies
 // outside the integer domain; the exclusive upper bound matters here.
 // The result is None for NaN, just as with standard floating comparison.
@@ -124,15 +124,6 @@ fn numeric_compare(left: &NumberValue, right: &NumberValue) -> Option<std::cmp::
         (NumberValue::Float(a), NumberValue::Int(b)) =>
             numeric_compare(&NumberValue::Int(*b), &NumberValue::Float(*a))
                 .map(Ordering::reverse),
-    }
-}
-
-// Keep equality, list membership and distinct-list processing consistent
-// with numerical ordering: 1 and 1.0 are the same number, but two adjacent
-// integers larger than 2^53 remain distinguishable.
-impl PartialEq for NumberValue {
-    fn eq(&self, other: &Self) -> bool {
-        numeric_compare(self, other) == Some(std::cmp::Ordering::Equal)
     }
 }
 
