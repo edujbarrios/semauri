@@ -400,6 +400,24 @@ fn fold_expr(
                     }
                     // Preserve overflow to emit S422 at evaluation.
                 }
+                (operator @ (UnaryOperator::BinaryDigits | UnaryOperator::OctalDigits
+                    | UnaryOperator::HexadecimalDigits), Some(ValueData::Number(value))) => {
+                    let base = match operator {
+                        UnaryOperator::BinaryDigits => 2,
+                        UnaryOperator::OctalDigits => 8,
+                        UnaryOperator::HexadecimalDigits => 16,
+                        _ => unreachable!("radix guard"),
+                    };
+                    if let Some(text) = numeric_radix(value, base) {
+                        *changes += 1;
+                        return HirExpr::Literal {
+                            ty: Type::String,
+                            value: LiteralValue::String(text),
+                            span: *span,
+                        };
+                    }
+                    // Keep fractional and out-of-range values for runtime S469.
+                }
                 (UnaryOperator::Digits, Some(ValueData::Number(value))) => {
                     if let Some(result) = numeric_digits(value) {
                         *changes += 1;

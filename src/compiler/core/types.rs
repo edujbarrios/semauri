@@ -298,6 +298,27 @@ fn numeric_digits(value: NumberValue) -> Option<NumberValue> {
     }))
 }
 
+// Convert an integral, signed 64-bit value to a sign-magnitude radix string.
+// unsigned_abs handles i64::MIN without overflow. No f64 conversion is used
+// for integer inputs, preserving exact digits above 2^53.
+fn numeric_radix(value: NumberValue, base: u8) -> Option<String> {
+    let integer = match value {
+        NumberValue::Int(n) => n,
+        NumberValue::Float(n)
+            if n.is_finite() && n.fract() == 0.0
+                && n >= i64::MIN as f64 && n < -(i64::MIN as f64) => n as i64,
+        _ => return None,
+    };
+    let magnitude = integer.unsigned_abs();
+    let digits = match base {
+        2 => format!("{magnitude:b}"),
+        8 => format!("{magnitude:o}"),
+        16 => format!("{magnitude:x}"),
+        _ => return None,
+    };
+    Some(if integer < 0 { format!("-{digits}") } else { digits })
+}
+
 // Reciprocal is a floating-point operation. Reject zero, non-finite
 // inputs, and any output that overflows to infinity.
 fn numeric_reciprocal(value: NumberValue) -> Option<NumberValue> {
