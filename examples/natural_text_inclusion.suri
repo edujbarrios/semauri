@@ -1,0 +1,13 @@
+# Natural typed inclusion, exclusion and negative text predicates.
+let words be a list of "alpha", "beta".
+assert words includes "alpha".
+assert words excludes "gamma".
+assert "alphabet" includes "pha".
+assert "alphabet" excludes "xyz".
+assert "alphabet" does not contain "xyz".
+assert "alphabet" does not include "xyz".
+assert "alphabet" does not start with "beta".
+assert "alphabet" does not end with "pha".
+when words includes "alpha" and "alphabet" does not end with "zzz" then:
+    print "Natural text inclusion OK".
+end.

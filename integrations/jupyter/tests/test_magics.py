@@ -58,6 +58,8 @@ class MagicTests(unittest.TestCase):
                                  ("negat", "negative"), ("eve", "even"), ("od", "odd"),
                                  ("lea", "least"), ("mos", "most"),
                                  ("one", "one"), ("divis", "divisible"), ("mult", "multiple"),
+                                 ("incl", "includes"), ("excl", "excludes"),
+                                 ("doe", "does"),
                                  ("abov", "above"), ("belo", "below")):
             result = kernel.do_complete(prefix, len(prefix))
             self.assertIn(expected, result["matches"])

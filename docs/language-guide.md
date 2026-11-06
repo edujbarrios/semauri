@@ -1393,3 +1393,27 @@ assert 9007199254740993 is greater than 9007199254740992.
 assert 9007199254740993 is greater than 9007199254740992.0.
 assert 1 is not equal to 1.0.
 ```
+
+## Readable inclusion and negative text predicates (unreleased)
+
+Both strings and typed lists now accept `collection includes value` and
+`collection excludes value`, as natural aliases of the existing statically
+typed `contains` and its boolean negation. `text does not contain value`
+and `text does not include value` are additional English-like forms.
+
+String-prefix and suffix tests support `text does not start with prefix`
+and `text does not end with suffix`, complementing the existing
+`starts with` and `ends with` positive forms. String-only predicates
+preserve the `S391` type diagnostic, and typed membership preserves
+`S344`. The compiler evaluates each input expression only once and uses
+existing HIR/optimizer/runtime operations. `includes`, `excludes` and
+`does` are contextual words, not reserved identifiers.
+
+```text
+let names be a list of "Ada", "Grace".
+assert names includes "Ada".
+assert names excludes "Alan".
+assert "Semauri" does not start with "Python".
+assert "Semauri" does not end with "thon".
+assert "Semauri" does not contain "zzz".
+```
