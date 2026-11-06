@@ -1433,6 +1433,28 @@ impl<'a> Parser<'a> {
                     operand: Box::new(operand),
                 })
             }
+            // Checked integer-to-text conversions for binary, octal and hex.
+            // The names remain ordinary identifiers without a following 'of'.
+            TokenKind::Word
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                    "binary" | "octal" | "hex" | "hexadecimal")
+                    && self.tokens.get(self.current + 1)
+                        .is_some_and(|next| next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Of, "Expected 'of' after radix formatter", "S242")?;
+                let operand = self.primary()?;
+                let operator = match start.lexeme.to_ascii_lowercase().as_str() {
+                    "binary" => UnaryOperator::BinaryDigits,
+                    "octal" => UnaryOperator::OctalDigits,
+                    "hex" | "hexadecimal" => UnaryOperator::HexadecimalDigits,
+                    _ => unreachable!("radix guard"),
+                };
+                Ok(Expr::Unary {
+                    operator,
+                    span: span_between_spans(start.span, operand.span()),
+                    operand: Box::new(operand),
+                })
+            }
             TokenKind::Word if token.lexeme.eq_ignore_ascii_case("digits")
                 && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
                 let start = self.advance().clone();

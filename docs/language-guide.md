@@ -1417,3 +1417,27 @@ assert "Semauri" does not start with "Python".
 assert "Semauri" does not end with "thon".
 assert "Semauri" does not contain "zzz".
 ```
+
+## Integer radix string functions (unreleased)
+
+Four contextual spellings provide three pure conversion functions:
+`binary of value`, `octal of value`, `hex of value`, and
+`hexadecimal of value`. Each converts an integral signed 64-bit number to
+a lowercase text representation in base 2, 8 or 16, without prefixes.
+Negative numbers use a leading `-` and the unsigned magnitude, rather
+than two's-complement bits. Zero is `"0"`. Integer inputs retain exact
+64-bit precision, including `i64::MIN`. Finite, integral decimals within
+the signed 64-bit range are also accepted.
+
+These operations return typed `string` values, can be used inside
+`map every` expressions and are constant-folded when inputs are known.
+Non-numeric operands report `S468`; fractional and out-of-range numeric
+inputs report `S469`. They require no permissions and do not expose file,
+network or other effects.
+
+```text
+assert (binary of 42) is equal to "101010".
+assert (octal of 64) is equal to "100".
+assert (hex of 255) is equal to "ff".
+assert (hexadecimal of (minus 42)) is equal to "-2a".
+```

@@ -1,0 +1,13 @@
+# Pure integer-to-string conversions with exact 64-bit magnitude.
+assert (binary of 42) is equal to "101010".
+assert (octal of 64) is equal to "100".
+assert (hex of 255) is equal to "ff".
+assert (hexadecimal of (minus 42)) is equal to "-2a".
+assert (binary of 0) is equal to "0".
+assert (hex of 9007199254740993) is equal to "20000000000001".
+let samples be a list of 10, 15, 255.
+let codes be map every x in samples to (hex of x).
+assert length of codes is equal to 3.
+assert (codes at 0) is equal to "a".
+assert (codes at 2) is equal to "ff".
+print "Integer radix functions OK".

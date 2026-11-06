@@ -781,6 +781,16 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Number
                     }
+                    UnaryOperator::BinaryDigits | UnaryOperator::OctalDigits
+                    | UnaryOperator::HexadecimalDigits => {
+                        if operand.ty() != Type::Number {
+                            return Err(SemauriError::semantic(
+                                "S468",
+                                format!("Radix formatters require number, received {}", operand.ty()),
+                                Some(*span), None));
+                        }
+                        Type::String
+                    }
                     UnaryOperator::Digits => {
                         if operand.ty() != Type::Number {
                             return Err(SemauriError::semantic(

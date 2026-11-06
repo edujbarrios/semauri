@@ -2030,6 +2030,38 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::BinaryDigits
+                    | UnaryOperator::OctalDigits | UnaryOperator::HexadecimalDigits),
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::Number,
+                    data: ValueData::Number(value),
+                } => {
+                    let base = match operator {
+                        UnaryOperator::BinaryDigits => 2,
+                        UnaryOperator::OctalDigits => 8,
+                        UnaryOperator::HexadecimalDigits => 16,
+                        _ => unreachable!("radix guard"),
+                    };
+                    Ok(BoundValue::Compile {
+                        ty: Type::String,
+                        data: ValueData::String(numeric_radix(value, base).ok_or_else(|| {
+                            SemauriError::semantic(
+                                "S469",
+                                "Radix conversion requires an integer in the signed 64-bit range",
+                                Some(expression.span()), None,
+                            )
+                        })?),
+                    })
+                }
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S468", format!("Radix conversion requires number, received {ty}"),
+                    Some(expression.span()), None)),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: UnaryOperator::Digits,
                 operand,
                 ..

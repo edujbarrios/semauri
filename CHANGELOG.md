@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Checked integer radix conversions
+- Add `binary of`, `octal of`, `hex of`, and `hexadecimal of` to format signed 64-bit integers as typed strings without losing precision.
+- Support zero, signed negatives (including i64::MIN), integral decimal inputs and source-aware `S468`/`S469` errors for invalid operands.
+- Wire type checking, constant folding, runtime, VS Code grammar, Jupyter completion/help and executable regression examples.
+
+
 ### Inclusion and negated text predicates
 - Add contextual `includes` / `excludes` for typed lists and text; add `does not contain`, `does not include`, `does not start with` and `does not end with`.
 - Reuse typed Contains/StartsWith/EndsWith and Not operators with no duplicate evaluation, runtime dependency or new effects; add comprehensive Rust examples and editor help.
