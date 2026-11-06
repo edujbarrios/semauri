@@ -213,3 +213,12 @@ fn grammar_highlights_english_text_inclusion_and_negation() {
         assert!(words.contains(item), "{item} missing from {words}");
     }
 }
+
+#[test]
+fn grammar_highlights_integer_radix_functions() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let names = grammar["repository"]["collections"]["match"].as_str().unwrap();
+    for name in ["binary", "octal", "hex", "hexadecimal"] {
+        assert!(names.contains(name), "{name} missing from {names}");
+    }
+}
