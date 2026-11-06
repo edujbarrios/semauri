@@ -195,3 +195,12 @@ fn grammar_highlights_natural_membership_alias() {
     let operators = grammar["repository"]["operators"]["match"].as_str().unwrap();
     assert!(operators.contains("one"), "{operators}");
 }
+
+#[test]
+fn grammar_highlights_divisibility_predicates() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let operators = grammar["repository"]["operators"]["match"].as_str().unwrap();
+    for word in ["divisible", "multiple"] {
+        assert!(operators.contains(word), "{word} missing in {operators}");
+    }
+}

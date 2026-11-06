@@ -2326,7 +2326,14 @@ impl<'a> Lowerer<'a> {
                         None,
                     ));
                 }
-                ValueData::Number(NumberValue::from_f64(a.as_f64() % b.as_f64()))
+                // Preserve exact i64 remainder above f64's 53-bit integer
+                // precision boundary. MIN % -1 has mathematical remainder 0.
+                let value = match (a, b) {
+                    (NumberValue::Int(a), NumberValue::Int(b)) =>
+                        NumberValue::Int(if b == -1 { 0 } else { a % b }),
+                    (a, b) => NumberValue::from_f64(a.as_f64() % b.as_f64()),
+                };
+                ValueData::Number(value)
             }
             (BinaryOperator::GreaterThan, ValueData::Number(a), ValueData::Number(b)) => {
                 ValueData::Boolean(a.as_f64() > b.as_f64())

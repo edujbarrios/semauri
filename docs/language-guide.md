@@ -1353,3 +1353,22 @@ assert ready is not false.
 assert "Ada" is one of names.
 assert "Bob" is not one of names.
 ```
+
+## Divisibility and multiples (unreleased)
+
+Use `number is divisible by divisor` or `number is a multiple of divisor`
+for a typed numerical divisibility check. Both support negation:
+`is not divisible by` and `is not a multiple of`. They desugar to an
+existing numeric `modulo` check against zero, preserving strict numeric
+operand typing and the `S317` error on zero divisors. Integer remainder
+now retains full 64-bit precision (including values greater than 2^53 and
+`i64::MIN` modulo -1), in both optimization and evaluation. For fractional
+numbers, divisibility follows floating-point remainder semantics, so
+exact-decimal mathematical equality should not be assumed.
+
+```text
+assert 12 is divisible by 3.
+assert 12 is a multiple of 4.
+assert 13 is not divisible by 2.
+assert 9007199254740993 is not a multiple of 2.
+```
