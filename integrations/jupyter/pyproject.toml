@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "semauri-jupyter"
-version = "0.8.0"
+version = "0.9.0"
 description = "Official Jupyter kernel adapter for Semauri"
 requires-python = ">=3.9"
 dependencies = ["ipykernel>=6,<8"]

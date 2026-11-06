@@ -1,4 +1,4 @@
-## Unreleased
+## 0.64.0 — 2026-11-06
 
 ### Typed mathematical divisibility
 - Add `is divisible by`, `is not divisible by`, `is a multiple of`, and `is not a multiple of` as English-like numeric predicates.

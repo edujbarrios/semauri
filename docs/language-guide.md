@@ -1294,7 +1294,7 @@ assert "  " is blank.
 assert "  hello  " is not blank.
 ```
 
-## Natural numeric and parity predicates (unreleased)
+## Natural numeric and parity predicates (v0.63.0)
 
 Natural-language comparisons include `number is zero`, `number is
 positive`, `number is negative`, `number is even`, and `number is odd`.
@@ -1333,7 +1333,7 @@ assert age is above 20.
 assert age is below 25.
 ```
 
-## Boolean and collection-membership predicates (unreleased)
+## Boolean and collection-membership predicates (v0.64.0)
 
 Boolean conditions can be written as `flag is true`, `flag is false`,
 `flag is not true` or `flag is not false`. The compiler reuses strict
@@ -1354,7 +1354,7 @@ assert "Ada" is one of names.
 assert "Bob" is not one of names.
 ```
 
-## Divisibility and multiples (unreleased)
+## Divisibility and multiples (v0.64.0)
 
 Use `number is divisible by divisor` or `number is a multiple of divisor`
 for a typed numerical divisibility check. Both support negation:
