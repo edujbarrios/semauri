@@ -44,7 +44,7 @@ class SemauriKernel(Kernel):
         "floor", "ceiling", "length", "reverse", "take", "drop", "json", "parse",
         "len", "abs", "mean", "min", "max", "strip", "upper", "lower",
         "empty", "blank", "zero", "positive", "negative", "even", "odd",
-        "least", "most", "above", "below",
+        "least", "most", "above", "below", "one",
     )
 
     # Offline help for frequently used Semauri expressions and notebook magics.
@@ -64,6 +64,9 @@ class SemauriKernel(Kernel):
         "then": "Optional delimiter in if/when/elif CONDITION then: ... end.",
         "do": "Optional loop delimiter: for item in items do: ... end.",
         "in": "ITEM in COLLECTION. Typed list membership or text substring.",
+        "one": "ITEM is one of COLLECTION / is not one of COLLECTION. Strict typed membership.",
+        "true": "FLAG is true / is not true. Strict Boolean comparison.",
+        "false": "FLAG is false / is not false. Strict Boolean comparison.",
         "empty": "VALUE is empty / is not empty. Typed empty list or string predicate.",
         "blank": "TEXT is blank / is not blank. Text is whitespace-only or empty.",
         "zero": "NUMBER is zero / is not zero. Checked numeric zero predicate.",

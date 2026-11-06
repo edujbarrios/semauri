@@ -1,0 +1,14 @@
+# Readable Boolean and collection-membership checks.
+let names be a list of "Ada", "Grace".
+let ready be true.
+assert ready is true.
+assert ready is not false.
+assert false is false.
+assert false is not true.
+assert "Ada" is one of names.
+assert "Alan" is not one of names.
+assert "aur" is one of "Semauri".
+assert "xyz" is not one of "Semauri".
+when ready is true and "Ada" is one of names then:
+    print "Boolean membership OK".
+end.
