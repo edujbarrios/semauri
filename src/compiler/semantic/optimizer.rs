@@ -881,9 +881,14 @@ fn eval_constant_binary(
         (BinaryOperator::Modulo, ValueData::Number(a), ValueData::Number(b))
             if !b.is_zero() =>
         {
-            Some(ValueData::Number(NumberValue::from_f64(
-                a.as_f64() % b.as_f64(),
-            )))
+            // Fold with the same exact-integer semantics as evaluation.
+            let value = match (a, b) {
+                (NumberValue::Int(a), NumberValue::Int(b)) => {
+                    NumberValue::Int(if *b == -1 { 0 } else { a % b })
+                }
+                (a, b) => NumberValue::from_f64(a.as_f64() % b.as_f64()),
+            };
+            Some(ValueData::Number(value))
         }
         (BinaryOperator::GreaterThan, ValueData::Number(a), ValueData::Number(b)) => {
             Some(ValueData::Boolean(a.as_f64() > b.as_f64()))
