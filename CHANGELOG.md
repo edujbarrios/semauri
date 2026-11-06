@@ -1,5 +1,9 @@
 ## Unreleased
 
+### Inclusion and negated text predicates
+- Add contextual `includes` / `excludes` for typed lists and text; add `does not contain`, `does not include`, `does not start with` and `does not end with`.
+- Reuse typed Contains/StartsWith/EndsWith and Not operators with no duplicate evaluation, runtime dependency or new effects; add comprehensive Rust examples and editor help.
+
 ### Exact numerical ordering
 - Compare signed 64-bit integers exactly in greater-than, less-than and inclusive ordering, including adjacent values above 2^53, without silently rounding through binary64.
 - Compare integer/decimal ordering without losing integer precision at signed boundaries.

@@ -585,6 +585,62 @@ impl<'a> Parser<'a> {
 
     fn comparison(&mut self) -> Result<Expr> {
         let left = self.concatenative()?;
+        // Conversational negation: 'does not start/end with' for text and
+        // 'does not contain/include' for strings or typed lists. Reuse the
+        // existing typed binary operators and boolean Not, without re-running
+        // either operand or introducing new runtime operations.
+        if self.check(TokenKind::Word)
+            && self.peek().lexeme.eq_ignore_ascii_case("does")
+            && self.tokens.get(self.current + 1)
+                .is_some_and(|next| next.kind == TokenKind::Not)
+            && self.tokens.get(self.current + 2).is_some_and(|next|
+                matches!(next.lexeme.to_ascii_lowercase().as_str(),
+                    "start" | "end" | "contain" | "include"))
+        {
+            self.advance(); // does
+            self.advance(); // not
+            let verb = self.advance().lexeme.to_ascii_lowercase();
+            let operator = match verb.as_str() {
+                "start" => BinaryOperator::StartsWith,
+                "end" => BinaryOperator::EndsWith,
+                _ => BinaryOperator::Contains,
+            };
+            if matches!(verb.as_str(), "start" | "end") {
+                if !self.check(TokenKind::Word)
+                    || !self.peek().lexeme.eq_ignore_ascii_case("with")
+                {
+                    return Err(self.parse_error(self.peek(),
+                        "Expected 'with' after 'does not start/end'", "S225", None));
+                }
+                self.advance(); // with
+            }
+            let right = self.concatenative()?;
+            let span = span_between_spans(left.span(), right.span());
+            let predicate = Expr::Binary {
+                left: Box::new(left), operator, right: Box::new(right), span,
+            };
+            return Ok(Expr::Unary {
+                operator: UnaryOperator::Not,
+                operand: Box::new(predicate), span,
+            });
+        }
+        // 'includes' and 'excludes' are typed contains/not-contains aliases.
+        if self.check(TokenKind::Word)
+            && matches!(self.peek().lexeme.to_ascii_lowercase().as_str(),
+                "includes" | "excludes")
+        {
+            let negated = self.advance().lexeme.eq_ignore_ascii_case("excludes");
+            let right = self.concatenative()?;
+            let span = span_between_spans(left.span(), right.span());
+            let predicate = Expr::Binary {
+                left: Box::new(left), operator: BinaryOperator::Contains,
+                right: Box::new(right), span,
+            };
+            return Ok(if negated {
+                Expr::Unary { operator: UnaryOperator::Not,
+                    operand: Box::new(predicate), span }
+            } else { predicate });
+        }
         // Natural-language predicates are contextual pairs, not reserved words.
         if self.check(TokenKind::Word)
             && matches!(self.peek().lexeme.to_ascii_lowercase().as_str(), "starts" | "ends")

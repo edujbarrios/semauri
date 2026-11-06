@@ -204,3 +204,12 @@ fn grammar_highlights_divisibility_predicates() {
         assert!(operators.contains(word), "{word} missing in {operators}");
     }
 }
+
+#[test]
+fn grammar_highlights_english_text_inclusion_and_negation() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let words = grammar["repository"]["operators"]["match"].as_str().unwrap();
+    for item in ["does", "start", "contain", "include", "includes", "excludes"] {
+        assert!(words.contains(item), "{item} missing from {words}");
+    }
+}
