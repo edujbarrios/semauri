@@ -1,3 +1,10 @@
+## Unreleased
+
+### Natural Boolean and typed membership tests
+- Add `is true`, `is false`, `is not true` and `is not false` as strict Boolean comparisons.
+- Add `is one of` and `is not one of` as contextual, type-checked membership aliases, preserving existing `S344` diagnostics.
+- Extend formatter, docs, executable examples, Rust regression tests and editor/kernel assistance.
+
 ## 0.63.0 — 2026-11-03
 
 ### Readable numeric conditions

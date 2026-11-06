@@ -647,6 +647,45 @@ impl<'a> Parser<'a> {
             return self.membership_expression(left, true);
         }
 
+        // "item is one of collection" is a natural spelling of the typed
+        // membership operator. Keep 'one' contextual instead of reserving it.
+        let one_of = self.check(TokenKind::Word)
+            && self.peek().lexeme.eq_ignore_ascii_case("one")
+            && self.tokens.get(self.current + 1)
+                .is_some_and(|next| next.kind == TokenKind::Of);
+        let not_one_of = self.check(TokenKind::Not)
+            && self.tokens.get(self.current + 1).is_some_and(|next|
+                next.kind == TokenKind::Word && next.lexeme.eq_ignore_ascii_case("one"))
+            && self.tokens.get(self.current + 2)
+                .is_some_and(|next| next.kind == TokenKind::Of);
+        if one_of || not_one_of {
+            if not_one_of { self.advance(); } // not
+            self.advance(); // one
+            self.advance(); // of
+            return self.membership_expression(left, not_one_of);
+        }
+
+        // Boolean words after 'is' are checked equality predicates, and
+        // only accept bool values. Ordinary identifiers are unaffected.
+        let not_boolean = self.check(TokenKind::Not)
+            && self.tokens.get(self.current + 1)
+                .is_some_and(|next| next.kind == TokenKind::Boolean);
+        if self.check(TokenKind::Boolean) || not_boolean {
+            if not_boolean { self.advance(); }
+            let token = self.advance().clone();
+            let span = span_between_spans(left.span(), token.span);
+            return Ok(Expr::Binary {
+                left: Box::new(left),
+                operator: if not_boolean { BinaryOperator::NotEqual } else { BinaryOperator::Equal },
+                right: Box::new(Expr::Literal {
+                    ty: Type::Boolean,
+                    value: LiteralValue::Boolean(token.lexeme.eq_ignore_ascii_case("true")),
+                    span: token.span,
+                }),
+                span,
+            });
+        }
+
         // Natural emptiness and whitespace predicates. Lower them to
         // existing typed Trim, Length, Equal and NotEqual operators so
         // their type safety, effects and optimizer remain unchanged.

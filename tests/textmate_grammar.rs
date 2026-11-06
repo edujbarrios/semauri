@@ -188,3 +188,10 @@ fn grammar_highlights_natural_comparison_bounds() {
         assert!(operators.contains(word), "missing {word} in {operators}");
     }
 }
+
+#[test]
+fn grammar_highlights_natural_membership_alias() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let operators = grammar["repository"]["operators"]["match"].as_str().unwrap();
+    assert!(operators.contains("one"), "{operators}");
+}

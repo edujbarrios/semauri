@@ -1332,3 +1332,24 @@ assert age is at most 65.
 assert age is above 20.
 assert age is below 25.
 ```
+
+## Boolean and collection-membership predicates (unreleased)
+
+Boolean conditions can be written as `flag is true`, `flag is false`,
+`flag is not true` or `flag is not false`. The compiler reuses strict
+`is equal to` / `is not equal to` checks; numbers and strings are not
+converted to booleans.
+
+The collection-membership phrases `item is one of collection` and
+`item is not one of collection` are equivalent to the typed `in` and
+`not in` expressions. Lists require an element of their declared type;
+strings allow typed substring matching. No extra capabilities are granted.
+
+```text
+let names be a list of "Ada", "Grace".
+let ready be true.
+assert ready is true.
+assert ready is not false.
+assert "Ada" is one of names.
+assert "Bob" is not one of names.
+```
