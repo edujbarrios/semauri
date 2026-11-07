@@ -106,3 +106,9 @@ Completion and offline help include `includes`, `excludes`, negative text predic
 Offline help describes all four new numerical comparisons: `is not above`,
 `is not below`, `is not at least`, and `is not at most`. These expressions
 share Semauri's checked numeric operators, with no new kernel permissions.
+
+## Inclusive sign predicates (unreleased)
+
+Completions and offline help recognize `nonzero`, `nonnegative`, and
+`nonpositive`, including all three `is not` spellings. These are
+numeric-only, pure Semauri expressions.

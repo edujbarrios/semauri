@@ -44,7 +44,7 @@ class SemauriKernel(Kernel):
         "floor", "ceiling", "length", "reverse", "take", "drop", "json", "parse",
         "len", "abs", "mean", "min", "max", "strip", "upper", "lower",
         "avg", "var", "stddev", "total", "size", "unique", "head", "final", "med", "prod",
-        "empty", "blank", "zero", "positive", "negative", "even", "odd",
+        "empty", "blank", "zero", "positive", "negative", "nonzero", "nonnegative", "nonpositive", "even", "odd",
         "least", "most", "above", "below", "one", "divisible", "multiple",
         "includes", "excludes", "does", "contain", "include",
     )
@@ -94,6 +94,9 @@ class SemauriKernel(Kernel):
         "zero": "NUMBER is zero / is not zero. Checked numeric zero predicate.",
         "positive": "NUMBER is positive / is not positive. Strictly greater than zero.",
         "negative": "NUMBER is negative / is not negative. Strictly less than zero.",
+        "nonzero": "NUMBER is nonzero / is not nonzero. Checked nonzero or zero predicate.",
+        "nonnegative": "NUMBER is nonnegative / is not nonnegative. Checked >= 0 or < 0.",
+        "nonpositive": "NUMBER is nonpositive / is not nonpositive. Checked <= 0 or > 0.",
         "even": "INTEGER is even / is not even. Checked parity predicate.",
         "odd": "INTEGER is odd / is not odd. Checked parity predicate.",
         "least": "NUMBER is at least LIMIT (>=), or is not at least LIMIT (<). Checked numeric comparison.",
