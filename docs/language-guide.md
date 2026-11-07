@@ -1,6 +1,6 @@
 # Semauri — language and tooling guide
 
-Full reference for the [short Quick Start](../README.md). Commands and examples refer to Semauri v0.55.0; consult the current release for changes.
+Full reference for the [short Quick Start](../README.md). Commands and examples refer to Semauri v0.66.0; consult the current release for changes.
 
 ## Agent quick start
 
@@ -1478,7 +1478,7 @@ assert (size of (unique of values)) is equal to 3.
 assert (total of values) is equal to 20.
 ```
 
-## Concise median and product functions (unreleased)
+## Concise median and product functions (v0.66.0)
 
 Use `med of NUMBERS` for the checked median and `prod of NUMBERS` for the
 checked product of a numeric list. Both are contextual aliases: `med` and
@@ -1494,7 +1494,7 @@ They share the existing numeric list type checks, exact integer and
 finite-value behavior, empty-list handling, optimizer paths and permissions
 of `median of` and `product of`; neither introduces a new capability.
 
-## Negative natural numeric bounds (unreleased)
+## Negative natural numeric bounds (v0.66.0)
 
 Semauri accepts four negative forms of existing checked numeric comparisons:
 
@@ -1518,7 +1518,7 @@ precise signed 64-bit comparisons (including values above 2^53), source-aware
 numeric type errors, optimizer behavior, and the existing effect requirements.
 Each side is evaluated once; unrelated identifier names remain valid.
 
-## Nonzero and inclusive sign predicates (unreleased)
+## Nonzero and inclusive sign predicates (v0.66.0)
 
 For numeric values, Semauri accepts `is nonzero`, `is nonnegative` and
 `is nonpositive` (as well as `is not nonzero`, `is not nonnegative` and
@@ -1545,7 +1545,7 @@ The implementation reuses the existing checked sign operation, preserving
 full signed-64-bit precision and S417 diagnostic for nonnumeric values. No
 implicit effects or new dependencies are introduced.
 
-## Concise list and text operators (unreleased)
+## Concise list and text operators (v0.66.0)
 
 Three contextual `of` aliases make Semauri's checked collection operations
 more concise without adding new runtime operations:
@@ -1568,7 +1568,7 @@ The spellings remain valid variable names without `of`; they reuse the
 existing type checks, optimizer, precision-aware sorting and capability rules.
 No new dependencies or effect permissions are introduced.
 
-## Explicit sorting direction (unreleased)
+## Explicit sorting direction (v0.66.0)
 
 For a typed list, `sorted ascending of values` returns the usual sorted
 order, while `sorted descending of values` returns that order reversed.
@@ -1589,7 +1589,7 @@ checked `reverse` and `sorted` operators without evaluating the input
 more than once. It preserves the original source-aware `S359` list type
 checks, exact mixed integer/float ordering, purity, and capability policy.
 
-## Natural prefix and suffix variants (unreleased)
+## Natural prefix and suffix variants (v0.66.0)
 
 In addition to `starts with` and `ends with`, Semauri supports the
 contextual spellings `begins with` and `finishes with`. The negative
@@ -1608,7 +1608,7 @@ and the same source-aware S391 diagnostics for invalid operand types. Inputs
 are evaluated exactly once, no runtime permissions are added, and the words
 `begins` and `finishes` remain valid identifiers outside predicate syntax.
 
-## Top-N and bottom-N typed list selection (unreleased)
+## Top-N and bottom-N typed list selection (v0.66.0)
 
 Use `top COUNT from LIST` to select the highest values in descending
 order, or `bottom COUNT from LIST` for the lowest values in ascending
@@ -1628,7 +1628,7 @@ and integer/float ordering preserve their established semantics (including
 values above 2^53). The count and list expressions are each evaluated once;
 no additional capabilities or runtime dependencies are needed.
 
-## Distinct cardinality of a typed list (unreleased)
+## Distinct cardinality of a typed list (v0.66.0)
 
 Use `cardinality of items`, `count distinct of items`, or
 `count unique of items` to calculate how many distinct typed values a
@@ -1648,7 +1648,7 @@ zero. These expressions require a typed list (error `S360` for other types),
 evaluate the input once, and introduce no capabilities or runtime dependencies.
 The new words remain ordinary identifiers outside their contextual syntax.
 
-## Last-N slicing for lists and Unicode text (unreleased)
+## Last-N slicing for lists and Unicode text (v0.66.0)
 
 Use `take last COUNT from VALUE` to return the final N elements of a
 list or Unicode scalar values of a string, in their **original order**.
@@ -1668,7 +1668,7 @@ checked reverse and slice operators, preserving Unicode scalar handling,
 type-aware diagnostics, optimizer behavior and effects. The existing
 `take last from items` remains valid if `last` is a numeric variable.
 
-## Sort and deduplicate typed lists (unreleased)
+## Sort and deduplicate typed lists (v0.66.0)
 
 Use `sorted distinct of LIST` or `sorted unique of LIST` to return a
 sorted list with duplicates removed. The shorter forms `sort distinct of
@@ -1687,7 +1687,7 @@ still have a sortable type. Exact integer/decimal ordering and the original
 storage-aware definition of duplicates are preserved. The list expression is
 evaluated exactly once and no additional runtime permissions are needed.
 
-## Unique top-N and bottom-N list selection (unreleased)
+## Unique top-N and bottom-N list selection (v0.66.0)
 
 `top unique N from LIST` and `top distinct N from LIST` return the
 highest N distinct values in descending order. `bottom unique N from LIST`
@@ -1705,7 +1705,7 @@ compiler composes existing checked Distinct, Sorted, Reverse and Take nodes,
 preserving exact 64-bit numeric ordering, single evaluation and typed errors.
 `top unique from values` still uses a numeric variable named `unique`.
 
-## First-count slicing (unreleased)
+## First-count slicing (v0.66.0)
 
 `take first COUNT from VALUE` selects the first COUNT elements of a list
 or Unicode scalar values of a string. `drop first COUNT from VALUE` removes
