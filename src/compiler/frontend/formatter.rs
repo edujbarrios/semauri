@@ -92,7 +92,8 @@ impl Compiler {
             let is_python_alias = token.kind == TokenKind::Word
                 && matches!(token.lexeme.to_ascii_lowercase().as_str(),
                     "len" | "abs" | "mean" | "min" | "max" | "strip" | "upper" | "lower"
-                    | "avg" | "var" | "stddev" | "total" | "size" | "unique" | "head" | "final" | "med" | "prod")
+                    | "avg" | "var" | "stddev" | "total" | "size" | "unique" | "head" | "final" | "med" | "prod"
+                    | "rev" | "sort" | "flat")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
             let is_scientific_math = token.kind == TokenKind::Word
                 && matches!(token.lexeme.to_ascii_lowercase().as_str(), "exp" | "ln" | "log10" | "log2" | "sin" | "cos" | "asin" | "acos" | "atan" | "sinh" | "cosh" | "tanh" | "asinh" | "acosh" | "atanh" | "log1p" | "expm1")

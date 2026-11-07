@@ -112,3 +112,8 @@ share Semauri's checked numeric operators, with no new kernel permissions.
 Completions and offline help recognize `nonzero`, `nonnegative`, and
 `nonpositive`, including all three `is not` spellings. These are
 numeric-only, pure Semauri expressions.
+
+## Concise collection operators (unreleased)
+
+Offline completion and help recognize `rev of`, `sort of`, and `flat of`
+as checked, contextual aliases for reverse, sorted, and one-level flatten.
