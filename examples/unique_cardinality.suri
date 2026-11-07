@@ -1,0 +1,6 @@
+let tags be a list of "rust", "python", "rust", "go".
+assert (cardinality of tags) is equal to 3.
+assert (count distinct of tags) is equal to 3.
+assert (count unique of tags) is equal to 3.
+assert (length of tags) is equal to 4.
+print "Distinct cardinality OK".

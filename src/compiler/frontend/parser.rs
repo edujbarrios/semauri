@@ -1210,6 +1210,38 @@ impl<'a> Parser<'a> {
                     sorted
                 })
             }
+            // Count unique typed values without allocating a second copy of
+            // the source expression. Both operators retain their HIR checks,
+            // distinct-value semantics, and constant-folding behavior.
+            TokenKind::Word
+                if (token.lexeme.eq_ignore_ascii_case("cardinality")
+                    && self.tokens.get(self.current + 1)
+                        .is_some_and(|next| next.kind == TokenKind::Of))
+                    || (token.lexeme.eq_ignore_ascii_case("count")
+                        && self.tokens.get(self.current + 1).is_some_and(|next|
+                            next.kind == TokenKind::Distinct
+                            || (next.kind == TokenKind::Word
+                                && next.lexeme.eq_ignore_ascii_case("unique")))
+                        && self.tokens.get(self.current + 2)
+                            .is_some_and(|next| next.kind == TokenKind::Of)) => {
+                let start = self.advance().clone();
+                if start.lexeme.eq_ignore_ascii_case("count") {
+                    self.advance(); // contextual distinct / unique
+                }
+                self.consume(TokenKind::Of, "Expected 'of' after unique count", "S242")?;
+                let operand = self.primary()?;
+                let span = span_between_spans(start.span, operand.span());
+                let unique = Expr::Unary {
+                    operator: UnaryOperator::Distinct,
+                    operand: Box::new(operand),
+                    span,
+                };
+                Ok(Expr::Unary {
+                    operator: UnaryOperator::Length,
+                    operand: Box::new(unique),
+                    span,
+                })
+            }
             // Python-friendly contextual functions; keep the strict existing HIR operators.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),
