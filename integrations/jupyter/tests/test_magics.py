@@ -155,6 +155,12 @@ class MagicTests(unittest.TestCase):
             self.assertIn(word + " distinct COUNT from LIST", entries[word])
             self.assertIn(word, SemauriKernel().do_complete(word[:2], 2)["matches"])
 
+    def test_first_count_slicing_help_and_completion(self):
+        for word in ("take", "drop"):
+            self.assertIn(word + " first COUNT from", SemauriKernel.KEYWORD_HELP[word])
+        self.assertIn("first of LIST", SemauriKernel.KEYWORD_HELP["first"])
+        self.assertIn("first", SemauriKernel().do_complete("fir", 3)["matches"])
+
     def test_completion(self):
         result = SemauriKernel().do_complete("pri", 3)
         self.assertIn("print", result["matches"])
