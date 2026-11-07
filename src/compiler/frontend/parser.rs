@@ -1416,6 +1416,49 @@ impl<'a> Parser<'a> {
                 let start = self.advance().clone();
                 self.list_literal(&start, true)
             }
+            // Select highest/lowest distinct values without repeating input evaluation.
+            TokenKind::Word
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "top" | "bottom")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.kind == TokenKind::Distinct
+                        || (next.kind == TokenKind::Word
+                            && next.lexeme.eq_ignore_ascii_case("unique")))
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        matches!(next.kind, TokenKind::Number | TokenKind::Word
+                            | TokenKind::Boolean | TokenKind::String
+                            | TokenKind::Minus | TokenKind::LParen)) => {
+                let start = self.advance().clone();
+                let top = start.lexeme.eq_ignore_ascii_case("top");
+                self.advance(); // distinct / unique
+                let count = self.numeric_unary()?;
+                self.consume(TokenKind::From,
+                    "Expected 'from' after top/bottom distinct count", "S243")?;
+                let source = self.primary()?;
+                let span = span_between_spans(start.span, source.span());
+                let distinct = Expr::Unary {
+                    operator: UnaryOperator::Distinct,
+                    operand: Box::new(source),
+                    span,
+                };
+                let sorted = Expr::Unary {
+                    operator: UnaryOperator::Sorted,
+                    operand: Box::new(distinct),
+                    span,
+                };
+                let sorted = if top {
+                    Expr::Unary {
+                        operator: UnaryOperator::Reverse,
+                        operand: Box::new(sorted),
+                        span,
+                    }
+                } else { sorted };
+                Ok(Expr::Binary {
+                    left: Box::new(count),
+                    operator: BinaryOperator::Take,
+                    right: Box::new(sorted),
+                    span,
+                })
+            }
             // Select the largest or smallest N elements without evaluating the
             // source list twice. Existing Sorted and Take enforce exact
             // ordering, list types, nonnegative integral counts and bounds.
