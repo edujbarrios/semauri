@@ -41,7 +41,7 @@ class SemauriKernel(Kernel):
         "power", "exp", "ln", "log2", "log10", "sin", "cos",
         "asin", "acos", "atan", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "log1p", "expm1", "minimum", "maximum", "median",
         "sorted", "distinct", "flatten", "partition", "split", "join", "joined", "different",
-        "floor", "ceiling", "length", "reverse", "take", "drop", "top", "bottom", "json", "parse",
+        "floor", "ceiling", "length", "reverse", "take", "drop", "last", "top", "bottom", "json", "parse",
         "len", "abs", "mean", "min", "max", "strip", "upper", "lower",
         "avg", "var", "stddev", "total", "size", "unique", "cardinality", "head", "final", "med", "prod",
         "rev", "sort", "flat", "ascending", "descending",
