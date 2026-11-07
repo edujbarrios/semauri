@@ -1647,3 +1647,23 @@ floating-point values (`1` versus `1.0`). Empty lists have cardinality
 zero. These expressions require a typed list (error `S360` for other types),
 evaluate the input once, and introduce no capabilities or runtime dependencies.
 The new words remain ordinary identifiers outside their contextual syntax.
+
+## Last-N slicing for lists and Unicode text (unreleased)
+
+Use `take last COUNT from VALUE` to return the final N elements of a
+list or Unicode scalar values of a string, in their **original order**.
+Use `drop last COUNT from VALUE` to remove the final N elements. Both
+forms return a new value without modifying the input.
+
+```text
+let scores be a list of 8, 3, 12, 5.
+assert (take last 2 from scores) is equal to (a list of 12, 5).
+assert (drop last 2 from scores) is equal to (a list of 8, 3).
+assert (take last 2 from "ñ🌍a") is equal to "🌍a".
+```
+
+Like `take` and `drop`, counts must be nonnegative integers; a count
+larger than the input clamps to its length. The parser reuses the existing
+checked reverse and slice operators, preserving Unicode scalar handling,
+type-aware diagnostics, optimizer behavior and effects. The existing
+`take last from items` remains valid if `last` is a numeric variable.

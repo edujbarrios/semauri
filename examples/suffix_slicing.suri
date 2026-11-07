@@ -1,0 +1,8 @@
+let items be a list of 8, 3, 12, 5.
+assert (take last 2 from items) is equal to (a list of 12, 5).
+assert (drop last 2 from items) is equal to (a list of 8, 3).
+assert (take last 2 from "ñ🌍a") is equal to "🌍a".
+assert (drop last 2 from "ñ🌍a") is equal to "ñ".
+let last be 3.
+assert (take last from items) is equal to (a list of 8, 3, 12).
+print "Suffix slicing OK".

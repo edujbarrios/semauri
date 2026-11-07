@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Suffix slicing of lists and Unicode strings
+- Add `take last COUNT from VALUE` and `drop last COUNT from VALUE`, preserving the original order of the resulting list or Unicode text.
+- Lower each to checked `Reverse(Take/Drop(COUNT, Reverse(VALUE)))` AST operations without reevaluating either expression; keep count bounds, source-aware diagnostics, effects and existing `last` identifiers.
+- Include a runnable example, Rust tests, formatter regression coverage, Jupyter help/completion and guide. No new dependencies or permissions.
+
 ### Distinct cardinality for typed lists
 - Add `cardinality of LIST`, `count distinct of LIST`, and `count unique of LIST` as contextual expressions mapping to existing statically checked `Length(Distinct(LIST))`.
 - Preserve distinct storage semantics (integers and decimals remain distinguishable), stable S360 list-type diagnostics, optimizer and effects without repeating evaluation.

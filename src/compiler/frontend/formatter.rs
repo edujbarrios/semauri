@@ -334,6 +334,13 @@ impl Compiler {
                 && !(token.kind == TokenKind::Last
                     && tokens.get(index + 1).is_some_and(|next| next.lexeme.eq_ignore_ascii_case("position"))
                     && tokens.get(index + 2).is_some_and(|next| next.kind == TokenKind::Of))
+                && !(token.kind == TokenKind::Last
+                    && index > 0
+                    && matches!(tokens[index - 1].kind, TokenKind::Take | TokenKind::Drop)
+                    && tokens.get(index + 1).is_some_and(|next|
+                        matches!(next.kind, TokenKind::Number | TokenKind::Word
+                            | TokenKind::Boolean | TokenKind::String
+                            | TokenKind::Minus | TokenKind::LParen)))
             {
                 continue;
             }
