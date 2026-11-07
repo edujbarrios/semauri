@@ -148,6 +148,13 @@ class MagicTests(unittest.TestCase):
             result = SemauriKernel().do_complete(prefix, len(prefix))
             self.assertIn(expected, result["matches"])
 
+    def test_unique_rank_help(self):
+        entries = SemauriKernel.KEYWORD_HELP
+        for word in ("top", "bottom"):
+            self.assertIn(word + " unique COUNT from LIST", entries[word])
+            self.assertIn(word + " distinct COUNT from LIST", entries[word])
+            self.assertIn(word, SemauriKernel().do_complete(word[:2], 2)["matches"])
+
     def test_completion(self):
         result = SemauriKernel().do_complete("pri", 3)
         self.assertIn("print", result["matches"])

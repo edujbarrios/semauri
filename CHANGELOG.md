@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Unique top-N and bottom-N list selection
+- Add `top/bottom unique COUNT from LIST` and `top/bottom distinct COUNT from LIST`, selecting highest or lowest distinct elements in sorted order.
+- Reuse checked `Take(Sorted(Distinct(LIST)))` (with `Reverse` for `top`), including strict S360/S363/S364 diagnostics, exact integer comparison and one-time evaluation.
+- Add an executable example, Rust tests, formatter and Jupyter help, and language guide; no new permissions, dependencies or release changes.
+
+
 ### Checked sorted-distinct collection expressions
 - Add contextual `sorted distinct of LIST`, `sorted unique of LIST`, `sort distinct of LIST`, and `sort unique of LIST` to deduplicate then sort a typed list.
 - Reuse existing `Sorted(Distinct(LIST))` HIR: preserve strict type checks, exact numeric sorting (including mixed integer/float values), duplicate storage semantics and one-time evaluation.

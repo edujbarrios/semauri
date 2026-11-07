@@ -1686,3 +1686,21 @@ non-list inputs fail with the usual `S360` diagnostic, and elements must
 still have a sortable type. Exact integer/decimal ordering and the original
 storage-aware definition of duplicates are preserved. The list expression is
 evaluated exactly once and no additional runtime permissions are needed.
+
+## Unique top-N and bottom-N list selection (unreleased)
+
+`top unique N from LIST` and `top distinct N from LIST` return the
+highest N distinct values in descending order. `bottom unique N from LIST`
+and `bottom distinct N from LIST` return the lowest values ascending.
+
+```text
+let values be a list of 5, 9, 5, 3, 9, 1.
+assert (top unique 2 from values) is equal to (a list of 9, 5).
+assert (bottom distinct 2 from values) is equal to (a list of 1, 3).
+```
+
+Counts are nonnegative integers, with zero yielding an empty list and values
+above the number of unique elements returning all available elements. The
+compiler composes existing checked Distinct, Sorted, Reverse and Take nodes,
+preserving exact 64-bit numeric ordering, single evaluation and typed errors.
+`top unique from values` still uses a numeric variable named `unique`.
