@@ -1,5 +1,12 @@
 ## Unreleased
 
+## 0.66.1 — 2026-11-07
+
+### Consolidated patch release
+- Rebuild and republish the complete v0.66.0 language feature set as v0.66.1, including PRs #316–#327. No language/runtime behavior changes after v0.66.0.
+- Update CLI/library package and citation metadata, keep Jupyter adapter v0.11.0, and produce six platform archives with SHA256SUMS.
+
+
 ## 0.66.0 — 2026-11-07
 
 ### Explicit first-count Unicode and list slicing
