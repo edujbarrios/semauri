@@ -1,0 +1,10 @@
+let values be a list of 2, 4, 6.
+assert (med of values) is equal to (median of values).
+assert (prod of values) is equal to (product of values).
+assert (med of values) is equal to 4.
+assert (prod of values) is equal to 48.
+let med be 9.
+let prod be 7.
+assert med is equal to 9.
+assert prod is equal to 7.
+print "Compact median and product OK".

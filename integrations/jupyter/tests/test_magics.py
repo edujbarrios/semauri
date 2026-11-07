@@ -63,6 +63,7 @@ class MagicTests(unittest.TestCase):
                                  ("avg", "avg"), ("var", "var"), ("stdde", "stddev"),
                                  ("tota", "total"), ("size", "size"),
                                  ("uniqu", "unique"), ("head", "head"), ("fina", "final"),
+                                 ("med", "med"), ("prod", "prod"),
                                  ("bina", "binary"), ("octa", "octal"),
                                  ("hexa", "hexadecimal"), ("hex", "hex"),
                                  ("abov", "above"), ("belo", "below")):

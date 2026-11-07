@@ -1477,3 +1477,19 @@ let values be a list of 3, 5, 5, 7.
 assert (size of (unique of values)) is equal to 3.
 assert (total of values) is equal to 20.
 ```
+
+## Concise median and product functions (unreleased)
+
+Use `med of NUMBERS` for the checked median and `prod of NUMBERS` for the
+checked product of a numeric list. Both are contextual aliases: `med` and
+`prod` remain valid user-defined names unless followed by `of`.
+
+```text
+let values be a list of 2, 4, 6.
+assert (med of values) is equal to 4.
+assert (prod of values) is equal to 48.
+```
+
+They share the existing numeric list type checks, exact integer and
+finite-value behavior, empty-list handling, optimizer paths and permissions
+of `median of` and `product of`; neither introduces a new capability.
