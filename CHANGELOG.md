@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Explicit first-count Unicode and list slicing
+- Add contextual `take first COUNT from VALUE` and `drop first COUNT from VALUE` as synonyms for checked prefix take/drop.
+- Preserve typed S363/S364 diagnostics, nonnegative bounds, Unicode scalar slicing, effects, and identifiers named first.
+- Add Rust tests, example, formatter, Jupyter offline help/completion and guide; no new capabilities or version bump.
+
 ### Unique top-N and bottom-N list selection
 - Add `top/bottom unique COUNT from LIST` and `top/bottom distinct COUNT from LIST`, selecting highest or lowest distinct elements in sorted order.
 - Reuse checked `Take(Sorted(Distinct(LIST)))` (with `Reverse` for `top`), including strict S360/S363/S364 diagnostics, exact integer comparison and one-time evaluation.

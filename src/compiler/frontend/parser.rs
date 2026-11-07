@@ -1536,6 +1536,34 @@ impl<'a> Parser<'a> {
                     span,
                 })
             }
+            // Explicit first-N variants reuse the checked Take/Drop operator.
+            // Only treat first as syntax when followed by a count expression:
+            // take first from values still accepts a variable called first.
+            kind if matches!(kind, TokenKind::Take | TokenKind::Drop)
+                && self.tokens.get(self.current + 1)
+                    .is_some_and(|next| next.kind == TokenKind::First)
+                && self.tokens.get(self.current + 2).is_some_and(|next|
+                    matches!(next.kind, TokenKind::Number | TokenKind::Word
+                        | TokenKind::Boolean | TokenKind::String
+                        | TokenKind::Minus | TokenKind::LParen)) => {
+                let start = self.advance().clone();
+                self.advance(); // first
+                let count = self.numeric_unary()?;
+                self.consume(TokenKind::From,
+                    "Expected 'from' after first-count slicing", "S243")?;
+                let source = self.primary()?;
+                let span = span_between_spans(start.span, source.span());
+                Ok(Expr::Binary {
+                    left: Box::new(count),
+                    operator: if start.kind == TokenKind::Take {
+                        BinaryOperator::Take
+                    } else {
+                        BinaryOperator::Drop
+                    },
+                    right: Box::new(source),
+                    span,
+                })
+            }
             TokenKind::Take | TokenKind::Drop => {
                 let start = self.advance().clone();
                 let count = self.numeric_unary()?;

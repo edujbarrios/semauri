@@ -1704,3 +1704,20 @@ above the number of unique elements returning all available elements. The
 compiler composes existing checked Distinct, Sorted, Reverse and Take nodes,
 preserving exact 64-bit numeric ordering, single evaluation and typed errors.
 `top unique from values` still uses a numeric variable named `unique`.
+
+## First-count slicing (unreleased)
+
+`take first COUNT from VALUE` selects the first COUNT elements of a list
+or Unicode scalar values of a string. `drop first COUNT from VALUE` removes
+them. Both reuse existing typed take/drop, work with nonnegative integral
+counts, and preserve the original value.
+
+```text
+let scores be a list of 1, 2, 3, 4.
+assert (take first 2 from scores) is equal to (a list of 1, 2).
+assert (drop first 2 from scores) is equal to (a list of 3, 4).
+assert (take first 2 from "ñ🌍a") is equal to "ñ🌍".
+```
+
+Zero and overlong counts follow the original slicing rules. The words first
+and last remain available in variable names and existing first-of syntax.

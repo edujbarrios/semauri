@@ -1,0 +1,8 @@
+let values be a list of 1, 2, 3, 4.
+assert (take first 2 from values) is equal to (a list of 1, 2).
+assert (drop first 2 from values) is equal to (a list of 3, 4).
+assert (take first 2 from "ñ🌍a") is equal to "ñ🌍".
+assert (drop first 2 from "ñ🌍a") is equal to "a".
+let first be 2.
+assert (take first from values) is equal to (a list of 1, 2).
+print "First-count slicing OK".
