@@ -1,6 +1,6 @@
 # Semauri
 
-**A readable, statically typed language for people and AI agents.** Write natural-language-inspired programs in `.suri`; compile with Rust, inspect effects, and run with explicit permissions. Current release: **v0.64.0**.
+**A readable, statically typed language for people and AI agents.** Write natural-language-inspired programs in `.suri`; compile with Rust, inspect effects, and run with explicit permissions. Current release: **v0.65.0**.
 
 ## Quick Start
 
@@ -87,7 +87,7 @@ Prediction for x=6:
 
 Use GitHub's **Cite this repository** feature or [CITATION.cff](CITATION.cff). Suggested citation:
 
-> Barrios, E. J. (2026). *Semauri: A natural-language-inspired programming language for humans and AI agents* (Version 0.64.0) [Computer software]. https://github.com/edujbarrios/semauri
+> Barrios, E. J. (2026). *Semauri: A natural-language-inspired programming language for humans and AI agents* (Version 0.65.0) [Computer software]. https://github.com/edujbarrios/semauri
 
 Apache-2.0 licensed. See [LICENSE](LICENSE).
 
@@ -106,3 +106,12 @@ Typed Python-like membership: `item in collection`, `item not in collection`,
 More conversational control flow: `when condition then:`,
 `elif other_condition then:`, and `for each item in items do:`.
 See [the updated natural-syntax example](examples/natural_syntax.suri).
+
+### New in v0.65.0
+
+- Exact signed 64-bit numeric ordering, including mixed integer/decimal comparisons at precision boundaries.
+- Natural typed `includes` / `excludes` and `does not contain/include/start with/end with` syntax.
+- Checked `binary of`, `octal of`, `hex of` and `hexadecimal of` integer-to-text conversions.
+- `is prime` / `is not prime`, plus `avg of`, `var of`, `stddev of`, `total of`, `size of`, `unique of`, `head of` and `final of` aliases.
+
+See [the v0.65.0 release notes](docs/releases/0.65.0.md) and the [full language guide](docs/language-guide.md).

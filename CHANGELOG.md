@@ -1,5 +1,7 @@
 ## Unreleased
 
+## 0.65.0 — 2026-11-07
+
 ### Compact collections, statistics and primality
 - Add contextual `avg of`, `var of`, `stddev of`, `total of`, `size of`, `unique of`, `head of`, and `final of` as typed aliases of existing pure operations.
 - Add `is prime` / `is not prime`, reusing checked `prime of` and negation; retain S435/S436 diagnostics.
