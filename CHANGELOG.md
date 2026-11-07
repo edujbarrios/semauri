@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Checked sorted-distinct collection expressions
+- Add contextual `sorted distinct of LIST`, `sorted unique of LIST`, `sort distinct of LIST`, and `sort unique of LIST` to deduplicate then sort a typed list.
+- Reuse existing `Sorted(Distinct(LIST))` HIR: preserve strict type checks, exact numeric sorting (including mixed integer/float values), duplicate storage semantics and one-time evaluation.
+- Include Rust regressions, executable example, formatter, Jupyter offline help/completion, and guide. No new effects, permissions or dependencies.
+
+
 ### Suffix slicing of lists and Unicode strings
 - Add `take last COUNT from VALUE` and `drop last COUNT from VALUE`, preserving the original order of the resulting list or Unicode text.
 - Lower each to checked `Reverse(Take/Drop(COUNT, Reverse(VALUE)))` AST operations without reevaluating either expression; keep count bounds, source-aware diagnostics, effects and existing `last` identifiers.

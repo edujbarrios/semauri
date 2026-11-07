@@ -136,6 +136,18 @@ class MagicTests(unittest.TestCase):
         result = SemauriKernel().do_complete("last", 4)
         self.assertIn("last", result["matches"])
 
+    def test_sorted_unique_documentation_and_completion(self):
+        help_entries = SemauriKernel.KEYWORD_HELP
+        self.assertIn("sorted distinct of LIST", help_entries["sorted"])
+        self.assertIn("sorted unique of LIST", help_entries["sorted"])
+        self.assertIn("sort unique/distinct of LIST", help_entries["sort"])
+        self.assertIn("sorted unique of LIST", help_entries["unique"])
+        self.assertIn("sort distinct of LIST", help_entries["distinct"])
+        for prefix, expected in (("sort", "sort"), ("dist", "distinct"),
+                                 ("uniq", "unique")):
+            result = SemauriKernel().do_complete(prefix, len(prefix))
+            self.assertIn(expected, result["matches"])
+
     def test_completion(self):
         result = SemauriKernel().do_complete("pri", 3)
         self.assertIn("print", result["matches"])
