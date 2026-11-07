@@ -595,22 +595,22 @@ impl<'a> Parser<'a> {
                 .is_some_and(|next| next.kind == TokenKind::Not)
             && self.tokens.get(self.current + 2).is_some_and(|next|
                 matches!(next.lexeme.to_ascii_lowercase().as_str(),
-                    "start" | "end" | "contain" | "include"))
+                    "start" | "end" | "begin" | "finish" | "contain" | "include"))
         {
             self.advance(); // does
             self.advance(); // not
             let verb = self.advance().lexeme.to_ascii_lowercase();
             let operator = match verb.as_str() {
-                "start" => BinaryOperator::StartsWith,
-                "end" => BinaryOperator::EndsWith,
+                "start" | "begin" => BinaryOperator::StartsWith,
+                "end" | "finish" => BinaryOperator::EndsWith,
                 _ => BinaryOperator::Contains,
             };
-            if matches!(verb.as_str(), "start" | "end") {
+            if matches!(verb.as_str(), "start" | "end" | "begin" | "finish") {
                 if !self.check(TokenKind::Word)
                     || !self.peek().lexeme.eq_ignore_ascii_case("with")
                 {
                     return Err(self.parse_error(self.peek(),
-                        "Expected 'with' after 'does not start/end'", "S225", None));
+                        "Expected 'with' after 'does not start/end/begin/finish'", "S225", None));
                 }
                 self.advance(); // with
             }
@@ -643,11 +643,14 @@ impl<'a> Parser<'a> {
         }
         // Natural-language predicates are contextual pairs, not reserved words.
         if self.check(TokenKind::Word)
-            && matches!(self.peek().lexeme.to_ascii_lowercase().as_str(), "starts" | "ends")
+            && matches!(self.peek().lexeme.to_ascii_lowercase().as_str(),
+                "starts" | "ends" | "begins" | "finishes")
             && self.tokens.get(self.current + 1).is_some_and(|next|
                 next.kind == TokenKind::Word && next.lexeme.eq_ignore_ascii_case("with"))
         {
-            let operator = if self.advance().lexeme.eq_ignore_ascii_case("starts") {
+            let operator = if matches!(
+                self.advance().lexeme.to_ascii_lowercase().as_str(),
+                "starts" | "begins") {
                 BinaryOperator::StartsWith
             } else {
                 BinaryOperator::EndsWith

@@ -1,0 +1,8 @@
+let name be "Café Ñandú".
+assert name begins with "Café".
+assert name finishes with "Ñandú".
+assert name does not begin with "café".
+assert name does not finish with "ñandú".
+assert "" begins with "".
+assert "" finishes with "".
+print "Natural text boundaries OK".

@@ -129,9 +129,9 @@ impl Compiler {
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Not)
                     && tokens.get(index + 2).is_some_and(|next|
                         matches!(next.lexeme.to_ascii_lowercase().as_str(),
-                            "start" | "end" | "contain" | "include")))
+                            "start" | "end" | "begin" | "finish" | "contain" | "include")))
                     || (matches!(token.lexeme.to_ascii_lowercase().as_str(),
-                        "start" | "contain" | "include")
+                        "start" | "end" | "begin" | "finish" | "contain" | "include")
                         && index >= 2 && tokens[index - 1].kind == TokenKind::Not
                         && tokens[index - 2].lexeme.eq_ignore_ascii_case("does"))
                     || (token.lexeme.eq_ignore_ascii_case("with")
@@ -145,11 +145,11 @@ impl Compiler {
                         | TokenKind::Colon | TokenKind::Eof | TokenKind::Be
                         | TokenKind::Is));
             let is_text_predicate = token.kind == TokenKind::Word
-                && ((matches!(token.lexeme.to_ascii_lowercase().as_str(), "starts" | "ends")
+                && ((matches!(token.lexeme.to_ascii_lowercase().as_str(), "starts" | "ends" | "begins" | "finishes")
                     && tokens.get(index + 1).is_some_and(|next| next.lexeme.eq_ignore_ascii_case("with")))
                     || (token.lexeme.eq_ignore_ascii_case("with")
                         && index > 0
-                        && matches!(tokens[index - 1].lexeme.to_ascii_lowercase().as_str(), "starts" | "ends")));
+                        && matches!(tokens[index - 1].lexeme.to_ascii_lowercase().as_str(), "starts" | "ends" | "begins" | "finishes")));
             let is_text_search = token.kind == TokenKind::Word
                 && matches!(token.lexeme.to_ascii_lowercase().as_str(), "occurrences" | "position" | "positions")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);

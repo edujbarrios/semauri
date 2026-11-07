@@ -1,5 +1,10 @@
 ## Unreleased
 
+### More natural Unicode prefix and suffix predicates
+- Support `begins with` / `finishes with` and `does not begin with` / `does not finish with` using existing checked string-prefix and string-suffix operators.
+- Preserve case-sensitive Unicode behavior, S391 type diagnostics, single operand evaluation, contextual identifiers, optimizer and effects.
+- Update formatter, executable examples, Rust tests, VS Code highlighting and Jupyter help/completion without new dependencies.
+
 ### Explicit ascending and descending typed sorting
 - Add `sorted ascending of LIST` and `sorted descending of LIST`, plus the contextual `sort ascending/descending of LIST` forms.
 - The ascending form reuses checked `sorted` and the descending form composes `reverse` over `sorted`; preserve exact signed 64-bit ordering, type diagnostics, and single list evaluation.

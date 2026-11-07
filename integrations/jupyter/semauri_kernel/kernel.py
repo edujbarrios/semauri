@@ -48,6 +48,7 @@ class SemauriKernel(Kernel):
         "empty", "blank", "zero", "positive", "negative", "nonzero", "nonnegative", "nonpositive", "even", "odd",
         "least", "most", "above", "below", "one", "divisible", "multiple",
         "includes", "excludes", "does", "contain", "include",
+        "begins", "finishes", "begin", "finish",
     )
 
     # Offline help for frequently used Semauri expressions and notebook magics.
@@ -90,7 +91,11 @@ class SemauriKernel(Kernel):
         "one": "ITEM is one of COLLECTION / is not one of COLLECTION. Strict typed membership.",
         "includes": "COLLECTION includes VALUE. Typed alias for contains.",
         "excludes": "COLLECTION excludes VALUE. Typed alias for not-contains.",
-        "does": "TEXT does not start/end with X; COLLECTION does not contain/include X.",
+        "does": "TEXT does not start/end/begin/finish with X; COLLECTION does not contain/include X.",
+        "begins": "TEXT begins with PREFIX. Checked Unicode, case-sensitive starts-with predicate.",
+        "finishes": "TEXT finishes with SUFFIX. Checked Unicode, case-sensitive ends-with predicate.",
+        "begin": "TEXT does not begin with PREFIX. Negated checked starts-with predicate.",
+        "finish": "TEXT does not finish with SUFFIX. Negated checked ends-with predicate.",
         "divisible": "X is divisible by Y / is not divisible by Y. Typed numeric remainder check.",
         "multiple": "X is a multiple of Y / is not a multiple of Y. Typed numeric remainder check.",
         "true": "FLAG is true / is not true. Strict Boolean comparison.",

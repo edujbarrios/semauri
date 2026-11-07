@@ -1588,3 +1588,22 @@ valid user-defined identifiers. Descending sorting composes the existing
 checked `reverse` and `sorted` operators without evaluating the input
 more than once. It preserves the original source-aware `S359` list type
 checks, exact mixed integer/float ordering, purity, and capability policy.
+
+## Natural prefix and suffix variants (unreleased)
+
+In addition to `starts with` and `ends with`, Semauri supports the
+contextual spellings `begins with` and `finishes with`. The negative
+forms are `does not begin with` and `does not finish with`.
+
+```text
+assert "Café" begins with "Ca".
+assert "Café" finishes with "fé".
+assert "Café" does not begin with "ca".
+assert "Café" does not finish with "fe".
+```
+
+All four forms reuse the existing strict Unicode-string `starts with` and
+`ends with` semantics (case-sensitive, including empty prefixes/suffixes)
+and the same source-aware S391 diagnostics for invalid operand types. Inputs
+are evaluated exactly once, no runtime permissions are added, and the words
+`begins` and `finishes` remain valid identifiers outside predicate syntax.
