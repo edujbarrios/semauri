@@ -66,6 +66,7 @@ class MagicTests(unittest.TestCase):
                                  ("tota", "total"), ("size", "size"),
                                  ("uniqu", "unique"), ("head", "head"), ("fina", "final"),
                                  ("med", "med"), ("prod", "prod"),
+                                 ("rev", "rev"), ("sor", "sort"), ("fla", "flat"),
                                  ("bina", "binary"), ("octa", "octal"),
                                  ("hexa", "hexadecimal"), ("hex", "hex"),
                                  ("abov", "above"), ("belo", "below")):
@@ -87,6 +88,13 @@ class MagicTests(unittest.TestCase):
         for word in ("nonzero", "nonnegative", "nonpositive"):
             self.assertIn("is " + word, entries[word])
             self.assertIn("is not " + word, entries[word])
+
+    def test_concise_collection_function_help(self):
+        for word, original in (("rev", "reverse"), ("sort", "sorted"),
+                               ("flat", "flatten")):
+            entry = SemauriKernel.KEYWORD_HELP[word]
+            self.assertIn(word + " of", entry)
+            self.assertIn(original + " of", entry)
 
     def test_completion(self):
         result = SemauriKernel().do_complete("pri", 3)

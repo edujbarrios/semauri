@@ -1544,3 +1544,26 @@ assert 8 is nonzero.
 The implementation reuses the existing checked sign operation, preserving
 full signed-64-bit precision and S417 diagnostic for nonnumeric values. No
 implicit effects or new dependencies are introduced.
+
+## Concise list and text operators (unreleased)
+
+Three contextual `of` aliases make Semauri's checked collection operations
+more concise without adding new runtime operations:
+
+| Short form | Canonical form | Result |
+| --- | --- | --- |
+| `rev of items` | `reverse of items` | Reverses a typed list or Unicode string |
+| `sort of items` | `sorted of items` | Returns a new sorted typed list |
+| `flat of groups` | `flatten of groups` | Flattens one level of nested typed lists |
+
+```text
+let values be a list of 3, 1, 2.
+assert (head of (sort of values)) is equal to 1.
+assert (head of (rev of values)) is equal to 2.
+let groups be a list of (a list of 1, 2), (a list of 3).
+assert (size of (flat of groups)) is equal to 3.
+```
+
+The spellings remain valid variable names without `of`; they reuse the
+existing type checks, optimizer, precision-aware sorting and capability rules.
+No new dependencies or effect permissions are introduced.

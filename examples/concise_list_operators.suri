@@ -1,0 +1,11 @@
+let values be a list of 3, 1, 2.
+let reversed be rev of values.
+let ordered be sort of values.
+assert (reversed at 0) is equal to 2.
+assert (ordered at 0) is equal to 1.
+assert (values at 0) is equal to 3.
+let groups be a list of (a list of 1, 2), (a list of 3).
+let flattened be flat of groups.
+assert (flattened at 2) is equal to 3.
+assert (rev of "ñ🌍a") is equal to "a🌍ñ".
+print "Concise list operators OK".

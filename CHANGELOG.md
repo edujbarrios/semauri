@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Concise list and text operators
+- Add contextual `rev of`, `sort of` and `flat of` as pure, statically typed aliases for `reverse of`, `sorted of` and `flatten of`.
+- Retain original string/list behavior, one-level flattening, strict operand diagnostics, exact numeric sorting and single evaluation.
+- Extend examples, regression tests, source formatter, VS Code and Jupyter completion/help.
+
 ### Natural nonzero and inclusive sign predicates
 - Add contextual `is nonzero`, `is nonnegative`, and `is nonpositive`, along with all three `is not` variants, using existing typed sign comparisons.
 - Preserve exact 64-bit sign behavior, S417 numeric diagnostics, optimizer, formatting, effects, and valid contextual identifiers.
