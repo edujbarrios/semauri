@@ -100,3 +100,9 @@ and `multiple` expressions, including `value is one of items`,
 ## Semauri 0.65.0 additions
 
 Completion and offline help include `includes`, `excludes`, negative text predicates, `binary`, `octal`, `hex`/`hexadecimal`, `prime`, and eight concise typed collection/statistical functions (`avg`, `var`, `stddev`, `total`, `size`, `unique`, `head`, `final`). The kernel continues to execute independent cells with explicit effects only.
+
+## Natural negated bounds (unreleased)
+
+Offline help describes all four new numerical comparisons: `is not above`,
+`is not below`, `is not at least`, and `is not at most`. These expressions
+share Semauri's checked numeric operators, with no new kernel permissions.

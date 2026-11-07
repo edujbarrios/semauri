@@ -1,0 +1,8 @@
+let score be 75.
+assert score is not below 50.
+assert score is not above 100.
+assert score is not at least 80.
+assert score is not at most 50.
+assert 9007199254740993 is not above 9007199254740993.
+assert 9007199254740993 is not below 9007199254740994.
+print "Negated numeric bounds OK".

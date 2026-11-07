@@ -70,6 +70,16 @@ class MagicTests(unittest.TestCase):
             result = kernel.do_complete(prefix, len(prefix))
             self.assertIn(expected, result["matches"])
 
+    def test_negated_numerical_bound_help(self):
+        help_entries = SemauriKernel.KEYWORD_HELP
+        for word, expected in (
+            ("least", "is not at least"),
+            ("most", "is not at most"),
+            ("above", "is not above"),
+            ("below", "is not below"),
+        ):
+            self.assertIn(expected, help_entries[word])
+
     def test_completion(self):
         result = SemauriKernel().do_complete("pri", 3)
         self.assertIn("print", result["matches"])
