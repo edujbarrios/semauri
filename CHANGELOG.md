@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Natural nonzero and inclusive sign predicates
+- Add contextual `is nonzero`, `is nonnegative`, and `is nonpositive`, along with all three `is not` variants, using existing typed sign comparisons.
+- Preserve exact 64-bit sign behavior, S417 numeric diagnostics, optimizer, formatting, effects, and valid contextual identifiers.
+- Add executable example, Rust regression tests, VS Code grammar, Jupyter completion/help and language guide.
+
 ### Natural negated numerical bounds
 - Add `is not above`, `is not below`, `is not at least`, and `is not at most` as contextual exact typed numeric comparisons.
 - Reuse existing inclusive/strict ordering and S314 type checks without extra evaluations, implicit effects, or runtime dependencies.

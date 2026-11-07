@@ -805,10 +805,10 @@ impl<'a> Parser<'a> {
             && self.tokens.get(self.current + 1).is_some_and(|next|
                 next.kind == TokenKind::Word && matches!(
                     next.lexeme.to_ascii_lowercase().as_str(),
-                    "zero" | "positive" | "negative" | "even" | "odd"));
+                    "zero" | "positive" | "negative" | "nonzero" | "nonnegative" | "nonpositive" | "even" | "odd"));
         let is_predicate = self.check(TokenKind::Word) && matches!(
             self.peek().lexeme.to_ascii_lowercase().as_str(),
-            "zero" | "positive" | "negative" | "even" | "odd");
+            "zero" | "positive" | "negative" | "nonzero" | "nonnegative" | "nonpositive" | "even" | "odd");
         if is_not_predicate || is_predicate {
             if is_not_predicate { self.advance(); }
             let keyword = self.advance().clone();
@@ -1022,6 +1022,12 @@ impl<'a> Parser<'a> {
             ("positive", true) => BinaryOperator::LessThanOrEqual,
             ("negative", false) => BinaryOperator::LessThan,
             ("negative", true) => BinaryOperator::GreaterThanOrEqual,
+            ("nonzero", false) => BinaryOperator::NotEqual,
+            ("nonzero", true) => BinaryOperator::Equal,
+            ("nonnegative", false) => BinaryOperator::GreaterThanOrEqual,
+            ("nonnegative", true) => BinaryOperator::LessThan,
+            ("nonpositive", false) => BinaryOperator::LessThanOrEqual,
+            ("nonpositive", true) => BinaryOperator::GreaterThan,
             _ => unreachable!("guard selects numeric predicates"),
         };
         Expr::Binary {

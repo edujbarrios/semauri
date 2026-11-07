@@ -55,7 +55,9 @@ class MagicTests(unittest.TestCase):
                                  ("upp", "upper"), ("low", "lower"),
                                  ("empt", "empty"), ("blan", "blank"),
                                  ("zer", "zero"), ("posit", "positive"),
-                                 ("negat", "negative"), ("eve", "even"), ("od", "odd"),
+                                 ("negat", "negative"), ("nonz", "nonzero"),
+                                 ("nonn", "nonnegative"), ("nonp", "nonpositive"),
+                                 ("eve", "even"), ("od", "odd"),
                                  ("lea", "least"), ("mos", "most"),
                                  ("one", "one"), ("divis", "divisible"), ("mult", "multiple"),
                                  ("incl", "includes"), ("excl", "excludes"),
@@ -79,6 +81,12 @@ class MagicTests(unittest.TestCase):
             ("below", "is not below"),
         ):
             self.assertIn(expected, help_entries[word])
+
+    def test_non_sign_predicate_help_is_offline(self):
+        entries = SemauriKernel.KEYWORD_HELP
+        for word in ("nonzero", "nonnegative", "nonpositive"):
+            self.assertIn("is " + word, entries[word])
+            self.assertIn("is not " + word, entries[word])
 
     def test_completion(self):
         result = SemauriKernel().do_complete("pri", 3)

@@ -1517,3 +1517,30 @@ These are contextual spellings, not independent runtime operators: they preserve
 precise signed 64-bit comparisons (including values above 2^53), source-aware
 numeric type errors, optimizer behavior, and the existing effect requirements.
 Each side is evaluated once; unrelated identifier names remain valid.
+
+## Nonzero and inclusive sign predicates (unreleased)
+
+For numeric values, Semauri accepts `is nonzero`, `is nonnegative` and
+`is nonpositive` (as well as `is not nonzero`, `is not nonnegative` and
+`is not nonpositive`). These are checked contextual operators, not reserved
+identifier names:
+
+| Predicate | Meaning |
+| --- | --- |
+| `value is nonzero` | `value != 0` |
+| `value is nonnegative` | `value >= 0` |
+| `value is nonpositive` | `value <= 0` |
+| `value is not nonzero` | `value == 0` |
+| `value is not nonnegative` | `value < 0` |
+| `value is not nonpositive` | `value > 0` |
+
+```text
+assert 0.0 is nonnegative.
+assert 0.0 is nonpositive.
+assert (minus 4) is not nonnegative.
+assert 8 is nonzero.
+```
+
+The implementation reuses the existing checked sign operation, preserving
+full signed-64-bit precision and S417 diagnostic for nonnumeric values. No
+implicit effects or new dependencies are introduced.

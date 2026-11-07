@@ -1,0 +1,9 @@
+assert 0 is not nonzero.
+assert 0.0 is nonnegative.
+assert 0.0 is nonpositive.
+assert 8 is nonzero.
+assert (minus 8) is not nonnegative.
+assert 8 is not nonpositive.
+assert 9007199254740993 is nonnegative.
+assert (minus 9007199254740993) is nonpositive.
+print "Inclusive sign predicates OK".

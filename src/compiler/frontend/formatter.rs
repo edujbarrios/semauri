@@ -252,7 +252,7 @@ impl Compiler {
                         && tokens[index - 2].kind == TokenKind::Is);
             let is_numeric_predicate = token.kind == TokenKind::Word
                 && matches!(token.lexeme.to_ascii_lowercase().as_str(),
-                    "zero" | "positive" | "negative" | "even" | "odd")
+                    "zero" | "positive" | "negative" | "nonzero" | "nonnegative" | "nonpositive" | "even" | "odd")
                 && (index > 0 && tokens[index - 1].kind == TokenKind::Is
                     || index > 1 && tokens[index - 1].kind == TokenKind::Not
                         && tokens[index - 2].kind == TokenKind::Is);
