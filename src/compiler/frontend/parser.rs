@@ -1148,7 +1148,7 @@ impl<'a> Parser<'a> {
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),
                     "len" | "abs" | "mean" | "min" | "max" | "strip" | "upper" | "lower"
-                    | "avg" | "var" | "stddev" | "total" | "size" | "unique" | "head" | "final")
+                    | "avg" | "var" | "stddev" | "total" | "size" | "unique" | "head" | "final" | "med" | "prod")
                     && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
                 let start = self.advance().clone();
                 self.consume(TokenKind::Of, "Expected 'of' after function alias", "S242")?;
@@ -1170,6 +1170,8 @@ impl<'a> Parser<'a> {
                     "unique" => UnaryOperator::Distinct,
                     "head" => UnaryOperator::First,
                     "final" => UnaryOperator::Last,
+                    "med" => UnaryOperator::Median,
+                    "prod" => UnaryOperator::Product,
                     _ => unreachable!("guard restricts aliases"),
                 };
                 Ok(Expr::Unary {

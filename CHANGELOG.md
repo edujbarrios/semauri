@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Short median and product functions
+- Add contextual `med of` and `prod of` aliases for existing statically typed `median of` and `product of` numerical list operations.
+- Preserve source-located type and evaluation checks, exact signed integer behavior, canonical formatting and effect limits.
+- Include runtime/type/format tests, an executable example, VS Code recognition, Jupyter completion/help and guide coverage.
+
 ## 0.65.0 — 2026-11-07
 
 ### Compact collections, statistics and primality
