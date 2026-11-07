@@ -840,7 +840,32 @@ impl<'a> Parser<'a> {
             } else { checked });
         }
 
-        let operator = if self.matches(&[TokenKind::Greater]) {
+        // Negated English bounds map to the complementary checked numeric
+        // ordering operator. This evaluates each operand exactly once and
+        // preserves precise signed-i64 comparisons and S314 type errors.
+        let not_at_bound = self.check(TokenKind::Not)
+            && self.tokens.get(self.current + 1)
+                .is_some_and(|next| next.kind == TokenKind::At)
+            && self.tokens.get(self.current + 2).is_some_and(|next|
+                next.kind == TokenKind::Word && matches!(
+                    next.lexeme.to_ascii_lowercase().as_str(), "least" | "most"));
+        let not_simple_bound = self.check(TokenKind::Not)
+            && self.tokens.get(self.current + 1).is_some_and(|next|
+                next.kind == TokenKind::Word && matches!(
+                    next.lexeme.to_ascii_lowercase().as_str(), "above" | "below"));
+        let operator = if not_at_bound || not_simple_bound {
+            self.advance(); // not
+            if not_at_bound {
+                self.advance(); // at
+                let bound = self.advance().lexeme.to_ascii_lowercase();
+                if bound == "least" { BinaryOperator::LessThan }
+                else { BinaryOperator::GreaterThan }
+            } else {
+                let bound = self.advance().lexeme.to_ascii_lowercase();
+                if bound == "above" { BinaryOperator::LessThanOrEqual }
+                else { BinaryOperator::GreaterThanOrEqual }
+            }
+        } else if self.matches(&[TokenKind::Greater]) {
             self.consume(
                 TokenKind::Than,
                 "Expected 'than' after 'greater'",

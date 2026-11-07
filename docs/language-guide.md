@@ -1493,3 +1493,27 @@ assert (prod of values) is equal to 48.
 They share the existing numeric list type checks, exact integer and
 finite-value behavior, empty-list handling, optimizer paths and permissions
 of `median of` and `product of`; neither introduces a new capability.
+
+## Negative natural numeric bounds (unreleased)
+
+Semauri accepts four negative forms of existing checked numeric comparisons:
+
+| Natural predicate | Numeric meaning |
+| --- | --- |
+| `value is not above limit` | `value <= limit` |
+| `value is not below limit` | `value >= limit` |
+| `value is not at least limit` | `value < limit` |
+| `value is not at most limit` | `value > limit` |
+
+```text
+let score be 75.
+assert score is not below 50.
+assert score is not above 100.
+assert score is not at least 80.
+assert score is not at most 50.
+```
+
+These are contextual spellings, not independent runtime operators: they preserve
+precise signed 64-bit comparisons (including values above 2^53), source-aware
+numeric type errors, optimizer behavior, and the existing effect requirements.
+Each side is evaluated once; unrelated identifier names remain valid.

@@ -238,9 +238,13 @@ impl Compiler {
             let is_bound_comparison = token.kind == TokenKind::Word
                 && ((matches!(token.lexeme.to_ascii_lowercase().as_str(), "least" | "most")
                     && index > 1 && tokens[index - 1].kind == TokenKind::At
-                    && tokens[index - 2].kind == TokenKind::Is)
+                    && (tokens[index - 2].kind == TokenKind::Is
+                        || (index > 2 && tokens[index - 2].kind == TokenKind::Not
+                            && tokens[index - 3].kind == TokenKind::Is)))
                     || (matches!(token.lexeme.to_ascii_lowercase().as_str(), "above" | "below")
-                        && index > 0 && tokens[index - 1].kind == TokenKind::Is));
+                        && index > 0 && (tokens[index - 1].kind == TokenKind::Is
+                            || (index > 1 && tokens[index - 1].kind == TokenKind::Not
+                                && tokens[index - 2].kind == TokenKind::Is))));
             let is_prime_predicate = token.kind == TokenKind::Word
                 && token.lexeme.eq_ignore_ascii_case("prime")
                 && (index > 0 && tokens[index - 1].kind == TokenKind::Is

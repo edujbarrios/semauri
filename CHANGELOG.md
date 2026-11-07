@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Natural negated numerical bounds
+- Add `is not above`, `is not below`, `is not at least`, and `is not at most` as contextual exact typed numeric comparisons.
+- Reuse existing inclusive/strict ordering and S314 type checks without extra evaluations, implicit effects, or runtime dependencies.
+- Add boundary and precision tests, a runnable example, source formatting, language guide, and Jupyter offline help coverage.
+
 ### Short median and product functions
 - Add contextual `med of` and `prod of` aliases for existing statically typed `median of` and `product of` numerical list operations.
 - Preserve source-located type and evaluation checks, exact signed integer behavior, canonical formatting and effect limits.
