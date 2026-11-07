@@ -1,5 +1,7 @@
 ## Unreleased
 
+## 0.66.0 — 2026-11-07
+
 ### Explicit first-count Unicode and list slicing
 - Add contextual `take first COUNT from VALUE` and `drop first COUNT from VALUE` as synonyms for checked prefix take/drop.
 - Preserve typed S363/S364 diagnostics, nonnegative bounds, Unicode scalar slicing, effects, and identifiers named first.

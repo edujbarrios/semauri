@@ -101,19 +101,28 @@ and `multiple` expressions, including `value is one of items`,
 
 Completion and offline help include `includes`, `excludes`, negative text predicates, `binary`, `octal`, `hex`/`hexadecimal`, `prime`, and eight concise typed collection/statistical functions (`avg`, `var`, `stddev`, `total`, `size`, `unique`, `head`, `final`). The kernel continues to execute independent cells with explicit effects only.
 
-## Natural negated bounds (unreleased)
+## Natural negated bounds (v0.66.0)
 
 Offline help describes all four new numerical comparisons: `is not above`,
 `is not below`, `is not at least`, and `is not at most`. These expressions
 share Semauri's checked numeric operators, with no new kernel permissions.
 
-## Inclusive sign predicates (unreleased)
+## Inclusive sign predicates (v0.66.0)
 
 Completions and offline help recognize `nonzero`, `nonnegative`, and
 `nonpositive`, including all three `is not` spellings. These are
 numeric-only, pure Semauri expressions.
 
-## Concise collection operators (unreleased)
+## Concise collection operators (v0.66.0)
 
 Offline completion and help recognize `rev of`, `sort of`, and `flat of`
 as checked, contextual aliases for reverse, sorted, and one-level flatten.
+
+## Semauri 0.66.0 language and collection improvements
+
+Jupyter completion and offline help now cover natural sign and negated
+numeric bounds, Unicode text boundary predicates, `rev`/`sort`/`flat`,
+explicit sorting direction, `top`/`bottom` selection, cardinality,
+`take first`/`drop first` and `take last`/`drop last` Unicode slicing,
+sorted deduplication and unique ranked selection. Per-cell isolation and
+explicit effect permissions remain unchanged.
