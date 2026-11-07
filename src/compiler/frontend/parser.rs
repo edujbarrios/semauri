@@ -1424,6 +1424,46 @@ impl<'a> Parser<'a> {
                     span,
                 })
             }
+            // Suffix selection is equivalent to reversing the input, applying
+            // the checked Take/Drop, and reversing the result. This preserves
+            // Unicode scalar order, the list's original order, and one-time
+            // evaluation of both operands. Require a count token after 'last':
+            // 'let last be 2. take last from values' remains valid.
+            kind if matches!(kind, TokenKind::Take | TokenKind::Drop)
+                && self.tokens.get(self.current + 1)
+                    .is_some_and(|next| next.kind == TokenKind::Last)
+                && self.tokens.get(self.current + 2).is_some_and(|next|
+                    matches!(next.kind, TokenKind::Number | TokenKind::Word
+                        | TokenKind::Boolean | TokenKind::String
+                        | TokenKind::Minus | TokenKind::LParen)) => {
+                let start = self.advance().clone();
+                self.advance(); // last
+                let count = self.numeric_unary()?;
+                self.consume(TokenKind::From,
+                    "Expected 'from' after take/drop last count", "S243")?;
+                let source = self.primary()?;
+                let span = span_between_spans(start.span, source.span());
+                let reversed = Expr::Unary {
+                    operator: UnaryOperator::Reverse,
+                    operand: Box::new(source),
+                    span,
+                };
+                let sliced = Expr::Binary {
+                    left: Box::new(count),
+                    operator: if start.kind == TokenKind::Take {
+                        BinaryOperator::Take
+                    } else {
+                        BinaryOperator::Drop
+                    },
+                    right: Box::new(reversed),
+                    span,
+                };
+                Ok(Expr::Unary {
+                    operator: UnaryOperator::Reverse,
+                    operand: Box::new(sliced),
+                    span,
+                })
+            }
             TokenKind::Take | TokenKind::Drop => {
                 let start = self.advance().clone();
                 let count = self.numeric_unary()?;

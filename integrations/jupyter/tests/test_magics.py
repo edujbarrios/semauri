@@ -128,6 +128,14 @@ class MagicTests(unittest.TestCase):
         result = SemauriKernel().do_complete("card", 4)
         self.assertIn("cardinality", result["matches"])
 
+    def test_last_slice_help_and_completion(self):
+        for operation in ("take", "drop"):
+            self.assertIn(operation + " last COUNT from", SemauriKernel.KEYWORD_HELP[operation])
+        self.assertIn("take last COUNT from", SemauriKernel.KEYWORD_HELP["last"])
+        self.assertIn("drop last COUNT from", SemauriKernel.KEYWORD_HELP["last"])
+        result = SemauriKernel().do_complete("last", 4)
+        self.assertIn("last", result["matches"])
+
     def test_completion(self):
         result = SemauriKernel().do_complete("pri", 3)
         self.assertIn("print", result["matches"])
