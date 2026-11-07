@@ -104,6 +104,14 @@ class MagicTests(unittest.TestCase):
             result = SemauriKernel().do_complete(direction[:4], 4)
             self.assertIn(direction, result["matches"])
 
+    def test_natural_text_boundary_help_and_completion(self):
+        entries = SemauriKernel.KEYWORD_HELP
+        for positive, negative in (("begins", "begin"), ("finishes", "finish")):
+            self.assertIn(positive + " with", entries[positive])
+            self.assertIn("does not " + negative + " with", entries[negative])
+            completion = SemauriKernel().do_complete(positive[:4], 4)
+            self.assertIn(positive, completion["matches"])
+
     def test_completion(self):
         result = SemauriKernel().do_complete("pri", 3)
         self.assertIn("print", result["matches"])
