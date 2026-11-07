@@ -106,6 +106,25 @@ impl Compiler {
                         "ascending" | "descending"))
                 && tokens.get(index + 2)
                     .is_some_and(|next| next.kind == TokenKind::Of);
+            let is_cardinality = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("cardinality")
+                && tokens.get(index + 1)
+                    .is_some_and(|next| next.kind == TokenKind::Of);
+            let is_count_distinct = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("count")
+                && tokens.get(index + 1).is_some_and(|next|
+                    next.kind == TokenKind::Distinct
+                    || (next.kind == TokenKind::Word
+                        && next.lexeme.eq_ignore_ascii_case("unique")))
+                && tokens.get(index + 2)
+                    .is_some_and(|next| next.kind == TokenKind::Of);
+            let is_count_unique = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("unique")
+                && index > 0
+                && tokens[index - 1].kind == TokenKind::Word
+                && tokens[index - 1].lexeme.eq_ignore_ascii_case("count")
+                && tokens.get(index + 1)
+                    .is_some_and(|next| next.kind == TokenKind::Of);
             let is_python_alias = token.kind == TokenKind::Word
                 && matches!(token.lexeme.to_ascii_lowercase().as_str(),
                     "len" | "abs" | "mean" | "min" | "max" | "strip" | "upper" | "lower"
@@ -300,7 +319,7 @@ impl Compiler {
                         | TokenKind::Minus | TokenKind::LParen));
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_import && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_rank_selection && !is_power && !is_statistics && !is_flatten && !is_absolute && !is_sign && !is_numeric_rounding && !is_round && !is_truncate && !is_factorial && !is_prime && !is_cube && !is_square && !is_sqrt && !is_scientific_math && !is_python_alias && !is_sort_direction && !is_sort_order_alias && !is_cbrt && !is_reciprocal && !is_digits && !is_radix_formatter && !is_parity && !is_product && !is_text_operation && !is_text_predicate && !is_text_negation && !is_inclusion_alias && !is_join_with && !is_joined_with && !is_different && !is_empty_or_blank && !is_numeric_predicate && !is_prime_predicate && !is_bound_comparison && !is_one_of && !is_divisibility && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field && !is_text_search && !is_last_position && !is_json_pointer && !is_character_from && !is_character_at && !is_remove_all
+                && !is_import && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_rank_selection && !is_power && !is_statistics && !is_flatten && !is_absolute && !is_sign && !is_numeric_rounding && !is_round && !is_truncate && !is_factorial && !is_prime && !is_cube && !is_square && !is_sqrt && !is_scientific_math && !is_python_alias && !is_cardinality && !is_count_distinct && !is_count_unique && !is_sort_direction && !is_sort_order_alias && !is_cbrt && !is_reciprocal && !is_digits && !is_radix_formatter && !is_parity && !is_product && !is_text_operation && !is_text_predicate && !is_text_negation && !is_inclusion_alias && !is_join_with && !is_joined_with && !is_different && !is_empty_or_blank && !is_numeric_predicate && !is_prime_predicate && !is_bound_comparison && !is_one_of && !is_divisibility && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field && !is_text_search && !is_last_position && !is_json_pointer && !is_character_from && !is_character_at && !is_remove_all
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count" | "reduce" | "zip" | "partition")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")

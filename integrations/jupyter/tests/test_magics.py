@@ -120,6 +120,14 @@ class MagicTests(unittest.TestCase):
             completion = SemauriKernel().do_complete(keyword[:2], 2)
             self.assertIn(keyword, completion["matches"])
 
+    def test_cardinality_and_unique_count_completions(self):
+        help_entries = SemauriKernel.KEYWORD_HELP
+        self.assertIn("cardinality of LIST", help_entries["cardinality"])
+        self.assertIn("count distinct of LIST", help_entries["count"])
+        self.assertIn("count unique of LIST", help_entries["count"])
+        result = SemauriKernel().do_complete("card", 4)
+        self.assertIn("cardinality", result["matches"])
+
     def test_completion(self):
         result = SemauriKernel().do_complete("pri", 3)
         self.assertIn("print", result["matches"])

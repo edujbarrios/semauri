@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Distinct cardinality for typed lists
+- Add `cardinality of LIST`, `count distinct of LIST`, and `count unique of LIST` as contextual expressions mapping to existing statically checked `Length(Distinct(LIST))`.
+- Preserve distinct storage semantics (integers and decimals remain distinguishable), stable S360 list-type diagnostics, optimizer and effects without repeating evaluation.
+- Include regression tests, executable example, formatter, VS Code and Jupyter completion/help and guide. No new runtime permissions.
+
 ### Checked top-N and bottom-N list selection
 - Add contextual `top COUNT from LIST` and `bottom COUNT from LIST` expressions, composing typed `sorted`, `reverse`, and `take` operators without evaluating the source twice.
 - Keep exact mixed integer/float ordering, stable list behavior, count bounds and source-aware `S359`/`S363`/`S364` errors.

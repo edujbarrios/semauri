@@ -1627,3 +1627,23 @@ compiler composes the existing checked sort and take operators: type errors
 and integer/float ordering preserve their established semantics (including
 values above 2^53). The count and list expressions are each evaluated once;
 no additional capabilities or runtime dependencies are needed.
+
+## Distinct cardinality of a typed list (unreleased)
+
+Use `cardinality of items`, `count distinct of items`, or
+`count unique of items` to calculate how many distinct typed values a
+list contains. All three forms are equivalent to
+`length of (distinct of items)`.
+
+```text
+let tags be a list of "rust", "python", "rust".
+assert (cardinality of tags) is equal to 2.
+assert (count distinct of tags) is equal to 2.
+assert (count unique of tags) is equal to 2.
+```
+
+Semauri preserves the existing distinction between stored integer and
+floating-point values (`1` versus `1.0`). Empty lists have cardinality
+zero. These expressions require a typed list (error `S360` for other types),
+evaluate the input once, and introduce no capabilities or runtime dependencies.
+The new words remain ordinary identifiers outside their contextual syntax.
