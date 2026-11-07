@@ -112,6 +112,14 @@ class MagicTests(unittest.TestCase):
             completion = SemauriKernel().do_complete(positive[:4], 4)
             self.assertIn(positive, completion["matches"])
 
+    def test_top_and_bottom_collection_help(self):
+        help_entries = SemauriKernel.KEYWORD_HELP
+        for keyword, label in (("top", "Highest"), ("bottom", "Lowest")):
+            self.assertIn(keyword + " COUNT from LIST", help_entries[keyword])
+            self.assertIn(label, help_entries[keyword])
+            completion = SemauriKernel().do_complete(keyword[:2], 2)
+            self.assertIn(keyword, completion["matches"])
+
     def test_completion(self):
         result = SemauriKernel().do_complete("pri", 3)
         self.assertIn("print", result["matches"])

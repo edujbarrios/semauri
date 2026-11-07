@@ -1355,6 +1355,42 @@ impl<'a> Parser<'a> {
                 let start = self.advance().clone();
                 self.list_literal(&start, true)
             }
+            // Select the largest or smallest N elements without evaluating the
+            // source list twice. Existing Sorted and Take enforce exact
+            // ordering, list types, nonnegative integral counts and bounds.
+            TokenKind::Word
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "top" | "bottom")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        matches!(next.kind, TokenKind::Number | TokenKind::Word
+                            | TokenKind::Boolean | TokenKind::Minus | TokenKind::LParen)) => {
+                let start = self.advance().clone();
+                let largest_first = start.lexeme.eq_ignore_ascii_case("top");
+                let count = self.numeric_unary()?;
+                self.consume(TokenKind::From,
+                    "Expected 'from' after top/bottom count", "S243")?;
+                let input = self.primary()?;
+                let span = span_between_spans(start.span, input.span());
+                let ordered = Expr::Unary {
+                    operator: UnaryOperator::Sorted,
+                    operand: Box::new(input),
+                    span,
+                };
+                let ordered = if largest_first {
+                    Expr::Unary {
+                        operator: UnaryOperator::Reverse,
+                        operand: Box::new(ordered),
+                        span,
+                    }
+                } else {
+                    ordered
+                };
+                Ok(Expr::Binary {
+                    left: Box::new(count),
+                    operator: BinaryOperator::Take,
+                    right: Box::new(ordered),
+                    span,
+                })
+            }
             TokenKind::Take | TokenKind::Drop => {
                 let start = self.advance().clone();
                 let count = self.numeric_unary()?;
