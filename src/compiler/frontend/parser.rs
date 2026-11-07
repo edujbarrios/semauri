@@ -1178,6 +1178,35 @@ impl<'a> Parser<'a> {
     fn primary(&mut self) -> Result<Expr> {
         let token = self.peek().clone();
         match token.kind {
+            // Deduplicate and sort a typed list in one expression. Composing
+            // existing operators retains storage-aware distinct semantics,
+            // exact numeric ordering and one-time evaluation of the source.
+            kind if (kind == TokenKind::Sorted
+                || (kind == TokenKind::Word
+                    && token.lexeme.eq_ignore_ascii_case("sort")))
+                && self.tokens.get(self.current + 1).is_some_and(|next|
+                    next.kind == TokenKind::Distinct
+                    || (next.kind == TokenKind::Word
+                        && next.lexeme.eq_ignore_ascii_case("unique")))
+                && self.tokens.get(self.current + 2)
+                    .is_some_and(|next| next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.advance(); // distinct / unique
+                self.consume(TokenKind::Of,
+                    "Expected 'of' after sorted distinct/unique", "S242")?;
+                let operand = self.primary()?;
+                let span = span_between_spans(start.span, operand.span());
+                let deduplicated = Expr::Unary {
+                    operator: UnaryOperator::Distinct,
+                    operand: Box::new(operand),
+                    span,
+                };
+                Ok(Expr::Unary {
+                    operator: UnaryOperator::Sorted,
+                    operand: Box::new(deduplicated),
+                    span,
+                })
+            }
             // Optional sort order keeps all of Sorted's static checks and exact
             // numeric comparisons. Descending wraps Sorted in Reverse, so the
             // list operand is evaluated exactly once (even if effectful).

@@ -1667,3 +1667,22 @@ larger than the input clamps to its length. The parser reuses the existing
 checked reverse and slice operators, preserving Unicode scalar handling,
 type-aware diagnostics, optimizer behavior and effects. The existing
 `take last from items` remains valid if `last` is a numeric variable.
+
+## Sort and deduplicate typed lists (unreleased)
+
+Use `sorted distinct of LIST` or `sorted unique of LIST` to return a
+sorted list with duplicates removed. The shorter forms `sort distinct of
+LIST` and `sort unique of LIST` mean the same thing. These expressions are
+equivalent to `sorted of (distinct of LIST)`; they do not mutate the input.
+
+```text
+let scores be a list of 3, 1, 3, 2, 1.
+assert (sorted unique of scores) is equal to (a list of 1, 2, 3).
+assert (sort distinct of scores) is equal to (a list of 1, 2, 3).
+```
+
+They reuse the existing typed `distinct` and `sorted` operations, so
+non-list inputs fail with the usual `S360` diagnostic, and elements must
+still have a sortable type. Exact integer/decimal ordering and the original
+storage-aware definition of duplicates are preserved. The list expression is
+evaluated exactly once and no additional runtime permissions are needed.
