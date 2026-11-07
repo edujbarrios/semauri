@@ -1,0 +1,9 @@
+let scores be a list of 8, 3, 12, 5.
+let best be top 2 from scores.
+let worst be bottom 2 from scores.
+assert (best at 0) is equal to 12.
+assert (best at 1) is equal to 8.
+assert (worst at 0) is equal to 3.
+assert (worst at 1) is equal to 5.
+assert (scores at 0) is equal to 8.
+print "Top and bottom selection OK".

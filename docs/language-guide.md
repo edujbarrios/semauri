@@ -1607,3 +1607,23 @@ All four forms reuse the existing strict Unicode-string `starts with` and
 and the same source-aware S391 diagnostics for invalid operand types. Inputs
 are evaluated exactly once, no runtime permissions are added, and the words
 `begins` and `finishes` remain valid identifiers outside predicate syntax.
+
+## Top-N and bottom-N typed list selection (unreleased)
+
+Use `top COUNT from LIST` to select the highest values in descending
+order, or `bottom COUNT from LIST` for the lowest values in ascending
+order. The original list is never modified. `COUNT` must be a nonnegative
+integer; zero gives an empty typed list, and a count larger than the list
+returns all available values.
+
+```text
+let scores be a list of 8, 3, 12, 5.
+assert (top 2 from scores) is equal to (a list of 12, 8).
+assert (bottom 2 from scores) is equal to (a list of 3, 5).
+```
+
+Both words are contextual and remain valid variable names otherwise. The
+compiler composes the existing checked sort and take operators: type errors
+and integer/float ordering preserve their established semantics (including
+values above 2^53). The count and list expressions are each evaluated once;
+no additional capabilities or runtime dependencies are needed.

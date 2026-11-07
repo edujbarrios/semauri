@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Checked top-N and bottom-N list selection
+- Add contextual `top COUNT from LIST` and `bottom COUNT from LIST` expressions, composing typed `sorted`, `reverse`, and `take` operators without evaluating the source twice.
+- Keep exact mixed integer/float ordering, stable list behavior, count bounds and source-aware `S359`/`S363`/`S364` errors.
+- Provide Rust regressions, runnable example, formatter, VS Code, Jupyter completion/help, and guide. No new effects or runtime dependencies.
+
 ### More natural Unicode prefix and suffix predicates
 - Support `begins with` / `finishes with` and `does not begin with` / `does not finish with` using existing checked string-prefix and string-suffix operators.
 - Preserve case-sensitive Unicode behavior, S391 type diagnostics, single operand evaluation, contextual identifiers, optimizer and effects.
