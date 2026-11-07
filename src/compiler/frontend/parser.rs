@@ -1175,6 +1175,38 @@ impl<'a> Parser<'a> {
     fn primary(&mut self) -> Result<Expr> {
         let token = self.peek().clone();
         match token.kind {
+            // Optional sort order keeps all of Sorted's static checks and exact
+            // numeric comparisons. Descending wraps Sorted in Reverse, so the
+            // list operand is evaluated exactly once (even if effectful).
+            kind if (kind == TokenKind::Sorted
+                || (kind == TokenKind::Word
+                    && token.lexeme.eq_ignore_ascii_case("sort")))
+                && self.tokens.get(self.current + 1).is_some_and(|next|
+                    next.kind == TokenKind::Word
+                    && matches!(next.lexeme.to_ascii_lowercase().as_str(),
+                        "ascending" | "descending"))
+                && self.tokens.get(self.current + 2)
+                    .is_some_and(|next| next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                let descending = self.advance().lexeme.eq_ignore_ascii_case("descending");
+                self.consume(TokenKind::Of, "Expected 'of' after sort order", "S242")?;
+                let operand = self.primary()?;
+                let span = span_between_spans(start.span, operand.span());
+                let sorted = Expr::Unary {
+                    operator: UnaryOperator::Sorted,
+                    operand: Box::new(operand),
+                    span,
+                };
+                Ok(if descending {
+                    Expr::Unary {
+                        operator: UnaryOperator::Reverse,
+                        operand: Box::new(sorted),
+                        span,
+                    }
+                } else {
+                    sorted
+                })
+            }
             // Python-friendly contextual functions; keep the strict existing HIR operators.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),

@@ -1567,3 +1567,24 @@ assert (size of (flat of groups)) is equal to 3.
 The spellings remain valid variable names without `of`; they reuse the
 existing type checks, optimizer, precision-aware sorting and capability rules.
 No new dependencies or effect permissions are introduced.
+
+## Explicit sorting direction (unreleased)
+
+For a typed list, `sorted ascending of values` returns the usual sorted
+order, while `sorted descending of values` returns that order reversed.
+The shorter contextual `sort ascending of values` and `sort descending of
+values` forms are equivalent. The existing `sorted of` and `sort of`
+spellings continue to sort ascending by default.
+
+```text
+let scores be a list of 7, 1, 9, 3.
+assert (head of (sorted ascending of scores)) is equal to 1.
+assert (head of (sorted descending of scores)) is equal to 9.
+assert (head of (sort descending of scores)) is equal to 9.
+```
+
+The order words are contextual, so `ascending` and `descending` are still
+valid user-defined identifiers. Descending sorting composes the existing
+checked `reverse` and `sorted` operators without evaluating the input
+more than once. It preserves the original source-aware `S359` list type
+checks, exact mixed integer/float ordering, purity, and capability policy.
