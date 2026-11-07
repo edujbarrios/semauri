@@ -96,3 +96,7 @@ natural source such as `assert 3 is positive.` and `assert 3 is at least 2.`.
 Notebook completion and offline help now support `one`, `divisible`
 and `multiple` expressions, including `value is one of items`,
 `value is divisible by divisor`, and `value is a multiple of divisor`.
+
+## Semauri 0.65.0 additions
+
+Completion and offline help include `includes`, `excludes`, negative text predicates, `binary`, `octal`, `hex`/`hexadecimal`, `prime`, and eight concise typed collection/statistical functions (`avg`, `var`, `stddev`, `total`, `size`, `unique`, `head`, `final`). The kernel continues to execute independent cells with explicit effects only.

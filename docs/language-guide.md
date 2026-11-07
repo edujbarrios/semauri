@@ -1373,7 +1373,7 @@ assert 13 is not divisible by 2.
 assert 9007199254740993 is not a multiple of 2.
 ```
 
-## Exact numerical ordering across integer and decimal values (unreleased)
+## Exact numerical ordering across integer and decimal values (v0.65.0)
 
 Semauri compares signed 64-bit integer values without converting them to
 binary64 floating point in ordering operations. This preserves exact
@@ -1394,7 +1394,7 @@ assert 9007199254740993 is greater than 9007199254740992.0.
 assert 1 is not equal to 1.0.
 ```
 
-## Readable inclusion and negative text predicates (unreleased)
+## Readable inclusion and negative text predicates (v0.65.0)
 
 Both strings and typed lists now accept `collection includes value` and
 `collection excludes value`, as natural aliases of the existing statically
@@ -1418,7 +1418,7 @@ assert "Semauri" does not end with "thon".
 assert "Semauri" does not contain "zzz".
 ```
 
-## Integer radix string functions (unreleased)
+## Integer radix string functions (v0.65.0)
 
 Four contextual spellings provide three pure conversion functions:
 `binary of value`, `octal of value`, `hex of value`, and
@@ -1442,7 +1442,7 @@ assert (hex of 255) is equal to "ff".
 assert (hexadecimal of (minus 42)) is equal to "-2a".
 ```
 
-## Concise collection and statistics functions (unreleased)
+## Concise collection and statistics functions (v0.65.0)
 
 Eight additional contextual `of` functions reuse the existing fully
 checked operators and optimizer paths, without changing runtime semantics:
@@ -1463,7 +1463,7 @@ static typing, effect restrictions and source-aware errors are unchanged.
 For example, `unique of` preserves the original order, and a numerical
 list's standard deviation remains subject to the existing list checks.
 
-## Natural primality predicates (unreleased)
+## Natural primality predicates (v0.65.0)
 
 Use `number is prime` or `number is not prime`. These are source-level
 alternatives to `prime of number` and `not (prime of number)`, and share
