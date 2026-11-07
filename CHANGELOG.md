@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Explicit ascending and descending typed sorting
+- Add `sorted ascending of LIST` and `sorted descending of LIST`, plus the contextual `sort ascending/descending of LIST` forms.
+- The ascending form reuses checked `sorted` and the descending form composes `reverse` over `sorted`; preserve exact signed 64-bit ordering, type diagnostics, and single list evaluation.
+- Extend executable examples, regression tests, formatting, editor highlighting, Jupyter completions, and guide without new runtime effects.
+
 ### Concise list and text operators
 - Add contextual `rev of`, `sort of` and `flat of` as pure, statically typed aliases for `reverse of`, `sorted of` and `flatten of`.
 - Retain original string/list behavior, one-level flattening, strict operand diagnostics, exact numeric sorting and single evaluation.

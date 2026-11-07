@@ -96,6 +96,14 @@ class MagicTests(unittest.TestCase):
             self.assertIn(word + " of", entry)
             self.assertIn(original + " of", entry)
 
+    def test_directional_sort_help_and_completion(self):
+        help_entries = SemauriKernel.KEYWORD_HELP
+        for direction in ("ascending", "descending"):
+            self.assertIn("sorted " + direction + " of", help_entries[direction])
+            self.assertIn("sort " + direction + " of", help_entries[direction])
+            result = SemauriKernel().do_complete(direction[:4], 4)
+            self.assertIn(direction, result["matches"])
+
     def test_completion(self):
         result = SemauriKernel().do_complete("pri", 3)
         self.assertIn("print", result["matches"])

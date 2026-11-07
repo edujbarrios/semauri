@@ -1,0 +1,9 @@
+let scores be a list of 7, 1, 9, 3.
+let high_first be sorted descending of scores.
+let low_first be sort ascending of scores.
+assert (high_first at 0) is equal to 9.
+assert (low_first at 0) is equal to 1.
+assert (scores at 0) is equal to 7.
+let words be a list of "é", "a", "z".
+assert (head of (sort descending of words)) is equal to "é".
+print "Directional sorting OK".
