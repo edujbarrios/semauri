@@ -1362,7 +1362,8 @@ impl<'a> Parser<'a> {
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(), "top" | "bottom")
                     && self.tokens.get(self.current + 1).is_some_and(|next|
                         matches!(next.kind, TokenKind::Number | TokenKind::Word
-                            | TokenKind::Boolean | TokenKind::Minus | TokenKind::LParen)) => {
+                            | TokenKind::Boolean | TokenKind::String
+                            | TokenKind::Minus | TokenKind::LParen)) => {
                 let start = self.advance().clone();
                 let largest_first = start.lexeme.eq_ignore_ascii_case("top");
                 let count = self.numeric_unary()?;

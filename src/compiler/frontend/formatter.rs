@@ -291,7 +291,8 @@ impl Compiler {
                 && matches!(token.lexeme.to_ascii_lowercase().as_str(), "top" | "bottom")
                 && tokens.get(index + 1).is_some_and(|next|
                     matches!(next.kind, TokenKind::Number | TokenKind::Word
-                        | TokenKind::Boolean | TokenKind::Minus | TokenKind::LParen));
+                        | TokenKind::Boolean | TokenKind::String
+                            | TokenKind::Minus | TokenKind::LParen));
             let is_repeat = token.kind == TokenKind::Word
                 && token.lexeme.eq_ignore_ascii_case("repeat")
                 && tokens.get(index + 1).is_some_and(|next|
