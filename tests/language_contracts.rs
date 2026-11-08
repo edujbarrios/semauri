@@ -454,7 +454,7 @@ fn string_unicode_scalar_escapes_are_decoded_and_invalid_forms_rejected() {
 
     for escape in [
         r"\u",
-        r"\u1234",
+        r"\u12G4",
         r"\u{}",
         r"\u{GG}",
         r"\u{D800}",
