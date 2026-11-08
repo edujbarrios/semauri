@@ -33,6 +33,15 @@ jobs:
           cargo build --release
           git worktree add --detach /tmp/semauri-048-baseline v0.48.0
           cargo build --release --manifest-path /tmp/semauri-048-baseline/Cargo.toml --target-dir /tmp/semauri-048-target
+      - name: Compare changed compiler against PR base (same runner)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git worktree add --detach /tmp/semauri-pr-base "$BASE_SHA"
+          cargo build --release --locked --manifest-path /tmp/semauri-pr-base/Cargo.toml --target-dir /tmp/semauri-pr-base-target
+          python3 scripts/benchmark_delta.py /tmp/semauri-pr-base-target/release/semauri target/release/semauri
       - name: Compare paired output and timed medians (50 + 3 warmups)
         run: |
           SEMAURI_BIN=/tmp/semauri-048-target/release/semauri BENCH_LABEL=baseline BENCH_RESULTS=/tmp/semauri-before.json bash scripts/bench.sh 50

@@ -1,5 +1,12 @@
 ## Unreleased
 
+## 0.68.0 — 2026-11-08
+
+### Runtime and compiler evaluation performance
+- Replace quadratic scan-based `distinct of`, `cardinality of` and unique counting with hash-bucket deduplication and exact equality verification. Preserve first-occurrence order, nested-list semantics, and integer-vs-decimal identity.
+- Remove an unconditional per-item clone from mapped, filtered, counted, quantified and partitioned list transformations by moving the immutable original item out of the temporary iterator frame.
+- Add large-input and storage-sensitive regressions plus paired same-runner benchmarks against the pull request base. No new dependencies, syntax, permissions, or effect changes.
+
 ## 0.67.0 — 2026-11-08
 
 ### Four-digit Unicode literals and ASCII escape

@@ -1165,11 +1165,20 @@ impl<'a> Lowerer<'a> {
                         *iterator_symbol_id,
                         BoundValue::Compile {
                             ty: input_element.as_ref().clone(),
-                            data: input.clone(),
+                            data: input,
                         },
                     );
                     let result = self.evaluate(body);
+                    // The iterator is immutable. Move its original value out
+                    // rather than cloning every item (notably long strings or
+                    // nested lists) before evaluating a map/filter predicate.
+                    let original = self.environments.last_mut().unwrap()
+                        .remove(iterator_symbol_id)
+                        .expect("typed list iterator binding");
                     self.pop_environment();
+                    let BoundValue::Compile { data: input, .. } = original else {
+                        unreachable!("list iterators hold compile-time values")
+                    };
                     let BoundValue::Compile { ty: body_type, data } = result? else {
                         return Err(self.runtime_value_error(body.span()));
                     };
@@ -1616,14 +1625,9 @@ impl<'a> Lowerer<'a> {
                     ty: ty @ Type::List(_),
                     data: ValueData::List(values),
                 } => {
-                    // Preserve source order and element type. Equality deliberately
-                    // matches the existing list 'contains' operation.
-                    let mut distinct = Vec::with_capacity(values.len());
-                    for value in values {
-                        if !distinct.contains(&value) {
-                            distinct.push(value);
-                        }
-                    }
+                    // Preserve first-occurrence order and exact ValueData
+                    // equality, including int/float storage distinctions.
+                    let distinct = distinct_values(values);
                     Ok(BoundValue::Compile {
                         ty,
                         data: ValueData::List(distinct),
@@ -2639,6 +2643,65 @@ impl<'a> Lowerer<'a> {
             ),
         )
     }
+}
+
+// Hash each value once and compare only entries in the same hash bucket.
+// The final equality check is deliberate: collisions cannot change semantics.
+// Float -0.0 and +0.0 share a fingerprint because they compare equal;
+// integers and floats remain distinct storage kinds, even when numerically equal.
+fn distinct_fingerprint(value: &ValueData) -> u64 {
+    use std::hash::{Hash, Hasher};
+
+    fn hash_value(value: &ValueData, hasher: &mut impl Hasher) {
+        match value {
+            ValueData::Number(NumberValue::Int(number)) => {
+                0u8.hash(hasher);
+                number.hash(hasher);
+            }
+            ValueData::Number(NumberValue::Float(number)) => {
+                1u8.hash(hasher);
+                (if *number == 0.0 { 0 } else { number.to_bits() }).hash(hasher);
+            }
+            ValueData::Boolean(value) => {
+                2u8.hash(hasher);
+                value.hash(hasher);
+            }
+            ValueData::String(value) => {
+                3u8.hash(hasher);
+                value.hash(hasher);
+            }
+            ValueData::Color(value) => {
+                4u8.hash(hasher);
+                value.hash(hasher);
+            }
+            ValueData::List(values) => {
+                5u8.hash(hasher);
+                values.len().hash(hasher);
+                for item in values {
+                    hash_value(item, hasher);
+                }
+            }
+            ValueData::Unit => 6u8.hash(hasher),
+        }
+    }
+
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    hash_value(value, &mut hasher);
+    hasher.finish()
+}
+
+fn distinct_values(values: Vec<ValueData>) -> Vec<ValueData> {
+    let mut distinct = Vec::with_capacity(values.len());
+    let mut buckets: HashMap<u64, Vec<usize>> = HashMap::new();
+    for value in values {
+        let fingerprint = distinct_fingerprint(&value);
+        let candidates = buckets.entry(fingerprint).or_default();
+        if candidates.iter().all(|&index| distinct[index] != value) {
+            candidates.push(distinct.len());
+            distinct.push(value);
+        }
+    }
+    distinct
 }
 
 fn capitalize(value: &str) -> String {

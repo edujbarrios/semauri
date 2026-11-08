@@ -1,6 +1,6 @@
 # Semauri
 
-**A readable, statically typed language for people and AI agents.** Write natural-language-inspired programs in `.suri`; compile with Rust, inspect effects, and run with explicit permissions. Current release: **v0.67.0**.
+**A readable, statically typed language for people and AI agents.** Write natural-language-inspired programs in `.suri`; compile with Rust, inspect effects, and run with explicit permissions. Current release: **v0.68.0**.
 
 ## Quick Start
 
@@ -87,7 +87,7 @@ Prediction for x=6:
 
 Use GitHub's **Cite this repository** feature or [CITATION.cff](CITATION.cff). Suggested citation:
 
-> Barrios, E. J. (2026). *Semauri: A natural-language-inspired programming language for humans and AI agents* (Version 0.67.0) [Computer software]. https://github.com/edujbarrios/semauri
+> Barrios, E. J. (2026). *Semauri: A natural-language-inspired programming language for humans and AI agents* (Version 0.68.0) [Computer software]. https://github.com/edujbarrios/semauri
 
 Apache-2.0 licensed. See [LICENSE](LICENSE).
 
@@ -107,4 +107,4 @@ More conversational control flow: `when condition then:`,
 `elif other_condition then:`, and `for each item in items do:`.
 See [the updated natural-syntax example](examples/natural_syntax.suri).
 
-**v0.67.0:** Support for four-digit `\uXXXX` Unicode string escapes and `\e` (ASCII escape). [Example](examples/unicode_four_digit_escapes.suri) · [Release notes](docs/releases/0.67.0.md).
+**v0.68.0:** Faster `distinct`/`cardinality` and fewer list-transform copies, with paired performance benchmarks. [Release notes](docs/releases/0.68.0.md).

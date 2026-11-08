@@ -68,4 +68,54 @@ End.
             "ml.training_run"
         );
     }
+    #[test]
+    fn hashed_distinct_preserves_nested_and_storage_sensitive_equality() {
+        let input = vec![
+            ValueData::Number(NumberValue::Int(1)),
+            ValueData::Number(NumberValue::Float(1.0)),
+            ValueData::Number(NumberValue::Int(1)),
+            ValueData::String("é".into()),
+            ValueData::String("é".into()),
+            ValueData::Color("red".into()),
+            ValueData::Color("red".into()),
+            ValueData::List(vec![ValueData::Boolean(true)]),
+            ValueData::List(vec![ValueData::Boolean(true)]),
+            ValueData::List(vec![ValueData::Boolean(false)]),
+        ];
+        let expected = vec![
+            input[0].clone(), input[1].clone(), input[3].clone(),
+            input[5].clone(), input[7].clone(), input[9].clone(),
+        ];
+        assert_eq!(distinct_values(input), expected);
+        let negative_zero = ValueData::Number(NumberValue::Float(-0.0));
+        let positive_zero = ValueData::Number(NumberValue::Float(0.0));
+        assert_eq!(distinct_fingerprint(&negative_zero), distinct_fingerprint(&positive_zero));
+        assert_eq!(distinct_values(vec![negative_zero, positive_zero]).len(), 1);
+    }
+
+    #[test]
+    fn hashed_distinct_matches_previous_equality_for_mixed_values() {
+        let input = vec![
+            ValueData::Unit,
+            ValueData::Boolean(false),
+            ValueData::Boolean(true),
+            ValueData::Boolean(false),
+            ValueData::String("hello".into()),
+            ValueData::String("HELLO".into()),
+            ValueData::Number(NumberValue::Float(0.5)),
+            ValueData::Number(NumberValue::Float(0.5)),
+            ValueData::Number(NumberValue::Int(0)),
+            ValueData::List(vec![ValueData::Number(NumberValue::Float(0.0))]),
+            ValueData::List(vec![ValueData::Number(NumberValue::Float(-0.0))]),
+        ];
+        let mut previous = Vec::new();
+        for value in &input {
+            if !previous.contains(value) {
+                previous.push(value.clone());
+            }
+        }
+        assert_eq!(distinct_values(input), previous);
+    }
+
+
 }
