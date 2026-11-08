@@ -1,0 +1,7 @@
+# Unicode escapes represent scalar values; lone surrogates are invalid.
+let greeting be "\u0048\u00E9".
+assert greeting is equal to "Hé".
+assert '\u0041' is equal to "\x41".
+assert "\e" is equal to "\x1B".
+assert "\u{1F600}" is equal to "\U0001F600".
+print greeting.

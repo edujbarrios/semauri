@@ -585,6 +585,7 @@ impl<'a> Lexer<'a> {
                     'f' => '\u{000C}',
                     'a' => '\u{0007}', // ASCII bell
                     'v' => '\u{000B}', // vertical tab
+                    'e' => '\u{001B}', // ASCII escape
                     '"' => '"',
                     '\'' => '\'',
                     '\\' => '\\',
@@ -617,6 +618,27 @@ impl<'a> Lexer<'a> {
                                 .ok_or_else(|| SemauriError::lex(
                                     "S104",
                                     "Expected eight hexadecimal digits after '\\U'",
+                                    SourceSpan::new(escape_line, escape_column, self.line, self.column),
+                                ))?;
+                            scalar = (scalar << 4) | digit;
+                            self.advance();
+                        }
+                        char::from_u32(scalar).ok_or_else(|| SemauriError::lex(
+                            "S104",
+                            "Unicode escape must be a valid Unicode scalar value",
+                            SourceSpan::new(escape_line, escape_column, self.line, self.column),
+                        ))?
+                    }
+                    'u' if self.current() != Some('{') => {
+                        // Fixed-width BMP escapes must yield Unicode scalars,
+                        // never lone UTF-16 surrogate code points.
+                        let mut scalar = 0u32;
+                        for _ in 0..4 {
+                            let digit = self.current()
+                                .and_then(|ch| ch.to_digit(16))
+                                .ok_or_else(|| SemauriError::lex(
+                                    "S104",
+                                    "Expected four hexadecimal digits after '\\u' (or use '\\u{HEX}')",
                                     SourceSpan::new(escape_line, escape_column, self.line, self.column),
                                 ))?;
                             scalar = (scalar << 4) | digit;

@@ -80,7 +80,7 @@
           "patterns": [
             {
               "name": "constant.character.escape.semauri",
-              "match": "\\\\(?:[\\\\'\"nrt0bfav]|x[0-9A-Fa-f]{2}|U[0-9A-Fa-f]{8}|u\\{[0-9A-Fa-f]{1,6}\\})"
+              "match": "\\\\(?:[\\\\'\"nrt0bfave]|x[0-9A-Fa-f]{2}|U[0-9A-Fa-f]{8}|u(?:[0-9A-Fa-f]{4}|\\{[0-9A-Fa-f]{1,6}\\}))"
             },
             {
               "name": "invalid.illegal.escape.semauri",
@@ -95,7 +95,7 @@
           "patterns": [
             {
               "name": "constant.character.escape.semauri",
-              "match": "\\\\(?:[\\\\'\"nrt0bfav]|x[0-9A-Fa-f]{2}|U[0-9A-Fa-f]{8}|u\\{[0-9A-Fa-f]{1,6}\\})"
+              "match": "\\\\(?:[\\\\'\"nrt0bfave]|x[0-9A-Fa-f]{2}|U[0-9A-Fa-f]{8}|u(?:[0-9A-Fa-f]{4}|\\{[0-9A-Fa-f]{1,6}\\}))"
             },
             {
               "name": "invalid.illegal.escape.semauri",

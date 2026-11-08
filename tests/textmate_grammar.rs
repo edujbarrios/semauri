@@ -233,3 +233,14 @@ fn grammar_supports_prime_predicates_and_short_function_aliases() {
         assert!(functions.contains(name), "{name} missing from {functions}");
     }
 }
+
+#[test]
+fn grammar_highlights_four_digit_unicode_and_escape_character() {
+    let grammar: Value = serde_json::from_str(GRAMMAR).unwrap();
+    let strings = grammar["repository"]["strings"]["patterns"].as_array().unwrap();
+    for quoted in &strings[2..4] {
+        let escape = quoted["patterns"][0]["match"].as_str().unwrap();
+        assert!(escape.contains(r"u(?:[0-9A-Fa-f]{4}|"), "{escape}");
+        assert!(escape.contains("nrt0bfave"), "{escape}");
+    }
+}
