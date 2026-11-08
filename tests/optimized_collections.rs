@@ -28,12 +28,12 @@ fn filtering_partitioning_and_mapping_keep_original_values() {
     compiler.analyze(r#"let values be a list of "alpha", "beta", "alphabet".
 let mapped be map every s in values to (uppercase of s).
 let filtered be filter every s in values if (s contains "alpha").
-let divided be partition every s in values if (s contains "alpha").
+let grouped_values be partition every s in values if (s contains "alpha").
 assert length of mapped is equal to 3.
 assert (mapped at 0) is equal to "ALPHA".
 assert length of filtered is equal to 2.
 assert (filtered at 1) is equal to "alphabet".
-assert length of divided is equal to 2.
+assert length of grouped_values is equal to 2.
 assert (values at 0) is equal to "alpha".
 print length of filtered."#).unwrap();
 }
