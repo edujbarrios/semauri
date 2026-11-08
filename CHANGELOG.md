@@ -1,5 +1,12 @@
 ## Unreleased
 
+## 0.67.0 — 2026-11-08
+
+### Four-digit Unicode literals and ASCII escape
+- Accept four-digit `\uXXXX` Unicode BMP scalar escapes in ordinary single- and double-quoted strings alongside `\u{HEX}` and `\UXXXXXXXX` forms; reject incomplete, non-hexadecimal, and surrogate values with source-located S104 diagnostics.
+- Add `\e` for ASCII escape (U+001B), equivalent to `\x1B`. Raw and triple-quoted strings retain literal backslashes.
+- Add regression tests, a checked example, VS Code highlighting and updated language documentation, with no new dependencies or runtime capabilities.
+
 ## 0.66.1 — 2026-11-07
 
 ### Consolidated patch release

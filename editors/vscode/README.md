@@ -13,3 +13,5 @@ For Semauri 0.53, the embedded grammar also recognizes raw strings (`r"..."` and
 Semauri 0.54 adds base-36 integer highlighting (`0z1_z`), two-digit ordinary string escapes (`\\x41`), and hash-delimited raw string highlighting (`r#\"quoted\"#`, `r##\"quoted\"##`). Matched `#` markers in the opening delimiter are repeated at the closing delimiter.
 
 In Semauri 0.55 the TextMate grammar also highlights decimal fractions such as `.5`, multiline triple-quoted blocks (`"""..."""` and `'''...'''`), and the fixed-width `\\U0001F600` Unicode escape in ordinary strings. Triple-quoted blocks are literal text: backslash escapes are not decoded.
+
+Semauri 0.67 adds `\u0041` style four-digit Unicode scalar escapes (excluding invalid surrogate code points) and `\e` for ASCII escape in ordinary quoted strings. Raw and triple-quoted strings remain literal.
