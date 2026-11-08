@@ -107,6 +107,4 @@ More conversational control flow: `when condition then:`,
 `elif other_condition then:`, and `for each item in items do:`.
 See [the updated natural-syntax example](examples/natural_syntax.suri).
 
-**v0.66.1:** Rebuilt stable packages with all v0.66.0 language features; no new code changes. [Release notes](docs/releases/0.66.1.md).
-
 **v0.67.0:** Support for four-digit `\uXXXX` Unicode string escapes and `\e` (ASCII escape). [Example](examples/unicode_four_digit_escapes.suri) · [Release notes](docs/releases/0.67.0.md).
