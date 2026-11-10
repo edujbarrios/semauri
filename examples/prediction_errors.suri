@@ -1,0 +1,14 @@
+let actual be 12.
+let predicted be 9.
+
+let residual be difference between actual and predicted.
+let error be absolute difference between actual and predicted.
+let loss be squared difference between actual and predicted.
+
+assert residual is equal to 3.
+assert error is equal to 3.
+assert loss is equal to 9.
+
+print residual.
+print error.
+print loss.
