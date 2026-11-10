@@ -509,8 +509,9 @@ Operands must be numbers. A compound operand must be parenthesized:
 to the existing checked subtraction, absolute-value and square operators,
 so each operand is evaluated once. Exact integer arithmetic is preserved,
 including values above 2^53, and non-finite decimal or signed 64-bit
-overflow is rejected. Invalid operand types raise `S314`; absolute
-overflow raises `S388`, and square overflow raises `S422`.
+overflow is rejected. Invalid operand types raise `S314`, subtraction
+overflow/non-finite results raise `S470`, absolute overflow raises
+`S388`, and square overflow raises `S422`.
 Each word remains an ordinary identifier outside the contextual phrase.
 
 See [numeric_differences.suri](../examples/numeric_differences.suri).
