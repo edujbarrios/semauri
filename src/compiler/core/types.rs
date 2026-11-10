@@ -101,6 +101,20 @@ impl NumberValue {
     }
 }
 
+// Subtraction must not round two exact integers through f64. Signed
+// overflow and non-finite decimal results are rejected consistently by
+// runtime execution and constant folding.
+fn numeric_subtract(left: &NumberValue, right: &NumberValue) -> Option<NumberValue> {
+    match (left, right) {
+        (NumberValue::Int(a), NumberValue::Int(b)) =>
+            a.checked_sub(*b).map(NumberValue::Int),
+        (a, b) => {
+            let result = a.as_f64() - b.as_f64();
+            result.is_finite().then(|| NumberValue::from_f64(result))
+        }
+    }
+}
+
 // Compare signed 64-bit integers and binary64 floats for ordering without rounding an
 // integer through f64. Casting i64::MAX to f64 yields 2^63, which lies
 // outside the integer domain; the exclusive upper bound matters here.

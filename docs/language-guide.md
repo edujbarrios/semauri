@@ -489,6 +489,33 @@ Non-number operands raise `S421` at type checking; numeric overflow or
 non-finite results raise `S422` during evaluation. The expression is pure
 and requires no new runtime permissions.
 
+### Numeric differences and error metrics
+
+Three contextual forms calculate signed differences and common error metrics
+without introducing conversions or a new runtime capability:
+
+```text
+assert (difference between 10 and 4) is equal to 6.
+assert (difference between 4 and 10) is equal to (minus 6).
+assert (absolute difference between 4 and 10) is equal to 6.
+assert (squared difference between 4 and 10) is equal to 36.
+let errors be map every predicted in (a list of 1, 2, 3) to
+  (squared difference between predicted and 2).
+assert (errors at 0) is equal to 1.
+```
+
+Operands must be numbers. A compound operand must be parenthesized:
+`difference between (a plus 1) and (b times 2)`. These forms compile
+to the existing checked subtraction, absolute-value and square operators,
+so each operand is evaluated once. Exact integer arithmetic is preserved,
+including values above 2^53, and non-finite decimal or signed 64-bit
+overflow is rejected. Invalid operand types raise `S314`, subtraction
+overflow/non-finite results raise `S470`, absolute overflow raises
+`S388`, and square overflow raises `S422`.
+Each word remains an ordinary identifier outside the contextual phrase.
+
+See [numeric_differences.suri](../examples/numeric_differences.suri).
+
 ### Population variance and standard deviation
 
 `variance of NUMERIC_LIST` and `stdev of NUMERIC_LIST` calculate the

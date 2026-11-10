@@ -877,9 +877,7 @@ fn eval_constant_binary(
             Some(ValueData::String(format!("{a}{b}")))
         }
         (BinaryOperator::Subtract, ValueData::Number(a), ValueData::Number(b)) => {
-            Some(ValueData::Number(NumberValue::from_f64(
-                a.as_f64() - b.as_f64(),
-            )))
+            numeric_subtract(a, b).map(ValueData::Number)
         }
         (BinaryOperator::Multiply, ValueData::Number(a), ValueData::Number(b)) => {
             Some(ValueData::Number(NumberValue::from_f64(

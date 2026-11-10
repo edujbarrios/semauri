@@ -1,0 +1,15 @@
+# Checked numeric differences for measurements and ML error metrics.
+let actual be 12.
+let predicted be 9.
+let residual be difference between actual and predicted.
+let absolute_error be absolute difference between predicted and actual.
+let squared_error be squared difference between predicted and actual.
+assert residual is equal to 3.
+assert absolute_error is equal to 3.
+assert squared_error is equal to 9.
+let values be a list of 1, 2, 3.
+let losses be map every value in values to (squared difference between value and 2).
+assert (losses at 0) is equal to 1.
+assert (losses at 1) is equal to 0.
+assert (losses at 2) is equal to 1.
+print "Numeric differences OK".
