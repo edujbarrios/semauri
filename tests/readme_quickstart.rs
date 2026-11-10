@@ -57,7 +57,7 @@ fn prediction_errors_readme_example_runs_and_matches_documented_output() {
     assert!(README.contains(EXAMPLE.trim()), "README snippet must match the runnable .suri file");
     assert!(README.contains("semauri run --allow console_write examples/prediction_errors.suri"));
     assert!(README.contains("Output (residual, absolute error, squared error):"));
-    assert!(README.contains("```text\\n3\\n3\\n9\\n```"));
+    assert!(README.contains("```text\n3\n3\n9\n```"));
 
     let path = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/prediction_errors.suri");
     let checked = run_cli(&["check".into(), path.into()]);
@@ -66,5 +66,5 @@ fn prediction_errors_readme_example_runs_and_matches_documented_output() {
         "run".into(), "--allow".into(), "console_write".into(), path.into()
     ]);
     assert_eq!(result.status, 0, "{}", result.stderr);
-    assert_eq!(result.stdout, "3\\n3\\n9\\n");
+    assert_eq!(result.stdout, "3\n3\n9\n");
 }
