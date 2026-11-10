@@ -516,6 +516,40 @@ Each word remains an ordinary identifier outside the contextual phrase.
 
 See [numeric_differences.suri](../examples/numeric_differences.suri).
 
+### Magnitude aggregations and mean absolute error
+
+For a list of signed residuals, four pure, checked expressions compute
+absolute-error statistics without manual mapping:
+
+```text
+let actual be a list of 3, 6, 4.
+let predicted be a list of 1, 9, 5.
+let errors be zip every observed in actual with estimated in predicted
+  to (difference between observed and estimated).
+assert (sum of magnitudes of errors) is equal to 6.
+assert (mean magnitude of errors) is equal to 2.
+assert (mean absolute error of errors) is equal to 2.
+assert (mae of errors) is equal to 2.
+assert (max magnitude of errors) is equal to 3.
+```
+
+`sum of magnitudes of VALUES` sums the absolute values in a typed numeric
+list, returning zero for an empty list. `mean magnitude of VALUES`,
+`mean absolute error of VALUES`, and `mae of VALUES` are equivalent
+arithmetic means of those magnitudes; `max magnitude of VALUES` finds
+the greatest magnitude. **MAE consumes residual errors**, not two separate
+observation/prediction lists. Use `zip every` to form residuals first.
+
+All operators evaluate the source list once and apply the same checked
+`absolute of` implementation to each element. Non-lists raise `S365`,
+nonnumeric elements raise `S386`, an absolute-value overflow raises
+`S388`, and a numeric aggregation overflow raises `S354`. An empty list
+is invalid for mean or MAE (`S354`) and maximum magnitude (`S355`).
+The names `mae`, `mean`, `magnitude`, and `error` remain valid
+identifiers outside these complete phrases.
+
+See [absolute_error_statistics.suri](../examples/absolute_error_statistics.suri).
+
 ### Squared statistics and root mean square
 
 Semauri can compute three common squared-value aggregates directly over

@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Absolute-error and magnitude aggregations (not yet released)
+- Add contextual `sum of magnitudes of LIST`, `mean magnitude of LIST`, `mean absolute error of LIST`, `mae of LIST`, and `max magnitude of LIST` for signed residuals and signal analysis.
+- Reuse the typed list transform, checked absolute value, and exact integer aggregation/max operations; reject empty mean/max, malformed types, and arithmetic overflow with existing diagnostics.
+- Add a paired-prediction runnable example, Rust regression tests, language guide, VS Code highlighting, and Jupyter completion/help. Keep these changes on the unreleased feature branch.
+
 ### Squared numeric aggregations (not yet released)
 - Add contextual `sum of squares of LIST`, `mean square of LIST`, `root mean square of LIST` and `rms of LIST` for loss, signal and statistical calculations.
 - Compose typed list mapping, checked integer squaring, aggregation and square-root operations; preserve one-time input evaluation, overflow diagnostics and pure effect semantics without new dependencies.

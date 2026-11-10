@@ -1412,6 +1412,93 @@ impl<'a> Parser<'a> {
                     aggregated
                 })
             }
+            // Absolute-error statistics over a list of signed residuals.
+            // Reuse one typed map of checked absolute values, then the
+            // existing sum, average or maximum. This preserves single
+            // evaluation of the source list and exact integer arithmetic.
+            kind if (kind == TokenKind::Sum
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.kind == TokenKind::Of)
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.kind == TokenKind::Word
+                        && next.lexeme.eq_ignore_ascii_case("magnitudes"))
+                    && self.tokens.get(self.current + 3).is_some_and(|next|
+                        next.kind == TokenKind::Of))
+                || (kind == TokenKind::Word
+                    && ((matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                        "mean" | "max")
+                        && self.tokens.get(self.current + 1).is_some_and(|next|
+                            next.kind == TokenKind::Word
+                            && next.lexeme.eq_ignore_ascii_case("magnitude"))
+                        && self.tokens.get(self.current + 2).is_some_and(|next|
+                            next.kind == TokenKind::Of))
+                        || (token.lexeme.eq_ignore_ascii_case("mean")
+                            && self.tokens.get(self.current + 1).is_some_and(|next|
+                                next.kind == TokenKind::Word
+                                && next.lexeme.eq_ignore_ascii_case("absolute"))
+                            && self.tokens.get(self.current + 2).is_some_and(|next|
+                                next.kind == TokenKind::Word
+                                && next.lexeme.eq_ignore_ascii_case("error"))
+                            && self.tokens.get(self.current + 3).is_some_and(|next|
+                                next.kind == TokenKind::Of))
+                        || (token.lexeme.eq_ignore_ascii_case("mae")
+                            && self.tokens.get(self.current + 1).is_some_and(|next|
+                                next.kind == TokenKind::Of)))) => {
+                let start = self.advance().clone();
+                let operation = if start.kind == TokenKind::Sum {
+                    self.consume(TokenKind::Of,
+                        "Expected 'of' before magnitudes", "S242")?;
+                    self.consume_surface("magnitudes",
+                        "Expected 'magnitudes' after sum of", "S242")?;
+                    UnaryOperator::Sum
+                } else if start.lexeme.eq_ignore_ascii_case("mae") {
+                    UnaryOperator::Average
+                } else {
+                    if start.lexeme.eq_ignore_ascii_case("mean")
+                        && self.peek().lexeme.eq_ignore_ascii_case("absolute")
+                    {
+                        self.consume_surface("absolute",
+                            "Expected 'absolute' after mean", "S242")?;
+                        self.consume_surface("error",
+                            "Expected 'error' after mean absolute", "S242")?;
+                    } else {
+                        self.consume_surface("magnitude",
+                            "Expected 'magnitude' after mean/max", "S242")?;
+                    }
+                    if start.lexeme.eq_ignore_ascii_case("max") {
+                        UnaryOperator::Maximum
+                    } else {
+                        UnaryOperator::Average
+                    }
+                };
+                self.consume(TokenKind::Of,
+                    "Expected 'of' before the list of numeric residuals", "S242")?;
+                let source = self.primary()?;
+                let span = span_between_spans(start.span, source.span());
+                // An internal symbol in the map scope, never a user binding.
+                let iterator = "__semauri_magnitude_aggregate_item".to_owned();
+                let absolute = Expr::Unary {
+                    operator: UnaryOperator::Absolute,
+                    operand: Box::new(Expr::Variable {
+                        name: iterator.clone(),
+                        span: start.span,
+                    }),
+                    span,
+                };
+                let mapped = Expr::ListTransform {
+                    kind: ListTransformKind::Map,
+                    iterator,
+                    binding_span: start.span,
+                    iterable: Box::new(source),
+                    body: Box::new(absolute),
+                    span,
+                };
+                Ok(Expr::Unary {
+                    operator: operation,
+                    operand: Box::new(mapped),
+                    span,
+                })
+            }
             // Python-friendly contextual functions; keep the strict existing HIR operators.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),
