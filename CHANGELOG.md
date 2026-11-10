@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Running list aggregates and sequential differences (not yet released)
+- Add `running total/sum of LIST` and `cumulative total/sum of LIST`, plus `running average of LIST` and `cumulative average of LIST`.
+- Add `adjacent differences of LIST` and `successive differences of LIST` for signed changes between consecutive numeric readings.
+- Implement linear-time, typed list scans with single input evaluation, exact checked 64-bit integer prefix sums, finite floating-point checks (`S471`), and shared checked subtraction (`S470`). Add runnable examples, Rust regressions, Jupyter and VS Code support. No new release or version bump.
+
 ### Model evaluation aliases: MSE, RMSE and signed bias (not yet released)
 - Add `mean squared error of ERRORS` / `mse of ERRORS`, `root mean squared error of ERRORS` / `rmse of ERRORS`, and `mean bias error of ERRORS` / `mean error of ERRORS` / `mbe of ERRORS`.
 - Reuse the exact checked square/map/mean/sqrt pathways and signed numeric average; no new runtime effects, permissions, dependencies, or reserved identifiers.

@@ -1556,6 +1556,42 @@ impl<'a> Parser<'a> {
                     span,
                 })
             }
+            // Running numeric series and adjacent changes are genuine typed
+            // list operators. Unlike rewriting into repeated prefix reductions,
+            // the source list is evaluated once and scanned in one pass.
+            TokenKind::Word
+                if (matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                    "running" | "cumulative")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.kind == TokenKind::Sum
+                            || next.kind == TokenKind::Average
+                            || (next.kind == TokenKind::Word
+                                && next.lexeme.eq_ignore_ascii_case("total")))
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.kind == TokenKind::Of))
+                    || (matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                        "adjacent" | "successive")
+                        && self.tokens.get(self.current + 1).is_some_and(|next|
+                            next.kind == TokenKind::Word
+                            && next.lexeme.eq_ignore_ascii_case("differences"))
+                        && self.tokens.get(self.current + 2).is_some_and(|next|
+                            next.kind == TokenKind::Of)) => {
+                let start = self.advance().clone();
+                let operation = self.advance().clone();
+                self.consume(TokenKind::Of,
+                    "Expected 'of' after the numeric series operation", "S242")?;
+                let operand = self.primary()?;
+                let span = span_between_spans(start.span, operand.span());
+                let operator = if start.lexeme.eq_ignore_ascii_case("adjacent")
+                    || start.lexeme.eq_ignore_ascii_case("successive") {
+                    UnaryOperator::AdjacentDifferences
+                } else if operation.kind == TokenKind::Average {
+                    UnaryOperator::RunningAverage
+                } else {
+                    UnaryOperator::RunningTotal
+                };
+                Ok(Expr::Unary { operator, operand: Box::new(operand), span })
+            }
             // Python-friendly contextual functions; keep the strict existing HIR operators.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),

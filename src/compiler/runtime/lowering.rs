@@ -1511,6 +1511,28 @@ impl<'a> Lowerer<'a> {
                 BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
             },
             HirExpr::Unary {
+                operator: operator @ (UnaryOperator::RunningTotal
+                    | UnaryOperator::RunningAverage | UnaryOperator::AdjacentDifferences),
+                operand,
+                ..
+            } => match self.evaluate(operand)? {
+                BoundValue::Compile {
+                    ty: Type::List(element),
+                    data: ValueData::List(values),
+                } if *element == Type::Number => Ok(BoundValue::Compile {
+                    ty: Type::List(Box::new(Type::Number)),
+                    data: ValueData::List(scan_numeric_series(
+                        &values, operator, expression.span(),
+                    )?),
+                }),
+                BoundValue::Compile { ty, .. } => Err(SemauriError::semantic(
+                    "S353",
+                    format!("Numeric series operation requires list<number>, received {ty}"),
+                    Some(expression.span()), None,
+                )),
+                BoundValue::Runtime(_) => Err(self.runtime_value_error(expression.span())),
+            },
+            HirExpr::Unary {
                 operator: operator @ (UnaryOperator::Any | UnaryOperator::All),
                 operand,
                 ..
@@ -2868,6 +2890,85 @@ fn extrema_numeric_list(
             None,
         )
     })
+}
+
+/// Linear-time, ordered scans of typed numeric lists. Prefix totals retain
+/// checked i64 precision; decimal operations must stay finite. Every prefix
+/// average divides the checked prefix total by its one-based element count.
+/// Differences are current minus previous, using the same checked arithmetic
+/// as the ordinary subtraction operator.
+fn scan_numeric_series(
+    values: &[ValueData],
+    operator: &UnaryOperator,
+    span: SourceSpan,
+) -> Result<Vec<ValueData>> {
+    if *operator == UnaryOperator::AdjacentDifferences {
+        let mut output = Vec::with_capacity(values.len().saturating_sub(1));
+        for pair in values.windows(2) {
+            let (ValueData::Number(before), ValueData::Number(after)) =
+                (&pair[0], &pair[1]) else {
+                    return Err(SemauriError::semantic(
+                        "S353", "Adjacent differences require list<number>",
+                        Some(span), None,
+                    ));
+                };
+            let difference = numeric_subtract(after, before).ok_or_else(|| {
+                SemauriError::semantic(
+                    "S470",
+                    "Adjacent subtraction overflows the signed integer range or is non-finite",
+                    Some(span), None,
+                )
+            })?;
+            output.push(ValueData::Number(difference));
+        }
+        return Ok(output);
+    }
+
+    let mut output = Vec::with_capacity(values.len());
+    let mut total: Option<NumberValue> = None;
+    for (index, item) in values.iter().enumerate() {
+        let ValueData::Number(value) = item else {
+            return Err(SemauriError::semantic(
+                "S353", "Running aggregates require list<number>", Some(span), None,
+            ));
+        };
+        let next = match &total {
+            None => value.clone(),
+            Some(NumberValue::Int(previous)) => match value {
+                NumberValue::Int(number) => NumberValue::Int(
+                    previous.checked_add(*number).ok_or_else(|| {
+                        SemauriError::semantic(
+                            "S471", "Running total exceeds the signed 64-bit integer range",
+                            Some(span), None,
+                        )
+                    })?,
+                ),
+                _ => NumberValue::from_f64(*previous as f64 + value.as_f64()),
+            },
+            Some(previous) => NumberValue::from_f64(previous.as_f64() + value.as_f64()),
+        };
+        if !next.as_f64().is_finite() {
+            return Err(SemauriError::semantic(
+                "S471", "Running numeric aggregation produced a non-finite result",
+                Some(span), None,
+            ));
+        }
+        let result = if *operator == UnaryOperator::RunningAverage {
+            let mean = next.as_f64() / (index + 1) as f64;
+            if !mean.is_finite() {
+                return Err(SemauriError::semantic(
+                    "S471", "Running average produced a non-finite result",
+                    Some(span), None,
+                ));
+            }
+            NumberValue::from_f64(mean)
+        } else {
+            next.clone()
+        };
+        output.push(ValueData::Number(result));
+        total = Some(next);
+    }
+    Ok(output)
 }
 
 /// Sum and mean of typed numeric lists. Exact integer sums are computed with

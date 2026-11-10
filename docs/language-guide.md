@@ -516,6 +516,45 @@ Each word remains an ordinary identifier outside the contextual phrase.
 
 See [numeric_differences.suri](../examples/numeric_differences.suri).
 
+### Running aggregates and changes between readings
+
+Numeric sequences can be analyzed without manually writing a loop:
+
+```text
+let readings be a list of 3, 5, 2, 6.
+
+let totals be running total of readings.
+let averages be running average of readings.
+let changes be adjacent differences of readings.
+
+assert (totals at 3) is equal to 16.
+assert (averages at 3) is equal to 4.
+assert (changes at 0) is equal to 2.
+assert (changes at 1) is equal to (minus 3).
+assert (changes at 2) is equal to 4.
+```
+
+- `running total of LIST`, `running sum of LIST`, `cumulative total of LIST`,
+  and `cumulative sum of LIST` return the cumulative sum after each element.
+- `running average of LIST` and `cumulative average of LIST` return
+  the arithmetic average of every prefix.
+- `adjacent differences of LIST` and `successive differences of LIST`
+  return each element minus the preceding element. The result is one
+  element shorter than the input.
+
+All three operations require `list<number>` (`S353` for other types),
+produce `list<number>`, and evaluate the input once in linear time.
+An empty list produces an empty result. A single-element list yields no
+adjacent differences. Cumulative integer totals use checked signed
+64-bit addition, preserving integers beyond 2^53; integer or floating
+overflow raises `S471`. Adjacent differences reuse checked subtraction
+(`S470`). Running averages divide checked prefix totals using the
+language's normal floating-point average semantics. No additional
+permissions or dependencies are required. Words such as `running`,
+`cumulative`, `adjacent`, and `differences` are not reserved.
+
+See the runnable [running_statistics.suri](../examples/running_statistics.suri).
+
 ### Prediction accuracy: MSE, RMSE and mean bias
 
 Given a list of **signed residuals** (observed minus predicted values),

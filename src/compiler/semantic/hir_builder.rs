@@ -669,6 +669,18 @@ impl<'a> HirBuilder<'a> {
                         }
                         Type::Boolean
                     }
+                    UnaryOperator::RunningTotal | UnaryOperator::RunningAverage
+                    | UnaryOperator::AdjacentDifferences => {
+                        if operand.ty() != Type::List(Box::new(Type::Number)) {
+                            return Err(SemauriError::semantic(
+                                "S353",
+                                format!("'{}' requires list<number>, received {}",
+                                    operator.as_str(), operand.ty()),
+                                Some(*span), None,
+                            ));
+                        }
+                        Type::List(Box::new(Type::Number))
+                    }
                     UnaryOperator::Sum | UnaryOperator::Average | UnaryOperator::Variance | UnaryOperator::StandardDeviation | UnaryOperator::Minimum | UnaryOperator::Maximum | UnaryOperator::Median => {
                         if operand.ty() != Type::List(Box::new(Type::Number)) {
                             return Err(SemauriError::semantic(
