@@ -1,6 +1,14 @@
 # Semauri
 
-**A readable, statically typed programming language for people and AI agents.** Write programs in `.suri`, check them before running, and explicitly allow side effects. Current release: **v0.68.0**.
+**Bringing human language closer to programming.**
+
+Semauri is a programming language inspired by natural language, built for **humans and AI agents**. Write readable `.suri` code, catch mistakes with static type checking, and run it with explicit permissions.
+
+[![Status: Active Development](https://img.shields.io/badge/status-active%20development-orange)](https://github.com/edujbarrios/semauri/commits/main)
+[![Latest release](https://img.shields.io/github/v/release/edujbarrios/semauri?label=release)](https://github.com/edujbarrios/semauri/releases/latest)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
+**Readable like language. Precise like code.** Start in minutes—no Rust installation needed when using a prebuilt binary.
 
 ## 1. Install
 
