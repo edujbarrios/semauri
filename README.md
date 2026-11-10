@@ -1,17 +1,83 @@
 # Semauri
 
-**A readable, statically typed language for people and AI agents.** Write natural-language-inspired programs in `.suri`; compile with Rust, inspect effects, and run with explicit permissions. Current release: **v0.68.0**.
+**A readable, statically typed programming language for people and AI agents.** Write programs in `.suri`, check them before running, and explicitly allow side effects. Current release: **v0.68.0**.
 
-## Quick Start
+## 1. Install
 
-Install the [latest binary for Windows, macOS or Linux](https://github.com/edujbarrios/semauri/releases/latest), or build from source with Rust:
+Choose your system. The official installers download the latest release and verify its checksum.
+
+**macOS / Linux** (Terminal):
 
 ```sh
-cargo install --path . --locked
+curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
 semauri version
 ```
 
-Create `hello.suri` (also available as [`examples/quickstart.suri`](examples/quickstart.suri)):
+If `semauri` is not found, add `$HOME/.local/bin` to your `PATH` and reopen the terminal.
+
+**Windows** (PowerShell):
+
+```powershell
+irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
+semauri version
+```
+
+If the command is not found, open a new PowerShell window.
+
+**Prefer a manual installation?** Download the binary for your system from [Releases](https://github.com/edujbarrios/semauri/releases/latest). To build from source, [install Rust](https://rustup.rs/), clone this repository and run `cargo install --path . --locked` in its directory.
+
+## 2. Your first program
+
+Create a file called `hello.suri`:
+
+```text
+print "Hello, world!".
+```
+
+In the same folder, run:
+
+```sh
+semauri check hello.suri
+semauri run --allow console_write hello.suri
+```
+
+Output: `Hello, world!`
+
+**Remember:** end statements with `.`, use lowercase keywords, and declare values before using them. `check` validates without running the program. `run` needs explicit permission to print.
+
+## 3. Learn by example
+
+Start small and build up. Save any example as a `.suri` file, then run it with the same `check` and `run` commands above.
+
+**Level 1 — Variables and arithmetic**
+
+```text
+let price be 10.
+let quantity be 3.
+print price times quantity.
+```
+
+**Level 2 — Conditions**
+
+```text
+let age be 20.
+if age is greater than 17:
+  print "Adult".
+otherwise:
+  print "Minor".
+end.
+```
+
+**Level 3 — Typed functions**
+
+```text
+define function square taking n as number to (n times n).
+let result be invoke square to 7.
+assert result is equal to 49.
+print result.
+```
+
+**Level 4 — Lists and transformations**
 
 ```text
 let numbers be a list of 1, 2, 3.
@@ -20,91 +86,46 @@ assert sum of doubled is equal to 12.
 print doubled.
 ```
 
+Output: `[2, 4, 6]`. Also see [the quickstart file](examples/quickstart.suri).
+
+**Level 5 — Real machine learning: linear regression**
+
+The [complete example](examples/linear_regression.suri) implements ordinary least squares in Semauri, without a training service. For points following `y = 2x + 1`, it learns the slope and intercept, then predicts `13` for `x = 6`.
+
 ```sh
-semauri check hello.suri
-semauri run --allow console_write hello.suri
+semauri run --allow console_write examples/linear_regression.suri
 ```
 
-Output: `[2, 4, 6]`.
+## 4. Command reference
 
-**Rules for humans and coding agents:** write lowercase keywords; finish each statement with `.`; declare immutable values before use; use `number`, `string`, `boolean`, and typed lists; declare pure functions with `define function ...`; use `if ... otherwise ... end.` for branches. Check generated code with `fmt` and `check` before running it. **No effects run unless explicitly allowed.** See the [complete language guide](docs/language-guide.md) for exact grammar and examples.
-
-## Language at a glance
-
-```text
-define function square taking n as number to (n times n).
-let value be invoke square to 7.
-if value is equal to 49:
-  print "Correct".
-otherwise:
-  print "Try again".
-end.
-```
-
-Lists support `map every`, `filter every`, `reduce every`, `zip every`, `sum of`, `average of`, `variance of`, `stdev of`, sorting, indexing, and ranges. Numbers support checked `power of A to B`, `exp of`, `ln of`, `log2 of`, `log10 of`, `sin of`, `cos of`, `asin of`, `acos of`, and `atan of`. Ordinary strings now recognize `\\a` (bell) and `\\v` (vertical tab) along with existing escapes; raw strings keep literal backslashes. Files can import typed functions. ML/AI workflows can be **planned and inspected**, but general model training is not yet an executable backend.
-
-## Commands
-
-| Command | Purpose |
+| Command | What it does |
 | --- | --- |
-| `semauri init PROJECT` | Scaffold a project |
-| `semauri check FILE` | Validate syntax and types |
-| `semauri fmt FILE --check` / `--write` | Check or apply formatting |
-| `semauri run --allow console_write FILE` | Run and print (effect explicitly allowed) |
-| `semauri test PATH [--allow-console]` | Execute assertion tests |
-| `semauri verify PROJECT` | Check project formatting and tests |
+| `semauri init PROJECT` | Create a project with starter files and tests |
+| `semauri check FILE` | Check syntax and types without executing |
+| `semauri fmt FILE --check` | Check formatting |
+| `semauri fmt FILE --write` | Format the file |
+| `semauri run --allow console_write FILE` | Run a program with permission to print |
+| `semauri test PATH [--allow-console]` | Run assertion-based tests |
+| `semauri verify PROJECT` | Check project formatting, types, and tests |
 | `semauri explain FILE` | Explain compiler decisions |
-| `semauri effects FILE` / `plan FILE` / `graph FILE` | Inspect permissions and execution plan |
-| `semauri build FILE [-o PATH]` | Generate build-time artifacts |
-| `semauri config [PATH]` / `domains` / `version` | Inspect configuration, operations, or version |
+| `semauri effects FILE` | Show required effects and permissions |
+| `semauri plan FILE` | Inspect planned execution |
+| `semauri graph FILE` | Visualize the execution plan |
+| `semauri build FILE [-o PATH]` | Generate build artifacts |
+| `semauri config [PATH]` | Inspect configuration |
+| `semauri domains` | List supported domains |
+| `semauri version` | Show the installed version |
+| `semauri tokens FILE` | Inspect tokens |
+| `semauri ast FILE` | Inspect the syntax tree |
+| `semauri hir FILE` | Inspect typed intermediate representation |
+| `semauri optimize FILE` | Inspect optimization |
+| `semauri symbols FILE` | Inspect symbols |
+| `semauri audit FILE` | Inspect the program audit |
 
-Machine-readable output: `--json` on supported commands. Other inspection commands: `tokens`, `ast`, `hir`, `optimize`, `symbols`, `audit`. Run `semauri` for CLI help. [Reference and advanced operations](docs/language-guide.md).
+Run `semauri` for CLI help. Supported commands also offer `--json` for machine-readable output. Other side effects require their own explicit permissions; see [the language guide](docs/language-guide.md).
 
-## Real ML demo: linear regression
+## 5. Go further
 
-[`examples/linear_regression.suri`](examples/linear_regression.suri) implements **ordinary least squares from scratch**, adapted from [edujbarrios-ai](https://github.com/edujbarrios/edujbarrios-ai/tree/main/algorithms/02_classical_ml/linear_regression). Given `y = 2x + 1`, it learns the coefficients and predicts `y = 13` for `x = 6`.
+[Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.68.0.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
 
-```console
-$ semauri run --allow console_write examples/linear_regression.suri
-Linear regression (ordinary least squares)
-Training observations:
-5
-Learned slope:
-2.0
-Learned intercept:
-1
-Prediction for x=6:
-13
-```
-
-**Measured CLI wall time:** **1.802 ms median** (101 executions, 3 warmups); **2.159 ms** on the first run. GitHub Actions Ubuntu 24.04 / Linux x86_64, optimized binary, 2026-10-30. Includes startup, checking and execution; **excludes compilation**. Hardware and runner load affect results; this is *not* a cross-language performance comparison. [Verified benchmark and raw output](https://github.com/edujbarrios/semauri/actions/runs/41132112869). Reproduce with `cargo build --release --locked` and `python3 scripts/benchmark_linear_regression.py --samples 101`.
-
-## Learn, extend, cite
-
-[Full language guide](docs/language-guide.md) · [Examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter kernel with local completion and help](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Contributing](CONTRIBUTING.md)
-
-## Citation
-
-Use GitHub's **Cite this repository** feature or [CITATION.cff](CITATION.cff). Suggested citation:
-
-> Barrios, E. J. (2026). *Semauri: A natural-language-inspired programming language for humans and AI agents* (Version 0.68.0) [Computer software]. https://github.com/edujbarrios/semauri
-
-Apache-2.0 licensed. See [LICENSE](LICENSE).
-
-## Natural syntax in v0.60.0
-
-Use `"Hello, " joined with name` for strictly typed text concatenation,
-`when condition: ... otherwise: ... end.` for readable branches,
-and `is different from` for strict inequality. Python-like
-`for item in items:` and `for each item in items:` also work.
-See [the example](examples/natural_syntax.suri).
-
-### New in v0.61.0
-
-Typed Python-like membership: `item in collection`, `item not in collection`,
-`item is in collection`, and `item is not in collection`.
-More conversational control flow: `when condition then:`,
-`elif other_condition then:`, and `for each item in items do:`.
-See [the updated natural-syntax example](examples/natural_syntax.suri).
-
-**v0.68.0:** Faster `distinct`/`cardinality` and fewer list-transform copies, with paired performance benchmarks. [Release notes](docs/releases/0.68.0.md).
+Apache-2.0 licensed ([LICENSE](LICENSE)). To cite Semauri, use GitHub's **Cite this repository** or [CITATION.cff](CITATION.cff).
