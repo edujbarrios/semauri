@@ -1,16 +1,16 @@
 # Semauri
 
 <p align="center">
-  <img src="assets/semauri_banner.png" alt="Semauri — turquoise symbol and white wordmark on a black background" width="850">
+  <img src="assets/semauri_banner_dot.svg" alt="Semauri. — turquoise symbol and white wordmark ending with a period on a black background" width="850">
 </p>
 
 **Bringing human language closer to programming.**
 
 Semauri is a programming language inspired by natural language, built for **humans and AI agents**. Write readable `.suri` code, catch mistakes with static type checking, and run it with explicit permissions.
 
-[![Status: Active Development](https://img.shields.io/badge/status-active%20development-orange)](https://github.com/edujbarrios/semauri/commits/main)
-[![Latest release](https://img.shields.io/github/v/release/edujbarrios/semauri?label=release)](https://github.com/edujbarrios/semauri/releases/latest)
-[![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Status: Active Development](https://img.shields.io/badge/status-active%20development-008080?labelColor=004d4d)](https://github.com/edujbarrios/semauri/commits/main)
+[![Latest release](https://img.shields.io/github/v/release/edujbarrios/semauri?label=release&color=006666&labelColor=004d4d)](https://github.com/edujbarrios/semauri/releases/latest)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-004d4d?labelColor=006666)](LICENSE)
 
 **Readable like language. Precise like code.** Start in minutes—no Rust installation needed when using a prebuilt binary.
 
