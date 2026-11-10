@@ -40,8 +40,8 @@ assert (running total of readings) is equal to (cumulative sum of readings).
 assert (running average of readings) is equal to (cumulative average of readings).
 assert (adjacent differences of readings) is equal to (successive differences of readings).
 assert (adjacent differences of (a list of 8, 3, 7)) is equal to (a list of (minus 5), 4).
-assert (running total of (drop 1 from (a list of 9))) is equal to (a list of 0).
-assert (running average of (drop 1 from (a list of 9))) is equal to (a list of 0).
+assert (running total of (drop 1 from (a list of 9))) is equal to (drop 1 from (a list of 9)).
+assert (running average of (drop 1 from (a list of 9))) is equal to (drop 1 from (a list of 9)).
 assert (adjacent differences of (a list of 9)) is equal to (drop 1 from (a list of 1)).
 assert (adjacent differences of (drop 1 from (a list of 1))) is equal to (drop 1 from (a list of 1))."#;
     let result = run(source);
