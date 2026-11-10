@@ -2968,7 +2968,10 @@ fn scan_numeric_series(
                     match &previous {
                         None => value.clone(),
                         Some(left) if decimal_product => {
-                            NumberValue::Float(left.as_f64() * value.as_f64())
+                            // Preserve normal Semauri number normalization for
+                            // exact integral decimal products, but keep the
+                            // floating mode sticky for later factors.
+                            NumberValue::from_f64(left.as_f64() * value.as_f64())
                         }
                         Some(NumberValue::Int(left)) => {
                             let NumberValue::Int(right) = value else {
