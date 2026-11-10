@@ -1320,6 +1320,98 @@ impl<'a> Parser<'a> {
                     _ => difference,
                 })
             }
+            // Common squared statistics for numeric lists. These contextual
+            // phrases expand to one checked map (square of each item), followed
+            // by sum/average and an optional square root. The source expression
+            // is evaluated once; no new untyped numeric arithmetic is needed.
+            kind if (kind == TokenKind::Sum
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.kind == TokenKind::Of)
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.kind == TokenKind::Word
+                        && next.lexeme.eq_ignore_ascii_case("squares"))
+                    && self.tokens.get(self.current + 3).is_some_and(|next|
+                        next.kind == TokenKind::Of))
+                || (kind == TokenKind::Word
+                    && ((token.lexeme.eq_ignore_ascii_case("mean")
+                        && self.tokens.get(self.current + 1).is_some_and(|next|
+                            next.kind == TokenKind::Word
+                            && next.lexeme.eq_ignore_ascii_case("square"))
+                        && self.tokens.get(self.current + 2).is_some_and(|next|
+                            next.kind == TokenKind::Of))
+                        || (token.lexeme.eq_ignore_ascii_case("root")
+                            && self.tokens.get(self.current + 1).is_some_and(|next|
+                                next.kind == TokenKind::Word
+                                && next.lexeme.eq_ignore_ascii_case("mean"))
+                            && self.tokens.get(self.current + 2).is_some_and(|next|
+                                next.kind == TokenKind::Word
+                                && next.lexeme.eq_ignore_ascii_case("square"))
+                            && self.tokens.get(self.current + 3).is_some_and(|next|
+                                next.kind == TokenKind::Of))
+                        || (token.lexeme.eq_ignore_ascii_case("rms")
+                            && self.tokens.get(self.current + 1).is_some_and(|next|
+                                next.kind == TokenKind::Of)))) => {
+                let start = self.advance().clone();
+                let (sum, root) = match start.kind {
+                    TokenKind::Sum => {
+                        self.consume(TokenKind::Of,
+                            "Expected 'of' before squares", "S242")?;
+                        self.consume_surface("squares",
+                            "Expected 'squares' after sum of", "S242")?;
+                        (true, false)
+                    }
+                    _ if start.lexeme.eq_ignore_ascii_case("root") => {
+                        self.consume_surface("mean",
+                            "Expected 'mean' after root", "S242")?;
+                        self.consume_surface("square",
+                            "Expected 'square' after root mean", "S242")?;
+                        (false, true)
+                    }
+                    _ if start.lexeme.eq_ignore_ascii_case("mean") => {
+                        self.consume_surface("square",
+                            "Expected 'square' after mean", "S242")?;
+                        (false, false)
+                    }
+                    _ => (false, true), // rms alias
+                };
+                self.consume(TokenKind::Of,
+                    "Expected 'of' before the list of numbers", "S242")?;
+                let source = self.primary()?;
+                let span = span_between_spans(start.span, source.span());
+                // The iterator is bound in a separate map scope and never
+                // exposed as a user variable.
+                let iterator = "__semauri_square_aggregate_item".to_owned();
+                let squared = Expr::Unary {
+                    operator: UnaryOperator::Square,
+                    operand: Box::new(Expr::Variable {
+                        name: iterator.clone(),
+                        span: start.span,
+                    }),
+                    span,
+                };
+                let mapped = Expr::ListTransform {
+                    kind: ListTransformKind::Map,
+                    iterator,
+                    binding_span: start.span,
+                    iterable: Box::new(source),
+                    body: Box::new(squared),
+                    span,
+                };
+                let aggregated = Expr::Unary {
+                    operator: if sum { UnaryOperator::Sum } else { UnaryOperator::Average },
+                    operand: Box::new(mapped),
+                    span,
+                };
+                Ok(if root {
+                    Expr::Unary {
+                        operator: UnaryOperator::SquareRoot,
+                        operand: Box::new(aggregated),
+                        span,
+                    }
+                } else {
+                    aggregated
+                })
+            }
             // Python-friendly contextual functions; keep the strict existing HIR operators.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),

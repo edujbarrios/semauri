@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Squared numeric aggregations (not yet released)
+- Add contextual `sum of squares of LIST`, `mean square of LIST`, `root mean square of LIST` and `rms of LIST` for loss, signal and statistical calculations.
+- Compose typed list mapping, checked integer squaring, aggregation and square-root operations; preserve one-time input evaluation, overflow diagnostics and pure effect semantics without new dependencies.
+- Add Rust regression tests, a runnable example, language-guide reference, Jupyter completions/help and VS Code highlighting. **Version remains 0.70.0; no release tag or distribution is created.**
+
 ## 0.70.0 — 2026-11-10
 
 ### Checked numeric difference expressions

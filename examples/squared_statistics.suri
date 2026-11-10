@@ -1,0 +1,13 @@
+# Squared numeric aggregations and root mean square.
+let values be a list of 3, 4.
+let sum_squared be sum of squares of values.
+let mean_squared be mean square of values.
+let root_mean_squared be root mean square of values.
+let rms_value be rms of values.
+assert sum_squared is equal to 25.
+assert mean_squared is equal to 12.5.
+assert root_mean_squared is equal to (sqrt of 12.5).
+assert rms_value is equal to root_mean_squared.
+let losses be a list of 0, 1, 2.
+assert (sum of squares of losses) is equal to 5.
+print "Squared statistics OK".

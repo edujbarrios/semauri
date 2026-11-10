@@ -49,6 +49,35 @@ impl Compiler {
             let is_product = token.kind == TokenKind::Word
                 && token.lexeme.eq_ignore_ascii_case("product")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
+            // Natural squared-list aggregates remain contextual: only the
+            // full operator phrases are canonicalized, never identifiers.
+            let is_square_aggregate = token.kind == TokenKind::Word
+                && ((token.lexeme.eq_ignore_ascii_case("rms")
+                    && tokens.get(index + 1).is_some_and(|next|
+                        next.kind == TokenKind::Of))
+                    || (token.lexeme.eq_ignore_ascii_case("root")
+                        && tokens.get(index + 1).is_some_and(|next|
+                            next.lexeme.eq_ignore_ascii_case("mean"))
+                        && tokens.get(index + 2).is_some_and(|next|
+                            next.lexeme.eq_ignore_ascii_case("square"))
+                        && tokens.get(index + 3).is_some_and(|next|
+                            next.kind == TokenKind::Of))
+                    || (token.lexeme.eq_ignore_ascii_case("mean")
+                        && tokens.get(index + 1).is_some_and(|next|
+                            next.lexeme.eq_ignore_ascii_case("square"))
+                        && tokens.get(index + 2).is_some_and(|next|
+                            next.kind == TokenKind::Of))
+                    || (token.lexeme.eq_ignore_ascii_case("square")
+                        && index > 0
+                        && tokens[index - 1].lexeme.eq_ignore_ascii_case("mean")
+                        && tokens.get(index + 1).is_some_and(|next|
+                            next.kind == TokenKind::Of))
+                    || (token.lexeme.eq_ignore_ascii_case("squares")
+                        && index > 1
+                        && tokens[index - 1].kind == TokenKind::Of
+                        && tokens[index - 2].kind == TokenKind::Sum
+                        && tokens.get(index + 1).is_some_and(|next|
+                            next.kind == TokenKind::Of)));
             let is_difference_modifier = token.kind == TokenKind::Word
                 && matches!(token.lexeme.to_ascii_lowercase().as_str(), "absolute" | "squared")
                 && tokens.get(index + 1).is_some_and(|next|
@@ -361,7 +390,7 @@ impl Compiler {
                         | TokenKind::Minus | TokenKind::LParen));
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_import && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_rank_selection && !is_rank_unique && !is_rank_unique_modifier && !is_power && !is_statistics && !is_flatten && !is_absolute && !is_difference_modifier && !is_difference && !is_difference_between && !is_sign && !is_numeric_rounding && !is_round && !is_truncate && !is_factorial && !is_prime && !is_cube && !is_square && !is_sqrt && !is_scientific_math && !is_python_alias && !is_sort_unique_alias && !is_cardinality && !is_count_distinct && !is_count_unique && !is_sort_direction && !is_sort_order_alias && !is_cbrt && !is_reciprocal && !is_digits && !is_radix_formatter && !is_parity && !is_product && !is_text_operation && !is_text_predicate && !is_text_negation && !is_inclusion_alias && !is_join_with && !is_joined_with && !is_different && !is_empty_or_blank && !is_numeric_predicate && !is_prime_predicate && !is_bound_comparison && !is_one_of && !is_divisibility && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field && !is_text_search && !is_last_position && !is_json_pointer && !is_character_from && !is_character_at && !is_remove_all
+                && !is_import && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_rank_selection && !is_rank_unique && !is_rank_unique_modifier && !is_power && !is_statistics && !is_flatten && !is_absolute && !is_square_aggregate && !is_difference_modifier && !is_difference && !is_difference_between && !is_sign && !is_numeric_rounding && !is_round && !is_truncate && !is_factorial && !is_prime && !is_cube && !is_square && !is_sqrt && !is_scientific_math && !is_python_alias && !is_sort_unique_alias && !is_cardinality && !is_count_distinct && !is_count_unique && !is_sort_direction && !is_sort_order_alias && !is_cbrt && !is_reciprocal && !is_digits && !is_radix_formatter && !is_parity && !is_product && !is_text_operation && !is_text_predicate && !is_text_negation && !is_inclusion_alias && !is_join_with && !is_joined_with && !is_different && !is_empty_or_blank && !is_numeric_predicate && !is_prime_predicate && !is_bound_comparison && !is_one_of && !is_divisibility && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field && !is_text_search && !is_last_position && !is_json_pointer && !is_character_from && !is_character_at && !is_remove_all
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count" | "reduce" | "zip" | "partition")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")

@@ -516,6 +516,36 @@ Each word remains an ordinary identifier outside the contextual phrase.
 
 See [numeric_differences.suri](../examples/numeric_differences.suri).
 
+### Squared statistics and root mean square
+
+Semauri can compute three common squared-value aggregates directly over
+`list<number>`, using checked integer squaring and the typed list operators:
+
+```text
+let values be a list of 3, 4.
+assert (sum of squares of values) is equal to 25.
+assert (mean square of values) is equal to 12.5.
+assert (root mean square of values) is equal to (sqrt of 12.5).
+assert (rms of values) is equal to (root mean square of values).
+```
+
+- `sum of squares of VALUES` computes the exact checked sum of all
+  squared values (the empty-list result is 0).
+- `mean square of VALUES` computes the arithmetic mean of squares.
+- `root mean square of VALUES` and its short alias `rms of VALUES`
+  compute the nonnegative square root of the mean square.
+
+Each expression evaluates its source list once and squares each element once
+using the same checked operations as `map every n in VALUES to (square of n)`.
+An empty input is invalid for mean square and RMS (`S354`).
+Non-list inputs raise `S365`; nonnumeric elements raise `S421`;
+integer square overflow raises `S422`; and aggregate overflow or
+non-finite results raise `S354`. The words `root`, `square`,
+`squares` and `rms` remain valid variable names outside these phrases.
+These pure operations need no new permissions.
+
+See [squared_statistics.suri](../examples/squared_statistics.suri).
+
 ### Population variance and standard deviation
 
 `variance of NUMERIC_LIST` and `stdev of NUMERIC_LIST` calculate the
