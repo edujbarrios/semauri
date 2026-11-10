@@ -1187,6 +1187,14 @@ impl<'a> Parser<'a> {
             UnaryOperator::AdjacentDifferences
         } else if operation.kind == TokenKind::Average {
             UnaryOperator::RunningAverage
+        } else if operation.kind == TokenKind::Minimum
+            || operation.lexeme.eq_ignore_ascii_case("min") {
+            UnaryOperator::RunningMinimum
+        } else if operation.kind == TokenKind::Maximum
+            || operation.lexeme.eq_ignore_ascii_case("max") {
+            UnaryOperator::RunningMaximum
+        } else if operation.lexeme.eq_ignore_ascii_case("product") {
+            UnaryOperator::RunningProduct
         } else {
             UnaryOperator::RunningTotal
         };
@@ -1580,10 +1588,11 @@ impl<'a> Parser<'a> {
                 if (matches!(token.lexeme.to_ascii_lowercase().as_str(),
                     "running" | "cumulative")
                     && self.tokens.get(self.current + 1).is_some_and(|next|
-                        next.kind == TokenKind::Sum
-                            || next.kind == TokenKind::Average
+                        matches!(next.kind, TokenKind::Sum | TokenKind::Average
+                            | TokenKind::Minimum | TokenKind::Maximum)
                             || (next.kind == TokenKind::Word
-                                && next.lexeme.eq_ignore_ascii_case("total")))
+                                && matches!(next.lexeme.to_ascii_lowercase().as_str(),
+                                    "total" | "product" | "min" | "max")))
                     && self.tokens.get(self.current + 2).is_some_and(|next|
                         next.kind == TokenKind::Of))
                     || (matches!(token.lexeme.to_ascii_lowercase().as_str(),

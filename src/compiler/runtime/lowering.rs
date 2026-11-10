@@ -1512,7 +1512,9 @@ impl<'a> Lowerer<'a> {
             },
             HirExpr::Unary {
                 operator: operator @ (UnaryOperator::RunningTotal
-                    | UnaryOperator::RunningAverage | UnaryOperator::AdjacentDifferences),
+                    | UnaryOperator::RunningAverage | UnaryOperator::RunningMinimum
+                    | UnaryOperator::RunningMaximum | UnaryOperator::RunningProduct
+                    | UnaryOperator::AdjacentDifferences),
                 operand,
                 ..
             } => match self.evaluate(operand)? {
@@ -2920,6 +2922,82 @@ fn scan_numeric_series(
                 )
             })?;
             output.push(ValueData::Number(difference));
+        }
+        return Ok(output);
+    }
+
+    // Numeric extrema retain exact mixed i64/f64 comparisons; a prefix
+    // product retains integer precision until a decimal factor appears.
+    if matches!(operator, UnaryOperator::RunningMinimum
+        | UnaryOperator::RunningMaximum | UnaryOperator::RunningProduct) {
+        let mut output = Vec::with_capacity(values.len());
+        let mut previous: Option<NumberValue> = None;
+        let mut decimal_product = false;
+        for item in values {
+            let ValueData::Number(value) = item else {
+                return Err(SemauriError::semantic(
+                    "S353", "Running numeric series requires list<number>",
+                    Some(span), None,
+                ));
+            };
+            let extrema = *operator != UnaryOperator::RunningProduct;
+            if !value.as_f64().is_finite() {
+                return Err(SemauriError::semantic(
+                    if extrema { "S355" } else { "S387" },
+                    "Running numeric series requires finite values",
+                    Some(span), None,
+                ));
+            }
+            let next = match operator {
+                UnaryOperator::RunningMinimum | UnaryOperator::RunningMaximum => {
+                    match &previous {
+                        Some(best) => {
+                            let cmp = compare_finite_numbers(value, best);
+                            let replace = if *operator == UnaryOperator::RunningMinimum {
+                                cmp.is_lt()
+                            } else {
+                                cmp.is_gt()
+                            };
+                            if replace { value.clone() } else { best.clone() }
+                        }
+                        None => value.clone(),
+                    }
+                }
+                UnaryOperator::RunningProduct => {
+                    decimal_product |= matches!(value, NumberValue::Float(_));
+                    match &previous {
+                        None => value.clone(),
+                        Some(left) if decimal_product => {
+                            NumberValue::Float(left.as_f64() * value.as_f64())
+                        }
+                        Some(NumberValue::Int(left)) => {
+                            let NumberValue::Int(right) = value else {
+                                unreachable!("decimal factors switch to floating product")
+                            };
+                            NumberValue::Int(left.checked_mul(*right).ok_or_else(|| {
+                                SemauriError::semantic(
+                                    "S387",
+                                    "Running integer product exceeds the signed 64-bit range",
+                                    Some(span), None,
+                                )
+                            })?)
+                        }
+                        Some(NumberValue::Float(_)) => {
+                            unreachable!("floating product mode is sticky")
+                        }
+                    }
+                }
+                _ => unreachable!("checked running series operator"),
+            };
+            if !next.as_f64().is_finite() {
+                return Err(SemauriError::semantic(
+                    if extrema { "S355" } else { "S387" },
+                    "Running numeric series produced a non-finite result",
+                    Some(span), None,
+                ));
+            }
+            output.push(ValueData::Number(next.clone()));
+            previous = Some(next);
         }
         return Ok(output);
     }

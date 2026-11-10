@@ -542,7 +542,7 @@ assert (changes at 2) is equal to 4.
   return each element minus the preceding element. The result is one
   element shorter than the input.
 
-All three operations require `list<number>` (`S353` for other types),
+The total, average and adjacent-difference operations require `list<number>` (`S353` for other types),
 produce `list<number>`, and evaluate the input once in linear time.
 An empty list produces an empty result. A single-element list yields no
 adjacent differences. Cumulative integer totals use checked signed
@@ -554,6 +554,38 @@ permissions or dependencies are required. Words such as `running`,
 `cumulative`, `adjacent`, and `differences` are not reserved.
 
 See the runnable [running_statistics.suri](../examples/running_statistics.suri).
+
+### Running extrema and products
+
+Semauri also supports three ordered prefix scans that preserve the
+intermediate minimum, maximum or product after each reading:
+
+```text
+let readings be a list of 3, 5, 2, 6.
+assert (running minimum of readings) is equal to (a list of 3, 3, 2, 2).
+assert (cumulative maximum of readings) is equal to (a list of 3, 5, 5, 6).
+assert (running product of readings) is equal to (a list of 3, 15, 30, 180).
+```
+
+- `running minimum of LIST` and `cumulative minimum of LIST`
+  keep the smallest numeric value seen so far.
+- `running maximum of LIST` and `cumulative maximum of LIST`
+  keep the largest numeric value seen so far.
+- `running product of LIST` and `cumulative product of LIST`
+  multiply all numeric values from the start to each position.
+
+Shorter `running min/max of LIST` and `cumulative min/max of LIST`
+are also supported. All expressions operate on `list<number>` in
+linear time, evaluate the list once, preserve its length and order, and
+return an empty list for empty input. Integer min/max comparisons are
+exact even beyond 2^53 and signed prefix products use checked i64
+multiplication. When a decimal factor appears, later products use
+finite floating-point multiplication. Non-list/nonnumeric inputs
+receive `S353`; non-finite extrema receive `S355`, and overflowing
+products receive `S387`. These operations are pure and require no
+new permissions or dependencies.
+
+See [running_statistics.suri](../examples/running_statistics.suri).
 
 ### Prediction accuracy: MSE, RMSE and mean bias
 

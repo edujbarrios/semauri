@@ -49,6 +49,55 @@ assert (adjacent differences of (drop 1 from (a list of 1))) is equal to (drop 1
 }
 
 #[test]
+fn running_extrema_and_products_cover_aliases_and_edge_cases() {
+    let source = r#"let values be a list of 3, 5, 2, 6.
+assert (running minimum of values) is equal to (a list of 3, 3, 2, 2).
+assert (cumulative min of values) is equal to (running minimum of values).
+assert (running min of values) is equal to (running minimum of values).
+assert (running maximum of values) is equal to (a list of 3, 5, 5, 6).
+assert (cumulative max of values) is equal to (running maximum of values).
+assert (running max of values) is equal to (running maximum of values).
+assert (running product of values) is equal to (a list of 3, 15, 30, 180).
+assert (cumulative product of values) is equal to (running product of values).
+assert (running minimum of (a list of 8)) is equal to (a list of 8).
+assert (running maximum of (a list of 8)) is equal to (a list of 8).
+assert (running product of (a list of 8)) is equal to (a list of 8).
+let empty be drop 1 from (a list of 8).
+assert (running minimum of empty) is equal to empty.
+assert (running maximum of empty) is equal to empty.
+assert (running product of empty) is equal to empty.
+assert (running product of (a list of 2, (minus 3), 0, 7)) is equal to
+    (a list of 2, (minus 6), 0, 0)."#;
+    let result = run(source);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+}
+
+#[test]
+fn running_extrema_compare_large_ints_exactly_and_products_are_checked() {
+    let source = r#"let big be a list of 9007199254740995, 9007199254740993, 9007199254740994.
+assert (running min of big) is equal to (a list of 9007199254740995, 9007199254740993, 9007199254740993).
+assert (running max of big) is equal to (a list of 9007199254740995, 9007199254740995, 9007199254740995).
+assert (running product of (a list of 9007199254740993, 1, (minus 1))) is equal to
+    (a list of 9007199254740993, 9007199254740993, (minus 9007199254740993)).
+assert (running minimum of (a list of 2.5, (minus 1.5), 1)) is equal to
+    (a list of 2.5, (minus 1.5), (minus 1.5)).
+assert (running maximum of (a list of 2.5, (minus 1.5), 3)) is equal to
+    (a list of 2.5, 2.5, 3).
+assert (running product of (a list of 2, 1.5, 3)) is equal to
+    (a list of 2, 3, 9)."#;
+    let result = run(source);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    for source in [
+        "print running product of (a list of 9223372036854775807, 2).",
+        "print cumulative product of (a list of 3037000500, 3037000500).",
+    ] {
+        let result = run(source);
+        assert_eq!(result.status, 65, "{source}: {}", result.stderr);
+        assert!(result.stderr.contains("S387"), "{source}: {}", result.stderr);
+    }
+}
+
+#[test]
 fn large_integer_precision_and_decimal_values() {
     let source = r#"let large be a list of 9007199254740993, 2.
 assert (running total of large) is equal to (a list of 9007199254740993, 9007199254740995).
@@ -66,6 +115,9 @@ fn type_checks_and_overflow_have_located_errors() {
     for source in [
         "print running total of true.",
         "print running average of 4.",
+        "print running minimum of true.",
+        "print cumulative maximum of \"wrong\".",
+        "print running product of (a list of false).",
         "print cumulative sum of (a list of \"wrong\").",
         "print adjacent differences of (a list of false).",
         "print successive differences of \"text\".",
@@ -92,18 +144,24 @@ fn formatter_is_idempotent_and_words_remain_identifiers() {
     let formatted = "print running total of (a list of 1, 2).\nprint running sum of (a list of 1, 2).\nprint cumulative average of (a list of 1, 2).\nprint adjacent differences of (a list of 1, 2).\nprint successive differences of (a list of 1, 2).";
     assert_eq!(compiler.format_source(raw).unwrap(), formatted);
     assert_eq!(compiler.format_source(formatted).unwrap(), formatted);
+    let extended_raw = "PRINT RUNNING MINIMUM OF (A LIST OF 4, 2).\nPRINT CUMULATIVE MAXIMUM OF (A LIST OF 4, 2).\nPRINT RUNNING PRODUCT OF (A LIST OF 4, 2).\nPRINT CUMULATIVE MIN OF (A LIST OF 4, 2).";
+    let extended_formatted = "print running minimum of (a list of 4, 2).\nprint cumulative maximum of (a list of 4, 2).\nprint running product of (a list of 4, 2).\nprint cumulative min of (a list of 4, 2).";
+    assert_eq!(compiler.format_source(extended_raw).unwrap(), extended_formatted);
+    assert_eq!(compiler.format_source(extended_formatted).unwrap(), extended_formatted);
     let source = r#"let running be 1.
 let cumulative be 2.
 let adjacent be 3.
 let successive be 4.
 let differences be 5.
 let total be 6.
+let product be 7.
 assert running is equal to 1.
 assert cumulative is equal to 2.
 assert adjacent is equal to 3.
 assert successive is equal to 4.
 assert differences is equal to 5.
-assert total is equal to 6."#;
+assert total is equal to 6.
+assert product is equal to 7."#;
     let result = run(source);
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert_eq!(compiler.format_source("LET Running BE 3. PRINT Running.").unwrap(),
@@ -117,6 +175,9 @@ fn type_ir_optimizer_effects_and_single_source_evaluation() {
         ("print running total of (a list of 1, 2).", "running_total"),
         ("print cumulative average of (a list of 1, 2).", "running_average"),
         ("print adjacent differences of (a list of 1, 2).", "adjacent_differences"),
+        ("print running minimum of (a list of 1, 2).", "running_minimum"),
+        ("print cumulative max of (a list of 1, 2).", "running_maximum"),
+        ("print running product of (a list of 1, 2).", "running_product"),
     ] {
         let ast = compiler.parse(source).unwrap().to_json().to_string();
         assert!(ast.contains(operator), "{source}: {ast}");

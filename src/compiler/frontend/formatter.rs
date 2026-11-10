@@ -189,13 +189,15 @@ impl Compiler {
                 && ((matches!(token.lexeme.to_ascii_lowercase().as_str(),
                     "running" | "cumulative")
                     && tokens.get(index + 1).is_some_and(|next|
-                        next.kind == TokenKind::Sum
-                            || next.kind == TokenKind::Average
+                        matches!(next.kind, TokenKind::Sum | TokenKind::Average
+                            | TokenKind::Minimum | TokenKind::Maximum)
                             || (next.kind == TokenKind::Word
-                                && next.lexeme.eq_ignore_ascii_case("total")))
+                                && matches!(next.lexeme.to_ascii_lowercase().as_str(),
+                                    "total" | "product" | "min" | "max")))
                     && tokens.get(index + 2).is_some_and(|next|
                         next.kind == TokenKind::Of))
-                    || (token.lexeme.eq_ignore_ascii_case("total")
+                    || (matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                        "total" | "product" | "min" | "max")
                         && index > 0
                         && tokens[index - 1].kind == TokenKind::Word
                         && matches!(tokens[index - 1].lexeme.to_ascii_lowercase().as_str(),

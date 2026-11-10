@@ -670,7 +670,8 @@ impl<'a> HirBuilder<'a> {
                         Type::Boolean
                     }
                     UnaryOperator::RunningTotal | UnaryOperator::RunningAverage
-                    | UnaryOperator::AdjacentDifferences => {
+                    | UnaryOperator::RunningMinimum | UnaryOperator::RunningMaximum
+                    | UnaryOperator::RunningProduct | UnaryOperator::AdjacentDifferences => {
                         if operand.ty() != Type::List(Box::new(Type::Number)) {
                             return Err(SemauriError::semantic(
                                 "S353",

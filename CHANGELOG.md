@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Running minima, maxima, and products (not yet released)
+- Add `running minimum/maximum/product of LIST` and `cumulative minimum/maximum/product of LIST`, with contextual `min`/`max` short forms.
+- Compute ordered prefix extrema using exact mixed integer/float comparisons and prefix products with checked i64 arithmetic, switching to finite floating-point multiplication when decimal factors occur.
+- Extend the running statistics example, language guide, editor help, and precision/overflow/empty-list regression coverage. Keep the current branch unreleased and version unchanged.
+
 ### Running list aggregates and sequential differences (not yet released)
 - Add `running total/sum of LIST` and `cumulative total/sum of LIST`, plus `running average of LIST` and `cumulative average of LIST`.
 - Add `adjacent differences of LIST` and `successive differences of LIST` for signed changes between consecutive numeric readings.
