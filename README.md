@@ -1,5 +1,9 @@
 # Semauri
 
+<p align="center">
+  <img src="assets/semauri_banner.png" alt="Semauri — turquoise symbol and white wordmark on a black background" width="850">
+</p>
+
 **Bringing human language closer to programming.**
 
 Semauri is a programming language inspired by natural language, built for **humans and AI agents**. Write readable `.suri` code, catch mistakes with static type checking, and run it with explicit permissions.
