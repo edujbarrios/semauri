@@ -1592,7 +1592,7 @@ impl<'a> Parser<'a> {
                             next.kind == TokenKind::Word
                             && next.lexeme.eq_ignore_ascii_case("differences"))
                         && self.tokens.get(self.current + 2).is_some_and(|next|
-                            next.kind == TokenKind::Of)) => { self.numeric_series_expression(),
+                            next.kind == TokenKind::Of)) => self.numeric_series_expression(),
             // Python-friendly contextual functions; keep the strict existing HIR operators.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),
