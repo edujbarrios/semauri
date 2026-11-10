@@ -61,6 +61,7 @@ fn invalid_operands_and_missing_delimiter_have_diagnostics() {
 #[test]
 fn checked_integer_overflow_is_not_silently_rounded() {
     for (source, code) in [
+        ("print difference between 9223372036854775807 and (minus 1).", "S470"),
         ("print absolute difference between (minus 9223372036854775807) and 1.", "S388"),
         ("print squared difference between 3037000500 and 0.", "S422"),
     ] {
