@@ -1,29 +1,25 @@
 ## Unreleased
 
-### Running minima, maxima, and products (not yet released)
-- Add `running minimum/maximum/product of LIST` and `cumulative minimum/maximum/product of LIST`, with contextual `min`/`max` short forms.
-- Compute ordered prefix extrema using exact mixed integer/float comparisons and prefix products with checked i64 arithmetic, switching to finite floating-point multiplication when decimal factors occur.
-- Extend the running statistics example, language guide, editor help, and precision/overflow/empty-list regression coverage. Keep the current branch unreleased and version unchanged.
+## 0.71.0 — 2026-11-10
 
-### Running list aggregates and sequential differences (not yet released)
-- Add `running total/sum of LIST` and `cumulative total/sum of LIST`, plus `running average of LIST` and `cumulative average of LIST`.
-- Add `adjacent differences of LIST` and `successive differences of LIST` for signed changes between consecutive numeric readings.
-- Implement linear-time, typed list scans with single input evaluation, exact checked 64-bit integer prefix sums, finite floating-point checks (`S471`), and shared checked subtraction (`S470`). Add runnable examples, Rust regressions, Jupyter and VS Code support. No new release or version bump.
+### Numerical sequences: cumulative and adjacent operations
+- Add `running total/sum` and `cumulative total/sum` of numeric lists, preserving checked i64 precision for integer prefix totals and reporting S471 on overflow or non-finite results.
+- Add `running average` and `cumulative average` of numeric lists, returning each prefix mean with checked accumulation.
+- Add `adjacent differences` and `successive differences` to compute the checked signed change from each previous element (S470).
+- Add `running minimum/maximum/product` and `cumulative minimum/maximum/product`, with contextual `min` and `max` spellings. Extrema retain exact mixed integer/decimal ordering; cumulative products use checked integer multiplication, switching to finite decimal arithmetic when a decimal occurs (S355/S387).
+- All numeric scans are pure, statically checked `list<number>` to `list<number>` operations. They evaluate the source once, run in linear time, preserve order, and return an empty list for empty input. Invalid types report S353.
 
-### Model evaluation aliases: MSE, RMSE and signed bias (not yet released)
-- Add `mean squared error of ERRORS` / `mse of ERRORS`, `root mean squared error of ERRORS` / `rmse of ERRORS`, and `mean bias error of ERRORS` / `mean error of ERRORS` / `mbe of ERRORS`.
-- Reuse the exact checked square/map/mean/sqrt pathways and signed numeric average; no new runtime effects, permissions, dependencies, or reserved identifiers.
-- Add a paired-prediction demonstration, regression/error/formatter tests, language guide, Jupyter help and VS Code highlighting. This is **unreleased** work on PR #339; version remains 0.70.0.
+### Model evaluation: squared and absolute error metrics
+- Add `sum of squares of LIST`, `mean square of LIST`, `root mean square of LIST`, and `rms of LIST`, implemented using existing checked square, typed mapping, aggregation, and square root.
+- Add `sum of magnitudes of LIST`, `mean magnitude of LIST`, `max magnitude of LIST`, `mean absolute error of LIST`, and `mae of LIST`; checked absolute values preserve exact signed integer behavior.
+- Add `mean squared error of ERRORS` / `mse of ERRORS` and `root mean squared error of ERRORS` / `rmse of ERRORS`.
+- Add signed `mean bias error of ERRORS` / `mean error of ERRORS` / `mbe of ERRORS`. These consume lists of residuals (observed minus predicted), not two independent input lists.
+- All expressions reuse existing arithmetic, type checking, and error diagnostics; they add no capabilities, external dependencies, or reserved identifiers. Empty inputs are accepted for sums but rejected for mean, RMS, minimum, and maximum where applicable.
 
-### Absolute-error and magnitude aggregations (not yet released)
-- Add contextual `sum of magnitudes of LIST`, `mean magnitude of LIST`, `mean absolute error of LIST`, `mae of LIST`, and `max magnitude of LIST` for signed residuals and signal analysis.
-- Reuse the typed list transform, checked absolute value, and exact integer aggregation/max operations; reject empty mean/max, malformed types, and arithmetic overflow with existing diagnostics.
-- Add a paired-prediction runnable example, Rust regression tests, language guide, VS Code highlighting, and Jupyter completion/help. Keep these changes on the unreleased feature branch.
-
-### Squared numeric aggregations (not yet released)
-- Add contextual `sum of squares of LIST`, `mean square of LIST`, `root mean square of LIST` and `rms of LIST` for loss, signal and statistical calculations.
-- Compose typed list mapping, checked integer squaring, aggregation and square-root operations; preserve one-time input evaluation, overflow diagnostics and pure effect semantics without new dependencies.
-- Add Rust regression tests, a runnable example, language-guide reference, Jupyter completions/help and VS Code highlighting. **Version remains 0.70.0; no release tag or distribution is created.**
+### Examples, tests, and tooling
+- Add executable `examples/squared_statistics.suri`, `examples/absolute_error_statistics.suri`, `examples/model_error_metrics.suri`, and `examples/running_statistics.suri`.
+- Add Rust regression suites covering static typing, source locations, exact large integers, decimal semantics, overflow, empty inputs, contextual names, canonical formatting, HIR/optimizer behavior, and capability/effect analysis.
+- Update the language guide, VS Code syntax highlighting, and Jupyter completion and offline help.
 
 ## 0.70.0 — 2026-11-10
 
