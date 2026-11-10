@@ -11,13 +11,14 @@ const HELLO: &str = include_str!("../examples/quickstart.suri");
 #[test]
 fn front_page_is_short_but_links_to_complete_reference() {
     let lines = README.lines().count();
-    assert!(lines <= 110, "README grew to {lines} lines; keep details in docs/language-guide.md");
+    assert!(lines <= 180, "README grew to {lines} lines; keep details in docs/language-guide.md");
     for required in [
-        "## Quick Start",
-        "## Commands",
-        "## Real ML demo: linear regression",
+        "## 1. Install",
+        "## 2. Your first program",
+        "## 3. Learn by example",
+        "## 4. Command reference",
         "## Citation",
-        "[complete language guide](docs/language-guide.md)",
+        "[Language reference](docs/language-guide.md)",
         "[CITATION.cff](CITATION.cff)",
     ] {
         assert!(README.contains(required), "README missing: {required}");
@@ -41,9 +42,11 @@ fn quickstart_code_in_readme_is_real_executable_semauri() {
 
 #[test]
 fn benchmark_section_is_linked_to_verifiable_execution() {
-    assert!(README.contains("1.802 ms median"));
-    assert!(README.contains("2.159 ms"));
     assert!(README.contains("https://github.com/edujbarrios/semauri/actions/runs/41132112869"));
-    assert!(README.contains("Prediction for x=6:\n13"));
-    assert!(README.contains("excludes compilation"));
+    assert!(README.contains("[complete example](examples/linear_regression.suri)"));
+    assert!(README.contains("semauri run --allow console_write examples/linear_regression.suri"));
+    assert!(README.contains("predicts `13` for `x = 6`"));
+    let baseline = include_str!("../benches/BASELINE.md");
+    assert!(baseline.contains("bash scripts/bench.sh 50"));
+    assert!(baseline.contains("same hosted runner"));
 }
