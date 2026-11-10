@@ -1271,6 +1271,55 @@ impl<'a> Parser<'a> {
                     span,
                 })
             }
+            // Numeric distance variants are contextual natural-language forms:
+            // difference between A and B, absolute difference between A and B,
+            // and squared difference between A and B. Lower to the existing
+            // checked operators so both inputs are evaluated exactly once.
+            TokenKind::Word
+                if (token.lexeme.eq_ignore_ascii_case("difference")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.lexeme.eq_ignore_ascii_case("between")))
+                    || (matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                        "absolute" | "squared")
+                        && self.tokens.get(self.current + 1).is_some_and(|next|
+                            next.kind == TokenKind::Word
+                            && next.lexeme.eq_ignore_ascii_case("difference"))
+                        && self.tokens.get(self.current + 2).is_some_and(|next|
+                            next.lexeme.eq_ignore_ascii_case("between"))) => {
+                let start = self.advance().clone();
+                let mode = start.lexeme.to_ascii_lowercase();
+                if mode != "difference" {
+                    self.advance(); // contextual "difference" after absolute/squared
+                }
+                self.consume_surface(
+                    "between", "Expected 'between' after difference", "S252"
+                )?;
+                let left = self.numeric_unary()?;
+                self.consume(
+                    TokenKind::And, "Expected 'and' between numeric operands", "S252"
+                )?;
+                let right = self.numeric_unary()?;
+                let span = span_between_spans(start.span, right.span());
+                let difference = Expr::Binary {
+                    left: Box::new(left),
+                    operator: BinaryOperator::Subtract,
+                    right: Box::new(right),
+                    span,
+                };
+                Ok(match mode.as_str() {
+                    "absolute" => Expr::Unary {
+                        operator: UnaryOperator::Absolute,
+                        operand: Box::new(difference),
+                        span,
+                    },
+                    "squared" => Expr::Unary {
+                        operator: UnaryOperator::Square,
+                        operand: Box::new(difference),
+                        span,
+                    },
+                    _ => difference,
+                })
+            }
             // Python-friendly contextual functions; keep the strict existing HIR operators.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),

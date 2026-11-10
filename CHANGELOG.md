@@ -1,5 +1,12 @@
 ## Unreleased
 
+## 0.70.0 — 2026-11-10
+
+### Checked numeric difference expressions
+- Add contextual `difference between A and B`, `absolute difference between A and B` and `squared difference between A and B` for numeric expressions, especially model loss/measurement calculations.
+- Compose the existing subtraction, absolute-value, and square operators: preserve exact checked signed 64-bit integers, finite decimal arithmetic, existing S314/S388/S422 diagnostics, optimizer folding, and one-time evaluation of each operand.
+- Add runnable examples, Rust conformance/error/formatter tests, Jupyter completions and help, VS Code highlighting, and language documentation. No new runtime effects or Rust dependencies.
+
 ## 0.69.0 — 2026-11-10
 
 ### Machine-readable formatter reports
