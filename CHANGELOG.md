@@ -1,5 +1,12 @@
 ## Unreleased
 
+## 0.69.0 — 2026-11-10
+
+### Machine-readable formatter reports
+- Add `semauri fmt FILE --json` to preview formatted source in a structured report without modifying the file.
+- Add `semauri fmt FILE|DIRECTORY --check --json` and `--write --json` with stable `ok`, `status`, `mode`, `files_checked`, `files_changed`, and `changed_files` fields for editors and CI. Preview reports also contain `formatted`.
+- Preserve text-mode output, exit statuses, bounded directory discovery, symlink exclusions, preflight-before-write behavior, and structured source diagnostics. No language syntax, effects, or dependencies change.
+
 ## 0.68.0 — 2026-11-08
 
 ### Runtime and compiler evaluation performance

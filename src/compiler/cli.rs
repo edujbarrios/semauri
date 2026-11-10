@@ -197,11 +197,16 @@ pub fn run_cli(args: &[String]) -> CliResult {
             Some("fmt") => {
                 let mut check = false;
                 let mut write = false;
+                let mut json_mode = false;
                 let mut path: Option<String> = None;
                 for arg in &args[1..] {
                     match arg.as_str() {
                         "--check" => check = true,
                         "--write" => write = true,
+                        "--json" => {
+                            json_mode = true;
+                            json_diagnostics = true;
+                        },
                         value if value.starts_with('-') => {
                             return Err(usage_error(format!("Unknown fmt option: {value}")))
                         }
@@ -219,11 +224,11 @@ pub fn run_cli(args: &[String]) -> CliResult {
                     ));
                 }
                 let path = path.ok_or_else(|| usage_error(
-                    "Usage: semauri fmt FILE|DIRECTORY [--check | --write]"
+                    "Usage: semauri fmt FILE|DIRECTORY [--check | --write] [--json]"
                 ))?;
                 if Path::new(&path).is_dir() {
                     let (report, status) = format_source_directory(
-                        Path::new(&path), &compiler, check, write
+                        Path::new(&path), &compiler, check, write, json_mode
                     )?;
                     stdout.push_str(&report);
                     return Ok(status);
@@ -232,6 +237,27 @@ pub fn run_cli(args: &[String]) -> CliResult {
                     .map_err(|error| usage_error(format!("S001: {error}")))?;
                 current_source = Some(source.clone());
                 let formatted = compiler.format_source(&source)?;
+                if json_mode {
+                    let changed = source != formatted;
+                    if write && changed {
+                        fs::write(&path, &formatted)
+                            .map_err(|error| usage_error(format!("S001: {error}")))?;
+                    }
+                    let status = if check && changed { 1 } else { 0 };
+                    let mut report = json!({
+                        "ok": status == 0,
+                        "status": status,
+                        "mode": if check { "check" } else if write { "write" } else { "preview" },
+                        "files_checked": 1,
+                        "files_changed": usize::from(changed),
+                        "changed_files": if changed { vec![path.clone()] } else { vec![] },
+                    });
+                    if !check && !write {
+                        report["formatted"] = json!(formatted);
+                    }
+                    stdout.push_str(&pretty_json(&report));
+                    return Ok(status);
+                }
                 if check {
                     if source != formatted {
                         stdout.push_str(&format!("{path}: lowercase formatting required\n"));
@@ -689,7 +715,7 @@ fn usage_error(message: impl Into<String>) -> SemauriError {
 }
 
 pub fn usage() -> String {
-    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  init PROJECT             Create a multi-file Semauri project without overwriting files\n  verify PROJECT [--json]   Check source, formatting and tests without running the app\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE [--json]    Explain semantic decisions as text or JSON\n  fmt FILE|DIR [--check|--write]  Format source files or a whole project directory\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] [--json] [--filter TEXT] Run all or selected assertion suites\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
+    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  init PROJECT             Create a multi-file Semauri project without overwriting files\n  verify PROJECT [--json]   Check source, formatting and tests without running the app\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE [--json]    Explain semantic decisions as text or JSON\n  fmt FILE|DIR [--check|--write] [--json] Format source files or a directory\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] [--json] [--filter TEXT] Run all or selected assertion suites\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
         .to_string()
 }
 

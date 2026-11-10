@@ -197,7 +197,17 @@ any files. Use `semauri fmt PROJECT --check` to list all formatting problems or
 `semauri fmt PROJECT --write` to format every source in one operation.
 Directory formatting validates all sources before writing the first file,
 excludes symlinks and generated/cache directories, and is limited to 256
-files and 4 MiB total source. Single-file formatting remains unchanged.
+files and 4 MiB total source. Without `--json`, single-file and directory
+formatting retain their existing text output.
+
+Use `semauri fmt FILE --json` to preview canonical source in the `formatted`
+field without changing the file. For CI and editors, combine `--json` with
+`--check` or `--write` for a file or directory. Reports contain `ok`,
+`status`, `mode` (`preview`, `check`, or `write`), `files_checked`,
+`files_changed`, and the ordered `changed_files` path list. Check mode
+returns status 1 when formatting is needed (and `ok: false`), while write
+mode reports the number of files actually rewritten. Invalid source reports
+structured diagnostics and leaves files unmodified.
 
 Rerun
 verification. This is a local project quality gate, not a dependency/package

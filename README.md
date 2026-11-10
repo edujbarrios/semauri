@@ -123,7 +123,7 @@ semauri run --allow console_write examples/linear_regression.suri
 | --- | --- |
 | `semauri init PROJECT` | Create a project with starter files and tests |
 | `semauri check FILE` | Check syntax and types without executing |
-| `semauri fmt FILE --check` | Check formatting |
+| `semauri fmt FILE --check [--json]` | Check formatting; optionally emit structured results |
 | `semauri fmt FILE --write` | Format the file |
 | `semauri run --allow console_write FILE` | Run a program with permission to print |
 | `semauri test PATH [--allow-console]` | Run assertion-based tests |
@@ -147,6 +147,11 @@ Run `semauri` for CLI help. Supported commands also offer `--json` for machine-r
 
 ## 5. Go further
 
-[Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.68.0.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
+[Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.69.0.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
 
-Apache-2.0 licensed ([LICENSE](LICENSE)). To cite Semauri, use GitHub's **Cite this repository** or [CITATION.cff](CITATION.cff).
+## Citation
+
+To cite Semauri, use GitHub's **Cite this repository** option or the
+[CITATION.cff](CITATION.cff) citation metadata.
+
+Semauri is licensed under Apache-2.0 ([LICENSE](LICENSE)).

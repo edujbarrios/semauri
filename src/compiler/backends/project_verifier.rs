@@ -35,6 +35,7 @@ fn scan_verify_sources(directory: &Path, collected: &mut Vec<PathBuf>) -> std::i
 // directories are excluded by the shared bounded project scanner.
 fn format_source_directory(
     directory: &Path, compiler: &Compiler, check: bool, write: bool,
+    json_mode: bool,
 ) -> Result<(String, i32)> {
     if !check && !write {
         return Err(usage_error(
@@ -68,6 +69,19 @@ fn format_source_directory(
     }
     let total = sources.len();
     let changed = changes.len();
+    let changed_files: Vec<String> = changes.iter()
+        .map(|(path, _)| path.display().to_string()).collect();
+    if check && json_mode {
+        let status = if changed == 0 { 0 } else { 1 };
+        return Ok((pretty_json(&json!({
+            "ok": status == 0,
+            "status": status,
+            "mode": "check",
+            "files_checked": total,
+            "files_changed": changed,
+            "changed_files": changed_files,
+        })), status));
+    }
     if check {
         let mut report = changes.iter()
             .map(|(path, _)| format!("{}: formatting required\n", path.display()))
@@ -79,7 +93,18 @@ fn format_source_directory(
         fs::write(&path, content).map_err(|error|
             usage_error(format!("Cannot write {}: {error}", path.display())))?;
     }
-    Ok((format!("Formatted {changed} of {total} .suri files\n"), 0))
+    if json_mode {
+        Ok((pretty_json(&json!({
+            "ok": true,
+            "status": 0,
+            "mode": "write",
+            "files_checked": total,
+            "files_changed": changed,
+            "changed_files": changed_files,
+        })), 0))
+    } else {
+        Ok((format!("Formatted {changed} of {total} .suri files\n"), 0))
+    }
 }
 
 fn verification_usage() -> String {
