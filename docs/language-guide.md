@@ -516,6 +516,44 @@ Each word remains an ordinary identifier outside the contextual phrase.
 
 See [numeric_differences.suri](../examples/numeric_differences.suri).
 
+### Prediction accuracy: MSE, RMSE and mean bias
+
+Given a list of **signed residuals** (observed minus predicted values),
+Semauri supports the common model-evaluation spellings:
+
+```text
+let residuals be a list of 2, (minus 3), 1.
+
+assert (mean squared error of residuals) is equal to (14 divided by 3).
+assert (mse of residuals) is equal to (mean square of residuals).
+assert (root mean squared error of residuals) is equal to (sqrt of (14 divided by 3)).
+assert (rmse of residuals) is equal to (rms of residuals).
+assert (mean bias error of residuals) is equal to 0.
+assert (mean error of residuals) is equal to 0.
+assert (mbe of residuals) is equal to 0.
+```
+
+- `mean squared error of ERRORS` / `mse of ERRORS`: the average of
+  squared residuals, identical to `mean square of ERRORS`.
+- `root mean squared error of ERRORS` / `rmse of ERRORS`: the
+  nonnegative square root of MSE, identical to `rms of ERRORS`.
+- `mean bias error of ERRORS`, `mean error of ERRORS` and
+  `mbe of ERRORS`: the **signed** mean of residuals, identical to
+  `average of ERRORS`. Negative and positive errors may cancel.
+
+The inputs are residual lists, **not** two raw prediction and
+observation lists. Pair observations using `zip every` and
+`difference between` first (see the runnable
+[model_error_metrics.suri](../examples/model_error_metrics.suri)).
+
+These expressions share Semauri's checked numeric operations:
+MSE/RMSE reject non-list input (`S365`), nonnumeric entries (`S421`),
+square overflow (`S422`), and aggregation overflow/empty lists
+(`S354`). Signed mean error uses the ordinary average checks
+(`S353` for a nonnumeric input and `S354` for empty/overflow).
+The words `mse`, `rmse`, `mbe`, `bias`, and `error` remain valid
+identifiers when not used as these complete expressions.
+
 ### Magnitude aggregations and mean absolute error
 
 For a list of signed residuals, four pure, checked expressions compute

@@ -1,0 +1,23 @@
+# Model-error evaluation from paired observations and predictions.
+# The residual is observed minus predicted; bias preserves its sign.
+let observed be a list of 3, 6, 5.
+let predicted be a list of 1, 9, 4.
+let residuals be zip every actual in observed with estimate in predicted
+  to (difference between actual and estimate).
+
+let squared_error be mean squared error of residuals.
+let mse_value be mse of residuals.
+let root_error be root mean squared error of residuals.
+let rmse_value be rmse of residuals.
+let bias_error be mean bias error of residuals.
+let signed_error be mean error of residuals.
+let mbe_value be mbe of residuals.
+
+assert squared_error is equal to (14 divided by 3).
+assert mse_value is equal to squared_error.
+assert root_error is equal to (sqrt of (14 divided by 3)).
+assert rmse_value is equal to root_error.
+assert bias_error is equal to 0.
+assert signed_error is equal to 0.
+assert mbe_value is equal to 0.
+print "Model error metrics OK".

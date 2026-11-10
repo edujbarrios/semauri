@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Model evaluation aliases: MSE, RMSE and signed bias (not yet released)
+- Add `mean squared error of ERRORS` / `mse of ERRORS`, `root mean squared error of ERRORS` / `rmse of ERRORS`, and `mean bias error of ERRORS` / `mean error of ERRORS` / `mbe of ERRORS`.
+- Reuse the exact checked square/map/mean/sqrt pathways and signed numeric average; no new runtime effects, permissions, dependencies, or reserved identifiers.
+- Add a paired-prediction demonstration, regression/error/formatter tests, language guide, Jupyter help and VS Code highlighting. This is **unreleased** work on PR #339; version remains 0.70.0.
+
 ### Absolute-error and magnitude aggregations (not yet released)
 - Add contextual `sum of magnitudes of LIST`, `mean magnitude of LIST`, `mean absolute error of LIST`, `mae of LIST`, and `max magnitude of LIST` for signed residuals and signal analysis.
 - Reuse the typed list transform, checked absolute value, and exact integer aggregation/max operations; reject empty mean/max, malformed types, and arithmetic overflow with existing diagnostics.
