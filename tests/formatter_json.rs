@@ -76,6 +76,7 @@ fn project_reports_sorted_changes_and_respects_preflight() {
         "semauri-format-project-json-{}-{}",
         std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)
     ));
+    fs::create_dir_all(&parent).unwrap();
     let root = parent.join("app");
     let init = run_cli(&["init".into(), root.to_string_lossy().into_owned()]);
     assert_eq!(init.status, 0, "{}", init.stderr);
