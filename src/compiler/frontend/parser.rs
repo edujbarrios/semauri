@@ -1175,6 +1175,32 @@ impl<'a> Parser<'a> {
         self.primary()
     }
 
+    fn numeric_series_expression(&mut self) -> Result<Expr> {
+        let start = self.advance().clone();
+        let operation = self.advance().clone();
+        self.consume(TokenKind::Of,
+            "Expected 'of' after the numeric series operation", "S242")?;
+        let operand = self.primary()?;
+        let span = span_between_spans(start.span, operand.span());
+        let operator = if start.lexeme.eq_ignore_ascii_case("adjacent")
+            || start.lexeme.eq_ignore_ascii_case("successive") {
+            UnaryOperator::AdjacentDifferences
+        } else if operation.kind == TokenKind::Average {
+            UnaryOperator::RunningAverage
+        } else if operation.kind == TokenKind::Minimum
+            || operation.lexeme.eq_ignore_ascii_case("min") {
+            UnaryOperator::RunningMinimum
+        } else if operation.kind == TokenKind::Maximum
+            || operation.lexeme.eq_ignore_ascii_case("max") {
+            UnaryOperator::RunningMaximum
+        } else if operation.lexeme.eq_ignore_ascii_case("product") {
+            UnaryOperator::RunningProduct
+        } else {
+            UnaryOperator::RunningTotal
+        };
+        Ok(Expr::Unary { operator, operand: Box::new(operand), span })
+    }
+
     fn primary(&mut self) -> Result<Expr> {
         let token = self.peek().clone();
         match token.kind {
@@ -1320,6 +1346,262 @@ impl<'a> Parser<'a> {
                     _ => difference,
                 })
             }
+            // Checked squared-error metrics for residual lists. These
+            // contextual names reuse the exact same map and aggregation as
+            // 'mean square' and 'root mean square'. No separate arithmetic
+            // or second evaluation of the input list is introduced.
+            kind if (kind == TokenKind::Sum
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.kind == TokenKind::Of)
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.kind == TokenKind::Word
+                        && next.lexeme.eq_ignore_ascii_case("squares"))
+                    && self.tokens.get(self.current + 3).is_some_and(|next|
+                        next.kind == TokenKind::Of))
+                || (kind == TokenKind::Word
+                    && ((token.lexeme.eq_ignore_ascii_case("mean")
+                        && ((self.tokens.get(self.current + 1).is_some_and(|next|
+                            next.lexeme.eq_ignore_ascii_case("square"))
+                            && self.tokens.get(self.current + 2).is_some_and(|next|
+                                next.kind == TokenKind::Of))
+                            || (self.tokens.get(self.current + 1).is_some_and(|next|
+                                next.lexeme.eq_ignore_ascii_case("squared"))
+                                && self.tokens.get(self.current + 2).is_some_and(|next|
+                                    next.lexeme.eq_ignore_ascii_case("error"))
+                                && self.tokens.get(self.current + 3).is_some_and(|next|
+                                    next.kind == TokenKind::Of))))
+                        || (token.lexeme.eq_ignore_ascii_case("root")
+                            && self.tokens.get(self.current + 1).is_some_and(|next|
+                                next.lexeme.eq_ignore_ascii_case("mean"))
+                            && ((self.tokens.get(self.current + 2).is_some_and(|next|
+                                next.lexeme.eq_ignore_ascii_case("square"))
+                                && self.tokens.get(self.current + 3).is_some_and(|next|
+                                    next.kind == TokenKind::Of))
+                                || (self.tokens.get(self.current + 2).is_some_and(|next|
+                                    next.lexeme.eq_ignore_ascii_case("squared"))
+                                    && self.tokens.get(self.current + 3).is_some_and(|next|
+                                        next.lexeme.eq_ignore_ascii_case("error"))
+                                    && self.tokens.get(self.current + 4).is_some_and(|next|
+                                        next.kind == TokenKind::Of))))
+                        || (matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                            "rms" | "mse" | "rmse")
+                            && self.tokens.get(self.current + 1).is_some_and(|next|
+                                next.kind == TokenKind::Of)))) => {
+                let start = self.advance().clone();
+                let (sum, root) = if start.kind == TokenKind::Sum {
+                    self.consume(TokenKind::Of,
+                        "Expected 'of' before squares", "S242")?;
+                    self.consume_surface("squares",
+                        "Expected 'squares' after sum of", "S242")?;
+                    (true, false)
+                } else if start.lexeme.eq_ignore_ascii_case("root") {
+                    self.consume_surface("mean",
+                        "Expected 'mean' after root", "S242")?;
+                    if self.peek().lexeme.eq_ignore_ascii_case("squared") {
+                        self.consume_surface("squared",
+                            "Expected 'squared' after root mean", "S242")?;
+                        self.consume_surface("error",
+                            "Expected 'error' after root mean squared", "S242")?;
+                    } else {
+                        self.consume_surface("square",
+                            "Expected 'square' after root mean", "S242")?;
+                    }
+                    (false, true)
+                } else if start.lexeme.eq_ignore_ascii_case("mean") {
+                    if self.peek().lexeme.eq_ignore_ascii_case("squared") {
+                        self.consume_surface("squared",
+                            "Expected 'squared' after mean", "S242")?;
+                        self.consume_surface("error",
+                            "Expected 'error' after mean squared", "S242")?;
+                    } else {
+                        self.consume_surface("square",
+                            "Expected 'square' after mean", "S242")?;
+                    }
+                    (false, false)
+                } else {
+                    (false, matches!(start.lexeme.to_ascii_lowercase().as_str(),
+                        "rms" | "rmse"))
+                };
+                self.consume(TokenKind::Of,
+                    "Expected 'of' before the list of numeric residuals", "S242")?;
+                let source = self.primary()?;
+                let span = span_between_spans(start.span, source.span());
+                let iterator = "__semauri_square_aggregate_item".to_owned();
+                let squared = Expr::Unary {
+                    operator: UnaryOperator::Square,
+                    operand: Box::new(Expr::Variable {
+                        name: iterator.clone(),
+                        span: start.span,
+                    }),
+                    span,
+                };
+                let mapped = Expr::ListTransform {
+                    kind: ListTransformKind::Map,
+                    iterator,
+                    binding_span: start.span,
+                    iterable: Box::new(source),
+                    body: Box::new(squared),
+                    span,
+                };
+                let aggregated = Expr::Unary {
+                    operator: if sum { UnaryOperator::Sum } else { UnaryOperator::Average },
+                    operand: Box::new(mapped),
+                    span,
+                };
+                Ok(if root {
+                    Expr::Unary {
+                        operator: UnaryOperator::SquareRoot,
+                        operand: Box::new(aggregated),
+                        span,
+                    }
+                } else {
+                    aggregated
+                })
+            }
+            // Signed model bias is the arithmetic mean of residuals.
+            // Mean bias error is distinct from mean absolute/squared error:
+            // negative residuals are intentionally preserved.
+            TokenKind::Word
+                if ((token.lexeme.eq_ignore_ascii_case("mbe")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.kind == TokenKind::Of))
+                    || (token.lexeme.eq_ignore_ascii_case("mean")
+                        && ((self.tokens.get(self.current + 1).is_some_and(|next|
+                            next.lexeme.eq_ignore_ascii_case("error"))
+                            && self.tokens.get(self.current + 2).is_some_and(|next|
+                                next.kind == TokenKind::Of))
+                            || (self.tokens.get(self.current + 1).is_some_and(|next|
+                                next.lexeme.eq_ignore_ascii_case("bias"))
+                                && self.tokens.get(self.current + 2).is_some_and(|next|
+                                    next.lexeme.eq_ignore_ascii_case("error"))
+                                && self.tokens.get(self.current + 3).is_some_and(|next|
+                                    next.kind == TokenKind::Of))))) => {
+                let start = self.advance().clone();
+                if start.lexeme.eq_ignore_ascii_case("mean") {
+                    if self.peek().lexeme.eq_ignore_ascii_case("bias") {
+                        self.consume_surface("bias",
+                            "Expected 'bias' after mean", "S242")?;
+                    }
+                    self.consume_surface("error",
+                        "Expected 'error' after mean/bias", "S242")?;
+                }
+                self.consume(TokenKind::Of,
+                    "Expected 'of' before the list of signed residuals", "S242")?;
+                let operand = self.primary()?;
+                let span = span_between_spans(start.span, operand.span());
+                Ok(Expr::Unary {
+                    operator: UnaryOperator::Average,
+                    operand: Box::new(operand),
+                    span,
+                })
+            }
+            // Absolute-error statistics over a list of signed residuals.
+            // Reuse one typed map of checked absolute values, then the
+            // existing sum, average or maximum. This preserves single
+            // evaluation of the source list and exact integer arithmetic.
+            kind if (kind == TokenKind::Sum
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.kind == TokenKind::Of)
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.kind == TokenKind::Word
+                        && next.lexeme.eq_ignore_ascii_case("magnitudes"))
+                    && self.tokens.get(self.current + 3).is_some_and(|next|
+                        next.kind == TokenKind::Of))
+                || (kind == TokenKind::Word
+                    && ((matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                        "mean" | "max")
+                        && self.tokens.get(self.current + 1).is_some_and(|next|
+                            next.kind == TokenKind::Word
+                            && next.lexeme.eq_ignore_ascii_case("magnitude"))
+                        && self.tokens.get(self.current + 2).is_some_and(|next|
+                            next.kind == TokenKind::Of))
+                        || (token.lexeme.eq_ignore_ascii_case("mean")
+                            && self.tokens.get(self.current + 1).is_some_and(|next|
+                                next.kind == TokenKind::Word
+                                && next.lexeme.eq_ignore_ascii_case("absolute"))
+                            && self.tokens.get(self.current + 2).is_some_and(|next|
+                                next.kind == TokenKind::Word
+                                && next.lexeme.eq_ignore_ascii_case("error"))
+                            && self.tokens.get(self.current + 3).is_some_and(|next|
+                                next.kind == TokenKind::Of))
+                        || (token.lexeme.eq_ignore_ascii_case("mae")
+                            && self.tokens.get(self.current + 1).is_some_and(|next|
+                                next.kind == TokenKind::Of)))) => {
+                let start = self.advance().clone();
+                let operation = if start.kind == TokenKind::Sum {
+                    self.consume(TokenKind::Of,
+                        "Expected 'of' before magnitudes", "S242")?;
+                    self.consume_surface("magnitudes",
+                        "Expected 'magnitudes' after sum of", "S242")?;
+                    UnaryOperator::Sum
+                } else if start.lexeme.eq_ignore_ascii_case("mae") {
+                    UnaryOperator::Average
+                } else {
+                    if start.lexeme.eq_ignore_ascii_case("mean")
+                        && self.peek().lexeme.eq_ignore_ascii_case("absolute")
+                    {
+                        self.consume_surface("absolute",
+                            "Expected 'absolute' after mean", "S242")?;
+                        self.consume_surface("error",
+                            "Expected 'error' after mean absolute", "S242")?;
+                    } else {
+                        self.consume_surface("magnitude",
+                            "Expected 'magnitude' after mean/max", "S242")?;
+                    }
+                    if start.lexeme.eq_ignore_ascii_case("max") {
+                        UnaryOperator::Maximum
+                    } else {
+                        UnaryOperator::Average
+                    }
+                };
+                self.consume(TokenKind::Of,
+                    "Expected 'of' before the list of numeric residuals", "S242")?;
+                let source = self.primary()?;
+                let span = span_between_spans(start.span, source.span());
+                // An internal symbol in the map scope, never a user binding.
+                let iterator = "__semauri_magnitude_aggregate_item".to_owned();
+                let absolute = Expr::Unary {
+                    operator: UnaryOperator::Absolute,
+                    operand: Box::new(Expr::Variable {
+                        name: iterator.clone(),
+                        span: start.span,
+                    }),
+                    span,
+                };
+                let mapped = Expr::ListTransform {
+                    kind: ListTransformKind::Map,
+                    iterator,
+                    binding_span: start.span,
+                    iterable: Box::new(source),
+                    body: Box::new(absolute),
+                    span,
+                };
+                Ok(Expr::Unary {
+                    operator: operation,
+                    operand: Box::new(mapped),
+                    span,
+                })
+            }
+            // Keep the parser's recursive primary() frame small by
+            // implementing the numeric scan body in its own method.
+            TokenKind::Word
+                if (matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                    "running" | "cumulative")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        matches!(next.kind, TokenKind::Sum | TokenKind::Average
+                            | TokenKind::Minimum | TokenKind::Maximum)
+                            || (next.kind == TokenKind::Word
+                                && matches!(next.lexeme.to_ascii_lowercase().as_str(),
+                                    "total" | "product" | "min" | "max")))
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.kind == TokenKind::Of))
+                    || (matches!(token.lexeme.to_ascii_lowercase().as_str(),
+                        "adjacent" | "successive")
+                        && self.tokens.get(self.current + 1).is_some_and(|next|
+                            next.kind == TokenKind::Word
+                            && next.lexeme.eq_ignore_ascii_case("differences"))
+                        && self.tokens.get(self.current + 2).is_some_and(|next|
+                            next.kind == TokenKind::Of)) => self.numeric_series_expression(),
             // Python-friendly contextual functions; keep the strict existing HIR operators.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),

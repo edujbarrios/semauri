@@ -1,0 +1,16 @@
+# Absolute-error metrics from paired observations and predictions.
+let actual be a list of 3, 6, 4.
+let predicted be a list of 1, 9, 5.
+let errors be zip every observed in actual with estimated in predicted
+  to (difference between observed and estimated).
+let total_error be sum of magnitudes of errors.
+let mean_error be mean magnitude of errors.
+let mean_absolute_error be mean absolute error of errors.
+let alias_error be mae of errors.
+let peak_error be max magnitude of errors.
+assert total_error is equal to 6.
+assert mean_error is equal to 2.
+assert mean_absolute_error is equal to 2.
+assert alias_error is equal to 2.
+assert peak_error is equal to 3.
+print "Absolute error statistics OK".

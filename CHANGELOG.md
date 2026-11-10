@@ -1,5 +1,26 @@
 ## Unreleased
 
+## 0.71.0 — 2026-11-10
+
+### Numerical sequences: cumulative and adjacent operations
+- Add `running total/sum` and `cumulative total/sum` of numeric lists, preserving checked i64 precision for integer prefix totals and reporting S471 on overflow or non-finite results.
+- Add `running average` and `cumulative average` of numeric lists, returning each prefix mean with checked accumulation.
+- Add `adjacent differences` and `successive differences` to compute the checked signed change from each previous element (S470).
+- Add `running minimum/maximum/product` and `cumulative minimum/maximum/product`, with contextual `min` and `max` spellings. Extrema retain exact mixed integer/decimal ordering; cumulative products use checked integer multiplication, switching to finite decimal arithmetic when a decimal occurs (S355/S387).
+- All numeric scans are pure, statically checked `list<number>` to `list<number>` operations. They evaluate the source once, run in linear time, preserve order, and return an empty list for empty input. Invalid types report S353.
+
+### Model evaluation: squared and absolute error metrics
+- Add `sum of squares of LIST`, `mean square of LIST`, `root mean square of LIST`, and `rms of LIST`, implemented using existing checked square, typed mapping, aggregation, and square root.
+- Add `sum of magnitudes of LIST`, `mean magnitude of LIST`, `max magnitude of LIST`, `mean absolute error of LIST`, and `mae of LIST`; checked absolute values preserve exact signed integer behavior.
+- Add `mean squared error of ERRORS` / `mse of ERRORS` and `root mean squared error of ERRORS` / `rmse of ERRORS`.
+- Add signed `mean bias error of ERRORS` / `mean error of ERRORS` / `mbe of ERRORS`. These consume lists of residuals (observed minus predicted), not two independent input lists.
+- All expressions reuse existing arithmetic, type checking, and error diagnostics; they add no capabilities, external dependencies, or reserved identifiers. Empty inputs are accepted for sums but rejected for mean, RMS, minimum, and maximum where applicable.
+
+### Examples, tests, and tooling
+- Add executable `examples/squared_statistics.suri`, `examples/absolute_error_statistics.suri`, `examples/model_error_metrics.suri`, and `examples/running_statistics.suri`.
+- Add Rust regression suites covering static typing, source locations, exact large integers, decimal semantics, overflow, empty inputs, contextual names, canonical formatting, HIR/optimizer behavior, and capability/effect analysis.
+- Update the language guide, VS Code syntax highlighting, and Jupyter completion and offline help.
+
 ## 0.70.0 — 2026-11-10
 
 ### Checked numeric difference expressions

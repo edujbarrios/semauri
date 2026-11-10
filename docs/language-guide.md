@@ -516,6 +516,179 @@ Each word remains an ordinary identifier outside the contextual phrase.
 
 See [numeric_differences.suri](../examples/numeric_differences.suri).
 
+### Running aggregates and changes between readings
+
+Numeric sequences can be analyzed without manually writing a loop:
+
+```text
+let readings be a list of 3, 5, 2, 6.
+
+let totals be running total of readings.
+let averages be running average of readings.
+let changes be adjacent differences of readings.
+
+assert (totals at 3) is equal to 16.
+assert (averages at 3) is equal to 4.
+assert (changes at 0) is equal to 2.
+assert (changes at 1) is equal to (minus 3).
+assert (changes at 2) is equal to 4.
+```
+
+- `running total of LIST`, `running sum of LIST`, `cumulative total of LIST`,
+  and `cumulative sum of LIST` return the cumulative sum after each element.
+- `running average of LIST` and `cumulative average of LIST` return
+  the arithmetic average of every prefix.
+- `adjacent differences of LIST` and `successive differences of LIST`
+  return each element minus the preceding element. The result is one
+  element shorter than the input.
+
+The total, average and adjacent-difference operations require `list<number>` (`S353` for other types),
+produce `list<number>`, and evaluate the input once in linear time.
+An empty list produces an empty result. A single-element list yields no
+adjacent differences. Cumulative integer totals use checked signed
+64-bit addition, preserving integers beyond 2^53; integer or floating
+overflow raises `S471`. Adjacent differences reuse checked subtraction
+(`S470`). Running averages divide checked prefix totals using the
+language's normal floating-point average semantics. No additional
+permissions or dependencies are required. Words such as `running`,
+`cumulative`, `adjacent`, and `differences` are not reserved.
+
+See the runnable [running_statistics.suri](../examples/running_statistics.suri).
+
+### Running extrema and products
+
+Semauri also supports three ordered prefix scans that preserve the
+intermediate minimum, maximum or product after each reading:
+
+```text
+let readings be a list of 3, 5, 2, 6.
+assert (running minimum of readings) is equal to (a list of 3, 3, 2, 2).
+assert (cumulative maximum of readings) is equal to (a list of 3, 5, 5, 6).
+assert (running product of readings) is equal to (a list of 3, 15, 30, 180).
+```
+
+- `running minimum of LIST` and `cumulative minimum of LIST`
+  keep the smallest numeric value seen so far.
+- `running maximum of LIST` and `cumulative maximum of LIST`
+  keep the largest numeric value seen so far.
+- `running product of LIST` and `cumulative product of LIST`
+  multiply all numeric values from the start to each position.
+
+Shorter `running min/max of LIST` and `cumulative min/max of LIST`
+are also supported. All expressions operate on `list<number>` in
+linear time, evaluate the list once, preserve its length and order, and
+return an empty list for empty input. Integer min/max comparisons are
+exact even beyond 2^53 and signed prefix products use checked i64
+multiplication. When a decimal factor appears, later products use
+finite floating-point multiplication. Non-list/nonnumeric inputs
+receive `S353`; non-finite extrema receive `S355`, and overflowing
+products receive `S387`. These operations are pure and require no
+new permissions or dependencies.
+
+See [running_statistics.suri](../examples/running_statistics.suri).
+
+### Prediction accuracy: MSE, RMSE and mean bias
+
+Given a list of **signed residuals** (observed minus predicted values),
+Semauri supports the common model-evaluation spellings:
+
+```text
+let residuals be a list of 2, (minus 3), 1.
+
+assert (mean squared error of residuals) is equal to (14 divided by 3).
+assert (mse of residuals) is equal to (mean square of residuals).
+assert (root mean squared error of residuals) is equal to (sqrt of (14 divided by 3)).
+assert (rmse of residuals) is equal to (rms of residuals).
+assert (mean bias error of residuals) is equal to 0.
+assert (mean error of residuals) is equal to 0.
+assert (mbe of residuals) is equal to 0.
+```
+
+- `mean squared error of ERRORS` / `mse of ERRORS`: the average of
+  squared residuals, identical to `mean square of ERRORS`.
+- `root mean squared error of ERRORS` / `rmse of ERRORS`: the
+  nonnegative square root of MSE, identical to `rms of ERRORS`.
+- `mean bias error of ERRORS`, `mean error of ERRORS` and
+  `mbe of ERRORS`: the **signed** mean of residuals, identical to
+  `average of ERRORS`. Negative and positive errors may cancel.
+
+The inputs are residual lists, **not** two raw prediction and
+observation lists. Pair observations using `zip every` and
+`difference between` first (see the runnable
+[model_error_metrics.suri](../examples/model_error_metrics.suri)).
+
+These expressions share Semauri's checked numeric operations:
+MSE/RMSE reject non-list input (`S365`), nonnumeric entries (`S421`),
+square overflow (`S422`), and aggregation overflow/empty lists
+(`S354`). Signed mean error uses the ordinary average checks
+(`S353` for a nonnumeric input and `S354` for empty/overflow).
+The words `mse`, `rmse`, `mbe`, `bias`, and `error` remain valid
+identifiers when not used as these complete expressions.
+
+### Magnitude aggregations and mean absolute error
+
+For a list of signed residuals, four pure, checked expressions compute
+absolute-error statistics without manual mapping:
+
+```text
+let actual be a list of 3, 6, 4.
+let predicted be a list of 1, 9, 5.
+let errors be zip every observed in actual with estimated in predicted
+  to (difference between observed and estimated).
+assert (sum of magnitudes of errors) is equal to 6.
+assert (mean magnitude of errors) is equal to 2.
+assert (mean absolute error of errors) is equal to 2.
+assert (mae of errors) is equal to 2.
+assert (max magnitude of errors) is equal to 3.
+```
+
+`sum of magnitudes of VALUES` sums the absolute values in a typed numeric
+list, returning zero for an empty list. `mean magnitude of VALUES`,
+`mean absolute error of VALUES`, and `mae of VALUES` are equivalent
+arithmetic means of those magnitudes; `max magnitude of VALUES` finds
+the greatest magnitude. **MAE consumes residual errors**, not two separate
+observation/prediction lists. Use `zip every` to form residuals first.
+
+All operators evaluate the source list once and apply the same checked
+`absolute of` implementation to each element. Non-lists raise `S365`,
+nonnumeric elements raise `S386`, an absolute-value overflow raises
+`S388`, and a numeric aggregation overflow raises `S354`. An empty list
+is invalid for mean or MAE (`S354`) and maximum magnitude (`S355`).
+The names `mae`, `mean`, `magnitude`, and `error` remain valid
+identifiers outside these complete phrases.
+
+See [absolute_error_statistics.suri](../examples/absolute_error_statistics.suri).
+
+### Squared statistics and root mean square
+
+Semauri can compute three common squared-value aggregates directly over
+`list<number>`, using checked integer squaring and the typed list operators:
+
+```text
+let values be a list of 3, 4.
+assert (sum of squares of values) is equal to 25.
+assert (mean square of values) is equal to 12.5.
+assert (root mean square of values) is equal to (sqrt of 12.5).
+assert (rms of values) is equal to (root mean square of values).
+```
+
+- `sum of squares of VALUES` computes the exact checked sum of all
+  squared values (the empty-list result is 0).
+- `mean square of VALUES` computes the arithmetic mean of squares.
+- `root mean square of VALUES` and its short alias `rms of VALUES`
+  compute the nonnegative square root of the mean square.
+
+Each expression evaluates its source list once and squares each element once
+using the same checked operations as `map every n in VALUES to (square of n)`.
+An empty input is invalid for mean square and RMS (`S354`).
+Non-list inputs raise `S365`; nonnumeric elements raise `S421`;
+integer square overflow raises `S422`; and aggregate overflow or
+non-finite results raise `S354`. The words `root`, `square`,
+`squares` and `rms` remain valid variable names outside these phrases.
+These pure operations need no new permissions.
+
+See [squared_statistics.suri](../examples/squared_statistics.suri).
+
 ### Population variance and standard deviation
 
 `variance of NUMERIC_LIST` and `stdev of NUMERIC_LIST` calculate the

@@ -1,0 +1,20 @@
+# Checked cumulative readings and changes, suitable for timeseries data.
+let readings be a list of 3, 5, 2, 6.
+let totals be running total of readings.
+let sums be cumulative sum of readings.
+let averages be running average of readings.
+let changes be adjacent differences of readings.
+let successive be successive differences of readings.
+let minima be running minimum of readings.
+let maxima be cumulative maximum of readings.
+let products be running product of readings.
+
+assert totals is equal to (a list of 3, 8, 10, 16).
+assert sums is equal to totals.
+assert averages is equal to (a list of 3, 4, (10 divided by 3), 4).
+assert changes is equal to (a list of 2, (minus 3), 4).
+assert successive is equal to changes.
+assert minima is equal to (a list of 3, 3, 2, 2).
+assert maxima is equal to (a list of 3, 5, 5, 6).
+assert products is equal to (a list of 3, 15, 30, 180).
+print "Running statistics OK".
