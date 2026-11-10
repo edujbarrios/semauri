@@ -109,7 +109,38 @@ print doubled.
 
 Output: `[2, 4, 6]`. Also see [the quickstart file](examples/quickstart.suri).
 
-**Level 5 — Real machine learning: linear regression**
+**Level 5 — Prediction error metrics**
+
+This [executable example](examples/prediction_errors.suri) computes a signed residual, an absolute error, and a squared error:
+
+```text
+let actual be 12.
+let predicted be 9.
+
+let residual be difference between actual and predicted.
+let error be absolute difference between actual and predicted.
+let loss be squared difference between actual and predicted.
+
+assert residual is equal to 3.
+assert error is equal to 3.
+assert loss is equal to 9.
+
+print residual.
+print error.
+print loss.
+```
+
+Run `semauri run --allow console_write examples/prediction_errors.suri`.
+
+Output (residual, absolute error, squared error):
+
+```text
+3
+3
+9
+```
+
+**Level 6 — Real machine learning: linear regression**
 
 The [complete example](examples/linear_regression.suri) implements ordinary least squares in Semauri, without a training service. For points following `y = 2x + 1`, it learns the slope and intercept, then predicts `13` for `x = 6`.
 

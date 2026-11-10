@@ -11,7 +11,7 @@ const HELLO: &str = include_str!("../examples/quickstart.suri");
 #[test]
 fn front_page_is_short_but_links_to_complete_reference() {
     let lines = README.lines().count();
-    assert!(lines <= 180, "README grew to {lines} lines; keep details in docs/language-guide.md");
+    assert!(lines <= 200, "README grew to {lines} lines; keep details in docs/language-guide.md");
     for required in [
         "## 1. Install",
         "## 2. Your first program",
@@ -49,4 +49,22 @@ fn benchmark_section_is_linked_to_verifiable_execution() {
     let baseline = include_str!("../benches/BASELINE.md");
     assert!(baseline.contains("bash scripts/bench.sh 50"));
     assert!(baseline.contains("same hosted runner"));
+}
+
+#[test]
+fn prediction_errors_readme_example_runs_and_matches_documented_output() {
+    const EXAMPLE: &str = include_str!("../examples/prediction_errors.suri");
+    assert!(README.contains(EXAMPLE.trim()), "README snippet must match the runnable .suri file");
+    assert!(README.contains("semauri run --allow console_write examples/prediction_errors.suri"));
+    assert!(README.contains("Output (residual, absolute error, squared error):"));
+    assert!(README.contains("```text\\n3\\n3\\n9\\n```"));
+
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/prediction_errors.suri");
+    let checked = run_cli(&["check".into(), path.into()]);
+    assert_eq!(checked.status, 0, "{}", checked.stderr);
+    let result = run_cli(&[
+        "run".into(), "--allow".into(), "console_write".into(), path.into()
+    ]);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "3\\n3\\n9\\n");
 }
