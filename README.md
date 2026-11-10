@@ -4,27 +4,36 @@
 
 ## 1. Install
 
-Choose your system. The official installers download the latest release and verify its checksum.
+**No Rust toolchain is required** when using the prebuilt binaries. Choose your OS; each installer downloads the latest release and checks its SHA-256 checksum.
 
-**macOS / Linux** (Terminal):
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
-semauri version
-```
-
-If `semauri` is not found, add `$HOME/.local/bin` to your `PATH` and reopen the terminal.
-
-**Windows** (PowerShell):
+### Windows (PowerShell)
 
 ```powershell
 irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
 semauri version
 ```
 
-If the command is not found, open a new PowerShell window.
+If `semauri` is not found, **open a new PowerShell window** and try again.
 
-**Prefer a manual installation?** Download the binary for your system from [Releases](https://github.com/edujbarrios/semauri/releases/latest). To build from source, [install Rust](https://rustup.rs/), clone this repository and run `cargo install --path . --locked` in its directory.
+### macOS (Terminal)
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+semauri version
+```
+
+### Linux (Terminal)
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+semauri version
+```
+
+On macOS/Linux, the `export` updates `PATH` for this terminal session; add it to your shell profile to make it permanent. Requires `curl`, `tar`, and a SHA-256 utility (`shasum` or `sha256sum`).
+
+**Alternatives:** [download a release manually](https://github.com/edujbarrios/semauri/releases/latest) or [build from source](docs/language-guide.md#install-and-verify) with Rust. Review [the install scripts](install.sh) ([Windows](install.ps1)) before executing downloaded code.
 
 ## 2. Your first program
 
@@ -43,7 +52,7 @@ semauri run --allow console_write hello.suri
 
 Output: `Hello, world!`
 
-**Remember:** end statements with `.`, use lowercase keywords, and declare values before using them. `check` validates without running the program. `run` needs explicit permission to print.
+**For humans and AI agents:** use lowercase keywords and `.suri` files; end statements with `.`; declare immutable values before use; follow documented syntax (do not guess). Run `semauri fmt FILE --check` and `semauri check FILE` before `run`. Inspect `semauri effects FILE` and grant **only** required permissions (printing needs `--allow console_write`). Use `--json` where supported for tool-friendly results. See the [language guide](docs/language-guide.md) for the grammar.
 
 ## 3. Learn by example
 
