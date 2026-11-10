@@ -1175,6 +1175,24 @@ impl<'a> Parser<'a> {
         self.primary()
     }
 
+    fn numeric_series_expression(&mut self) -> Result<Expr> {
+        let start = self.advance().clone();
+        let operation = self.advance().clone();
+        self.consume(TokenKind::Of,
+            "Expected 'of' after the numeric series operation", "S242")?;
+        let operand = self.primary()?;
+        let span = span_between_spans(start.span, operand.span());
+        let operator = if start.lexeme.eq_ignore_ascii_case("adjacent")
+            || start.lexeme.eq_ignore_ascii_case("successive") {
+            UnaryOperator::AdjacentDifferences
+        } else if operation.kind == TokenKind::Average {
+            UnaryOperator::RunningAverage
+        } else {
+            UnaryOperator::RunningTotal
+        };
+        Ok(Expr::Unary { operator, operand: Box::new(operand), span })
+    }
+
     fn primary(&mut self) -> Result<Expr> {
         let token = self.peek().clone();
         match token.kind {
@@ -1556,9 +1574,8 @@ impl<'a> Parser<'a> {
                     span,
                 })
             }
-            // Running numeric series and adjacent changes are genuine typed
-            // list operators. Unlike rewriting into repeated prefix reductions,
-            // the source list is evaluated once and scanned in one pass.
+            // Keep the parser's recursive primary() frame small by
+            // implementing the numeric scan body in its own method.
             TokenKind::Word
                 if (matches!(token.lexeme.to_ascii_lowercase().as_str(),
                     "running" | "cumulative")
@@ -1575,23 +1592,7 @@ impl<'a> Parser<'a> {
                             next.kind == TokenKind::Word
                             && next.lexeme.eq_ignore_ascii_case("differences"))
                         && self.tokens.get(self.current + 2).is_some_and(|next|
-                            next.kind == TokenKind::Of)) => {
-                let start = self.advance().clone();
-                let operation = self.advance().clone();
-                self.consume(TokenKind::Of,
-                    "Expected 'of' after the numeric series operation", "S242")?;
-                let operand = self.primary()?;
-                let span = span_between_spans(start.span, operand.span());
-                let operator = if start.lexeme.eq_ignore_ascii_case("adjacent")
-                    || start.lexeme.eq_ignore_ascii_case("successive") {
-                    UnaryOperator::AdjacentDifferences
-                } else if operation.kind == TokenKind::Average {
-                    UnaryOperator::RunningAverage
-                } else {
-                    UnaryOperator::RunningTotal
-                };
-                Ok(Expr::Unary { operator, operand: Box::new(operand), span })
-            }
+                            next.kind == TokenKind::Of)) => { self.numeric_series_expression(),
             // Python-friendly contextual functions; keep the strict existing HIR operators.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),
