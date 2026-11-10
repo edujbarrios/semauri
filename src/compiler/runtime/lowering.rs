@@ -2331,7 +2331,12 @@ impl<'a> Lowerer<'a> {
                 ValueData::List(a)
             }
             (BinaryOperator::Subtract, ValueData::Number(a), ValueData::Number(b)) => {
-                ValueData::Number(NumberValue::from_f64(a.as_f64() - b.as_f64()))
+                ValueData::Number(numeric_subtract(&a, &b).ok_or_else(|| {
+                    SemauriError::semantic(
+                        "S470", "Subtraction overflows the signed integer range or produces a non-finite result",
+                        Some(span), None,
+                    )
+                })?)
             }
             (BinaryOperator::Multiply, ValueData::Number(a), ValueData::Number(b)) => {
                 ValueData::Number(NumberValue::from_f64(a.as_f64() * b.as_f64()))
