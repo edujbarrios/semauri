@@ -52,8 +52,8 @@ fn negated_comparisons_preserve_type_errors_and_contextual_names() {
         assert!(error.span.is_some());
     }
     let output = run(r#"let no be 2.
-let greater be 7.
-assert no is no greater than greater.
+let limit be 7.
+assert no is no greater than limit.
 print "ok"."#);
     assert_eq!(output.status, 0, "{}", output.stderr);
     assert_eq!(output.stdout, "ok\n");
