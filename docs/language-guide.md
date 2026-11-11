@@ -268,6 +268,59 @@ semauri check hello.suri
 semauri run --allow console_write hello.suri
 ```
 
+## Unreleased language ergonomics (development branch)
+
+These features are implemented in Rust and have no new runtime effects or
+permissions. They do not change the current released Semauri version.
+
+### Natural negated ordering
+
+Use `is not greater than`, `is not less than`,
+`is no greater than` or `is no less than` for inclusive numeric limits.
+Adding `or equal to` after `not greater than` or `not less than`
+negates the inclusive comparison instead:
+
+| Expression | Meaning |
+| --- | --- |
+| `a is not greater than b` / `a is no greater than b` | a ≤ b |
+| `a is not less than b` / `a is no less than b` | a ≥ b |
+| `a is not greater than or equal to b` | a < b |
+| `a is not less than or equal to b` | a > b |
+
+Operands remain statically checked numbers. The compiler uses the existing
+exact integer and finite-decimal comparison semantics, and evaluates each
+operand once. `no` remains an identifier outside the contextual phrase.
+
+### Inclusive ranges through a bound
+
+`range from A through B` is an inclusive alias for `range from A to B`.
+It supports ascending, descending and singleton ranges, using the same
+checked integer endpoints and maximum range limits:
+
+```text
+let values be range from 1 through 4.
+assert values is equal to (a list of 1, 2, 3, 4).
+```
+
+The word `through` stays contextual: `let through be 5.` remains valid.
+
+### Optional trailing commas
+
+A list literal can end with a comma immediately before the statement
+terminator, and a parenthesized function call can end with one immediately
+before its closing parenthesis. Neither adds an empty element or argument.
+
+```text
+define function add taking a as number, b as number to (a plus b).
+let xs be a list of 1, 2, 3,.
+assert length of xs is equal to 3.
+assert invoke add to (2, 3,) is equal to 5.
+```
+
+Extra commas in the middle remain syntax errors, and normal function
+argument-count and type checks still apply. See the
+[executable example](../examples/natural_language_ergonomics.suri).
+
 ## Core syntax
 
 ```text
