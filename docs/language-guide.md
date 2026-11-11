@@ -2213,3 +2213,29 @@ reset ai response cache.
 
 These runtime constraints do not grant permissions or provide provider-side
 billing, token accounting, prompt-injection defenses, or true model inference.
+
+## Validación de JSON estructurado para agentes (en desarrollo)
+
+`validate ai json RESPONSE against schema SCHEMA` comprueba un documento JSON
+sin invocar modelos, red ni archivos. Ambos argumentos son cadenas y el
+resultado es un booleano. Por ejemplo:
+
+```text
+let contract be "{\"type\":\"object\",\"required\":[\"label\"],\"properties\":{\"label\":{\"type\":\"string\"}},\"additionalProperties\":false}".
+let reply be "{\"label\":\"cat\"}".
+assert validate ai json reply against schema contract.
+```
+
+La sintaxis admite **un subconjunto explícito** de JSON Schema: los tipos
+`object`, `array`, `string`, `number`, `integer`, `boolean` y `null`;
+`properties`, `required` y `additionalProperties` para objetos;
+`items`, `minItems` y `maxItems` para listas; y `minLength` y
+`maxLength` para cadenas (contando caracteres Unicode). No convierte tipos.
+
+Un esquema erróneo o con palabras no reconocidas produce un error S503
+explícito; un documento JSON inválido o incompatible produce `false`.
+El documento está limitado a 1 MiB y el esquema a 64 KiB; además existen
+límites de profundidad y número de propiedades. No se trata de un validador
+completo del estándar JSON Schema ni protege por sí solo de inyecciones
+de instrucciones. Consulta
+[el ejemplo ejecutable](../examples/ai_structured_json.suri).
