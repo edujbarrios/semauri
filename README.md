@@ -148,6 +148,12 @@ The [complete example](examples/linear_regression.suri) implements ordinary leas
 semauri run --allow console_write examples/linear_regression.suri
 ```
 
+**In development:** Semauri now supports explicitly declared third-party
+`.suri` source libraries using `import "library:NAME".`, without automatic
+downloads or additional runtime permissions. See the
+[external-library proposal and working example](docs/external-libraries.md).
+This feature is not part of the current published release.
+
 ## 4. Command reference
 
 | Command | What it does |
@@ -166,6 +172,7 @@ semauri run --allow console_write examples/linear_regression.suri
 | `semauri build FILE [-o PATH]` | Generate build artifacts |
 | `semauri config [PATH]` | Inspect configuration |
 | `semauri domains` | List supported domains |
+| `semauri libraries PROJECT\|FILE` | Validate and list locally installed complementary libraries *(unreleased)* |
 | `semauri version` | Show the installed version |
 | `semauri tokens FILE` | Inspect tokens |
 | `semauri ast FILE` | Inspect the syntax tree |
