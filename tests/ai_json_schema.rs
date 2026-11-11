@@ -172,3 +172,46 @@ fn checked_in_example_runs_without_model_or_network_permissions() {
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert_eq!(result.stdout, "false\nStructured AI response validated.\n");
 }
+
+#[test]
+fn enumerated_labels_reject_unknown_values_and_malformed_enums() {
+    let schema = json!({"type":"string","enum":["cat","dog","ñ🙂"]}).to_string();
+    assert!(matches_json(r#""cat""#, &schema));
+    assert!(matches_json(r#""ñ🙂""#, &schema));
+    assert!(!matches_json(r#""bird""#, &schema));
+    assert!(!matches_json("1", &schema));
+    for invalid in [
+        r#"{"type":"string","enum":[]}"#,
+        r#"{"type":"string","enum":["a","a"]}"#,
+        r#"{"type":"string","enum":["a",1]}"#,
+        r#"{"type":"number","enum":[1]}"#,
+    ] {
+        let result = run(&program(r#""a""#, invalid));
+        assert_eq!(result.status, 70, "{invalid}: {}", result.stderr);
+        assert!(result.stderr.contains("S503"));
+    }
+}
+
+#[test]
+fn normalized_json_is_canonical_and_fails_for_mismatched_responses() {
+    let schema = r#"{"type":"object","required":["a","b"],"properties":{"a":{"type":"integer"},"b":{"type":"integer"}},"additionalProperties":false}"#;
+    let source = format!("print normalize ai json {} against schema {}.",
+        serde_json::to_string(r#"{"b":2, "a":1}"#).unwrap(),
+        serde_json::to_string(schema).unwrap());
+    let result = run(&source);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "{\"a\":1,\"b\":2}\n");
+    let compiler = Compiler::new();
+    assert!(compiler.effect_analysis(
+        "let clean be normalize ai json \"{}\" against schema \"{\\\"type\\\":\\\"object\\\"}\"."
+    ).unwrap().effects().is_empty());
+    let plan = compiler.runtime_plan(&source).unwrap().to_json().to_string();
+    assert!(plan.contains("normalize_json_response"), "{plan}");
+
+    let invalid = format!("print normalize ai json {} against schema {}.",
+        serde_json::to_string(r#"{"a":"wrong","b":2}"#).unwrap(),
+        serde_json::to_string(schema).unwrap());
+    let error = run(&invalid);
+    assert_eq!(error.status, 70, "{}", error.stderr);
+    assert!(error.stderr.contains("AI JSON response does not match"));
+}
