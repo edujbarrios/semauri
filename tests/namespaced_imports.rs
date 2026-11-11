@@ -128,6 +128,7 @@ fn namespaced_imports_deny_unqualified_lookup_and_duplicate_aliases() {
         ("import \"library:math_kit\" as math.\nimport \"library:other_kit\" as math.\nprint 1.\n","S416"),
         ("import \"library:math_kit\" as math.\nprint invoke other.shared to 1.\n","S416"),
         ("import \"library:math_kit\" as for.\nprint 1.\n","S416"),
+        ("import \"library:math_kit\" as prompt.\nprint 1.\n","S416"),
         ("import \"library:math_kit\" as invalid/path.\nprint 1.\n","S416"),
     ] {
         let app = put(&project,"main.suri",body);
@@ -219,11 +220,13 @@ fn semantic_errors_in_aliased_files_keep_original_locations() {
 #[test]
 fn generated_namespace_prefix_is_reserved_in_source_files() {
     let (root,project) = fixture();
-    let app = put(&project,"main.suri",
-        "define function semauri_ns_1__shared taking n as number to n.\n\
-         print invoke semauri_ns_1__shared to 2.\n");
-    let result = call("check",&app);
-    assert_eq!(result.status,65,"{}",result.stderr);
-    assert!(result.stderr.contains("S416"),"{}",result.stderr);
+    for name in ["semauri_ns_1__shared", "SEMAURI_NS_1__SHARED"] {
+        let app = put(&project,"main.suri",
+            &format!("define function {name} taking n as number to n.\n\
+                print invoke {name} to 2.\n"));
+        let result = call("check",&app);
+        assert_eq!(result.status,65,"{}",result.stderr);
+        assert!(result.stderr.contains("S416"),"{}",result.stderr);
+    }
     fs::remove_dir_all(root).unwrap();
 }
