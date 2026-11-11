@@ -1,5 +1,85 @@
 // Checked, bounded validation of JSON output shapes for AI workflows.
 // This is a strict subset, not an implementation of the JSON Schema specification.
+// Reject duplicate JSON object keys, including in nested data and schemas.
+// serde_json::Value alone silently keeps the last occurrence of a key.
+struct UniqueAiJson(JsonValue);
+
+impl<'de> serde::Deserialize<'de> for UniqueAiJson {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_any(UniqueAiJsonVisitor)
+    }
+}
+
+struct UniqueAiJsonVisitor;
+
+impl<'de> serde::de::Visitor<'de> for UniqueAiJsonVisitor {
+    type Value = UniqueAiJson;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("a JSON value without duplicate object keys")
+    }
+
+    fn visit_unit<E: serde::de::Error>(self) -> std::result::Result<Self::Value, E> {
+        Ok(UniqueAiJson(JsonValue::Null))
+    }
+
+    fn visit_bool<E: serde::de::Error>(self, value: bool) -> std::result::Result<Self::Value, E> {
+        Ok(UniqueAiJson(JsonValue::Bool(value)))
+    }
+
+    fn visit_i64<E: serde::de::Error>(self, value: i64) -> std::result::Result<Self::Value, E> {
+        Ok(UniqueAiJson(json!(value)))
+    }
+
+    fn visit_u64<E: serde::de::Error>(self, value: u64) -> std::result::Result<Self::Value, E> {
+        Ok(UniqueAiJson(json!(value)))
+    }
+
+    fn visit_f64<E: serde::de::Error>(self, value: f64) -> std::result::Result<Self::Value, E> {
+        let number = serde_json::Number::from_f64(value)
+            .ok_or_else(|| E::custom("non-finite JSON number"))?;
+        Ok(UniqueAiJson(JsonValue::Number(number)))
+    }
+
+    fn visit_str<E: serde::de::Error>(self, value: &str) -> std::result::Result<Self::Value, E> {
+        Ok(UniqueAiJson(JsonValue::String(value.to_owned())))
+    }
+
+    fn visit_string<E: serde::de::Error>(self, value: String) -> std::result::Result<Self::Value, E> {
+        Ok(UniqueAiJson(JsonValue::String(value)))
+    }
+
+    fn visit_seq<A: serde::de::SeqAccess<'de>>(
+        self, mut sequence: A,
+    ) -> std::result::Result<Self::Value, A::Error> {
+        let mut values = Vec::new();
+        while let Some(value) = sequence.next_element::<UniqueAiJson>()? {
+            values.push(value.0);
+        }
+        Ok(UniqueAiJson(JsonValue::Array(values)))
+    }
+
+    fn visit_map<A: serde::de::MapAccess<'de>>(
+        self, mut map: A,
+    ) -> std::result::Result<Self::Value, A::Error> {
+        let mut values = JsonMap::new();
+        while let Some((key, value)) = map.next_entry::<String, UniqueAiJson>()? {
+            if values.contains_key(&key) {
+                return Err(serde::de::Error::custom("duplicate JSON object key"));
+            }
+            values.insert(key, value.0);
+        }
+        Ok(UniqueAiJson(JsonValue::Object(values)))
+    }
+}
+
+fn parse_unique_ai_json(value: &str) -> std::result::Result<JsonValue, serde_json::Error> {
+    serde_json::from_str::<UniqueAiJson>(value).map(|value| value.0)
+}
+
 const AI_JSON_DOCUMENT_MAX_BYTES: usize = 1024 * 1024;
 const AI_JSON_SCHEMA_MAX_BYTES: usize = 64 * 1024;
 const AI_JSON_SCHEMA_MAX_DEPTH: usize = 16;
@@ -14,14 +94,14 @@ fn validate_ai_json_response(
     if schema_text.len() > AI_JSON_SCHEMA_MAX_BYTES {
         return Err("AI JSON schema exceeds the 64 KiB limit");
     }
-    let schema: JsonValue = serde_json::from_str(schema_text)
+    let schema: JsonValue = parse_unique_ai_json(schema_text)
         .map_err(|_| "AI JSON schema is not valid JSON")?;
     let mut nodes = 0usize;
     check_ai_json_schema(&schema, 1, &mut nodes)?;
     if document.len() > AI_JSON_DOCUMENT_MAX_BYTES {
         return Ok(false);
     }
-    let Ok(value) = serde_json::from_str::<JsonValue>(document) else {
+    let Ok(value) = parse_unique_ai_json(document) else {
         return Ok(false);
     };
     Ok(matches_ai_json_schema(&value, &schema))
@@ -36,7 +116,7 @@ fn normalize_ai_json_response(
     }
     // The first validation already bounded and parsed the input. JSON objects
     // use the stable serde_json map ordering and no fields are synthesized.
-    let value: JsonValue = serde_json::from_str(document)
+    let value: JsonValue = parse_unique_ai_json(document)
         .map_err(|_| "AI JSON response is not valid JSON")?;
     Ok(value.to_string())
 }
