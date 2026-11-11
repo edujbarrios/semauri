@@ -170,5 +170,5 @@ fn checked_in_example_runs_without_model_or_network_permissions() {
     let source = include_str!("../examples/ai_structured_json.suri");
     let result = run(source);
     assert_eq!(result.status, 0, "{}", result.stderr);
-    assert_eq!(result.stdout, "Structured AI response validated.\n");
+    assert_eq!(result.stdout, "false\nStructured AI response validated.\n");
 }
