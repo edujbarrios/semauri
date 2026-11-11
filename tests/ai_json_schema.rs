@@ -226,3 +226,40 @@ fn duplicate_json_keys_are_rejected_in_responses_and_contracts() {
     assert_eq!(invalid.status, 70, "{}", invalid.stderr);
     assert!(invalid.stderr.contains("AI JSON schema is not valid JSON"));
 }
+
+#[test]
+fn nominal_ai_response_flows_safely_into_text_validation() {
+    let source = r#"let model be connect language model "local/test".
+let generated be prompt model with "{\"label\":\"cat\"}".
+let checked be validate ai json generated against schema "{\"type\":\"object\"}".
+print checked."#;
+    let compiler = Compiler::new();
+    compiler.hir(source).unwrap();
+    let required = compiler.effect_analysis(source).unwrap().effects();
+    for effect in ["model_load", "model_inference", "network", "console_write"] {
+        assert!(required.contains(&effect.to_string()), "{required:?}");
+    }
+
+    let path = std::env::temp_dir().join(format!(
+        "semauri-ai-response-text-{}-{}.suri",
+        std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)
+    ));
+    fs::write(&path, source).unwrap();
+    let result = run_cli(&[
+        "run".into(), path.to_string_lossy().into_owned(),
+        "--allow".into(), "console_write".into(),
+        "--allow".into(), "model_load".into(),
+        "--allow".into(), "model_inference".into(),
+        "--allow".into(), "network".into(),
+    ]);
+    fs::remove_file(path).unwrap();
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    // The local backend is a simulator: it adds a prefix, so it does not
+    // claim to have generated valid JSON even when the prompt contains JSON.
+    assert_eq!(result.stdout, "false\n");
+
+    // Only ai.response is safely readable as text. Model identities stay nominal.
+    assert!(compiler.hir(
+        "let model be connect language model \"local/test\". let checked be validate ai json model against schema \"{}\"."
+    ).is_err());
+}
