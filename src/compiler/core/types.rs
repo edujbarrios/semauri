@@ -560,6 +560,19 @@ impl Type {
                 return Some(AssignmentKind::Promote);
             }
         }
+        // An AI response is backed by immutable text: it is safe to read it
+        // as string without making models, tools, or agents interchangeable.
+        // Preserve all other nominal type boundaries.
+        if expected == &Type::String {
+            if let Type::Nominal(nominal) = actual {
+                if nominal.domain == "ai"
+                    && nominal.name == "response"
+                    && nominal.base_type.as_ref() == &Type::String
+                {
+                    return Some(AssignmentKind::Promote);
+                }
+            }
+        }
         None
     }
 }

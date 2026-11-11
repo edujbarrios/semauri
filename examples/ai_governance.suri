@@ -2,6 +2,8 @@
 bound ai prompts to 4 characters.
 cap ai requests to 1.
 memoize ai response cache.
+constrain ai cache to 2 entries.
+restrict ai outputs to 64 characters.
 let model be connect language model "local/test".
 let first be prompt model with "hola".
 let cached be prompt model with "hola".

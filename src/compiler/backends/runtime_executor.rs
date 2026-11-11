@@ -26,12 +26,31 @@ fn execute_runtime_plan(plan: &RuntimePlan, config: &crate::ProgramConfig) -> Re
                 ai.prompt_limit = Some(expect_nonnegative_integer(argument("count")?, operation, "count")?);
                 None
             }
+            ("ai", "cache_capacity") => {
+                ai.cache_limit = Some(expect_nonnegative_integer(argument("count")?, operation, "count")?);
+                ai.trim_cache();
+                None
+            }
+            ("ai", "clear_cache") => {
+                ai.cache.clear();
+                ai.cache_order.clear();
+                None
+            }
+            ("ai", "output_limit") => {
+                ai.output_limit = Some(expect_nonnegative_integer(argument("count")?, operation, "count")?);
+                None
+            }
             ("ai", "usage_report") => Some(ValueData::String(json!({
                 "requests": ai.requests,
                 "request_limit": ai.request_limit,
                 "prompt_character_limit": ai.prompt_limit,
                 "cache_hits": ai.cache_hits,
                 "cache_entries": ai.cache.len(),
+                "cache_capacity": ai.cache_limit,
+                "cache_evictions": ai.cache_evictions,
+                "output_character_limit": ai.output_limit,
+                "agent_count": ai.agents.len(),
+                "agent_turns": ai.agent_turns,
             }).to_string())),
             ("ai", "retry_policy") => {
                 ai.retries = expect_nonnegative_integer(argument("count")?, operation, "count")?;
@@ -62,16 +81,46 @@ fn execute_runtime_plan(plan: &RuntimePlan, config: &crate::ProgramConfig) -> Re
                 let checksum = text.bytes().fold(0_u64, |sum, byte| sum.wrapping_mul(31).wrapping_add(u64::from(byte)));
                 Some(ValueData::String(format!("local-embedding:{checksum:016x}")))
             }
+            ("ai", "validate_json_response") => {
+                let document = expect_string(argument("document")?, operation, "document")?;
+                let schema = expect_string(argument("schema")?, operation, "schema")?;
+                let matches = validate_ai_json_response(&document, &schema)
+                    .map_err(|message| runtime_error(operation, message))?;
+                Some(ValueData::Boolean(matches))
+            }
+            ("ai", "normalize_json_response") => {
+                let document = expect_string(argument("document")?, operation, "document")?;
+                let schema = expect_string(argument("schema")?, operation, "schema")?;
+                let canonical = normalize_ai_json_response(&document, &schema)
+                    .map_err(|message| runtime_error(operation, message))?;
+                Some(ValueData::String(canonical))
+            }
             ("ai", "typed_tool") => Some(ValueData::String(expect_string(argument("name")?, operation, "name")?)),
             ("ai", "bounded_agent") => {
                 let model = expect_string(argument("model")?, operation, "model")?;
+                let system = expect_string(argument("system")?, operation, "system")?;
+                let max_turns = expect_nonnegative_integer(argument("max_turns")?, operation, "max_turns")?;
                 ensure_local_model(&model, operation)?;
-                Some(ValueData::String(model))
+                let handle = format!("semauri-agent:{}", ai.agents.len() + 1);
+                ai.agents.insert(handle.clone(), AgentRuntime {
+                    model, system, max_turns, turns: 0,
+                });
+                Some(ValueData::String(handle))
             }
             ("ai", "run_agent") => {
-                let model = expect_string(argument("agent")?, operation, "agent")?;
+                let handle = expect_string(argument("agent")?, operation, "agent")?;
                 let prompt = expect_string(argument("prompt")?, operation, "prompt")?;
-                Some(ai.infer(&model, &prompt, operation)?)
+                let agent = ai.agents.get(&handle).cloned()
+                    .ok_or_else(|| runtime_error(operation, "unknown AI agent handle"))?;
+                if agent.turns >= agent.max_turns {
+                    return Err(runtime_error(operation, "AI agent turn limit exhausted"));
+                }
+                let answer = ai.infer_with_context(&agent.model, &prompt, &agent.system, operation)?;
+                if let Some(agent) = ai.agents.get_mut(&handle) {
+                    agent.turns += 1;
+                }
+                ai.agent_turns += 1;
+                Some(answer)
             }
             // Pure built-in boolean expressions evaluated after reading runtime
             // configuration or other dynamic values. These never grant effects.
@@ -139,25 +188,63 @@ fn ensure_local_model(model: &str, operation: &RuntimeOperation) -> Result<()> {
     }
 }
 
+#[derive(Clone)]
+struct AgentRuntime {
+    model: String,
+    // Preserved as a separate context for provider adapters and cache isolation.
+    // The local/test backend is a deterministic simulator, not an instruction follower.
+    system: String,
+    max_turns: u64,
+    turns: u64,
+}
+
 #[derive(Default)]
 struct AiRuntimeState {
     request_limit: Option<u64>,
     prompt_limit: Option<u64>,
+    output_limit: Option<u64>,
+    cache_limit: Option<u64>,
     requests: u64,
     cache_hits: u64,
+    cache_evictions: u64,
     retries: u64,
     cache_enabled: bool,
     cache: BTreeMap<String, ValueData>,
+    // FIFO insertion order; a cache hit does not change eviction priority.
+    cache_order: VecDeque<String>,
+    agents: BTreeMap<String, AgentRuntime>,
+    agent_turns: u64,
 }
 
 impl AiRuntimeState {
     fn check_prompt_length(&self, prompt: &str, operation: &RuntimeOperation) -> Result<()> {
-        let length = prompt.chars().count() as u64;
-        if self.prompt_limit.is_some_and(|limit| length > limit) {
-            return Err(runtime_error(
-                operation,
-                format!("AI prompt exceeds character limit: got {length} characters, maximum {}", self.prompt_limit.unwrap()),
-            ));
+        self.check_prompt_with_context(prompt, "", operation)
+    }
+
+    fn check_prompt_with_context(
+        &self, prompt: &str, context: &str, operation: &RuntimeOperation,
+    ) -> Result<()> {
+        let length = (prompt.chars().count() as u64).saturating_add(context.chars().count() as u64);
+        if let Some(limit) = self.prompt_limit {
+            if length > limit {
+                return Err(runtime_error(
+                    operation,
+                    format!("AI prompt exceeds character limit: got {length} characters, maximum {limit}"),
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    fn check_output_length(&self, output: &ValueData, operation: &RuntimeOperation) -> Result<()> {
+        if let (Some(limit), ValueData::String(text)) = (self.output_limit, output) {
+            let length = text.chars().count() as u64;
+            if length > limit {
+                return Err(runtime_error(
+                    operation,
+                    format!("AI output exceeds character limit: got {length} characters, maximum {limit}"),
+                ));
+            }
         }
         Ok(())
     }
@@ -170,12 +257,31 @@ impl AiRuntimeState {
         Ok(())
     }
 
+    fn trim_cache(&mut self) {
+        if let Some(limit) = self.cache_limit {
+            while (self.cache.len() as u64) > limit {
+                let Some(oldest) = self.cache_order.pop_front() else { break };
+                if self.cache.remove(&oldest).is_some() {
+                    self.cache_evictions += 1;
+                }
+            }
+        }
+    }
+
     fn infer(&mut self, model: &str, prompt: &str, operation: &RuntimeOperation) -> Result<ValueData> {
+        self.infer_with_context(model, prompt, "", operation)
+    }
+
+    fn infer_with_context(
+        &mut self, model: &str, prompt: &str, context: &str, operation: &RuntimeOperation,
+    ) -> Result<ValueData> {
         ensure_local_model(model, operation)?;
-        self.check_prompt_length(prompt, operation)?;
-        let key = format!("{model}\0{prompt}");
+        self.check_prompt_with_context(prompt, context, operation)?;
+        // System context scopes the cache without leaking it in the local simulator's output.
+        let key = format!("{model}\0{context}\0{prompt}");
         if self.cache_enabled {
             if let Some(value) = self.cache.get(&key) {
+                self.check_output_length(value, operation)?;
                 self.cache_hits += 1;
                 return Ok(value.clone());
             }
@@ -183,8 +289,12 @@ impl AiRuntimeState {
         self.account_request(operation)?;
         let _configured_retries = self.retries;
         let value = ValueData::String(format!("[{model}] {prompt}"));
-        if self.cache_enabled {
-            self.cache.insert(key, value.clone());
+        // A rejected response is neither returned nor cached; the attempt consumed a request.
+        self.check_output_length(&value, operation)?;
+        if self.cache_enabled && self.cache_limit != Some(0) {
+            self.cache.insert(key.clone(), value.clone());
+            self.cache_order.push_back(key);
+            self.trim_cache();
         }
         Ok(value)
     }

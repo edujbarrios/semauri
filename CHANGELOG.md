@@ -6,6 +6,22 @@
 - Keep lazy `and` / `or` semantics unchanged pending control-flow lowering; no new dependencies or implicit permissions, and no version bump.
 
 
+### Strict structured AI JSON validation (development; no release)
+- Safely allow nominal `ai.response` values to flow into ordinary string parameters (including JSON validation) without weakening nominal model/tool/agent type separation.
+- Reject duplicate JSON object keys at every depth in both input data and schema contracts, rather than silently taking the final value.
+- Add pure `validate ai json RESPONSE against schema SCHEMA`, a typed Boolean expression for structurally validating AI JSON before use.
+- Support strict JSON Schema-like primitive, object and array types, required and nested properties, unknown-field rejection and Unicode-aware size constraints. Unsupported schema keywords raise S503 instead of being ignored; malformed response data returns false.
+- Bound schema and document sizes, schema nesting and property counts. Add executable examples, Rust regression tests and Jupyter completion vocabulary; no additional permissions or packages.
+- Support bounded string enumerations and `normalize ai json RESPONSE against schema SCHEMA` for deterministic JSON serialization after strict validation; mismatches raise S503 without silent data repair.
+
+
+### AI runtime correctness and resource safety (development; no release)
+- Enforce configured per-agent maximum turns, retain distinct system contexts for cache isolation, and reject invalid turn counts instead of silently ignoring them. The local model remains a deterministic simulator, not an instruction-following provider.
+- Add explicit FIFO cache limits (`constrain ai cache to N entries.`) and cache reset (`reset ai response cache.`); report evictions and capacity without revealing prompts.
+- Add runtime output guards (`restrict ai outputs to N characters.`) for generated and cached text, plus expanded AI usage metrics and regression tests.
+- Preserve existing effects, default cache behavior and v0.73.0 package metadata; work remains unpublished on a development PR.
+
+
 ## 0.73.0 — 2026-11-11
 
 ### Safer, observable AI workflows

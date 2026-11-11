@@ -9,7 +9,7 @@
 
 use serde::Serialize;
 use serde_json::{json, Map as JsonMap, Value as JsonValue};
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
 use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -21,6 +21,7 @@ include!("core/text_conversions.rs");
 include!("core/text_search.rs");
 include!("core/unicode_scalars.rs");
 include!("core/json_decode.rs");
+include!("core/ai_json_schema.rs");
 include!("core/module_loader.rs");
 
 include!("domains/model.rs");
