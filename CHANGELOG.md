@@ -1,5 +1,12 @@
 ## Unreleased
 
+### Namespaced imports (development; no version bump)
+- Add `import "library:NAME" as alias.` and local source aliases with checked `invoke alias.function to ...` calls, avoiding collisions between exported functions of multiple libraries.
+- Preserve nested unqualified calls within each alias scope; reject malformed, duplicate, reserved or unknown aliases (S416). Unaliased imports retain original semantics.
+- Imported top-level statements and values remain unisolated; all existing effect permissions and source path boundaries still apply.
+- Kept on a draft development PR; no version, tag or release changes.
+
+
 ## 0.72.0 — 2026-11-11
 
 ### External and complementary libraries
