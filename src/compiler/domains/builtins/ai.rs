@@ -186,6 +186,20 @@ fn ai_domain() -> DomainSpec {
                 &[],
             ),
             op(
+                "normalize_json_response",
+                &["normalize"],
+                vec![
+                    lit("ai"),
+                    lit("json"),
+                    slot("document", Type::String),
+                    lit("against"),
+                    lit("schema"),
+                    slot("schema", Type::String),
+                ],
+                Type::String,
+                &[],
+            ),
+            op(
                 "typed_tool",
                 &["declare"],
                 vec![
