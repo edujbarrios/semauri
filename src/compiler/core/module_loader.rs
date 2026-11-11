@@ -157,10 +157,38 @@ const MAX_MODULE_DEPTH: usize = 32;
 const MAX_MODULE_BYTES: usize = 4 * 1024 * 1024;
 
 #[derive(Clone, Debug)]
+struct NamespaceColumnEdit {
+    generated_start: usize,
+    generated_end: usize,
+    original_start: usize,
+    original_end: usize,
+}
+
+#[derive(Clone, Debug)]
 struct LoadedSource {
     source: String,
     origins: Vec<(PathBuf, usize)>,
     files: HashMap<PathBuf, String>,
+    column_edits: Vec<Vec<NamespaceColumnEdit>>,
+}
+
+impl LoadedSource {
+    fn source_column(&self, line: usize, column: usize) -> usize {
+        let Some(edits) = self.column_edits.get(line.saturating_sub(1)) else {
+            return column;
+        };
+        let mut shift = 0_isize;
+        for edit in edits {
+            if column < edit.generated_start { break; }
+            if column <= edit.generated_end {
+                return edit.original_start + (column - edit.generated_start)
+                    .min(edit.original_end - edit.original_start);
+            }
+            shift += (edit.generated_end - edit.generated_start) as isize
+                - (edit.original_end - edit.original_start) as isize;
+        }
+        (column as isize - shift).max(1) as usize
+    }
 }
 
 struct ModuleLoader {
@@ -248,11 +276,11 @@ fn parse_module_import(raw: &str, file: &Path, line: usize)
 
 fn rewrite_scoped_source(
     source: &str, namespace: &str, aliases: &HashMap<String, String>, file: &Path,
-) -> Result<String> {
+) -> Result<(String, Vec<Vec<NamespaceColumnEdit>>)> {
     if namespace.is_empty() && aliases.is_empty()
         && !source.contains(PRIVATE_NAMESPACE_PREFIX)
     {
-        return Ok(source.to_owned());
+        return Ok((source.to_owned(), vec![Vec::new(); source.lines().count()]));
     }
     let tokens = Lexer::new(source, &DomainRegistry::builtins()).tokens()
         .map_err(|error| module_error(file,
@@ -273,7 +301,7 @@ fn rewrite_scoped_source(
     };
     let start = |token: &Token| position(token.span.line(), token.span.column());
     let end = |token: &Token| position(token.span.end_line(), token.span.end_column());
-    let mut edits = Vec::<(usize, usize, String)>::new();
+    let mut edits = Vec::<(usize, usize, String, usize, usize, usize)>::new();
     let mut index = 0;
     while index < tokens.len() {
         let token = &tokens[index];
@@ -293,7 +321,8 @@ fn rewrite_scoped_source(
         {
             let name = &tokens[index + 2];
             edits.push((start(name), end(name),
-                format!("{namespace}{}", name.lexeme.to_lowercase())));
+                format!("{namespace}{}", name.lexeme.to_lowercase()),
+                name.span.line(), name.span.column(), name.span.end_column()));
             index += 3;
             continue;
         }
@@ -309,8 +338,13 @@ fn rewrite_scoped_source(
                     let scope = aliases.get(&alias.lexeme.to_ascii_lowercase())
                         .ok_or_else(|| module_error(file, alias.span.line(),
                             format!("Unknown import namespace '{}'", alias.lexeme)))?;
+                    if alias.span.line() != function.span.end_line() {
+                        return Err(module_error(file, alias.span.line(),
+                            "Keep qualified function names on a single line"));
+                    }
                     edits.push((start(alias), end(function),
-                        format!("{scope}{}", function.lexeme.to_lowercase())));
+                        format!("{scope}{}", function.lexeme.to_lowercase()),
+                        alias.span.line(), alias.span.column(), function.span.end_column()));
                     index += 5;
                     continue;
                 }
@@ -319,7 +353,8 @@ fn rewrite_scoped_source(
                 if let (Some(name), Some(to)) = (next, tokens.get(index + 2)) {
                     if name.kind == TokenKind::Word && to.kind == TokenKind::To {
                         edits.push((start(name), end(name),
-                            format!("{namespace}{}", name.lexeme.to_lowercase())));
+                            format!("{namespace}{}", name.lexeme.to_lowercase()),
+                            name.span.line(), name.span.column(), name.span.end_column()));
                         index += 3;
                         continue;
                     }
@@ -329,19 +364,29 @@ fn rewrite_scoped_source(
         index += 1;
     }
     if edits.is_empty() {
-        return Ok(source.to_owned());
+        return Ok((source.to_owned(), vec![Vec::new(); source.lines().count()]));
     }
     // Rebuild from original offsets; replacements may change character count,
     // but do not add/remove lines, preserving the original file/line map.
     let mut output = String::with_capacity(source.len() + edits.len() * 20);
+    let mut columns = vec![Vec::new(); lines.len()];
+    let mut shifts = vec![0_isize; lines.len()];
     let mut cursor = 0;
-    for (begin, finish, replacement) in edits {
+    for (begin, finish, replacement, line, original_start, original_end) in edits {
+        let row = line - 1;
+        let generated_start = (original_start as isize + shifts[row]) as usize;
+        let generated_end = generated_start + replacement.chars().count();
+        columns[row].push(NamespaceColumnEdit {
+            generated_start, generated_end, original_start, original_end,
+        });
+        shifts[row] += replacement.chars().count() as isize
+            - (original_end - original_start) as isize;
         output.push_str(&source[cursor..begin]);
         output.push_str(&replacement);
         cursor = finish;
     }
     output.push_str(&source[cursor..]);
-    Ok(output)
+    Ok((output, columns))
 }
 
 // The nearest real .semauri-root file defines the project boundary.
@@ -380,6 +425,7 @@ fn load_module_source(entry: &Path) -> Result<LoadedSource> {
             source: String::new(),
             origins: Vec::new(),
             files: HashMap::new(),
+            column_edits: Vec::new(),
         },
     };
     loader.visit(&entry, 0, &root, "")?;
@@ -493,13 +539,16 @@ impl ModuleLoader {
             }
             self.visit(&resolved, depth + 1, boundary, child_namespace)?;
         }
-        let transformed = rewrite_scoped_source(&content, namespace, &aliases, file)?;
+        let (transformed, column_edits) =
+            rewrite_scoped_source(&content, namespace, &aliases, file)?;
         let transformed_lines = transformed.lines().collect::<Vec<_>>();
         for (_, original_line) in body {
             self.loaded.source.push_str(transformed_lines.get(original_line - 1)
                 .copied().unwrap_or(""));
             self.loaded.source.push('\n');
             self.loaded.origins.push((file.to_path_buf(), original_line));
+            self.loaded.column_edits.push(
+                column_edits.get(original_line - 1).cloned().unwrap_or_default());
         }
         self.visiting.pop();
         Ok(())
