@@ -17,7 +17,7 @@ use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 const DELIMITER: &[u8] = b"<IDS|MSG>";
-const KEYWORDS: &str = "let be then do print assert range from to of number string boolean map filter count reduce every if when otherwise elif unless end within define function taking invoke import square sqrt round truncate factorial even odd true false cube cbrt reciprocal digits binary octal hex hexadecimal prime capitalize swapcase uncapitalize titlecase sum average variance stdev power difference between absolute squared root rms squares mae mse rmse mbe bias error exp ln log2 log10 sin cos asin acos atan sinh cosh tanh asinh acosh atanh log1p expm1 minimum maximum median sorted distinct flatten partition split join joined different floor ceiling length reverse take drop first last top bottom json parse len abs mean min max strip upper lower avg var stddev total size unique cardinality head final med prod rev sort flat ascending descending running cumulative adjacent successive differences empty blank zero positive negative nonzero nonnegative nonpositive least most above below one divisible multiple includes excludes does contain include begins finishes begin finish";
+const KEYWORDS: &str = "let be then do print assert range from to of number string boolean map filter count reduce every if when otherwise elif unless end within define function taking invoke import square sqrt round truncate factorial even odd true false cube cbrt reciprocal digits binary octal hex hexadecimal prime capitalize swapcase uncapitalize titlecase sum average variance stdev power difference between absolute squared root rms squares mae mse rmse mbe bias error exp ln log2 log10 sin cos asin acos atan sinh cosh tanh asinh acosh atanh log1p expm1 minimum maximum median sorted distinct flatten partition split join joined different floor ceiling length reverse take drop first last top bottom json parse len abs mean min max strip upper lower avg var stddev total size unique cardinality head final med prod rev sort flat ascending descending running cumulative adjacent successive differences empty blank zero positive negative nonzero nonnegative nonpositive least most above below one divisible multiple includes excludes does contain include begins finishes begin finish bound report cap reattempt memoize";
 const DIRECTIVES: &[&str] = &["check", "explain", "effects", "plan", "tokens", "ast", "hir", "optimize", "symbols", "graph", "fmt", "audit"];
 static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -271,7 +271,7 @@ fn dispatch(request: &Request, iopub: &zmq::Socket, key: &str, counter: &mut u64
     let content = match kind {
         "kernel_info_request" => json!({
             "protocol_version":"5.3","implementation":"semauri","implementation_version":"0.11.0",
-            "language_info":{"name":"semauri","version":"0.72.0","mimetype":"text/x-semauri",
+            "language_info":{"name":"semauri","version":"0.73.0","mimetype":"text/x-semauri",
                 "file_extension":".suri","pygments_lexer":"text","codemirror_mode":"text"},
             "banner":"Semauri Jupyter kernel — standalone, capability-checked .suri cells",
             "status":"ok","help_links":[]

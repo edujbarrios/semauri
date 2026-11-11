@@ -42,6 +42,26 @@ fn ai_domain() -> DomainSpec {
                 &[],
             ),
             op(
+                "prompt_limit",
+                &["bound"],
+                vec![
+                    lit("ai"),
+                    lit("prompts"),
+                    lit("to"),
+                    slot("count", Type::Number),
+                    lit("characters"),
+                ],
+                Type::Unit,
+                &[],
+            ),
+            op(
+                "usage_report",
+                &["report"],
+                vec![lit("ai"), lit("usage")],
+                Type::String,
+                &[],
+            ),
+            op(
                 "retry_policy",
                 &["reattempt"],
                 vec![

@@ -1,29 +1,22 @@
 ## Unreleased
 
-### Immutable typed dictionaries (development; no version bump)
-- Provide recoverable typed lookups with `entry "key" of DICTIONARY with default EXPR`; fallback is lazy, type-checked (S423), and ordinary missing-key lookups keep S421.
-- Permit explicitly typed empty and nonempty dictionary literals (`dictionary of number ()`, `dictionary of number ("score": 7)`), keeping unannotated empty dictionaries invalid and checking annotation mismatches statically.
-- Add safe `has entry "key" in DICTIONARY` and stable sorted `keys of DICTIONARY` with checked S422 errors, optimizer, formatter and effects integration.
-- Add homogeneous string-key `dictionary of ("key": EXPR, ...)` literals, optional article, `entry "key" of DICTIONARY` lookups and statically checked `dictionary of TYPE` function parameters.
-- Add nested dictionaries, exact value-type inference, stable JSON serialization through `json of`, and compiler/runtime diagnostics S420/S421 for malformed or invalid entries, missing keys, and type mismatches.
-- Support the AST, HIR, optimizer, effect analysis, formatter and evaluation pipeline in Rust with regression tests and a runnable example.
-- Preserve immutable semantics, explicit capabilities and 0.72.0 release; changes stay on the unmerged draft PR.
+## 0.73.0 — 2026-11-11
 
+### Safer, observable AI workflows
+- Add `bound ai prompts to COUNT characters.` to enforce a runtime length budget on prompts, image requests and embedding inputs using Unicode scalar counts; violations fail before consuming request budget or serving cached text.
+- Add pure `report ai usage` returning stable JSON for completed AI requests, configured limits, text-response cache hits and cache entries; it exposes no prompt contents.
+- Count locally computed embeddings against `cap ai requests to COUNT.` and enforce the same prompt bound on embedding inputs.
+- Keep explicit `--allow` effect gates, existing local-model backend limits and no additional Rust dependencies.
 
-### Immutable typed records (development; no version bump)
-- Introduce `record of ("field": EXPR, ...)` and `field "name" of record` with inferred structural field types, nesting, lists and pure function results.
-- Reject duplicate fields, missing field names, excessive records and invalid field access with S418/S419 diagnostics; retain explicit capability rules and source spans.
-- Add compiler, optimizer, formatter, CLI and regression coverage; record constructors currently require compile-time-evaluable values.
-- Allow `json of RECORD` for JSON string encoding of immutable typed records (including nested records and lists), using the existing checked serializer.
-- Keep Semauri at 0.72.0 on the draft development PR; do not publish or merge until requested.
+### Namespaced library imports
+- Support `import "library:NAME" as alias.` and `invoke alias.function to ...` with collision-safe resolution across nested imports, local files and pinned external libraries.
+- Reject malformed, reserved, duplicated and unknown aliases with S416; preserve existing unaliased import behavior and source-aware diagnostics.
 
-
-### Namespaced imports (development; no version bump)
-- Add `import "library:NAME" as alias.` and local source aliases with checked `invoke alias.function to ...` calls, avoiding collisions between exported functions of multiple libraries.
-- Preserve nested unqualified calls within each alias scope; reject malformed, duplicate, reserved or unknown aliases (S416). Unaliased imports retain original semantics.
-- Imported top-level statements and values remain unisolated; all existing effect permissions and source path boundaries still apply.
-- Kept on a draft development PR; no version, tag or release changes.
-
+### Immutable typed records and dictionaries
+- Add immutable structural `record of ("key": VALUE)` literals, exact record-parameter typing, `field "key" of RECORD` and JSON conversion.
+- Add homogeneous `dictionary of ("key": VALUE)`, `entry "key" of DICTIONARY`, typed empty dictionaries, safe membership and sorted keys queries.
+- Add lazy recoverable `entry "key" of DICTIONARY with default EXPR`, with static fallback typing and diagnostics S420–S423.
+- Add examples, optimizer and formatter handling, effect accounting and Rust regression tests.
 
 ## 0.72.0 — 2026-11-11
 

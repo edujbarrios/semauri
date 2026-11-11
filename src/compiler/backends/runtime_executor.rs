@@ -22,6 +22,17 @@ fn execute_runtime_plan(plan: &RuntimePlan, config: &crate::ProgramConfig) -> Re
                 ai.request_limit = Some(expect_nonnegative_integer(argument("count")?, operation, "count")?);
                 None
             }
+            ("ai", "prompt_limit") => {
+                ai.prompt_limit = Some(expect_nonnegative_integer(argument("count")?, operation, "count")?);
+                None
+            }
+            ("ai", "usage_report") => Some(ValueData::String(json!({
+                "requests": ai.requests,
+                "request_limit": ai.request_limit,
+                "prompt_character_limit": ai.prompt_limit,
+                "cache_hits": ai.cache_hits,
+                "cache_entries": ai.cache.len(),
+            }).to_string())),
             ("ai", "retry_policy") => {
                 ai.retries = expect_nonnegative_integer(argument("count")?, operation, "count")?;
                 None
@@ -46,6 +57,8 @@ fn execute_runtime_plan(plan: &RuntimePlan, config: &crate::ProgramConfig) -> Re
                 let model = expect_string(argument("model")?, operation, "model")?;
                 let text = expect_string(argument("text")?, operation, "text")?;
                 ensure_local_model(&model, operation)?;
+                ai.check_prompt_length(&text, operation)?;
+                ai.account_request(operation)?;
                 let checksum = text.bytes().fold(0_u64, |sum, byte| sum.wrapping_mul(31).wrapping_add(u64::from(byte)));
                 Some(ValueData::String(format!("local-embedding:{checksum:016x}")))
             }
@@ -114,25 +127,45 @@ fn ensure_local_model(model: &str, operation: &RuntimeOperation) -> Result<()> {
 #[derive(Default)]
 struct AiRuntimeState {
     request_limit: Option<u64>,
+    prompt_limit: Option<u64>,
     requests: u64,
+    cache_hits: u64,
     retries: u64,
     cache_enabled: bool,
     cache: BTreeMap<String, ValueData>,
 }
 
 impl AiRuntimeState {
-    fn infer(&mut self, model: &str, prompt: &str, operation: &RuntimeOperation) -> Result<ValueData> {
-        ensure_local_model(model, operation)?;
-        let key = format!("{model}\0{prompt}");
-        if self.cache_enabled {
-            if let Some(value) = self.cache.get(&key) {
-                return Ok(value.clone());
-            }
+    fn check_prompt_length(&self, prompt: &str, operation: &RuntimeOperation) -> Result<()> {
+        let length = prompt.chars().count() as u64;
+        if self.prompt_limit.is_some_and(|limit| length > limit) {
+            return Err(runtime_error(
+                operation,
+                format!("AI prompt exceeds character limit: got {length} characters, maximum {}", self.prompt_limit.unwrap()),
+            ));
         }
+        Ok(())
+    }
+
+    fn account_request(&mut self, operation: &RuntimeOperation) -> Result<()> {
         if self.request_limit.is_some_and(|limit| self.requests >= limit) {
             return Err(runtime_error(operation, "AI request budget exhausted"));
         }
         self.requests += 1;
+        Ok(())
+    }
+
+    fn infer(&mut self, model: &str, prompt: &str, operation: &RuntimeOperation) -> Result<ValueData> {
+        ensure_local_model(model, operation)?;
+        self.check_prompt_length(prompt, operation)?;
+        let key = format!("{model}\0{prompt}");
+        if self.cache_enabled {
+            if let Some(value) = self.cache.get(&key) {
+                self.cache_hits += 1;
+                return Ok(value.clone());
+            }
+        }
+        self.account_request(operation)?;
         let _configured_retries = self.retries;
         let value = ValueData::String(format!("[{model}] {prompt}"));
         if self.cache_enabled {

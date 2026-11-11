@@ -2126,3 +2126,39 @@ assert (take first 2 from "ñ🌍a") is equal to "ñ🌍".
 
 Zero and overlong counts follow the original slicing rules. The words first
 and last remain available in variable names and existing first-of syntax.
+
+
+## Bounded and observable AI requests (v0.73.0)
+
+AI code can bound prompt/input size before the runtime calls a local model:
+
+```text
+bound ai prompts to 4096 characters.
+cap ai requests to 10.
+memoize ai response cache.
+let model be connect language model "local/example".
+let response be prompt model with "Summarize the supplied text.".
+let usage be report ai usage.
+print usage.
+```
+
+- `bound ai prompts to COUNT characters.` accepts a nonnegative integer at runtime.
+  It counts Unicode scalar values (not UTF-8 bytes or tokens). It applies to
+  text generation, agent requests, image-inspection requests (including their
+  image reference appended to the prompt), and embedding text. Reconfiguration
+  replaces the prior limit. An overlength input fails with runtime S503 before
+  using a cached response or consuming the request budget.
+- `cap ai requests to COUNT.` now counts locally computed embeddings as AI
+  requests, as well as generated and agent text; repeated cached text responses
+  do not spend the request budget.
+- `report ai usage` produces a string containing deterministic JSON:
+  `requests`, `request_limit`, `prompt_character_limit`, `cache_hits`,
+  and `cache_entries`. Unset limits are `null`. It never contains prompts,
+  model identifiers or cached responses, needs no new effect permission, and
+  reports only the current execution's state.
+- These are runtime guardrails for **size and accounting**, not a guarantee
+  against prompt injection, data leakage, model costs, or unsafe outputs.
+  Only `local/*` model identifiers are executable without a provider adapter;
+  inference and console effects still require explicit `--allow` flags.
+
+See [examples/ai_governance.suri](../examples/ai_governance.suri).
