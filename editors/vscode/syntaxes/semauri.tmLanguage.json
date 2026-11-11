@@ -174,7 +174,7 @@
     },
     "random": {
       "name": "support.function.random.semauri",
-      "match": "\\\\b(?:password|secure|random|draw|pick|integer)\\\\b"
+      "match": "\\b(?:password|secure|random|draw|pick|integer)\\b"
     },
     "collections": {
       "name": "support.function.collection.semauri",
