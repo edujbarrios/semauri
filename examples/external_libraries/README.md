@@ -19,8 +19,13 @@ semauri verify examples/external_libraries/app
 ```
 
 The program prints `15` after checking `square(7) = 49`. The external
-library is accessed only through the catalog's `math_kit` alias, and its
+library is selected from the catalog and imported `as math` in the app;
+its
 nested module import cannot leave its package root.
+
+**Development-only:** this example also demonstrates `as math` and qualified
+calls such as `invoke math.square to 7`. These namespaces are not part of
+the currently published Semauri v0.72.0 binaries; build this branch to try them.
 
 This does not download or install any packages: both directories are
 included to make the example reproducible offline. See

@@ -1,0 +1,33 @@
+# Immutable homogeneous typed dictionaries. Unreleased language feature.
+let scores be dictionary of ("alice": 8, "bob": 10).
+assert (entry "alice" of scores) is equal to 8.
+
+define function read_score taking scores as dictionary of number to entry "bob" of scores.
+let selected be invoke read_score to scores.
+assert selected is equal to 10.
+
+let locations be dictionary of (
+  "north": dictionary of ("city": "Bilbao"),
+  "south": dictionary of ("city": "Las Palmas")
+).
+assert (entry "city" of entry "south" of locations) is equal to "Las Palmas".
+
+print selected.
+print json of scores.
+
+# Safe membership never fails for an absent dictionary key.
+assert has entry "alice" in scores.
+assert not (has entry "charlie" in scores).
+
+# Key enumeration is stable, in lexicographic order.
+print json of keys of scores.
+
+# Explicit annotations let programs start with an empty typed mapping.
+let empty be dictionary of number ().
+assert not (has entry "missing" in empty).
+print json of empty.
+
+# Missing entries can now return a type-checked default.
+let fallback_score be entry "missing" of scores with default 0.
+assert fallback_score is equal to 0.
+assert (entry "bob" of scores with default 0) is equal to 10.

@@ -215,6 +215,13 @@ manager or a substitute for full integration and deployment tests.
 
 ## External and complementary source libraries (v0.72.0)
 
+**In development (unreleased):** use `import "library:NAME" as alias.` or
+`import "relative/file.suri" as alias.` and invoke a function with
+`invoke alias.function to VALUE`. Aliases isolate imported **function names**,
+not top-level variables or side effects. Existing unaliased imports still work.
+See [namespaced imports](external-libraries.md#namespaced-imports-development-unreleased).
+
+
 Projects can now declare third-party Semauri `.suri` libraries in
 `.semauri-libraries.json` and import them using a named library path:
 
@@ -378,6 +385,117 @@ Comments begin with `#`, `//`, or a nestable `/* ... */` block. Keywords are cas
 - nominal runtime types: typed handles produced by operations.
 
 Semauri does not silently coerce unrelated types.
+
+### Immutable typed dictionaries (development, not yet released)
+
+Dictionaries are immutable **string-keyed maps of one statically inferred value
+type**, unlike records whose fields may each have different types.
+
+```text
+let scores be dictionary of ("alice": 8, "bob": 10).
+assert (entry "alice" of scores) is equal to 8.
+print json of scores.
+```
+
+Use `dictionary of ("key": EXPR, ...)` or `a dictionary of (...)`.
+Access values with `entry "key" of DICTIONARY`; keys are quoted
+case-sensitive strings of 1–64 UTF-8 bytes. Unannotated dictionary literals require at least one
+entry to infer the value type. **An explicitly typed empty dictionary is
+valid:** `dictionary of number ()` or `dictionary of list of string ()`.
+Typed nonempty dictionaries may also declare their value type, as in
+`dictionary of number ("alice": 8)`. Each entry's value must have exactly
+the same type as its annotation (or inferred value type). Duplicate keys, malformed syntax or more than 64
+entries produce S420. Mixing incompatible value types, accessing a non-
+dictionary or reading a missing key produces S421 (the latter when evaluated).
+
+A dictionary can be inspected safely with **`has entry "key" in DICTIONARY`**,
+which returns `true` or `false` even for an absent key; it does not
+perform a failing lookup. **`keys of DICTIONARY`** returns a typed
+`list of string` in deterministic lexicographic order. This makes it
+possible to guard an entry lookup or iterate over keys:
+
+```text
+let scores be dictionary of ("alice": 8, "bob": 10).
+assert not (has entry "carol" in scores).
+print json of keys of scores.
+```
+
+A missing entry can also be recovered with an explicit typed default:
+
+```text
+let scores be dictionary of ("ada": 7, "grace": 9).
+let score be entry "unknown" of scores with default 0.
+print score.
+```
+
+`entry "key" of DICTIONARY with default EXPR` returns the stored value if
+the key exists; otherwise, it evaluates `EXPR`. The fallback expression is
+**only evaluated if the key is missing**, and the compiler requires it to
+have precisely the dictionary's value type (S423 on mismatch or non-dictionary
+input). This is a narrowly scoped *recoverable lookup*, not a general error
+catching mechanism. The existing `entry "key" of DICTIONARY` still reports
+missing-key errors. The contextual words `with default` do not become
+reserved identifiers. Runtime/model-derived dictionaries are still subject
+to the existing runtime-value limitations.
+
+Both operations are checked against `dictionary of TYPE` by the compiler.
+Using a non-dictionary produces S422. Literal `entry "key" of` still
+raises S421 if a key is missing during evaluation; it does not silently
+default a value. Existing `keys of json DOCUMENT` retains its meaning.
+
+Dictionary types can be nested, used in lists, and declared as function
+parameter types: `taking scores as dictionary of number`. A mismatched
+argument type fails with S370. The existing `json of` expression
+serializes dictionaries, including nested values, to JSON strings. Enclose
+comma-separated list values in parentheses, e.g.,
+`dictionary of ("a": (a list of 1, 2), "b": (a list of 3, 4))`.
+
+These dictionaries are **immutable** and use literal string keys; dynamic
+key expressions, insert/remove operations, and runtime-derived compound
+values are not yet supported. The feature requires no new permissions,
+dependencies or online registry. Semauri **0.72.0** remains the current
+published version while development continues on an unmerged draft PR.
+
+### Immutable typed records (development, not yet released)
+
+Semauri now supports **structurally typed records** in the development branch.
+Records are immutable: field names and the type of each value are known to the
+compiler. A field lookup is checked *before execution*.
+
+```text
+let person be record of ("name": "Ada", "age": 37, "active": true).
+assert (field "age" of person) is equal to 37.
+print field "name" of person.
+```
+
+Add the optional article (`a record of (...)`), nest records, or include them
+in lists. Field names are **quoted, case-sensitive strings** of 1–64 UTF-8
+bytes; at most 32 fields are allowed, and duplicate names are rejected.
+An empty record is `record of ()`. Access a value with
+`field "FIELD_NAME" of RECORD` or use parentheses for nested lookups.
+The record's structural type is inferred (for example,
+`record<age: number, name: string>`), with S418 for malformed
+declarations and S419 for missing fields, non-record access or unit fields.
+
+Use `json of RECORD` to serialize a typed record (including nested
+records and lists) into a JSON string suitable for API payloads or files.
+Serialization does not implicitly grant network or filesystem permissions.
+Parsing arbitrary JSON into a statically typed record is **not** implemented.
+
+Records can contain core values and work with pure functions. **Function
+parameters can declare exact structural record types** with
+`taking person as record of ("name": string, "age": number)`. Nested
+records and `list of TYPE` fields are supported; mismatched structures
+report S370 before execution. In this first
+step, *building records from runtime-dependent model/API results is not yet
+supported*. They do not enable network access, file I/O or implicit effects.
+For a field whose value is a comma-separated list, enclose the list
+in parentheses so record field separators remain unambiguous:
+`record of ("tags": (a list of "alpha", "beta"), "score": 5)`.
+Record-valued functions also work across namespaced Semauri libraries.
+
+The public language version is still **0.72.0** and these features remain
+in the draft development PR.
 
 ### Expressions
 
@@ -2008,3 +2126,39 @@ assert (take first 2 from "ñ🌍a") is equal to "ñ🌍".
 
 Zero and overlong counts follow the original slicing rules. The words first
 and last remain available in variable names and existing first-of syntax.
+
+
+## Bounded and observable AI requests (v0.73.0)
+
+AI code can bound prompt/input size before the runtime calls a local model:
+
+```text
+bound ai prompts to 4096 characters.
+cap ai requests to 10.
+memoize ai response cache.
+let model be connect language model "local/example".
+let response be prompt model with "Summarize the supplied text.".
+let usage be report ai usage.
+print usage.
+```
+
+- `bound ai prompts to COUNT characters.` accepts a nonnegative integer at runtime.
+  It counts Unicode scalar values (not UTF-8 bytes or tokens). It applies to
+  text generation, agent requests, image-inspection requests (including their
+  image reference appended to the prompt), and embedding text. Reconfiguration
+  replaces the prior limit. An overlength input fails with runtime S503 before
+  using a cached response or consuming the request budget.
+- `cap ai requests to COUNT.` now counts locally computed embeddings as AI
+  requests, as well as generated and agent text; repeated cached text responses
+  do not spend the request budget.
+- `report ai usage` produces a string containing deterministic JSON:
+  `requests`, `request_limit`, `prompt_character_limit`, `cache_hits`,
+  and `cache_entries`. Unset limits are `null`. It never contains prompts,
+  model identifiers or cached responses, needs no new effect permission, and
+  reports only the current execution's state.
+- These are runtime guardrails for **size and accounting**, not a guarantee
+  against prompt injection, data leakage, model costs, or unsafe outputs.
+  Only `local/*` model identifiers are executable without a provider adapter;
+  inference and console effects still require explicit `--allow` flags.
+
+See [examples/ai_governance.suri](../examples/ai_governance.suri).

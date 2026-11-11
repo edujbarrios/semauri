@@ -279,6 +279,44 @@ fn fold_expr(
                 .collect(),
             span: *span,
         },
+        HirExpr::Dictionary { ty, entries, span } => HirExpr::Dictionary {
+            ty: ty.clone(),
+            entries: entries.iter().map(|(name, value)|
+                (name.clone(), fold_expr(value, constants, changes))).collect(),
+            span: *span,
+        },
+        HirExpr::DictionaryEntry { ty, name, dictionary, span } => HirExpr::DictionaryEntry {
+            ty: ty.clone(), name: name.clone(),
+            dictionary: Box::new(fold_expr(dictionary, constants, changes)),
+            span: *span,
+        },
+        HirExpr::DictionaryGetOr { ty, name, dictionary, fallback, span } => HirExpr::DictionaryGetOr {
+            ty: ty.clone(), name: name.clone(),
+            dictionary: Box::new(fold_expr(dictionary, constants, changes)),
+            fallback: Box::new(fold_expr(fallback, constants, changes)),
+            span: *span,
+        },
+        HirExpr::DictionaryContains { ty, name, dictionary, span } => HirExpr::DictionaryContains {
+            ty: ty.clone(), name: name.clone(),
+            dictionary: Box::new(fold_expr(dictionary, constants, changes)),
+            span: *span,
+        },
+        HirExpr::DictionaryKeys { ty, dictionary, span } => HirExpr::DictionaryKeys {
+            ty: ty.clone(),
+            dictionary: Box::new(fold_expr(dictionary, constants, changes)),
+            span: *span,
+        },
+        HirExpr::Record { ty, fields, span } => HirExpr::Record {
+            ty: ty.clone(),
+            fields: fields.iter().map(|(name, value)|
+                (name.clone(), fold_expr(value, constants, changes))).collect(),
+            span: *span,
+        },
+        HirExpr::RecordField { ty, name, record, span } => HirExpr::RecordField {
+            ty: ty.clone(), name: name.clone(),
+            record: Box::new(fold_expr(record, constants, changes)),
+            span: *span,
+        },
         HirExpr::Unary {
             ty,
             operator,
@@ -839,6 +877,14 @@ fn is_constant_expr(expr: &HirExpr) -> bool {
     match expr {
         HirExpr::Literal { .. } => true,
         HirExpr::List { items, .. } => items.iter().all(is_constant_expr),
+        HirExpr::Dictionary { entries, .. } => entries.values().all(is_constant_expr),
+        HirExpr::DictionaryEntry { dictionary, .. } => is_constant_expr(dictionary),
+        HirExpr::DictionaryGetOr { dictionary, fallback, .. } =>
+            is_constant_expr(dictionary) && is_constant_expr(fallback),
+        HirExpr::DictionaryContains { dictionary, .. }
+        | HirExpr::DictionaryKeys { dictionary, .. } => is_constant_expr(dictionary),
+        HirExpr::Record { fields, .. } => fields.values().all(is_constant_expr),
+        HirExpr::RecordField { record, .. } => is_constant_expr(record),
         _ => false,
     }
 }
@@ -856,6 +902,44 @@ fn clone_constant_with_span(value: &HirExpr, span: SourceSpan) -> HirExpr {
                 .iter()
                 .map(|item| clone_constant_with_span(item, item.span()))
                 .collect(),
+            span,
+        },
+        HirExpr::Dictionary { ty, entries, .. } => HirExpr::Dictionary {
+            ty: ty.clone(),
+            entries: entries.iter().map(|(name, value)|
+                (name.clone(), clone_constant_with_span(value, value.span()))).collect(),
+            span,
+        },
+        HirExpr::DictionaryEntry { ty, name, dictionary, .. } => HirExpr::DictionaryEntry {
+            ty: ty.clone(), name: name.clone(),
+            dictionary: Box::new(clone_constant_with_span(dictionary, dictionary.span())),
+            span,
+        },
+        HirExpr::DictionaryGetOr { ty, name, dictionary, fallback, .. } => HirExpr::DictionaryGetOr {
+            ty: ty.clone(), name: name.clone(),
+            dictionary: Box::new(clone_constant_with_span(dictionary, dictionary.span())),
+            fallback: Box::new(clone_constant_with_span(fallback, fallback.span())),
+            span,
+        },
+        HirExpr::DictionaryContains { ty, name, dictionary, .. } => HirExpr::DictionaryContains {
+            ty: ty.clone(), name: name.clone(),
+            dictionary: Box::new(clone_constant_with_span(dictionary, dictionary.span())),
+            span,
+        },
+        HirExpr::DictionaryKeys { ty, dictionary, .. } => HirExpr::DictionaryKeys {
+            ty: ty.clone(),
+            dictionary: Box::new(clone_constant_with_span(dictionary, dictionary.span())),
+            span,
+        },
+        HirExpr::Record { ty, fields, .. } => HirExpr::Record {
+            ty: ty.clone(),
+            fields: fields.iter().map(|(name, value)|
+                (name.clone(), clone_constant_with_span(value, value.span()))).collect(),
+            span,
+        },
+        HirExpr::RecordField { ty, name, record, .. } => HirExpr::RecordField {
+            ty: ty.clone(), name: name.clone(),
+            record: Box::new(clone_constant_with_span(record, record.span())),
             span,
         },
         _ => value.clone(),
@@ -1180,6 +1264,14 @@ fn removable_expression(expr: &HirExpr) -> bool {
         HirExpr::Literal { .. } | HirExpr::SymbolRef { .. } => true,
         HirExpr::Promote { value, .. } => removable_expression(value),
         HirExpr::List { items, .. } => items.iter().all(removable_expression),
+        HirExpr::Dictionary { entries, .. } => entries.values().all(removable_expression),
+        // Unlike record fields, dictionary keys are resolved at evaluation
+        // and a missing key can raise S421: never eliminate a lookup.
+        HirExpr::DictionaryEntry { .. } | HirExpr::DictionaryGetOr { .. } => false,
+        HirExpr::DictionaryContains { dictionary, .. }
+        | HirExpr::DictionaryKeys { dictionary, .. } => removable_expression(dictionary),
+        HirExpr::Record { fields, .. } => fields.values().all(removable_expression),
+        HirExpr::RecordField { record, .. } => removable_expression(record),
         HirExpr::Unary { operand, .. } => removable_expression(operand),
         HirExpr::Binary {
             operator,
@@ -1260,6 +1352,25 @@ fn collect_symbol_refs_expr(expr: &HirExpr, refs: &mut HashSet<u64>) {
                 collect_symbol_refs_expr(item, refs);
             }
         }
+        HirExpr::Dictionary { entries, .. } => {
+            for value in entries.values() {
+                collect_symbol_refs_expr(value, refs);
+            }
+        }
+        HirExpr::DictionaryEntry { dictionary, .. }
+        | HirExpr::DictionaryContains { dictionary, .. }
+        | HirExpr::DictionaryKeys { dictionary, .. } =>
+            collect_symbol_refs_expr(dictionary, refs),
+        HirExpr::DictionaryGetOr { dictionary, fallback, .. } => {
+            collect_symbol_refs_expr(dictionary, refs);
+            collect_symbol_refs_expr(fallback, refs);
+        }
+        HirExpr::Record { fields, .. } => {
+            for value in fields.values() {
+                collect_symbol_refs_expr(value, refs);
+            }
+        }
+        HirExpr::RecordField { record, .. } => collect_symbol_refs_expr(record, refs),
         HirExpr::Binary { left, right, .. } => {
             collect_symbol_refs_expr(left, refs);
             collect_symbol_refs_expr(right, refs);

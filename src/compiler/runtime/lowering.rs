@@ -957,6 +957,27 @@ impl<'a> Lowerer<'a> {
                 }
                 false
             }
+            HirExpr::Dictionary { entries, .. } => {
+                let mut dependent = false;
+                for value in entries.values() {
+                    if self.runtime_dependent(value)? { dependent = true; }
+                }
+                dependent
+            }
+            HirExpr::DictionaryEntry { dictionary, .. }
+            | HirExpr::DictionaryContains { dictionary, .. }
+            | HirExpr::DictionaryKeys { dictionary, .. } =>
+                self.runtime_dependent(dictionary)?,
+            HirExpr::DictionaryGetOr { dictionary, fallback, .. } =>
+                self.runtime_dependent(dictionary)? || self.runtime_dependent(fallback)?,
+            HirExpr::Record { fields, .. } => {
+                let mut dependent = false;
+                for value in fields.values() {
+                    if self.runtime_dependent(value)? { dependent = true; }
+                }
+                dependent
+            }
+            HirExpr::RecordField { record, .. } => self.runtime_dependent(record)?,
             HirExpr::Repeat { count, value, .. } =>
                 self.runtime_dependent(count)? || self.runtime_dependent(value)?,
             HirExpr::Conditional { condition, consequence, alternative, .. } => {
@@ -1249,6 +1270,107 @@ impl<'a> Lowerer<'a> {
                     ty: ty.clone(),
                     data: ValueData::List(values),
                 })
+            }
+            HirExpr::Dictionary { ty, entries, .. } => {
+                let mut values = BTreeMap::new();
+                for (name, expression) in entries {
+                    match self.evaluate(expression)? {
+                        BoundValue::Compile { data, .. } => {
+                            values.insert(name.clone(), data);
+                        }
+                        BoundValue::Runtime(_) =>
+                            return Err(self.runtime_value_error(expression.span())),
+                    }
+                }
+                Ok(BoundValue::Compile {
+                    ty: ty.clone(),
+                    data: ValueData::Dictionary(values),
+                })
+            }
+            HirExpr::DictionaryEntry { ty, name, dictionary, span } => {
+                match self.evaluate(dictionary)? {
+                    BoundValue::Compile {
+                        data: ValueData::Dictionary(entries), ..
+                    } => {
+                        let data = entries.get(name).cloned().ok_or_else(||
+                            SemauriError::semantic(
+                                "S421", format!("Dictionary has no entry '{name}'"),
+                                Some(*span), None))?;
+                        Ok(BoundValue::Compile { ty: ty.clone(), data })
+                    }
+                    BoundValue::Compile { .. } => Err(SemauriError::semantic(
+                        "S421", "Entry lookup requires a dictionary",
+                        Some(*span), None)),
+                    BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
+                }
+            }
+            HirExpr::DictionaryGetOr { ty, name, dictionary, fallback, span } => {
+                match self.evaluate(dictionary)? {
+                    BoundValue::Compile { data: ValueData::Dictionary(entries), .. } => {
+                        if let Some(data) = entries.get(name) {
+                            Ok(BoundValue::Compile { ty: ty.clone(), data: data.clone() })
+                        } else {
+                            // The fallback branch runs only if the key is absent.
+                            self.evaluate(fallback)
+                        }
+                    }
+                    BoundValue::Compile { .. } => Err(SemauriError::semantic(
+                        "S423", "Defaulted entry lookup requires a dictionary",
+                        Some(*span), None)),
+                    BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
+                }
+            }
+            HirExpr::DictionaryContains { name, dictionary, span, .. } => {
+                match self.evaluate(dictionary)? {
+                    BoundValue::Compile { data: ValueData::Dictionary(entries), .. } =>
+                        Ok(BoundValue::Compile {
+                            ty: Type::Boolean,
+                            data: ValueData::Boolean(entries.contains_key(name)),
+                        }),
+                    BoundValue::Compile { .. } => Err(SemauriError::semantic(
+                        "S422", "Membership requires a dictionary", Some(*span), None)),
+                    BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
+                }
+            }
+            HirExpr::DictionaryKeys { dictionary, span, .. } => {
+                match self.evaluate(dictionary)? {
+                    BoundValue::Compile { data: ValueData::Dictionary(entries), .. } =>
+                        Ok(BoundValue::Compile {
+                            ty: Type::List(Box::new(Type::String)),
+                            data: ValueData::List(entries.keys()
+                                .cloned().map(ValueData::String).collect()),
+                        }),
+                    BoundValue::Compile { .. } => Err(SemauriError::semantic(
+                        "S422", "Key enumeration requires a dictionary", Some(*span), None)),
+                    BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
+                }
+            }
+            HirExpr::Record { ty, fields, .. } => {
+                let mut values = BTreeMap::new();
+                for (name, value) in fields {
+                    match self.evaluate(value)? {
+                        BoundValue::Compile { data, .. } => { values.insert(name.clone(), data); }
+                        BoundValue::Runtime(_) => return Err(self.runtime_value_error(value.span())),
+                    }
+                }
+                Ok(BoundValue::Compile {
+                    ty: ty.clone(),
+                    data: ValueData::Record(values),
+                })
+            }
+            HirExpr::RecordField { ty, name, record, span } => {
+                match self.evaluate(record)? {
+                    BoundValue::Compile { data: ValueData::Record(fields), .. } => {
+                        let data = fields.get(name).cloned().ok_or_else(||
+                            SemauriError::semantic(
+                                "S419", format!("Record has no field '{name}'"),
+                                Some(*span), None))?;
+                        Ok(BoundValue::Compile { ty: ty.clone(), data })
+                    }
+                    BoundValue::Compile { .. } => Err(SemauriError::semantic(
+                        "S419", "Field access requires a record", Some(*span), None)),
+                    BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
+                }
             }
             HirExpr::SymbolRef {
                 symbol_id,
@@ -2711,6 +2833,23 @@ fn distinct_fingerprint(value: &ValueData) -> u64 {
                 }
             }
             ValueData::Unit => 6u8.hash(hasher),
+            ValueData::Record(fields) => {
+                7u8.hash(hasher);
+                fields.len().hash(hasher);
+                // BTreeMap order is canonical and independent of declaration order.
+                for (name, value) in fields {
+                    name.hash(hasher);
+                    hash_value(value, hasher);
+                }
+            },
+            ValueData::Dictionary(entries) => {
+                8u8.hash(hasher);
+                entries.len().hash(hasher);
+                for (name, value) in entries {
+                    name.hash(hasher);
+                    hash_value(value, hasher);
+                }
+            },
         }
     }
 
@@ -2748,6 +2887,10 @@ fn inspect_value(value: &ValueData) -> String {
         ValueData::Boolean(value) => value.to_string(),
         ValueData::List(values) => format!("{:?}", values.iter().map(ValueData::to_json).collect::<Vec<_>>()),
         ValueData::Unit => "nil".to_string(),
+        ValueData::Record(fields) =>
+            ValueData::Record(fields.clone()).to_json().to_string(),
+        ValueData::Dictionary(entries) =>
+            ValueData::Dictionary(entries.clone()).to_json().to_string(),
     }
 }
 

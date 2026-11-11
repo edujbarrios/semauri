@@ -610,9 +610,10 @@ pub fn run_cli(args: &[String]) -> CliResult {
             if let (Some(loaded), Some(span)) = (current_loaded.as_ref(), error.span) {
                 if let Some((path, line)) = loaded.origins.get(span.line().saturating_sub(1)) {
                     if let Some(original) = loaded.files.get(path) {
-                        reported.span = Some(SourceSpan::new(*line, span.column(),
+                        reported.span = Some(SourceSpan::new(*line,
+                            loaded.source_column(span.line(), span.column()),
                             line.saturating_add(span.end_line().saturating_sub(span.line())),
-                            span.end_column()));
+                            loaded.source_column(span.end_line(), span.end_column())));
                         diagnostic_source = Some(original);
                         reported_file = Some(path.display().to_string());
                     }

@@ -167,6 +167,13 @@ Library code is type-checked and respects explicit permissions; this supports
 [Copy the working example](examples/external_libraries/) or follow the
 [step-by-step guide](docs/external-libraries.md).
 
+**New in 0.73.0:** qualify library calls with `as math` and
+`invoke math.square to 7`. Use immutable `record of (...)` and
+`dictionary of (...)` values with typed field/entry access.
+For AI programs, `bound ai prompts to 4096 characters.` and
+`report ai usage` provide explicit input limits and JSON usage accounting.
+See the [language guide](docs/language-guide.md) for syntax and limits.
+
 ## 4. Command reference
 
 | Command | What it does |

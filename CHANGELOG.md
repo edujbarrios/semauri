@@ -1,5 +1,23 @@
 ## Unreleased
 
+## 0.73.0 — 2026-11-11
+
+### Safer, observable AI workflows
+- Add `bound ai prompts to COUNT characters.` to enforce a runtime length budget on prompts, image requests and embedding inputs using Unicode scalar counts; violations fail before consuming request budget or serving cached text.
+- Add pure `report ai usage` returning stable JSON for completed AI requests, configured limits, text-response cache hits and cache entries; it exposes no prompt contents.
+- Count locally computed embeddings against `cap ai requests to COUNT.` and enforce the same prompt bound on embedding inputs.
+- Keep explicit `--allow` effect gates, existing local-model backend limits and no additional Rust dependencies.
+
+### Namespaced library imports
+- Support `import "library:NAME" as alias.` and `invoke alias.function to ...` with collision-safe resolution across nested imports, local files and pinned external libraries.
+- Reject malformed, reserved, duplicated and unknown aliases with S416; preserve existing unaliased import behavior and source-aware diagnostics.
+
+### Immutable typed records and dictionaries
+- Add immutable structural `record of ("key": VALUE)` literals, exact record-parameter typing, `field "key" of RECORD` and JSON conversion.
+- Add homogeneous `dictionary of ("key": VALUE)`, `entry "key" of DICTIONARY`, typed empty dictionaries, safe membership and sorted keys queries.
+- Add lazy recoverable `entry "key" of DICTIONARY with default EXPR`, with static fallback typing and diagnostics S420–S423.
+- Add examples, optimizer and formatter handling, effect accounting and Rust regression tests.
+
 ## 0.72.0 — 2026-11-11
 
 ### External and complementary libraries

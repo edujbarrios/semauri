@@ -298,6 +298,40 @@ pub enum Expr {
         items: Vec<Expr>,
         span: SourceSpan,
     },
+    Dictionary {
+        value_type: Option<Type>,
+        entries: Vec<(String, Expr)>,
+        span: SourceSpan,
+    },
+    DictionaryEntry {
+        name: String,
+        dictionary: Box<Expr>,
+        span: SourceSpan,
+    },
+    DictionaryGetOr {
+        name: String,
+        dictionary: Box<Expr>,
+        fallback: Box<Expr>,
+        span: SourceSpan,
+    },
+    DictionaryContains {
+        name: String,
+        dictionary: Box<Expr>,
+        span: SourceSpan,
+    },
+    DictionaryKeys {
+        dictionary: Box<Expr>,
+        span: SourceSpan,
+    },
+    Record {
+        fields: Vec<(String, Expr)>,
+        span: SourceSpan,
+    },
+    RecordField {
+        name: String,
+        record: Box<Expr>,
+        span: SourceSpan,
+    },
     Variable {
         name: String,
         span: SourceSpan,
@@ -365,6 +399,13 @@ impl Expr {
         match self {
             Expr::Literal { span, .. }
             | Expr::List { span, .. }
+            | Expr::Dictionary { span, .. }
+            | Expr::DictionaryEntry { span, .. }
+            | Expr::DictionaryGetOr { span, .. }
+            | Expr::DictionaryContains { span, .. }
+            | Expr::DictionaryKeys { span, .. }
+            | Expr::Record { span, .. }
+            | Expr::RecordField { span, .. }
             | Expr::Variable { span, .. }
             | Expr::FunctionCall { span, .. }
             | Expr::Conditional { span, .. }
@@ -382,6 +423,18 @@ impl Expr {
         match self {
             Expr::Literal { ty, value, .. } => Expr::Literal { ty, value, span },
             Expr::List { items, .. } => Expr::List { items, span },
+            Expr::Dictionary { value_type, entries, .. } =>
+                Expr::Dictionary { value_type, entries, span },
+            Expr::DictionaryEntry { name, dictionary, .. } =>
+                Expr::DictionaryEntry { name, dictionary, span },
+            Expr::DictionaryGetOr { name, dictionary, fallback, .. } =>
+                Expr::DictionaryGetOr { name, dictionary, fallback, span },
+            Expr::DictionaryContains { name, dictionary, .. } =>
+                Expr::DictionaryContains { name, dictionary, span },
+            Expr::DictionaryKeys { dictionary, .. } =>
+                Expr::DictionaryKeys { dictionary, span },
+            Expr::Record { fields, .. } => Expr::Record { fields, span },
+            Expr::RecordField { name, record, .. } => Expr::RecordField { name, record, span },
             Expr::Variable { name, .. } => Expr::Variable { name, span },
             Expr::FunctionCall { name, arguments, .. } => Expr::FunctionCall { name, arguments, span },
             Expr::Repeat { count, value, .. } => Expr::Repeat { count, value, span },
@@ -448,6 +501,45 @@ impl Expr {
                     "items".into(),
                     JsonValue::Array(items.iter().map(Expr::to_json).collect()),
                 );
+            }
+            Expr::Dictionary { value_type, entries, .. } => {
+                base.insert("type".into(), json!("dictionary_literal"));
+                base.insert("declared_value_type".into(),
+                    json!(value_type.as_ref().map(Type::to_json)));
+                base.insert("entries".into(), json!(entries.iter()
+                    .map(|(name, value)| json!({"key": name, "value": value.to_json()}))
+                    .collect::<Vec<_>>()));
+            }
+            Expr::DictionaryEntry { name, dictionary, .. } => {
+                base.insert("type".into(), json!("dictionary_entry"));
+                base.insert("name".into(), json!(name));
+                base.insert("dictionary".into(), dictionary.to_json());
+            }
+            Expr::DictionaryGetOr { name, dictionary, fallback, .. } => {
+                base.insert("type".into(), json!("dictionary_get_or"));
+                base.insert("name".into(), json!(name));
+                base.insert("dictionary".into(), dictionary.to_json());
+                base.insert("fallback".into(), fallback.to_json());
+            }
+            Expr::DictionaryContains { name, dictionary, .. } => {
+                base.insert("type".into(), json!("dictionary_contains"));
+                base.insert("name".into(), json!(name));
+                base.insert("dictionary".into(), dictionary.to_json());
+            }
+            Expr::DictionaryKeys { dictionary, .. } => {
+                base.insert("type".into(), json!("dictionary_keys"));
+                base.insert("dictionary".into(), dictionary.to_json());
+            }
+            Expr::Record { fields, .. } => {
+                base.insert("type".into(), json!("record_literal"));
+                base.insert("fields".into(), json!(fields.iter()
+                    .map(|(name, value)| json!({"name": name, "value": value.to_json()}))
+                    .collect::<Vec<_>>()));
+            }
+            Expr::RecordField { name, record, .. } => {
+                base.insert("type".into(), json!("record_field"));
+                base.insert("name".into(), json!(name));
+                base.insert("record".into(), record.to_json());
             }
             Expr::Repeat { count, value, .. } => {
                 base.insert("type".into(), json!("repeat_expression"));

@@ -132,6 +132,22 @@ fn collect_effects_expr(expr: &HirExpr, uses: &mut Vec<EffectUse>) {
                 collect_effects_expr(item, uses);
             }
         }
+        HirExpr::Dictionary { entries, .. } => {
+            for value in entries.values() { collect_effects_expr(value, uses); }
+        }
+        HirExpr::DictionaryEntry { dictionary, .. }
+        | HirExpr::DictionaryContains { dictionary, .. }
+        | HirExpr::DictionaryKeys { dictionary, .. } =>
+            collect_effects_expr(dictionary, uses),
+        HirExpr::DictionaryGetOr { dictionary, fallback, .. } => {
+            collect_effects_expr(dictionary, uses);
+            // Conservatively account for fallback effects even when a key exists.
+            collect_effects_expr(fallback, uses);
+        }
+        HirExpr::Record { fields, .. } => {
+            for value in fields.values() { collect_effects_expr(value, uses); }
+        }
+        HirExpr::RecordField { record, .. } => collect_effects_expr(record, uses),
         HirExpr::Binary { left, right, .. } => {
             collect_effects_expr(left, uses);
             collect_effects_expr(right, uses);

@@ -326,6 +326,131 @@ impl<'a> HirBuilder<'a> {
                     span: *span,
                 })
             }
+            Expr::Dictionary { value_type: annotation, entries, span } => {
+                // Explicit annotation takes precedence; otherwise infer
+                // the homogeneous element type from the first entry.
+                let mut built = BTreeMap::new();
+                let mut value_type = annotation.clone();
+                for (name, expression) in entries {
+                    let value = self.build_expr(expression)?;
+                    let ty = value.ty();
+                    if ty == Type::Unit {
+                        return Err(SemauriError::semantic(
+                            "S421", format!("Dictionary entry '{name}' cannot have type unit"),
+                            Some(expression.span()), None));
+                    }
+                    if let Some(expected) = &value_type {
+                        if &ty != expected {
+                            return Err(SemauriError::semantic(
+                                "S421", format!("Dictionary entries must have one type: expected {expected}, received {ty} for '{name}'"),
+                                Some(expression.span()), None));
+                        }
+                    } else {
+                        value_type = Some(ty);
+                    }
+                    built.insert(name.clone(), value);
+                }
+                let ty = value_type.ok_or_else(||
+                    SemauriError::semantic("S420",
+                        "A dictionary needs at least one entry to infer its value type",
+                        Some(*span), None))?;
+                Ok(HirExpr::Dictionary {
+                    ty: Type::Dictionary(Box::new(ty)),
+                    entries: built,
+                    span: *span,
+                })
+            }
+            Expr::DictionaryEntry { name, dictionary, span } => {
+                let dictionary = self.build_expr(dictionary)?;
+                let ty = match dictionary.ty() {
+                    Type::Dictionary(ty) => *ty,
+                    other => return Err(SemauriError::semantic(
+                        "S421", format!("Entry lookup requires a dictionary, received {other}"),
+                        Some(dictionary.span()), None)),
+                };
+                Ok(HirExpr::DictionaryEntry {
+                    ty, name: name.clone(), dictionary: Box::new(dictionary), span: *span,
+                })
+            }
+            Expr::DictionaryGetOr { name, dictionary, fallback, span } => {
+                let dictionary = self.build_expr(dictionary)?;
+                let ty = match dictionary.ty() {
+                    Type::Dictionary(element) => *element,
+                    other => return Err(SemauriError::semantic(
+                        "S423", format!("Defaulted entry lookup requires a dictionary, received {other}"),
+                        Some(dictionary.span()), None)),
+                };
+                let fallback = self.build_expr(fallback)?;
+                if fallback.ty() != ty {
+                    return Err(SemauriError::semantic(
+                        "S423", format!("Dictionary entry default must have type {ty}, received {}", fallback.ty()),
+                        Some(fallback.span()), None));
+                }
+                Ok(HirExpr::DictionaryGetOr {
+                    ty, name: name.clone(),
+                    dictionary: Box::new(dictionary),
+                    fallback: Box::new(fallback),
+                    span: *span,
+                })
+            }
+            Expr::DictionaryContains { name, dictionary, span } => {
+                let dictionary = self.build_expr(dictionary)?;
+                if !matches!(dictionary.ty(), Type::Dictionary(_)) {
+                    return Err(SemauriError::semantic(
+                        "S422", format!("'has entry' requires a dictionary, received {}", dictionary.ty()),
+                        Some(dictionary.span()), None));
+                }
+                Ok(HirExpr::DictionaryContains {
+                    ty: Type::Boolean, name: name.clone(),
+                    dictionary: Box::new(dictionary), span: *span,
+                })
+            }
+            Expr::DictionaryKeys { dictionary, span } => {
+                let dictionary = self.build_expr(dictionary)?;
+                if !matches!(dictionary.ty(), Type::Dictionary(_)) {
+                    return Err(SemauriError::semantic(
+                        "S422", format!("'keys of' requires a dictionary, received {}", dictionary.ty()),
+                        Some(dictionary.span()), None));
+                }
+                Ok(HirExpr::DictionaryKeys {
+                    ty: Type::List(Box::new(Type::String)),
+                    dictionary: Box::new(dictionary), span: *span,
+                })
+            }
+            Expr::Record { fields, span } => {
+                let mut types = BTreeMap::new();
+                let mut built = BTreeMap::new();
+                for (name, expression) in fields {
+                    let value = self.build_expr(expression)?;
+                    if value.ty() == Type::Unit {
+                        return Err(SemauriError::semantic(
+                            "S419", format!("Record field '{name}' cannot have type unit"),
+                            Some(expression.span()), None));
+                    }
+                    types.insert(name.clone(), value.ty());
+                    built.insert(name.clone(), value);
+                }
+                Ok(HirExpr::Record {
+                    ty: Type::Record(types),
+                    fields: built,
+                    span: *span,
+                })
+            }
+            Expr::RecordField { name, record, span } => {
+                let record = self.build_expr(record)?;
+                let ty = match record.ty() {
+                    Type::Record(fields) => fields.get(name).cloned().ok_or_else(||
+                        SemauriError::semantic(
+                            "S419", format!("Record has no field '{name}'"),
+                            Some(*span), None))?,
+                    other => return Err(SemauriError::semantic(
+                        "S419", format!("Field access requires a record, received {other}"),
+                        Some(record.span()), None)),
+                };
+                Ok(HirExpr::RecordField {
+                    ty, name: name.clone(), record: Box::new(record), span: *span,
+                })
+            }
             Expr::Variable { name, span } => {
                 let symbol = self.resolve_symbol(name, *span)?;
                 Ok(HirExpr::SymbolRef {
@@ -638,7 +763,7 @@ impl<'a> HirBuilder<'a> {
                                 "S390",
                                 format!("'json of' requires a serializable value, received {}", operand.ty()),
                                 Some(*span),
-                                Some("Use numbers, booleans, strings, colors, or lists of those values.".into()),
+                                Some("Use numbers, booleans, strings, colors, typed records, or lists of serializable values.".into()),
                             ));
                         }
                         Type::String
@@ -1668,6 +1793,14 @@ fn pure_function_expression(expr: &HirExpr) -> bool {
         HirExpr::DomainOperation { .. } => false,
         HirExpr::Literal { .. } | HirExpr::SymbolRef { .. } => true,
         HirExpr::List { items, .. } => items.iter().all(pure_function_expression),
+        HirExpr::Dictionary { entries, .. } => entries.values().all(pure_function_expression),
+        HirExpr::DictionaryEntry { dictionary, .. }
+        | HirExpr::DictionaryContains { dictionary, .. }
+        | HirExpr::DictionaryKeys { dictionary, .. } => pure_function_expression(dictionary),
+        HirExpr::DictionaryGetOr { dictionary, fallback, .. } =>
+            pure_function_expression(dictionary) && pure_function_expression(fallback),
+        HirExpr::Record { fields, .. } => fields.values().all(pure_function_expression),
+        HirExpr::RecordField { record, .. } => pure_function_expression(record),
         HirExpr::Unary { operand, .. } | HirExpr::Promote { value: operand, .. } =>
             pure_function_expression(operand),
         HirExpr::Binary { left, right, .. } =>
@@ -1695,6 +1828,8 @@ fn is_json_serializable_type(ty: &Type) -> bool {
     match ty {
         Type::Number | Type::Boolean | Type::String | Type::Color => true,
         Type::List(element) => is_json_serializable_type(element),
+        Type::Dictionary(ty) => is_json_serializable_type(ty),
+        Type::Record(fields) => fields.values().all(is_json_serializable_type),
         _ => false,
     }
 }

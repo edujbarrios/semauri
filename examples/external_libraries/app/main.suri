@@ -1,4 +1,4 @@
 # External library imports are resolved from the project's declared catalog.
-import "library:math_kit".
-assert invoke square to 7 is equal to 49.
-print invoke triple to 5.
+import "library:math_kit" as math.
+assert invoke math.square to 7 is equal to 49.
+print invoke math.triple to 5.
