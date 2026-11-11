@@ -164,7 +164,6 @@ struct LoadedSource {
 }
 
 struct ModuleLoader {
-    root: PathBuf,
     libraries: HashMap<String, ExternalLibrary>,
     visited: HashSet<PathBuf>,
     visiting: Vec<PathBuf>,
@@ -216,7 +215,6 @@ fn load_module_source(entry: &Path) -> Result<LoadedSource> {
     let root = module_project_root(&entry);
     let libraries = load_external_libraries(&root)?;
     let mut loader = ModuleLoader {
-        root: root.clone(),
         libraries,
         visited: HashSet::new(),
         visiting: Vec::new(),
