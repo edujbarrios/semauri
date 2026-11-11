@@ -2168,7 +2168,7 @@ See [examples/ai_governance.suri](../examples/ai_governance.suri).
 
 Semauri now accepts the **contextual** operator `xor` for exclusive-or of
 booleans. It is statically checked and uses the precedence
-`not` > comparisons > `and` > `xor` > `or`, associating to the left.
+comparisons > `not` > `and` > `xor` > `or`, associating to the left.
 The word `xor` remains a normal identifier outside operator position.
 
 ```text
