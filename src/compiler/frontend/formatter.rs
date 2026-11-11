@@ -4,6 +4,9 @@
 // regard to case, so this is not a breaking grammar change.
 impl Compiler {
     pub fn format_source(&self, source: &str) -> Result<String> {
+        // Match the lexer's leading-BOM normalization so token coordinates
+        // and source offsets remain aligned during canonical formatting.
+        let source = source.strip_prefix('\u{feff}').unwrap_or(source);
         let tokens = self.tokenize(source)?;
         let chars = source.chars().collect::<Vec<_>>();
         let mut byte_offsets = source.char_indices().map(|(idx, _)| idx).collect::<Vec<_>>();
