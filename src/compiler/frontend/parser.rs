@@ -148,6 +148,45 @@ impl<'a> Parser<'a> {
             self.consume(TokenKind::Of, "Expected 'of' after list type", "S246")?;
             return Ok(Type::List(Box::new(self.function_type()?)));
         }
+        // A record schema is a first-class structural parameter type:
+        // "record of (\"name\": string, \"age\": number)".
+        // Use the same field-name limits and exact casing as record literals.
+        if self.check(TokenKind::Word)
+            && self.peek().lexeme.eq_ignore_ascii_case("record")
+        {
+            self.advance();
+            self.consume(TokenKind::Of, "Expected 'of' after record type", "S418")?;
+            self.consume(TokenKind::LParen,
+                "Expected '(' before record type fields", "S418")?;
+            let mut fields = BTreeMap::new();
+            while !self.check(TokenKind::RParen) {
+                let field = self.consume(TokenKind::String,
+                    "Record type field names must be quoted strings", "S418")?;
+                let key = token_string_literal(&field);
+                if key.is_empty() || key.len() > 64 {
+                    return Err(self.parse_error(&field,
+                        "Record type field name must have 1-64 UTF-8 bytes",
+                        "S418", None));
+                }
+                if fields.contains_key(&key) {
+                    return Err(self.parse_error(&field,
+                        format!("Duplicate record type field '{key}'"), "S418", None));
+                }
+                self.consume(TokenKind::Colon,
+                    "Expected ':' after record type field name", "S418")?;
+                let ty = self.function_type()?;
+                fields.insert(key, ty);
+                if fields.len() > 32 {
+                    return Err(self.parse_error(&field,
+                        "Record types support at most 32 fields", "S418", None));
+                }
+                if !self.matches(&[TokenKind::Comma]) { break; }
+                if self.check(TokenKind::RParen) { break; }
+            }
+            self.consume(TokenKind::RParen,
+                "Expected ')' after record type fields", "S418")?;
+            return Ok(Type::Record(fields));
+        }
         let token = self.peek().clone();
         let ty = match token.lexeme.to_ascii_lowercase().as_str() {
             "number" => Type::Number,
@@ -155,7 +194,7 @@ impl<'a> Parser<'a> {
             "boolean" => Type::Boolean,
             "color" => Type::Color,
             _ => return Err(self.parse_error(&token,
-                "Expected parameter type number, string, boolean, color or list of TYPE", "S246", None)),
+                "Expected parameter type number, string, boolean, color, list of TYPE or record of (...)", "S246", None)),
         };
         self.advance();
         Ok(ty)

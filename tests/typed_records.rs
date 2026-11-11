@@ -86,8 +86,8 @@ print person.
 
 #[test]
 fn records_can_appear_in_pure_function_bodies_and_list_values() {
-    let source = r#"define function make taking n as number to record of ("value": n, "double": (n times 2)).
-let result be invoke make to 6.
+    let source = r#"define function build_profile taking n as number to record of ("value": n, "double": (n times 2)).
+let result be invoke build_profile to 6.
 assert (field "double" of result) is equal to 12.
 let people be a list of record of ("name": "Ada"), record of ("name": "Grace").
 print field "value" of result.
@@ -115,4 +115,58 @@ fn record_field_limits_are_checked() {
     let result = command("check", &source);
     assert_eq!(result.status, 65, "{}", result.stderr);
     assert!(result.stderr.contains("S418"), "{}", result.stderr);
+}
+
+#[test]
+fn structural_record_parameters_are_typechecked() {
+    let source = r#"define function display_age taking person as record of ("name": string, "age": number) to field "age" of person.
+let person be record of ("age": 37, "name": "Ada").
+print invoke display_age to person.
+"#;
+    let check = command("check", source);
+    assert_eq!(check.status, 0, "{}", check.stderr);
+    let result = command("run", source);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "37\n");
+}
+
+#[test]
+fn nested_record_parameter_types_work_with_lists() {
+    let source = r#"define function extract taking profile as record of ("address": record of ("city": string), "tags": list of string) to field "city" of field "address" of profile.
+let entry be record of ("tags": a list of "a", "b", "address": record of ("city": "Barcelona")).
+print invoke extract to entry.
+"#;
+    let result = command("run", source);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "Barcelona\n");
+}
+
+#[test]
+fn structural_record_parameters_reject_incompatible_fields() {
+    let prefix = r#"define function display_age taking person as record of ("name": string, "age": number) to field "age" of person.
+"#;
+    for value in [
+        r#"record of ("name": "Ada", "age": "old")"#,
+        r#"record of ("name": "Ada")"#,
+        r#"record of ("name": "Ada", "age": 37, "extra": true)"#,
+    ] {
+        let source = format!("{prefix}let person be {value}.\nprint invoke display_age to person.\n");
+        let result = command("check", &source);
+        assert_eq!(result.status, 65, "{source}: {}", result.stderr);
+        assert!(result.stderr.contains("S370"), "{source}: {}", result.stderr);
+    }
+}
+
+#[test]
+fn invalid_record_parameter_schemas_report_s418() {
+    for schema in [
+        r#"record of ("name": string, "name": number)"#,
+        r#"record of ("": string)"#,
+        r#"record of ("age" number)"#,
+    ] {
+        let source = format!("define function get_value taking value as {schema} to value.\nprint 1.\n");
+        let result = command("check", &source);
+        assert_eq!(result.status, 65, "{source}: {}", result.stderr);
+        assert!(result.stderr.contains("S418"), "{source}: {}", result.stderr);
+    }
 }

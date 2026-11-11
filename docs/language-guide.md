@@ -407,7 +407,11 @@ The record's structural type is inferred (for example,
 `record<age: number, name: string>`), with S418 for malformed
 declarations and S419 for missing fields, non-record access or unit fields.
 
-Records can contain core values and work with pure functions. In this first
+Records can contain core values and work with pure functions. **Function
+parameters can declare exact structural record types** with
+`taking person as record of ("name": string, "age": number)`. Nested
+records and `list of TYPE` fields are supported; mismatched structures
+report S370 before execution. In this first
 step, *building records from runtime-dependent model/API results is not yet
 supported*. They do not enable network access, file I/O or implicit effects.
 The public language version is still **0.72.0** and these features remain
