@@ -1,0 +1,11 @@
+# Core Boolean operators, including contextual XOR.
+# Precedence: not > comparison > and > xor > or.
+let truth be true xor false.
+let balanced be true xor true.
+let precedence be true or true xor true.
+assert truth.
+assert not balanced.
+assert precedence.
+assert true xor (true and false).
+assert (true xor true) is equal to false.
+print "Boolean expressions verified.".
