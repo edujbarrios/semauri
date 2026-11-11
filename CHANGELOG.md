@@ -4,6 +4,7 @@
 - Add pure `validate ai json RESPONSE against schema SCHEMA`, a typed Boolean expression for structurally validating AI JSON before use.
 - Support strict JSON Schema-like primitive, object and array types, required and nested properties, unknown-field rejection and Unicode-aware size constraints. Unsupported schema keywords raise S503 instead of being ignored; malformed response data returns false.
 - Bound schema and document sizes, schema nesting and property counts. Add executable examples, Rust regression tests and Jupyter completion vocabulary; no additional permissions or packages.
+- Support bounded string enumerations and `normalize ai json RESPONSE against schema SCHEMA` for deterministic JSON serialization after strict validation; mismatches raise S503 without silent data repair.
 
 
 ### AI runtime correctness and resource safety (development; no release)
