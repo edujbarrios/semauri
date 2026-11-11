@@ -29,4 +29,4 @@ jobs:
       - name: Compile release-mode Semauri
         run: cargo build --release --locked
       - name: Verify output and time 101 CLI executions
-        run: python3 src/bin/semauri_bench.rs --samples 101
+        run: target/release/semauri_bench linear --samples 101
