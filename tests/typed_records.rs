@@ -170,3 +170,17 @@ fn invalid_record_parameter_schemas_report_s418() {
         assert!(result.stderr.contains("S418"), "{source}: {}", result.stderr);
     }
 }
+
+#[test]
+fn records_serialize_to_json_without_additional_permissions() {
+    let source = r#"let payload be record of ("name": "Ada", "score": 7, "tags": (a list of "ai", "rust"), "nested": record of ("ok": true)).
+let encoded be json of payload.
+print encoded.
+"#;
+    let check = command("check", source);
+    assert_eq!(check.status, 0, "{}", check.stderr);
+    let run = command("run", source);
+    assert_eq!(run.status, 0, "{}", run.stderr);
+    assert_eq!(run.stdout,
+        r#"{"name":"Ada","nested":{"ok":true},"score":7,"tags":["ai","rust"]}"#.to_string() + "\n");
+}

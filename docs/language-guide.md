@@ -407,6 +407,11 @@ The record's structural type is inferred (for example,
 `record<age: number, name: string>`), with S418 for malformed
 declarations and S419 for missing fields, non-record access or unit fields.
 
+Use `json of RECORD` to serialize a typed record (including nested
+records and lists) into a JSON string suitable for API payloads or files.
+Serialization does not implicitly grant network or filesystem permissions.
+Parsing arbitrary JSON into a statically typed record is **not** implemented.
+
 Records can contain core values and work with pure functions. **Function
 parameters can declare exact structural record types** with
 `taking person as record of ("name": string, "age": number)`. Nested

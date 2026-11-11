@@ -672,7 +672,7 @@ impl<'a> HirBuilder<'a> {
                                 "S390",
                                 format!("'json of' requires a serializable value, received {}", operand.ty()),
                                 Some(*span),
-                                Some("Use numbers, booleans, strings, colors, or lists of those values.".into()),
+                                Some("Use numbers, booleans, strings, colors, typed records, or lists of serializable values.".into()),
                             ));
                         }
                         Type::String
@@ -1731,6 +1731,7 @@ fn is_json_serializable_type(ty: &Type) -> bool {
     match ty {
         Type::Number | Type::Boolean | Type::String | Type::Color => true,
         Type::List(element) => is_json_serializable_type(element),
+        Type::Record(fields) => fields.values().all(is_json_serializable_type),
         _ => false,
     }
 }

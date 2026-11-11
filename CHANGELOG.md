@@ -4,6 +4,7 @@
 - Introduce `record of ("field": EXPR, ...)` and `field "name" of record` with inferred structural field types, nesting, lists and pure function results.
 - Reject duplicate fields, missing field names, excessive records and invalid field access with S418/S419 diagnostics; retain explicit capability rules and source spans.
 - Add compiler, optimizer, formatter, CLI and regression coverage; record constructors currently require compile-time-evaluable values.
+- Allow `json of RECORD` for JSON string encoding of immutable typed records (including nested records and lists), using the existing checked serializer.
 - Keep Semauri at 0.72.0 on the draft development PR; do not publish or merge until requested.
 
 
