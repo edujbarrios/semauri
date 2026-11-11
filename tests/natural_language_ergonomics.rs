@@ -86,6 +86,7 @@ fn trailing_commas_work_in_lists_and_function_calls() {
 define function triple taking x as number, y as number, z as number to ((x plus y) plus z).
 let values be a list of 1, 2, 3,.
 assert length of values is equal to 3.
+assert length of (a list of 4, 5,) is equal to 2.
 print values.
 print invoke combine to (4, 5,).
 print invoke triple to (1, 2, 3,)."#);
