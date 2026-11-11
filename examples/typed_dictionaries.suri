@@ -21,3 +21,8 @@ assert not (has entry "charlie" in scores).
 
 # Key enumeration is stable, in lexicographic order.
 print json of keys of scores.
+
+# Explicit annotations let programs start with an empty typed mapping.
+let empty be dictionary of number ().
+assert not (has entry "missing" in empty).
+print json of empty.

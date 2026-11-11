@@ -326,10 +326,11 @@ impl<'a> HirBuilder<'a> {
                     span: *span,
                 })
             }
-            Expr::Dictionary { entries, span } => {
-                // Every entry shares exactly one statically inferred type.
+            Expr::Dictionary { value_type: annotation, entries, span } => {
+                // Entries must match their declared type when present; otherwise
+                // the first entry determines the homogeneous dictionary type.
                 let mut built = BTreeMap::new();
-                let mut value_type: Option<Type> = None;
+                let mut value_type = annotation.clone();
                 for (name, expression) in entries {
                     let value = self.build_expr(expression)?;
                     let ty = value.ty();

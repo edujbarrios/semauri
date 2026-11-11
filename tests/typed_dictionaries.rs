@@ -158,3 +158,58 @@ fn formatter_recognizes_dictionary_grammar_without_mutating_keys() {
     assert!(formatted.stdout.contains("entry \"Key\" of values"),
         "{}", formatted.stdout);
 }
+
+#[test]
+fn explicitly_typed_empty_dictionaries_are_valid_and_safe() {
+    let source = r#"let empty be dictionary of number ().
+assert not (has entry "none" in empty).
+print json of empty.
+print json of keys of empty.
+"#;
+    for cmd in ["check", "hir", "effects"] {
+        let result = command(cmd, source);
+        assert_eq!(result.status, 0, "{cmd}: {}", result.stderr);
+    }
+    let result = command("run", source);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "{}\n[]\n");
+}
+
+#[test]
+fn explicit_dictionary_annotations_check_every_value() {
+    let valid = r#"let scores be dictionary of number ("alice": 7, "bob": 9).
+print entry "bob" of scores.
+"#;
+    let result = command("run", valid);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "9\n");
+    let invalid = r#"let scores be dictionary of number ("alice": 7, "bob": "wrong").
+print scores.
+"#;
+    let result = command("check", invalid);
+    assert_eq!(result.status, 65, "{}", result.stderr);
+    assert!(result.stderr.contains("S421"), "{}", result.stderr);
+}
+
+#[test]
+fn empty_dictionaries_work_as_typed_function_arguments() {
+    let source = r#"define function count_keys taking data as dictionary of number to length of keys of data.
+let empty be dictionary of number ().
+print invoke count_keys to empty.
+"#;
+    let result = command("run", source);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "0\n");
+}
+
+#[test]
+fn empty_dictionaries_support_nested_and_list_value_types() {
+    let source = r#"let lists be dictionary of list of string ().
+let profiles be dictionary of record of ("name": string, "age": number) ().
+print json of lists.
+print json of profiles.
+"#;
+    let result = command("run", source);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "{}\n{}\n");
+}

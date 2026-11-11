@@ -399,9 +399,12 @@ print json of scores.
 
 Use `dictionary of ("key": EXPR, ...)` or `a dictionary of (...)`.
 Access values with `entry "key" of DICTIONARY`; keys are quoted
-case-sensitive strings of 1–64 UTF-8 bytes. Dictionary literals require at
-least one entry so the element type can be inferred. Each entry's value must
-have exactly the same type. Duplicate keys, malformed syntax or more than 64
+case-sensitive strings of 1–64 UTF-8 bytes. Unannotated dictionary literals require at least one
+entry to infer the value type. **An explicitly typed empty dictionary is
+valid:** `dictionary of number ()` or `dictionary of list of string ()`.
+Typed nonempty dictionaries may also declare their value type, as in
+`dictionary of number ("alice": 8)`. Each entry's value must have exactly
+the same type as its annotation (or inferred value type). Duplicate keys, malformed syntax or more than 64
 entries produce S420. Mixing incompatible value types, accessing a non-
 dictionary or reading a missing key produces S421 (the latter when evaluated).
 
