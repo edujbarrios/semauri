@@ -588,13 +588,33 @@ impl<'a> Parser<'a> {
     }
 
     fn logical_or(&mut self) -> Result<Expr> {
-        let mut expression = self.logical_and()?;
+        let mut expression = self.logical_xor()?;
         while self.matches(&[TokenKind::Or]) {
-            let right = self.logical_and()?;
+            let right = self.logical_xor()?;
             let span = span_between_spans(expression.span(), right.span());
             expression = Expr::Binary {
                 left: Box::new(expression),
                 operator: BinaryOperator::Or,
+                right: Box::new(right),
+                span,
+            };
+        }
+        Ok(expression)
+    }
+
+    // 'xor' is contextual: it remains a valid variable name, and binds more
+    // tightly than 'or' but less tightly than 'and'.
+    fn logical_xor(&mut self) -> Result<Expr> {
+        let mut expression = self.logical_and()?;
+        while self.check(TokenKind::Word)
+            && self.peek().lexeme.eq_ignore_ascii_case("xor")
+        {
+            self.advance();
+            let right = self.logical_and()?;
+            let span = span_between_spans(expression.span(), right.span());
+            expression = Expr::Binary {
+                left: Box::new(expression),
+                operator: BinaryOperator::Xor,
                 right: Box::new(right),
                 span,
             };
