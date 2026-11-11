@@ -25,6 +25,10 @@ fn initialize_project(directory: &Path) -> Result<()> {
         fs::create_dir(directory.join("lib"))?;
         fs::create_dir(directory.join("tests"))?;
         fs::write(directory.join(".semauri-root"), "")?;
+        // New projects can declare third-party Semauri source libraries here.
+        // No dependency is downloaded or trusted implicitly.
+        fs::write(directory.join(".semauri-libraries.json"),
+            "{\n  \"schema\": 1,\n  \"libraries\": []\n}\n")?;
         fs::write(directory.join("lib").join("math.suri"),
             "define function square taking n as number to (n times n).\n")?;
         fs::write(directory.join("main.suri"),
@@ -40,7 +44,9 @@ fn initialize_project(directory: &Path) -> Result<()> {
              Run semauri check main.suri to type-check.\n\
              Run semauri run --allow console_write main.suri to print 49.\n\
              Run semauri test tests --allow-console to execute tests.\nRun semauri verify . to check source, formatting and tests together.\n\n\
-             The .semauri-root file defines the boundary for local imports.\n")?;
+             The .semauri-root file defines the boundary for local imports.\n\
+             Declare optional external source libraries in .semauri-libraries.json.\n\
+             Inspect them with semauri libraries main.suri.\n")?;
         Ok(())
     })();
     result.map_err(|error| usage_error(format!(
@@ -85,6 +91,28 @@ pub fn run_cli(args: &[String]) -> CliResult {
             }
             Some("version") | Some("--version") | Some("-v") => {
                 stdout.push_str(&format!("Semauri {VERSION}\n"));
+                Ok(0)
+            }
+            Some("libraries") => {
+                if args.len() != 2 {
+                    return Err(usage_error("Usage: semauri libraries PROJECT|FILE"));
+                }
+                let input = fs::canonicalize(&args[1]).map_err(|error|
+                    usage_error(format!("Cannot open '{}': {error}", args[1])))?;
+                let root = if input.is_dir() { input } else { module_project_root(&input) };
+                let mut libraries = load_external_libraries(&root)?
+                    .into_iter().collect::<Vec<_>>();
+                libraries.sort_by(|left, right| left.0.cmp(&right.0));
+                stdout.push_str(&pretty_json(&json!({
+                    "schema": 1,
+                    "project": root.display().to_string(),
+                    "libraries": libraries.into_iter().map(|(name, library)| json!({
+                        "name": name,
+                        "version": library.version,
+                        "path": library.root.display().to_string(),
+                        "entry": library.entry.display().to_string(),
+                    })).collect::<Vec<_>>(),
+                })));
                 Ok(0)
             }
             Some("domains") => {
@@ -715,7 +743,7 @@ fn usage_error(message: impl Into<String>) -> SemauriError {
 }
 
 pub fn usage() -> String {
-    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  init PROJECT             Create a multi-file Semauri project without overwriting files\n  verify PROJECT [--json]   Check source, formatting and tests without running the app\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE [--json]    Explain semantic decisions as text or JSON\n  fmt FILE|DIR [--check|--write] [--json] Format source files or a directory\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] [--json] [--filter TEXT] Run all or selected assertion suites\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
+    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  init PROJECT             Create a multi-file Semauri project without overwriting files\n  verify PROJECT [--json]   Check source, formatting and tests without running the app\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  libraries PROJECT|FILE   Validate and list declared external .suri libraries\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE [--json]    Explain semantic decisions as text or JSON\n  fmt FILE|DIR [--check|--write] [--json] Format source files or a directory\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] [--json] [--filter TEXT] Run all or selected assertion suites\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
         .to_string()
 }
 
