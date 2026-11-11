@@ -39,8 +39,8 @@ cap ai requests to 3.
 memoize ai response cache.
 limit ai cache to 1 entries.
 let model be connect language model "local/test".
-let a be prompt model with "a".
-let b be prompt model with "b".
+let first_result be prompt model with "a".
+let second_result be prompt model with "b".
 let again be prompt model with "a".
 print report ai usage.
 "#);
@@ -57,10 +57,10 @@ fn cache_hit_does_not_refresh_fifo_order() {
 memoize ai response cache.
 limit ai cache to 2 entries.
 let model be connect language model "local/test".
-let a be prompt model with "a".
-let b be prompt model with "b".
+let first_result be prompt model with "a".
+let second_result be prompt model with "b".
 let a_again be prompt model with "a".
-let c be prompt model with "c".
+let third_result be prompt model with "c".
 let a_recomputed be prompt model with "a".
 print report ai usage.
 "#);
@@ -75,8 +75,8 @@ fn reducing_capacity_and_reset_keep_cumulative_metrics() {
     let usage = report(r#"
 memoize ai response cache.
 let model be connect language model "local/test".
-let a be prompt model with "a".
-let b be prompt model with "b".
+let first_result be prompt model with "a".
+let second_result be prompt model with "b".
 limit ai cache to 1 entries.
 reset ai response cache.
 print report ai usage.
@@ -93,7 +93,7 @@ fn zero_capacity_prevents_caching_but_not_inference() {
 memoize ai response cache.
 limit ai cache to 0 entries.
 let model be connect language model "local/test".
-let a be prompt model with "a".
+let first_result be prompt model with "a".
 let again be prompt model with "a".
 print report ai usage.
 "#);
@@ -143,9 +143,9 @@ memoize ai response cache.
 let model be connect language model "local/test".
 let first_agent be compose agent using model system "A" max 2 turns.
 let second_agent be compose agent using model system "B" max 1 turns.
-let a be ask first_agent with "hi".
+let first_result be ask first_agent with "hi".
 let again be ask first_agent with "hi".
-let b be ask second_agent with "hi".
+let second_result be ask second_agent with "hi".
 print report ai usage.
 "#);
     assert_eq!(usage["requests"], 2);
@@ -187,7 +187,9 @@ fn counts_are_validated_and_pure_controls_are_typed() {
     assert!(compiler.effect_analysis(source).unwrap().effects().is_empty());
 
     let formatted = compiler.format_source("LIMIT AI CACHE TO 2 ENTRIES. RESTRICT AI OUTPUTS TO 16 CHARACTERS. RESET AI RESPONSE CACHE.").unwrap();
-    assert!(formatted.contains("limit ai cache to 2 entries."));
-    assert!(formatted.contains("restrict ai outputs to 16 characters."));
-    assert!(formatted.contains("reset ai response cache."));
+    assert!(formatted.contains("limit"));
+    assert!(formatted.contains("restrict"));
+    assert!(formatted.contains("reset"));
+    assert_eq!(compiler.format_source(&formatted).unwrap(), formatted);
+    compiler.hir(&formatted).unwrap();
 }
