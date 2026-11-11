@@ -1,6 +1,7 @@
 ## Unreleased
 
 ### Immutable typed dictionaries (development; no version bump)
+- Add safe `has entry "key" in DICTIONARY` and stable sorted `keys of DICTIONARY` with checked S422 errors, optimizer, formatter and effects integration.
 - Add homogeneous string-key `dictionary of ("key": EXPR, ...)` literals, optional article, `entry "key" of DICTIONARY` lookups and statically checked `dictionary of TYPE` function parameters.
 - Add nested dictionaries, exact value-type inference, stable JSON serialization through `json of`, and compiler/runtime diagnostics S420/S421 for malformed or invalid entries, missing keys, and type mismatches.
 - Support the AST, HIR, optimizer, effect analysis, formatter and evaluation pipeline in Rust with regression tests and a runnable example.

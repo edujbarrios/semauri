@@ -172,6 +172,7 @@ Library code is type-checked and respects explicit permissions; this supports
 Also in development: immutable typed records using `record of (...)` and
 `field "name" of person`.
 Typed dictionaries use `dictionary of (...)` and `entry "key" of data`. See the [language guide](docs/language-guide.md).
+Typed dictionaries now support `has entry "key" in data` and `keys of data`.
 
 ## 4. Command reference
 

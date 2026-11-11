@@ -964,7 +964,9 @@ impl<'a> Lowerer<'a> {
                 }
                 dependent
             }
-            HirExpr::DictionaryEntry { dictionary, .. } =>
+            HirExpr::DictionaryEntry { dictionary, .. }
+            | HirExpr::DictionaryContains { dictionary, .. }
+            | HirExpr::DictionaryKeys { dictionary, .. } =>
                 self.runtime_dependent(dictionary)?,
             HirExpr::Record { fields, .. } => {
                 let mut dependent = false;
@@ -1297,6 +1299,31 @@ impl<'a> Lowerer<'a> {
                     BoundValue::Compile { .. } => Err(SemauriError::semantic(
                         "S421", "Entry lookup requires a dictionary",
                         Some(*span), None)),
+                    BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
+                }
+            }
+            HirExpr::DictionaryContains { name, dictionary, span } => {
+                match self.evaluate(dictionary)? {
+                    BoundValue::Compile { data: ValueData::Dictionary(entries), .. } =>
+                        Ok(BoundValue::Compile {
+                            ty: Type::Boolean,
+                            data: ValueData::Boolean(entries.contains_key(name)),
+                        }),
+                    BoundValue::Compile { .. } => Err(SemauriError::semantic(
+                        "S422", "Membership requires a dictionary", Some(*span), None)),
+                    BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
+                }
+            }
+            HirExpr::DictionaryKeys { dictionary, span } => {
+                match self.evaluate(dictionary)? {
+                    BoundValue::Compile { data: ValueData::Dictionary(entries), .. } =>
+                        Ok(BoundValue::Compile {
+                            ty: Type::List(Box::new(Type::String)),
+                            data: ValueData::List(entries.keys()
+                                .cloned().map(ValueData::String).collect()),
+                        }),
+                    BoundValue::Compile { .. } => Err(SemauriError::semantic(
+                        "S422", "Key enumeration requires a dictionary", Some(*span), None)),
                     BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
                 }
             }

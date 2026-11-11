@@ -14,3 +14,10 @@ assert (entry "city" of entry "south" of locations) is equal to "Las Palmas".
 
 print selected.
 print json of scores.
+
+# Safe membership never fails for an absent dictionary key.
+assert has entry "alice" in scores.
+assert not (has entry "charlie" in scores).
+
+# Key enumeration is stable, in lexicographic order.
+print json of keys of scores.

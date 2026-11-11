@@ -371,6 +371,30 @@ impl<'a> HirBuilder<'a> {
                     ty, name: name.clone(), dictionary: Box::new(dictionary), span: *span,
                 })
             }
+            Expr::DictionaryContains { name, dictionary, span } => {
+                let dictionary = self.build_expr(dictionary)?;
+                if !matches!(dictionary.ty(), Type::Dictionary(_)) {
+                    return Err(SemauriError::semantic(
+                        "S422", format!("'has entry' requires a dictionary, received {}", dictionary.ty()),
+                        Some(dictionary.span()), None));
+                }
+                Ok(HirExpr::DictionaryContains {
+                    ty: Type::Boolean, name: name.clone(),
+                    dictionary: Box::new(dictionary), span: *span,
+                })
+            }
+            Expr::DictionaryKeys { dictionary, span } => {
+                let dictionary = self.build_expr(dictionary)?;
+                if !matches!(dictionary.ty(), Type::Dictionary(_)) {
+                    return Err(SemauriError::semantic(
+                        "S422", format!("'keys of' requires a dictionary, received {}", dictionary.ty()),
+                        Some(dictionary.span()), None));
+                }
+                Ok(HirExpr::DictionaryKeys {
+                    ty: Type::List(Box::new(Type::String)),
+                    dictionary: Box::new(dictionary), span: *span,
+                })
+            }
             Expr::Record { fields, span } => {
                 let mut types = BTreeMap::new();
                 let mut built = BTreeMap::new();
@@ -1748,7 +1772,9 @@ fn pure_function_expression(expr: &HirExpr) -> bool {
         HirExpr::Literal { .. } | HirExpr::SymbolRef { .. } => true,
         HirExpr::List { items, .. } => items.iter().all(pure_function_expression),
         HirExpr::Dictionary { entries, .. } => entries.values().all(pure_function_expression),
-        HirExpr::DictionaryEntry { dictionary, .. } => pure_function_expression(dictionary),
+        HirExpr::DictionaryEntry { dictionary, .. }
+        | HirExpr::DictionaryContains { dictionary, .. }
+        | HirExpr::DictionaryKeys { dictionary, .. } => pure_function_expression(dictionary),
         HirExpr::Record { fields, .. } => fields.values().all(pure_function_expression),
         HirExpr::RecordField { record, .. } => pure_function_expression(record),
         HirExpr::Unary { operand, .. } | HirExpr::Promote { value: operand, .. } =>

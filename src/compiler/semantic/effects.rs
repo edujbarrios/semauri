@@ -135,7 +135,9 @@ fn collect_effects_expr(expr: &HirExpr, uses: &mut Vec<EffectUse>) {
         HirExpr::Dictionary { entries, .. } => {
             for value in entries.values() { collect_effects_expr(value, uses); }
         }
-        HirExpr::DictionaryEntry { dictionary, .. } =>
+        HirExpr::DictionaryEntry { dictionary, .. }
+        | HirExpr::DictionaryContains { dictionary, .. }
+        | HirExpr::DictionaryKeys { dictionary, .. } =>
             collect_effects_expr(dictionary, uses),
         HirExpr::Record { fields, .. } => {
             for value in fields.values() { collect_effects_expr(value, uses); }

@@ -405,6 +405,23 @@ have exactly the same type. Duplicate keys, malformed syntax or more than 64
 entries produce S420. Mixing incompatible value types, accessing a non-
 dictionary or reading a missing key produces S421 (the latter when evaluated).
 
+A dictionary can be inspected safely with **`has entry "key" in DICTIONARY`**,
+which returns `true` or `false` even for an absent key; it does not
+perform a failing lookup. **`keys of DICTIONARY`** returns a typed
+`list of string` in deterministic lexicographic order. This makes it
+possible to guard an entry lookup or iterate over keys:
+
+```text
+let scores be dictionary of ("alice": 8, "bob": 10).
+assert not (has entry "carol" in scores).
+print json of keys of scores.
+```
+
+Both operations are checked against `dictionary of TYPE` by the compiler.
+Using a non-dictionary produces S422. Literal `entry "key" of` still
+raises S421 if a key is missing during evaluation; it does not silently
+default a value. Existing `keys of json DOCUMENT` retains its meaning.
+
 Dictionary types can be nested, used in lists, and declared as function
 parameter types: `taking scores as dictionary of number`. A mismatched
 argument type fails with S370. The existing `json of` expression

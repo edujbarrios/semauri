@@ -42,6 +42,17 @@ pub enum HirExpr {
         dictionary: Box<HirExpr>,
         span: SourceSpan,
     },
+    DictionaryContains {
+        ty: Type,
+        name: String,
+        dictionary: Box<HirExpr>,
+        span: SourceSpan,
+    },
+    DictionaryKeys {
+        ty: Type,
+        dictionary: Box<HirExpr>,
+        span: SourceSpan,
+    },
     Record {
         ty: Type,
         fields: BTreeMap<String, HirExpr>,
@@ -143,6 +154,8 @@ impl HirExpr {
             | HirExpr::List { ty, .. }
             | HirExpr::Dictionary { ty, .. }
             | HirExpr::DictionaryEntry { ty, .. }
+            | HirExpr::DictionaryContains { ty, .. }
+            | HirExpr::DictionaryKeys { ty, .. }
             | HirExpr::Record { ty, .. }
             | HirExpr::RecordField { ty, .. }
             | HirExpr::SymbolRef { ty, .. }
@@ -165,6 +178,8 @@ impl HirExpr {
             | HirExpr::List { span, .. }
             | HirExpr::Dictionary { span, .. }
             | HirExpr::DictionaryEntry { span, .. }
+            | HirExpr::DictionaryContains { span, .. }
+            | HirExpr::DictionaryKeys { span, .. }
             | HirExpr::Record { span, .. }
             | HirExpr::RecordField { span, .. }
             | HirExpr::SymbolRef { span, .. }
@@ -187,6 +202,8 @@ impl HirExpr {
             HirExpr::List { .. } => "list",
             HirExpr::Dictionary { .. } => "dictionary",
             HirExpr::DictionaryEntry { .. } => "dictionary_entry",
+            HirExpr::DictionaryContains { .. } => "dictionary_contains",
+            HirExpr::DictionaryKeys { .. } => "dictionary_keys",
             HirExpr::Record { .. } => "record",
             HirExpr::RecordField { .. } => "record_field",
             HirExpr::SymbolRef { .. } => "symbol_ref",
@@ -222,6 +239,13 @@ impl HirExpr {
             }
             HirExpr::DictionaryEntry { name, dictionary, .. } => {
                 fields.insert("name".into(), json!(name));
+                fields.insert("dictionary".into(), dictionary.to_json());
+            }
+            HirExpr::DictionaryContains { name, dictionary, .. } => {
+                fields.insert("name".into(), json!(name));
+                fields.insert("dictionary".into(), dictionary.to_json());
+            }
+            HirExpr::DictionaryKeys { dictionary, .. } => {
                 fields.insert("dictionary".into(), dictionary.to_json());
             }
             HirExpr::Record { fields: values, .. } => {

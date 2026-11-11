@@ -1868,6 +1868,49 @@ impl<'a> Parser<'a> {
                     span,
                 })
             }
+            // Safe dictionary membership never throws for a missing key.
+            // The quoted key and "in" delimiter distinguish it from JSON tests.
+            TokenKind::Word
+                if token.lexeme.eq_ignore_ascii_case("has")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.lexeme.eq_ignore_ascii_case("entry"))
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.kind == TokenKind::String)
+                    && self.tokens.get(self.current + 3).is_some_and(|next|
+                        next.kind == TokenKind::In) =>
+            {
+                let start = self.advance().clone();
+                self.consume_surface("entry",
+                    "Expected 'entry' after has", "S422")?;
+                let key = self.consume(TokenKind::String,
+                    "Expected quoted dictionary key", "S422")?;
+                self.consume(TokenKind::In,
+                    "Expected 'in' after dictionary key", "S422")?;
+                let dictionary = self.primary()?;
+                Ok(Expr::DictionaryContains {
+                    name: token_string_literal(&key),
+                    span: span_between_spans(start.span, dictionary.span()),
+                    dictionary: Box::new(dictionary),
+                })
+            }
+            // Iterating keys returns a sorted list of strings (BTreeMap order).
+            // Do not consume the existing 'keys of json DOCUMENT' expression.
+            TokenKind::Word
+                if token.lexeme.eq_ignore_ascii_case("keys")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.kind == TokenKind::Of)
+                    && !self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.lexeme.eq_ignore_ascii_case("json")) =>
+            {
+                let start = self.advance().clone();
+                self.consume(TokenKind::Of,
+                    "Expected 'of' after keys", "S422")?;
+                let dictionary = self.primary()?;
+                Ok(Expr::DictionaryKeys {
+                    span: span_between_spans(start.span, dictionary.span()),
+                    dictionary: Box::new(dictionary),
+                })
+            }
             TokenKind::Word if token.lexeme.eq_ignore_ascii_case("record")
                 && self.tokens.get(self.current + 1).is_some_and(|next|
                     next.kind == TokenKind::Of) =>

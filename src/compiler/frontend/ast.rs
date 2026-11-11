@@ -307,6 +307,15 @@ pub enum Expr {
         dictionary: Box<Expr>,
         span: SourceSpan,
     },
+    DictionaryContains {
+        name: String,
+        dictionary: Box<Expr>,
+        span: SourceSpan,
+    },
+    DictionaryKeys {
+        dictionary: Box<Expr>,
+        span: SourceSpan,
+    },
     Record {
         fields: Vec<(String, Expr)>,
         span: SourceSpan,
@@ -385,6 +394,8 @@ impl Expr {
             | Expr::List { span, .. }
             | Expr::Dictionary { span, .. }
             | Expr::DictionaryEntry { span, .. }
+            | Expr::DictionaryContains { span, .. }
+            | Expr::DictionaryKeys { span, .. }
             | Expr::Record { span, .. }
             | Expr::RecordField { span, .. }
             | Expr::Variable { span, .. }
@@ -407,6 +418,10 @@ impl Expr {
             Expr::Dictionary { entries, .. } => Expr::Dictionary { entries, span },
             Expr::DictionaryEntry { name, dictionary, .. } =>
                 Expr::DictionaryEntry { name, dictionary, span },
+            Expr::DictionaryContains { name, dictionary, .. } =>
+                Expr::DictionaryContains { name, dictionary, span },
+            Expr::DictionaryKeys { dictionary, .. } =>
+                Expr::DictionaryKeys { dictionary, span },
             Expr::Record { fields, .. } => Expr::Record { fields, span },
             Expr::RecordField { name, record, .. } => Expr::RecordField { name, record, span },
             Expr::Variable { name, .. } => Expr::Variable { name, span },
@@ -485,6 +500,15 @@ impl Expr {
             Expr::DictionaryEntry { name, dictionary, .. } => {
                 base.insert("type".into(), json!("dictionary_entry"));
                 base.insert("name".into(), json!(name));
+                base.insert("dictionary".into(), dictionary.to_json());
+            }
+            Expr::DictionaryContains { name, dictionary, .. } => {
+                base.insert("type".into(), json!("dictionary_contains"));
+                base.insert("name".into(), json!(name));
+                base.insert("dictionary".into(), dictionary.to_json());
+            }
+            Expr::DictionaryKeys { dictionary, .. } => {
+                base.insert("type".into(), json!("dictionary_keys"));
                 base.insert("dictionary".into(), dictionary.to_json());
             }
             Expr::Record { fields, .. } => {
