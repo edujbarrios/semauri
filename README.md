@@ -167,10 +167,10 @@ Library code is type-checked and respects explicit permissions; this supports
 [Copy the working example](examples/external_libraries/) or follow the
 [step-by-step guide](docs/external-libraries.md).
 
-**New in 0.73.0:** library namespaces (`as math`), typed `record of (...)` and
-`dictionary of (...)`, AI prompt bounds and `report ai usage`.
-**In development:** bounded agent turns, `constrain ai cache to 32 entries.`
-and `restrict ai outputs to 4096 characters.` ([guide](docs/language-guide.md)).
+**New in 0.74.0:** typed `xor`, runtime numeric and Boolean expressions,
+bounded AI agents, strict JSON shape checks and canonical JSON validation.
+All changes in PRs #342–#344 are included ([guide](docs/language-guide.md)).
+Previous releases keep their existing syntax and permission rules.
 
 ## 4. Command reference
 
@@ -203,7 +203,7 @@ Run `semauri` for CLI help. Supported commands also offer `--json` for machine-r
 
 ## 5. Go further
 
-[Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.73.0.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
+[Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.74.0.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
 
 ## Citation
 
