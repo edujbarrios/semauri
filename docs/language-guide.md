@@ -2231,6 +2231,12 @@ La sintaxis admite **un subconjunto explícito** de JSON Schema: los tipos
 `properties`, `required` y `additionalProperties` para objetos;
 `items`, `minItems` y `maxItems` para listas; y `minLength` y
 `maxLength` para cadenas (contando caracteres Unicode). No convierte tipos.
+Los esquemas de texto también admiten `enum` con 1 a 128 alternativas únicas.
+
+`normalize ai json RESPONSE against schema SCHEMA` valida la respuesta y
+devuelve su representación JSON canónica, sin espacios superfluos y con las
+claves de objetos ordenadas. Si la respuesta no cumple el esquema, produce
+S503; **no repara ni transforma los datos**.
 
 Un esquema erróneo o con palabras no reconocidas produce un error S503
 explícito; un documento JSON inválido o incompatible produce `false`.
