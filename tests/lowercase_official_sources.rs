@@ -30,7 +30,13 @@ fn visit(path: &Path, compiler: &Compiler, visited: &mut usize) {
         path.display(), path.display(),
     );
     if source.lines().any(|line| line.trim_start().starts_with("import ")) {
-        let checked = run_cli(&["check".to_string(), path.to_string_lossy().to_string()]);
+        // Reusable package entry modules may consist entirely of function
+        // declarations. Type-check their resolved import graph with HIR;
+        // runnable examples must still satisfy the CLI output contract.
+        let library_module = path.ancestors().any(|parent|
+            parent.join(".semauri-library.json").is_file());
+        let command = if library_module { "hir" } else { "check" };
+        let checked = run_cli(&[command.to_string(), path.to_string_lossy().to_string()]);
         assert_eq!(checked.status, 0, "{}: {}", path.display(), checked.stderr);
     } else {
         compiler.parse(&source)
