@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Additional natural-language syntax (unreleased)
+- Add statically checked numeric comparisons `is not greater than`, `is not less than`, `is no greater than`, `is no less than`, and strict negations of inclusive greater/less comparisons. Reuse exact checked ordering operators, with no new effects.
+- Allow `range from A through B` as a contextual, inclusive alias for `range from A to B`, preserving existing range validation.
+- Allow a final comma in `a list of 1, 2,.` and `invoke add to (1, 2,)`; reject double commas and preserve function arity checks.
+- Add Rust regression coverage, formatting tests, an executable example and language-guide documentation.
+
 ### Rust-only internals and development tools
 - Replace the Python Jupyter adapter and installer with a native Rust ZeroMQ kernel, including HMAC-authenticated messages, independent cell execution, capability controls, read-only directives, completions, and Rust unit/protocol tests.
 - Replace Python benchmark and report scripts with `semauri_bench`, migrate GitHub Actions workflows, and remove all repository-owned Python source files.
