@@ -1,3 +1,155 @@
+// External libraries are explicit, locally installed source dependencies.
+// They are compiled into the same program and never introduce implicit
+// networking, plugin execution, or new runtime capabilities.
+const MAX_LIBRARY_CATALOG_BYTES: u64 = 64 * 1024;
+const MAX_EXTERNAL_LIBRARIES: usize = 32;
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LibraryCatalog {
+    schema: u32,
+    libraries: Vec<LibraryDependency>,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LibraryDependency {
+    name: String,
+    version: String,
+    path: String,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LibraryDescriptor {
+    schema: u32,
+    name: String,
+    version: String,
+    entry: String,
+}
+
+#[derive(Clone, Debug)]
+struct ExternalLibrary {
+    version: String,
+    root: PathBuf,
+    entry: PathBuf,
+}
+
+fn library_error(file: &Path, detail: impl AsRef<str>) -> SemauriError {
+    SemauriError::semantic(
+        "S417",
+        format!("{}: {}", file.display(), detail.as_ref()),
+        None,
+        Some("Declare local external libraries in .semauri-libraries.json and check each library's .semauri-library.json (schema 1, name, version, entry).".into()),
+    )
+}
+
+fn valid_library_name(name: &str) -> bool {
+    name.len() <= 64 && name.bytes().next().is_some_and(|byte| byte.is_ascii_lowercase())
+        && name.bytes().all(|byte|
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_' || byte == b'-')
+}
+
+fn valid_library_version(version: &str) -> bool {
+    let parts = version.split('.').collect::<Vec<_>>();
+    parts.len() == 3 && parts.iter().all(|part| {
+        !part.is_empty()
+            && (part.len() == 1 || !part.starts_with('0'))
+            && part.bytes().all(|byte| byte.is_ascii_digit())
+            && part.parse::<u64>().is_ok()
+    })
+}
+
+fn read_library_json<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T> {
+    let metadata = fs::symlink_metadata(path).map_err(|error|
+        library_error(path, format!("Cannot inspect library metadata: {error}")))?;
+    if !metadata.file_type().is_file() {
+        return Err(library_error(path, "Library metadata must be a regular file (not a symlink)"));
+    }
+    if metadata.len() > MAX_LIBRARY_CATALOG_BYTES {
+        return Err(library_error(path, "Library metadata exceeds 64 KiB"));
+    }
+    let source = fs::read_to_string(path).map_err(|error|
+        library_error(path, format!("Cannot read UTF-8 library metadata: {error}")))?;
+    serde_json::from_str(&source)
+        .map_err(|error| library_error(path, format!("Invalid library metadata JSON: {error}")))
+}
+
+// A project's catalog explicitly authorizes additional local filesystem
+// trees. Relative catalog paths may point to vendored directories or to
+// sibling project directories, but imports inside a library cannot escape
+// that library's canonical root, including via symlinks.
+fn load_external_libraries(root: &Path) -> Result<HashMap<String, ExternalLibrary>> {
+    let catalog_path = root.join(".semauri-libraries.json");
+    match fs::symlink_metadata(&catalog_path) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            return Ok(HashMap::new())
+        }
+        Err(error) => return Err(library_error(&catalog_path,
+            format!("Cannot inspect library catalog: {error}"))),
+        Ok(_) => {}
+    }
+    let catalog: LibraryCatalog = read_library_json(&catalog_path)?;
+    if catalog.schema != 1 {
+        return Err(library_error(&catalog_path, "Unsupported library catalog schema (expected 1)"));
+    }
+    if catalog.libraries.len() > MAX_EXTERNAL_LIBRARIES {
+        return Err(library_error(&catalog_path, "Library catalog exceeds 32 dependencies"));
+    }
+    let mut resolved = HashMap::new();
+    for pin in catalog.libraries {
+        if !valid_library_name(&pin.name) || !valid_library_version(&pin.version) {
+            return Err(library_error(&catalog_path,
+                format!("Invalid library name or MAJOR.MINOR.PATCH version: {}", pin.name)));
+        }
+        if pin.path.is_empty() || pin.path.len() > 1024
+            || Path::new(&pin.path).is_absolute()
+        {
+            return Err(library_error(&catalog_path,
+                format!("Library '{}' path must be a nonempty relative directory path", pin.name)));
+        }
+        if resolved.contains_key(&pin.name) {
+            return Err(library_error(&catalog_path,
+                format!("Duplicate external library '{}'", pin.name)));
+        }
+        let directory = fs::canonicalize(root.join(&pin.path)).map_err(|error|
+            library_error(&catalog_path,
+                format!("Cannot locate external library '{}': {error}", pin.name)))?;
+        if !directory.is_dir() {
+            return Err(library_error(&catalog_path,
+                format!("Library '{}' path must point to a directory", pin.name)));
+        }
+        let descriptor_path = directory.join(".semauri-library.json");
+        let descriptor: LibraryDescriptor = read_library_json(&descriptor_path)?;
+        if descriptor.schema != 1 || descriptor.name != pin.name
+            || descriptor.version != pin.version
+            || !valid_library_name(&descriptor.name)
+            || !valid_library_version(&descriptor.version)
+        {
+            return Err(library_error(&descriptor_path,
+                format!("Library '{}' identity or version does not match project catalog", pin.name)));
+        }
+        if descriptor.entry.is_empty() || Path::new(&descriptor.entry).is_absolute()
+            || Path::new(&descriptor.entry).extension().is_none_or(|ext| ext != "suri")
+        {
+            return Err(library_error(&descriptor_path,
+                "Library entry must be a relative .suri source file"));
+        }
+        let entry = fs::canonicalize(directory.join(&descriptor.entry)).map_err(|error|
+            library_error(&descriptor_path, format!("Cannot resolve library entry: {error}")))?;
+        if !entry.is_file() || !entry.starts_with(&directory) {
+            return Err(library_error(&descriptor_path,
+                "Library entry escapes the declared library directory (possibly via symlink)"));
+        }
+        resolved.insert(pin.name, ExternalLibrary {
+            version: pin.version,
+            root: directory,
+            entry,
+        });
+    }
+    Ok(resolved)
+}
+
 // Local-only, compile-time imports. All imported declarations and effects enter
 // the same checked program; imports do not grant runtime filesystem access.
 const MAX_MODULE_FILES: usize = 64;
@@ -12,7 +164,7 @@ struct LoadedSource {
 }
 
 struct ModuleLoader {
-    root: PathBuf,
+    libraries: HashMap<String, ExternalLibrary>,
     visited: HashSet<PathBuf>,
     visiting: Vec<PathBuf>,
     bytes: usize,
@@ -61,8 +213,9 @@ fn load_module_source(entry: &Path) -> Result<LoadedSource> {
         return Err(module_error(&entry, 1, "Source files must end in .suri"));
     }
     let root = module_project_root(&entry);
+    let libraries = load_external_libraries(&root)?;
     let mut loader = ModuleLoader {
-        root,
+        libraries,
         visited: HashSet::new(),
         visiting: Vec::new(),
         bytes: 0,
@@ -72,12 +225,12 @@ fn load_module_source(entry: &Path) -> Result<LoadedSource> {
             files: HashMap::new(),
         },
     };
-    loader.visit(&entry, 0)?;
+    loader.visit(&entry, 0, &root)?;
     Ok(loader.loaded)
 }
 
 impl ModuleLoader {
-    fn visit(&mut self, file: &Path, depth: usize) -> Result<()> {
+    fn visit(&mut self, file: &Path, depth: usize, boundary: &Path) -> Result<()> {
         if self.visiting.iter().any(|item| item == file) {
             let mut chain = self.visiting.clone();
             chain.push(file.to_path_buf());
@@ -97,6 +250,9 @@ impl ModuleLoader {
         }
         let content = fs::read_to_string(file).map_err(|error|
             module_error(file, 1, format!("Cannot read UTF-8 module: {error}")))?;
+        // Normalize a single leading UTF-8 BOM before scanning imports;
+        // otherwise an import on line 1 looks like an executable statement.
+        let content = content.strip_prefix('\u{feff}').unwrap_or(&content).to_owned();
         self.bytes += content.len();
         self.loaded.files.insert(file.to_path_buf(), content.clone());
         self.visited.insert(file.to_path_buf());
@@ -132,8 +288,14 @@ impl ModuleLoader {
                 if relative.is_empty() || Path::new(&relative).is_absolute() {
                     return Err(module_error(file, number, "Import path must be nonempty and relative"));
                 }
-                if Path::new(&relative).extension().is_none_or(|ext| ext != "suri") {
-                    return Err(module_error(file, number, "Only .suri files can be imported"));
+                if let Some(name) = relative.strip_prefix("library:") {
+                    if !valid_library_name(name) {
+                        return Err(library_error(file,
+                            format!("Invalid external library alias '{name}' at line {number}")));
+                    }
+                } else if Path::new(&relative).extension().is_none_or(|ext| ext != "suri") {
+                    return Err(module_error(file, number,
+                        "Only .suri files or library:NAME aliases can be imported"));
                 }
                 imports.push((relative, number));
             } else {
@@ -145,19 +307,25 @@ impl ModuleLoader {
             }
         }
         for (relative, number) in imports {
+            if let Some(name) = relative.strip_prefix("library:") {
+                let external = self.libraries.get(name).ok_or_else(|| library_error(file,
+                    format!("Undeclared external library '{name}' at line {number}")))?.clone();
+                self.visit(&external.entry, depth + 1, &external.root)?;
+                continue;
+            }
             let base = file.parent().expect("canonical source has a parent");
             let destination = base.join(relative);
             let resolved = fs::canonicalize(&destination).map_err(|error|
                 module_error(file, number,
                     format!("Cannot import {}: {error}", destination.display())))?;
-            if !resolved.starts_with(&self.root) {
+            if !resolved.starts_with(boundary) {
                 return Err(module_error(file, number,
-                    "Import escapes project root (including through symlinks)"));
+                    "Import escapes its project/library root (including through symlinks)"));
             }
             if !resolved.is_file() {
                 return Err(module_error(file, number, "Import target must be a file"));
             }
-            self.visit(&resolved, depth + 1)?;
+            self.visit(&resolved, depth + 1, boundary)?;
         }
         for (line, original_line) in body {
             self.loaded.source.push_str(line);

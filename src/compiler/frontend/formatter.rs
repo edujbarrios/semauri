@@ -4,6 +4,9 @@
 // regard to case, so this is not a breaking grammar change.
 impl Compiler {
     pub fn format_source(&self, source: &str) -> Result<String> {
+        // Match the lexer's leading-BOM normalization so token coordinates
+        // and source offsets remain aligned during canonical formatting.
+        let source = source.strip_prefix('\u{feff}').unwrap_or(source);
         let tokens = self.tokenize(source)?;
         let chars = source.chars().collect::<Vec<_>>();
         let mut byte_offsets = source.char_indices().map(|(idx, _)| idx).collect::<Vec<_>>();
@@ -464,6 +467,26 @@ impl Compiler {
                 && ((index > 0 && tokens[index - 1].kind == TokenKind::Is)
                     || (index > 1 && tokens[index - 1].kind == TokenKind::Not
                         && tokens[index - 2].kind == TokenKind::Is));
+            // Keep the short natural negation "is no greater/less than"
+            // contextual rather than lowercasing unrelated identifiers.
+            let is_no_order = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("no")
+                && index > 0 && tokens[index - 1].kind == TokenKind::Is
+                && tokens.get(index + 1).is_some_and(|next|
+                    matches!(next.kind, TokenKind::Greater | TokenKind::Less));
+            // "through" is a range delimiter only after a range lower bound,
+            // never an unconditional reserved word.
+            let is_range_through = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("through")
+                && tokens.get(index + 1).is_some_and(|next|
+                    matches!(next.kind, TokenKind::Number | TokenKind::Word
+                        | TokenKind::Minus | TokenKind::LParen))
+                && tokens[..index].iter().rev()
+                    .take_while(|previous| previous.kind != TokenKind::Dot)
+                    .any(|previous| previous.kind == TokenKind::From)
+                && tokens[..index].iter().rev()
+                    .take_while(|previous| previous.kind != TokenKind::Dot)
+                    .any(|previous| previous.lexeme.eq_ignore_ascii_case("range"));
             let is_bound_comparison = token.kind == TokenKind::Word
                 && ((matches!(token.lexeme.to_ascii_lowercase().as_str(), "least" | "most")
                     && index > 1 && tokens[index - 1].kind == TokenKind::At
@@ -530,7 +553,7 @@ impl Compiler {
                         | TokenKind::Minus | TokenKind::LParen));
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_import && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_rank_selection && !is_rank_unique && !is_rank_unique_modifier && !is_power && !is_statistics && !is_flatten && !is_absolute && !is_square_aggregate && !is_bias_aggregate && !is_magnitude_aggregate && !is_numeric_series && !is_difference_modifier && !is_difference && !is_difference_between && !is_sign && !is_numeric_rounding && !is_round && !is_truncate && !is_factorial && !is_prime && !is_cube && !is_square && !is_sqrt && !is_scientific_math && !is_python_alias && !is_sort_unique_alias && !is_cardinality && !is_count_distinct && !is_count_unique && !is_sort_direction && !is_sort_order_alias && !is_cbrt && !is_reciprocal && !is_digits && !is_radix_formatter && !is_parity && !is_product && !is_text_operation && !is_text_predicate && !is_text_negation && !is_inclusion_alias && !is_join_with && !is_joined_with && !is_different && !is_empty_or_blank && !is_numeric_predicate && !is_prime_predicate && !is_bound_comparison && !is_one_of && !is_divisibility && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field && !is_text_search && !is_last_position && !is_json_pointer && !is_character_from && !is_character_at && !is_remove_all
+                && !is_import && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_rank_selection && !is_rank_unique && !is_rank_unique_modifier && !is_power && !is_statistics && !is_flatten && !is_absolute && !is_square_aggregate && !is_bias_aggregate && !is_magnitude_aggregate && !is_numeric_series && !is_difference_modifier && !is_difference && !is_difference_between && !is_sign && !is_numeric_rounding && !is_round && !is_truncate && !is_factorial && !is_prime && !is_cube && !is_square && !is_sqrt && !is_scientific_math && !is_python_alias && !is_sort_unique_alias && !is_cardinality && !is_count_distinct && !is_count_unique && !is_sort_direction && !is_sort_order_alias && !is_cbrt && !is_reciprocal && !is_digits && !is_radix_formatter && !is_parity && !is_product && !is_text_operation && !is_text_predicate && !is_text_negation && !is_inclusion_alias && !is_join_with && !is_joined_with && !is_different && !is_empty_or_blank && !is_numeric_predicate && !is_prime_predicate && !is_bound_comparison && !is_no_order && !is_range_through && !is_one_of && !is_divisibility && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field && !is_text_search && !is_last_position && !is_json_pointer && !is_character_from && !is_character_at && !is_remove_all
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count" | "reduce" | "zip" | "partition")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")

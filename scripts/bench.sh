@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 N="${1:-50}"
-if [[ ! -x "${SEMAURI_BIN:-target/release/semauri}" ]]; then
+if [[ ! -x "${SEMAURI_BIN:-target/release/semauri}" || ! -x target/release/semauri_bench ]]; then
   cargo build --release
 fi
-python3 scripts/bench_driver.py "$N"
+target/release/semauri_bench suite "$N"

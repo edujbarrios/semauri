@@ -148,6 +148,25 @@ The [complete example](examples/linear_regression.suri) implements ordinary leas
 semauri run --allow console_write examples/linear_regression.suri
 ```
 
+## Create your own Semauri-compatible library to extend Semauri's power
+
+Write a reusable `.suri` function such as
+`define function triple taking n as number to (n times 3).`.
+Give your library a `.semauri-library.json` descriptor (name, version and
+entry file), then declare its local path/version in the project's
+`.semauri-libraries.json`. Import it with:
+
+```text
+import "library:math_boost".
+print invoke triple to 7.
+```
+
+Start with `semauri init my-app` and validate with `semauri libraries my-app`.
+Library code is type-checked and respects explicit permissions; this supports
+**local `.suri` sources** (not automatic downloads or native plugins).
+[Copy the working example](examples/external_libraries/) or follow the
+[step-by-step guide](docs/external-libraries.md).
+
 ## 4. Command reference
 
 | Command | What it does |
@@ -166,6 +185,7 @@ semauri run --allow console_write examples/linear_regression.suri
 | `semauri build FILE [-o PATH]` | Generate build artifacts |
 | `semauri config [PATH]` | Inspect configuration |
 | `semauri domains` | List supported domains |
+| `semauri libraries PROJECT\|FILE` | Validate and list installed complementary libraries |
 | `semauri version` | Show the installed version |
 | `semauri tokens FILE` | Inspect tokens |
 | `semauri ast FILE` | Inspect the syntax tree |
@@ -178,7 +198,7 @@ Run `semauri` for CLI help. Supported commands also offer `--json` for machine-r
 
 ## 5. Go further
 
-[Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.71.0.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
+[Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.72.0.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
 
 ## Citation
 

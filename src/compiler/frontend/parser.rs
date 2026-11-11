@@ -856,7 +856,39 @@ impl<'a> Parser<'a> {
             && self.tokens.get(self.current + 1).is_some_and(|next|
                 next.kind == TokenKind::Word && matches!(
                     next.lexeme.to_ascii_lowercase().as_str(), "above" | "below"));
-        let operator = if not_at_bound || not_simple_bound {
+        // Natural negated comparisons are complements of the checked
+        // ordering operators. This evaluates both operands exactly once and
+        // preserves precise integer comparisons and numeric-only typing.
+        // "no" stays contextual, so it remains a usable identifier elsewhere.
+        let is_negated_order = (self.check(TokenKind::Not)
+            || (self.check(TokenKind::Word)
+                && self.peek().lexeme.eq_ignore_ascii_case("no")))
+            && self.tokens.get(self.current + 1).is_some_and(|next|
+                matches!(next.kind, TokenKind::Greater | TokenKind::Less));
+        let operator = if is_negated_order {
+            self.advance(); // not / contextual no
+            let greater = self.matches(&[TokenKind::Greater]);
+            if !greater {
+                self.consume(TokenKind::Less, "Expected 'less' after negation", "S223")?;
+            }
+            self.consume(TokenKind::Than, "Expected 'than' in negated comparison",
+                if greater { "S222" } else { "S223" })?;
+            let inclusive = if self.matches(&[TokenKind::Or]) {
+                self.consume(TokenKind::Equal,
+                    "Expected 'equal' after 'or' in a negated comparison",
+                    if greater { "S222" } else { "S223" })?;
+                self.consume(TokenKind::To,
+                    "Expected 'to' after 'equal' in a negated comparison",
+                    if greater { "S222" } else { "S223" })?;
+                true
+            } else { false };
+            match (greater, inclusive) {
+                (true, false) => BinaryOperator::LessThanOrEqual,
+                (true, true) => BinaryOperator::LessThan,
+                (false, false) => BinaryOperator::GreaterThanOrEqual,
+                (false, true) => BinaryOperator::GreaterThan,
+            }
+        } else if not_at_bound || not_simple_bound {
             self.advance(); // not
             if not_at_bound {
                 self.advance(); // at
@@ -2523,6 +2555,9 @@ impl<'a> Parser<'a> {
                                     "Function calls support at most 16 arguments", "S247", None));
                             }
                             if !self.matches(&[TokenKind::Comma]) { break; }
+                            // A trailing comma is allowed inside an argument
+                            // tuple, but never creates an extra argument.
+                            if self.check(TokenKind::RParen) { break; }
                         }
                     }
                     let close = self.consume(TokenKind::RParen,
@@ -2545,7 +2580,14 @@ impl<'a> Parser<'a> {
                 let start = self.advance().clone();
                 self.consume(TokenKind::From, "Expected 'from' after range", "S245")?;
                 let lower = self.numeric_unary()?;
-                self.consume(TokenKind::To, "Expected 'to' between range endpoints", "S245")?;
+                // "through" is a contextual inclusive alias for "to".
+                if self.check(TokenKind::Word)
+                    && self.peek().lexeme.eq_ignore_ascii_case("through") {
+                    self.advance();
+                } else {
+                    self.consume(TokenKind::To,
+                        "Expected 'to' or 'through' between range endpoints", "S245")?;
+                }
                 let upper = self.numeric_unary()?;
                 Ok(Expr::Binary {
                     span: span_between_spans(start.span, upper.span()),
@@ -2714,6 +2756,10 @@ impl<'a> Parser<'a> {
         )?;
         let mut items = vec![self.expression()?];
         while self.matches(&[TokenKind::Comma]) {
+            // The final comma may precede the statement terminator
+            // or a closing parenthesis around the list expression.
+            // Reject missing elements in the middle of a list as before.
+            if self.check(TokenKind::Dot) || self.check(TokenKind::RParen) { break; }
             items.push(self.expression()?);
         }
         let span = span_between_spans(start.span, items.last().unwrap().span());

@@ -17,6 +17,11 @@ jobs:
       - name: Check example conformance
         run: cargo test --test example_conformance
       - name: Test Rust compiler
+        # Rust test harness threads have a smaller default stack than the
+        # normal CLI main thread. Deeply nested parser/optimizer regression
+        # cases need the same 8 MiB headroom as production Linux processes.
+        env:
+          RUST_MIN_STACK: "8388608"
         run: cargo test --all-targets
       - name: Validate AI engineering ML contract
         run: cargo test --test ml_portfolio_contract

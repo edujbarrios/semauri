@@ -1,8 +1,9 @@
-name: Jupyter kernel integration
+name: Jupyter kernel integration (Rust)
 on:
   pull_request:
     paths:
       - "integrations/jupyter/**"
+      - "src/compiler/**"
       - ".github/workflows/jupyter.yml"
       - "README.md"
   push:
@@ -18,12 +19,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - run: python -m pip install -e ./integrations/jupyter
-      - run: python -m unittest discover -s integrations/jupyter/tests -v
-      - run: cargo build
-      - run: semauri-jupyter-install --sys-prefix
-      - name: Real notebook messaging smoke test
-        run: SEMAURI_BINARY="$(pwd)/target/debug/semauri" python -m unittest discover -s integrations/jupyter/protocol_tests -v
+      - name: Install ZeroMQ development library
+        run: sudo apt-get update -qq && sudo apt-get install -y libzmq3-dev pkg-config
+      - name: Build Semauri compiler
+        run: cargo build --locked
+      - name: Test native Rust kernel
+        run: cargo test --manifest-path integrations/jupyter/Cargo.toml
+      - name: Verify kernel installation
+        run: |
+          cargo build --manifest-path integrations/jupyter/Cargo.toml
+          integrations/jupyter/target/debug/semauri-jupyter install --prefix=/tmp/semauri-test-prefix
+          test -f /tmp/semauri-test-prefix/share/jupyter/kernels/semauri/kernel.json

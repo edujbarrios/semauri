@@ -1,5 +1,27 @@
 ## Unreleased
 
+## 0.72.0 — 2026-11-11
+
+### External and complementary libraries
+- Add optional project-level `.semauri-libraries.json` catalogs for up to 32 explicitly declared offline third-party `.suri` source libraries, including libraries installed outside the project root.
+- Match each dependency's canonical name and pinned `MAJOR.MINOR.PATCH` metadata to its `.semauri-library.json` descriptor, and resolve `import "library:NAME".` at compile time.
+- Scope nested local imports to each canonical library root; reject undeclared dependencies, identity mismatches, import cycles and symlink/path escapes (S417/S416), without granting runtime capabilities.
+- Include `semauri libraries PROJECT|FILE` validation and introspection, empty catalogs in new projects, Rust regression tests and a complete example.
+- This first stage does not include remote resolution, registry publication, cryptographic lockfiles or native plugin loading.
+
+
+### Additional natural-language syntax
+- Add statically checked numeric comparisons `is not greater than`, `is not less than`, `is no greater than`, `is no less than`, and strict negations of inclusive greater/less comparisons. Reuse exact checked ordering operators, with no new effects.
+- Allow `range from A through B` as a contextual, inclusive alias for `range from A to B`, preserving existing range validation.
+- Allow a final comma in `a list of 1, 2,.` and `invoke combine to (1, 2,)`; reject double commas and preserve function arity checks.
+- Add Rust regression coverage, formatting tests, an executable example and language-guide documentation.
+
+### Rust-only internals and development tools
+- Replace the Python Jupyter adapter and installer with a native Rust ZeroMQ kernel, including HMAC-authenticated messages, independent cell execution, capability controls, read-only directives, completions, and Rust unit/protocol tests.
+- Replace Python benchmark and report scripts with `semauri_bench`, migrate GitHub Actions workflows, and remove all repository-owned Python source files.
+- Accept a leading UTF-8 BOM in direct source and imported modules, while keeping embedded BOM characters invalid, with Rust regression tests.
+- The compiler, kernel metadata and release tooling are versioned together for v0.72.0.
+
 ## 0.71.0 — 2026-11-10
 
 ### Numerical sequences: cumulative and adjacent operations

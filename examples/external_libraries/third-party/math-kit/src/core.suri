@@ -1,0 +1,2 @@
+# Library-relative imports stay inside the third-party package.
+define function square taking n as number to (n times n).

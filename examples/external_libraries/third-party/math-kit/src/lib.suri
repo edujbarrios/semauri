@@ -1,0 +1,3 @@
+# Reusable Semauri library installed outside the application directory.
+import "core.suri".
+define function triple taking n as number to (n times 3).

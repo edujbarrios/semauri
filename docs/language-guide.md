@@ -1,6 +1,6 @@
 # Semauri — language and tooling guide
 
-Full reference for the [short Quick Start](../README.md). Commands and examples refer to Semauri v0.66.0; consult the current release for changes.
+Full reference for the [short Quick Start](../README.md). Commands and examples cover Semauri v0.72.0; consult the current release notes for changes.
 
 ## Agent quick start
 
@@ -35,14 +35,14 @@ cargo run -- check examples/hello.suri
 
 ## Semauri in Jupyter Notebook / JupyterLab
 
-This repository includes an official, experimental
+This repository includes a native Rust, experimental
 [Semauri Jupyter kernel](../integrations/jupyter/README.md).
+The host Jupyter application is external; the Semauri kernel requires ZeroMQ development libraries.
 After installing the Rust `semauri` executable on your `PATH`:
 
 ```sh
-python3 -m pip install -e ./integrations/jupyter
-semauri-jupyter-install --user
-python3 -m pip install jupyterlab
+cargo build --release --manifest-path integrations/jupyter/Cargo.toml
+./integrations/jupyter/target/release/semauri-jupyter install --user
 jupyter lab
 ```
 
@@ -213,6 +213,30 @@ Rerun
 verification. This is a local project quality gate, not a dependency/package
 manager or a substitute for full integration and deployment tests.
 
+## External and complementary source libraries (v0.72.0)
+
+Projects can now declare third-party Semauri `.suri` libraries in
+`.semauri-libraries.json` and import them using a named library path:
+
+```text
+import "library:math_kit".
+print invoke square to 7.
+```
+
+The library's own `.semauri-library.json` provides a matching name,
+`MAJOR.MINOR.PATCH` version and relative entry file. The loader accepts
+explicitly declared local paths outside the application directory, but
+confines all nested imports to their respective canonical library roots.
+Imports still participate in compile-time type checking, effect analysis,
+source-located diagnostics and normal runtime permission checks.
+
+Use `semauri libraries PROJECT|FILE` to inspect and validate installed
+dependencies without executing them. This initial support is fully offline:
+it does not download packages, load native plugins or provide registry
+resolution or lockfile integrity. The full manifest schema, security
+restrictions and working example are in the
+[external libraries guide](external-libraries.md).
+
 ## Multi-file programs and imports
 
 Semauri projects can share statically typed functions and other definitions
@@ -267,6 +291,59 @@ Then check and run it:
 semauri check hello.suri
 semauri run --allow console_write hello.suri
 ```
+
+## Language ergonomics (v0.72.0)
+
+These features are implemented in Rust and have no new runtime effects or
+permissions. They are included in Semauri v0.72.0.
+
+### Natural negated ordering
+
+Use `is not greater than`, `is not less than`,
+`is no greater than` or `is no less than` for inclusive numeric limits.
+Adding `or equal to` after `not greater than` or `not less than`
+negates the inclusive comparison instead:
+
+| Expression | Meaning |
+| --- | --- |
+| `a is not greater than b` / `a is no greater than b` | a ≤ b |
+| `a is not less than b` / `a is no less than b` | a ≥ b |
+| `a is not greater than or equal to b` | a < b |
+| `a is not less than or equal to b` | a > b |
+
+Operands remain statically checked numbers. The compiler uses the existing
+exact integer and finite-decimal comparison semantics, and evaluates each
+operand once. `no` remains an identifier outside the contextual phrase.
+
+### Inclusive ranges through a bound
+
+`range from A through B` is an inclusive alias for `range from A to B`.
+It supports ascending, descending and singleton ranges, using the same
+checked integer endpoints and maximum range limits:
+
+```text
+let values be range from 1 through 4.
+assert values is equal to (a list of 1, 2, 3, 4).
+```
+
+The word `through` stays contextual: `let through be 5.` remains valid.
+
+### Optional trailing commas
+
+A list literal can end with a comma immediately before the statement
+terminator, and a parenthesized function call can end with one immediately
+before its closing parenthesis. Neither adds an empty element or argument.
+
+```text
+define function combine taking left as number, right as number to (left plus right).
+let xs be a list of 1, 2, 3,.
+assert length of xs is equal to 3.
+assert invoke combine to (2, 3,) is equal to 5.
+```
+
+Extra commas in the middle remain syntax errors, and normal function
+argument-count and type checks still apply. See the
+[executable example](../examples/natural_language_ergonomics.suri).
 
 ## Core syntax
 

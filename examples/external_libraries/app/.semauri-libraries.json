@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "libraries": [
+    {
+      "name": "math_kit",
+      "version": "1.2.3",
+      "path": "../third-party/math-kit"
+    }
+  ]
+}
