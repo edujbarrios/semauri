@@ -76,10 +76,10 @@ fn internal_unqualified_function_calls_resolve_inside_each_namespace() {
         "define function shared taking n as number to (n plus 10).\n\
          define function combined taking n as number to ((invoke shared to n) plus 2).\n");
     let app = put(&project,"main.suri",
-        "import \"library:math_kit\" as a.\n\
-         import \"library:other_kit\" as b.\n\
-         assert (invoke a.combined to 4) is equal to 9.\n\
-         print invoke b.combined to 4.\n");
+        "import \"library:math_kit\" as alpha.\n\
+         import \"library:other_kit\" as beta.\n\
+         assert (invoke alpha.combined to 4) is equal to 9.\n\
+         print invoke beta.combined to 4.\n");
     let result = run(&app);
     assert_eq!(result.status,0,"{}",result.stderr);
     assert_eq!(result.stdout,"16\n");
@@ -110,9 +110,9 @@ fn nested_and_local_aliases_work_together() {
 fn same_package_can_be_imported_twice_with_distinct_aliases() {
     let (root,project) = fixture();
     let app = put(&project,"main.suri",
-        "import \"library:math_kit\" as first.\n\
+        "import \"library:math_kit\" as primary.\n\
          import \"library:math_kit\" as second.\n\
-         assert (invoke first.shared to 4) is equal to 8.\n\
+         assert (invoke primary.shared to 4) is equal to 8.\n\
          print invoke second.shared to 8.\n");
     let result = run(&app);
     assert_eq!(result.status,0,"{}",result.stderr);
