@@ -4,6 +4,7 @@ let contract be "{\"type\":\"object\",\"required\":[\"label\",\"confidence\"],\"
 let accepted be "{\"label\":\"cat\",\"confidence\":0.91}".
 let rejected be "{\"label\":17,\"confidence\":0.91}".
 assert validate ai json accepted against schema contract.
+let canonical be normalize ai json accepted against schema contract.
 let matches_contract be validate ai json rejected against schema contract.
 print matches_contract.
 print "Structured AI response validated.".
