@@ -1,0 +1,8 @@
+# Check an AI response's shape before using its fields.
+# Validation is pure; printing is the only effect in this example.
+let contract be "{\"type\":\"object\",\"required\":[\"label\",\"confidence\"],\"properties\":{\"label\":{\"type\":\"string\",\"minLength\":1},\"confidence\":{\"type\":\"number\"}},\"additionalProperties\":false}".
+let accepted be "{\"label\":\"cat\",\"confidence\":0.91}".
+let rejected be "{\"label\":17,\"confidence\":0.91}".
+assert validate ai json accepted against schema contract.
+assert not (validate ai json rejected against schema contract).
+print "Structured AI response validated.".
