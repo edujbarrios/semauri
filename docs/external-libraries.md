@@ -10,6 +10,39 @@ This is the **initial offline library interface**, not a public package
 registry, dependency downloader, lockfile or dynamic Rust/C ABI. Projects must
 obtain and audit third-party sources separately.
 
+## Namespaced imports (development, unreleased)
+
+Give local source imports or external libraries an optional alias when you
+want **functions with the same name** to coexist:
+
+```text
+import "library:math_kit" as math.
+import "library:other_kit" as other.
+
+let result be invoke math.square to 7.
+print result.
+```
+
+For local sources, write `import "lib/helpers.suri" as helpers.`
+and call `invoke helpers.function to VALUE`. Parenthesized calls with
+multiple arguments work as usual. Import aliases are case-insensitive and
+must begin with an ASCII letter and contain only letters, digits or
+underscores (up to 64 characters). Aliases apply **only in the importing
+file**; a nested module must declare any aliases it uses.
+
+An aliased dependency gets a private internal **function namespace**, including
+unaliased submodules. The same package can be imported under several aliases,
+and two different packages can export identically named functions.
+Unknown aliases or duplicates produce S416 diagnostics. Imports without an
+alias keep their original global-function behavior.
+
+**Current scope:** only function definitions and calls are namespaced.
+Imported top-level values and executable statements are not isolated:
+imports may still run effects, and those effects still require explicit
+permissions. Ordinary path/version checks, symlink protection, and file
+budgets are unchanged. The change is on the development branch: Semauri's
+published language version remains **0.72.0** until a later release.
+
 ## 1. Declare the dependencies in the application
 
 A project normally contains `.semauri-root` (created by `semauri init`).
