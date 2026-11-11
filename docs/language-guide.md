@@ -1,6 +1,6 @@
 # Semauri — language and tooling guide
 
-Full reference for the [short Quick Start](../README.md). Commands and examples refer to Semauri v0.66.0; consult the current release for changes.
+Full reference for the [short Quick Start](../README.md). Commands and examples cover Semauri v0.72.0; consult the current release notes for changes.
 
 ## Agent quick start
 
@@ -213,7 +213,7 @@ Rerun
 verification. This is a local project quality gate, not a dependency/package
 manager or a substitute for full integration and deployment tests.
 
-## External and complementary source libraries (unreleased)
+## External and complementary source libraries (v0.72.0)
 
 Projects can now declare third-party Semauri `.suri` libraries in
 `.semauri-libraries.json` and import them using a named library path:
@@ -292,10 +292,10 @@ semauri check hello.suri
 semauri run --allow console_write hello.suri
 ```
 
-## Unreleased language ergonomics (development branch)
+## Language ergonomics (v0.72.0)
 
 These features are implemented in Rust and have no new runtime effects or
-permissions. They do not change the current released Semauri version.
+permissions. They are included in Semauri v0.72.0.
 
 ### Natural negated ordering
 

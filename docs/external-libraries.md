@@ -1,4 +1,4 @@
-# External and complementary Semauri libraries (unreleased)
+# External and complementary Semauri libraries (v0.72.0)
 
 Semauri can compile reusable third-party **`.suri` source libraries** from
 outside a project, using an explicit dependency catalog. Libraries reuse the
