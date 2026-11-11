@@ -108,9 +108,8 @@ fn publish(iopub: &zmq::Socket, key: &str, request: &Request, typ: &str, content
 }
 fn parse_cell(code: &str) -> Result<(String, bool, String), String> {
     let mut lines = code.split_inclusive('\n').peekable();
-    let mut skipped = String::new();
     while let Some(line) = lines.peek() {
-        if line.trim().is_empty() { skipped.push_str(lines.next().unwrap()); } else { break; }
+        if line.trim().is_empty() { lines.next(); } else { break; }
     }
     let Some(first) = lines.next() else { return Ok(("run".into(), false, code.into())); };
     if !first.trim().starts_with("%%") { return Ok(("run".into(), false, code.into())); }
@@ -419,8 +418,10 @@ mod tests {
     }
     #[test]
     fn completions_include_locals_without_execution() {
-        let response = completion("let score be 3.\nprint sc", 28);
+        let source = "let score be 3.\nprint sc";
+        let cursor = source.chars().count();
+        let response = completion(source, cursor);
         assert!(response["matches"].as_array().unwrap().iter().any(|name| name == "score"));
-        assert_eq!(response["cursor_start"], 26);
+        assert_eq!(response["cursor_start"], cursor - 2);
     }
 }
