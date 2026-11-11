@@ -1,5 +1,12 @@
 ## Unreleased
 
+## 0.75.1 — 2026-11-11
+
+### Contextual secure-random vocabulary compatibility
+- Preserve `password`, `secure`, `draw` and `pick` as valid immutable variable names even though they can also introduce cryptographic random operations; fix parsing of the natural `let password be password of 20 characters.` phrase.
+- Retain the v0.75.0 operating-system CSPRNG implementation, unbiased sampling, strict limits and explicit `secure_random` capability without introducing additional dependencies.
+- Add regression tests for these contextual identifiers and their corresponding random operations. Update the README example, native Jupyter version, and publication metadata.
+
 ## 0.75.0 — 2026-11-11
 
 ### Secure random passwords, strings, numbers and choices

@@ -148,12 +148,12 @@ The [complete example](examples/linear_regression.suri) implements ordinary leas
 semauri run --allow console_write examples/linear_regression.suri
 ```
 
-**Level 7 — Secure passwords (v0.75.0)**
+**Level 7 — Secure passwords (v0.75.1)**
 
 ```text
-let generated_password be password of 20 characters.
+let password be password of 20 characters.
 let token be secure random string of 32 characters from "abcdef0123456789".
-print generated_password.
+print password.
 ```
 
 Run the [complete example](examples/secure_password.suri):
@@ -179,9 +179,9 @@ Library code is type-checked and respects explicit permissions; this supports
 [Copy the working example](examples/external_libraries/) or follow the
 [step-by-step guide](docs/external-libraries.md).
 
-**New in 0.75.0:** cryptographically secure password and token generation,
-random integer ranges and Unicode character selection. The improvements from
-v0.74.0 remain available ([guide](docs/language-guide.md)).
+**New in 0.75.1:** secure passwords, tokens and uniform random choices,
+including contextual variable names such as `password` and `pick`.
+See the [guide](docs/language-guide.md) for details.
 Previous releases keep their existing syntax and permission rules.
 
 ## 4. Command reference
@@ -215,7 +215,7 @@ Run `semauri` for CLI help. Supported commands also offer `--json` for machine-r
 
 ## 5. Go further
 
-[Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.75.0.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
+[Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.75.1.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
 
 ## Citation
 
