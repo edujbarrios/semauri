@@ -32,8 +32,10 @@ fn formatter_normalizes_contextual_record_words_without_touching_strings() {
 }
 
 #[test]
-fn contextual_record_words_remain_ordinary_identifiers_outside_records() {
-    let source = "let record be 2.\nlet field be 3.\nprint record plus field.\n";
+fn contextual_record_word_remains_an_identifier_outside_records() {
+    // "field" already belongs to the built-in structured-data vocabulary,
+    // while "record" is deliberately contextual to retain compatibility.
+    let source = "let record be 2.\nlet score be 3.\nprint record plus score.\n";
     let result = Compiler::new().analyze(source);
     assert!(result.is_ok(), "{result:?}");
 }
