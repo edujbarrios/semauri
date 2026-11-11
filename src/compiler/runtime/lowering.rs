@@ -2746,6 +2746,15 @@ fn distinct_fingerprint(value: &ValueData) -> u64 {
                 }
             }
             ValueData::Unit => 6u8.hash(hasher),
+            ValueData::Record(fields) => {
+                7u8.hash(hasher);
+                fields.len().hash(hasher);
+                // BTreeMap order is canonical and independent of declaration order.
+                for (name, value) in fields {
+                    name.hash(hasher);
+                    hash_value(value, hasher);
+                }
+            },
         }
     }
 
@@ -2783,6 +2792,8 @@ fn inspect_value(value: &ValueData) -> String {
         ValueData::Boolean(value) => value.to_string(),
         ValueData::List(values) => format!("{:?}", values.iter().map(ValueData::to_json).collect::<Vec<_>>()),
         ValueData::Unit => "nil".to_string(),
+        ValueData::Record(fields) =>
+            ValueData::Record(fields.clone()).to_json().to_string(),
     }
 }
 
