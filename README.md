@@ -167,6 +167,9 @@ Library code is type-checked and respects explicit permissions; this supports
 [Copy the working example](examples/external_libraries/) or follow the
 [step-by-step guide](docs/external-libraries.md).
 
+**In development (not released):** add `as math` to a library import, then call
+`invoke math.square to 7` to avoid function-name collisions between libraries.
+
 ## 4. Command reference
 
 | Command | What it does |
