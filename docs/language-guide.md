@@ -2162,3 +2162,54 @@ print usage.
   inference and console effects still require explicit `--allow` flags.
 
 See [examples/ai_governance.suri](../examples/ai_governance.suri).
+
+
+## AI execution hardening (Unreleased, after v0.73.0)
+
+The local AI runtime now enforces agent turn budgets and allows explicit
+resource bounds and cache controls:
+
+```text
+cap ai requests to 4.
+bound ai prompts to 500 characters.
+restrict ai outputs to 200 characters.
+memoize ai response cache.
+limit ai cache to 2 entries.
+let model be connect language model "local/test".
+let assistant be compose agent using model system "Be concise." max 2 turns.
+let first be ask assistant with "Hola".
+let second be ask assistant with "Hello".
+let metrics be report ai usage.
+print metrics.
+reset ai response cache.
+```
+
+- `compose agent using MODEL system TEXT max N turns` validates a
+  nonnegative integer `N`. Each successful `ask AGENT with TEXT` (including
+  cache hits) consumes one agent turn. An additional attempt fails with S503
+  before spending the global request budget. Unsuccessful attempts do not
+  consume a turn. Separate agent instances have separate turn counters.
+- The system message is **kept separate** from the user prompt and used to
+  distinguish cache entries. The current `local/*` backend is only a
+  deterministic simulator, **not** a real language model that follows system
+  instructions; provider adapters are still required for real inference.
+  Prompt bounds cover the system message plus the user's prompt.
+- `limit ai cache to N entries.` sets a nonnegative integer limit on
+  memoized responses. The oldest inserted entry is evicted first (FIFO);
+  cache hits do not refresh order. Lowering the limit immediately evicts
+  excess entries. Zero disables storage without disabling model execution.
+  Without an explicit limit, existing unbounded-cache behavior remains.
+- `reset ai response cache.` clears cached text while retaining configured
+  limits, whether caching is enabled, and cumulative usage counters.
+- `restrict ai outputs to N characters.` sets a nonnegative integer
+  Unicode-scalar limit on generated text (including agent and vision text),
+  enforcing it for both new results and cache hits. Oversized fresh results
+  consume a request but are rejected before they can be returned or cached.
+  Embedding fingerprints are opaque data and are unaffected by this limit.
+- `report ai usage` additionally includes `cache_capacity`,
+  `cache_evictions`, `output_character_limit`, `agent_count`,
+  and `agent_turns` in its JSON string. No prompts, model identifiers or
+  system instructions appear in the report.
+
+These runtime constraints do not grant permissions or provide provider-side
+billing, token accounting, prompt-injection defenses, or true model inference.

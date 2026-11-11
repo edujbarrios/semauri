@@ -172,6 +172,9 @@ Library code is type-checked and respects explicit permissions; this supports
 `dictionary of (...)` values with typed field/entry access.
 For AI programs, `bound ai prompts to 4096 characters.` and
 `report ai usage` provide explicit input limits and JSON usage accounting.
+**In development:** `limit ai cache to 32 entries.`,
+`restrict ai outputs to 4096 characters.`, and enforced per-agent turn
+budgets; see the [language guide](docs/language-guide.md).
 See the [language guide](docs/language-guide.md) for syntax and limits.
 
 ## 4. Command reference

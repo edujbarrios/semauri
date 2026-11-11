@@ -1,5 +1,12 @@
 ## Unreleased
 
+### AI runtime correctness and resource safety (development; no release)
+- Enforce configured per-agent maximum turns, retain distinct system contexts for cache isolation, and reject invalid turn counts instead of silently ignoring them. The local model remains a deterministic simulator, not an instruction-following provider.
+- Add explicit FIFO cache limits (`limit ai cache to N entries.`) and cache reset (`reset ai response cache.`); report evictions and capacity without revealing prompts.
+- Add runtime output guards (`restrict ai outputs to N characters.`) for generated and cached text, plus expanded AI usage metrics and regression tests.
+- Preserve existing effects, default cache behavior and v0.73.0 package metadata; work remains unpublished on a development PR.
+
+
 ## 0.73.0 — 2026-11-11
 
 ### Safer, observable AI workflows
