@@ -520,7 +520,7 @@ pub fn run_cli(args: &[String]) -> CliResult {
                         .operations
                         .iter()
                         .all(|operation| match operation.domain.as_str() {
-                            "config" | "ai" | "console" => true,
+                            "config" | "ai" | "console" | "random" => true,
                             // Pure SSA primitives are executable but do not
                             // grant arbitrary core or plugin operations.
                             "core" => matches!(operation.name.as_str(),

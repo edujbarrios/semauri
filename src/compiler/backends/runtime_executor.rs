@@ -13,6 +13,72 @@ fn execute_runtime_plan(plan: &RuntimePlan, config: &crate::ProgramConfig) -> Re
             }
         };
         let result = match (operation.domain.as_str(), operation.name.as_str()) {
+            ("random", "password" | "secure_string") => {
+                let count = match argument("count")? {
+                    ValueData::Number(NumberValue::Int(count))
+                        if (1..=MAX_SECURE_RANDOM_CHARACTERS as i64).contains(&count) =>
+                            count as usize,
+                    _ => return Err(runtime_error(
+                        operation, "random string length must be an integer from 1 to 4096",
+                    )),
+                };
+                let alphabet = if operation.name == "password" {
+                    DEFAULT_PASSWORD_ALPHABET.to_string()
+                } else {
+                    expect_string(argument("alphabet")?, operation, "alphabet")?
+                };
+                let characters = checked_random_alphabet(&alphabet).ok_or_else(|| runtime_error(
+                    operation,
+                    "random alphabet must contain 1 to 4096 distinct Unicode characters",
+                ))?;
+                let mut rng = OsSecureRandom::new().map_err(|_| runtime_error(
+                    operation, "operating-system secure random source is unavailable",
+                ))?;
+                let generated = sample_secure_string(&mut rng, count, &characters)
+                    .map_err(|_| runtime_error(operation,
+                        "operating-system secure random source failed"))?;
+                Some(ValueData::String(generated))
+            }
+            ("random", "character") => {
+                let alphabet = expect_string(argument("alphabet")?, operation, "alphabet")?;
+                let characters = checked_random_alphabet(&alphabet).ok_or_else(|| runtime_error(
+                    operation,
+                    "random alphabet must contain 1 to 4096 distinct Unicode characters",
+                ))?;
+                let mut rng = OsSecureRandom::new().map_err(|_| runtime_error(
+                    operation, "operating-system secure random source is unavailable",
+                ))?;
+                let generated = sample_secure_string(&mut rng, 1, &characters)
+                    .map_err(|_| runtime_error(operation,
+                        "operating-system secure random source failed"))?;
+                Some(ValueData::String(generated))
+            }
+            ("random", "integer") => {
+                let minimum = match argument("minimum")? {
+                    ValueData::Number(NumberValue::Int(value)) => value,
+                    _ => return Err(runtime_error(
+                        operation, "random integer minimum must be a signed 64-bit integer",
+                    )),
+                };
+                let maximum = match argument("maximum")? {
+                    ValueData::Number(NumberValue::Int(value)) => value,
+                    _ => return Err(runtime_error(
+                        operation, "random integer maximum must be a signed 64-bit integer",
+                    )),
+                };
+                if minimum > maximum {
+                    return Err(runtime_error(
+                        operation, "random integer minimum must not exceed maximum",
+                    ));
+                }
+                let mut rng = OsSecureRandom::new().map_err(|_| runtime_error(
+                    operation, "operating-system secure random source is unavailable",
+                ))?;
+                let generated = sample_secure_integer(&mut rng, minimum, maximum)
+                    .map_err(|_| runtime_error(operation,
+                        "operating-system secure random source failed"))?;
+                Some(ValueData::Number(NumberValue::Int(generated)))
+            }
             ("config", kind @ ("read_string" | "read_number" | "read_boolean")) => {
                 let name = expect_string(argument("name")?, operation, "name")?;
                 let value = config.resolve_binding(&name).map_err(|error| runtime_error(operation, error.to_string()))?;

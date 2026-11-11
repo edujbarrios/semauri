@@ -1,5 +1,14 @@
 ## Unreleased
 
+## 0.75.0 — 2026-11-11
+
+### Secure random passwords, strings, numbers and choices
+- Introduce `password of COUNT characters` with a cryptographically secure operating-system source and a built-in alphabet of letters, digits and symbols.
+- Add `secure random string of COUNT characters from ALPHABET`, `draw random integer from MIN to MAX`, and `pick random character from ALPHABET`.
+- Use unbiased rejection sampling, exact inclusive signed-64-bit integer bounds, Unicode scalar-safe custom alphabets, strict 4096-character limits and explicit `secure_random` capability gating.
+- Refuse duplicate or empty alphabets, invalid lengths and unavailable system entropy without a predictable fallback. Never embed generated secrets in compiler plans.
+- Add native Linux/macOS/Windows implementations without adding dependencies, integration/regression tests, a complete example, README walkthrough, Jupyter keyword completions and VS Code syntax highlighting.
+
 ## 0.74.0 — 2026-11-11
 
 ### Dynamic numeric expressions (core language)

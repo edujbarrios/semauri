@@ -148,6 +148,18 @@ The [complete example](examples/linear_regression.suri) implements ordinary leas
 semauri run --allow console_write examples/linear_regression.suri
 ```
 
+**Level 7 — Secure passwords (v0.75.0)**
+
+```text
+let generated_password be password of 20 characters.
+let token be secure random string of 32 characters from "abcdef0123456789".
+print generated_password.
+```
+
+Run the [complete example](examples/secure_password.suri):
+`semauri run examples/secure_password.suri --allow secure_random --allow console_write`.
+The OS-backed CSPRNG uses unbiased sampling. Don't log real passwords.
+
 ## Create your own Semauri-compatible library to extend Semauri's power
 
 Write a reusable `.suri` function such as
@@ -167,9 +179,9 @@ Library code is type-checked and respects explicit permissions; this supports
 [Copy the working example](examples/external_libraries/) or follow the
 [step-by-step guide](docs/external-libraries.md).
 
-**New in 0.74.0:** typed `xor`, runtime numeric and Boolean expressions,
-bounded AI agents, strict JSON shape checks and canonical JSON validation.
-All changes in PRs #342–#344 are included ([guide](docs/language-guide.md)).
+**New in 0.75.0:** cryptographically secure password and token generation,
+random integer ranges and Unicode character selection. The improvements from
+v0.74.0 remain available ([guide](docs/language-guide.md)).
 Previous releases keep their existing syntax and permission rules.
 
 ## 4. Command reference

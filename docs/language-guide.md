@@ -2320,3 +2320,46 @@ and comparison nodes themselves grant no new effects. Short-circuit
 eager by optimization. Dynamic addition, multiplication and other expressions
 are outside this increment; the compiler continues to report their existing
 limitation rather than pretending they execute.
+
+
+## Secure passwords and unbiased random selection (v0.75.0)
+
+Semauri provides OS-backed cryptographic random operations via the `random`
+domain. These are **runtime operations**, never compiler-time constants.
+Every random operation requires explicit `--allow secure_random`; showing
+a generated secret on the console also requires `--allow console_write`.
+
+```text
+let generated_password be password of 20 characters.
+let token be secure random string of 32 characters from "abcdef0123456789".
+let dice_roll be draw random integer from 1 to 6.
+let chosen_letter be pick random character from "ABCDEF".
+print generated_password.
+```
+
+The default password alphabet includes lowercase/uppercase ASCII letters,
+digits and common symbols. Both password lengths and custom secure string
+lengths must be whole numbers from 1 to 4096. A custom alphabet must have 1
+to 4096 **unique Unicode scalar characters** (duplicate symbols, including
+identical emoji, are rejected). Random characters are selected uniformly
+without modulo bias; the generator uses `/dev/urandom` on Unix/macOS and
+Windows `BCryptGenRandom` with the system-preferred RNG flag. If the
+operating system's source is unavailable, execution stops rather than
+falling back to a predictable seed. The default alphabet does not promise
+each character class will appear in every password. Passwords should be
+sufficiently long for their intended threat model.
+
+Random integer ranges are **inclusive** and require integer bounds
+(`i64`); signed overflow is avoided even across the full 64-bit range.
+The `pick random character from ...` operation returns one Unicode character
+as a string, and both selectors reject empty or duplicated alphabets where
+applicable. Each request obtains unpredictable randomness at runtime and
+remains subject to normal effect/capability auditing. Generated secrets
+are not written into compiler plans or usage reports, but `print` and
+external logs can expose them, so avoid logging production credentials.
+
+Run the complete example:
+
+```sh
+semauri run examples/secure_password.suri --allow secure_random --allow console_write
+```

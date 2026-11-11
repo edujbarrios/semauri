@@ -325,6 +325,13 @@ impl<'a> Lexer<'a> {
             (kind, TokenLiteral::None)
         } else if is_color(&normalized) {
             (TokenKind::Color, TokenLiteral::String(normalized.clone()))
+        // New random verbs are contextual: "pick" remains an ordinary
+        // function/variable name unless it actually begins "pick random ...".
+        // This avoids breaking established user source or imported libraries.
+        } else if matches!(normalized.as_str(), "pick" | "draw" | "secure" | "password")
+            && !self.follows_random_phrase(&normalized)
+        {
+            (TokenKind::Word, TokenLiteral::String(text.clone()))
         } else if let Some(domain_literal) = self.domains.classify(&normalized) {
             let kind = match &domain_literal {
                 TokenLiteral::DomainTerm(term) => term.category.token_kind(),
@@ -342,6 +349,23 @@ impl<'a> Lexer<'a> {
             literal,
             span: SourceSpan::new(line, column, self.line, self.column),
         })
+    }
+
+    fn follows_random_phrase(&self, verb: &str) -> bool {
+        let expected = if verb == "password" { "of" } else { "random" };
+        let mut position = self.index;
+        while self.chars.get(position).is_some_and(|ch| ch.is_whitespace()) {
+            position += 1;
+        }
+        let start = position;
+        while self.chars.get(position).is_some_and(|ch|
+            ch.is_alphanumeric() || matches!(ch, '_' | '\'' | '-'))
+        {
+            position += 1;
+        }
+        position > start
+            && self.chars[start..position].iter().collect::<String>()
+                .eq_ignore_ascii_case(expected)
     }
 
     fn number_token(&mut self, line: usize, column: usize) -> Result<Token> {

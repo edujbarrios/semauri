@@ -11,8 +11,8 @@ const HELLO: &str = include_str!("../examples/quickstart.suri");
 #[test]
 fn front_page_is_short_but_links_to_complete_reference() {
     let lines = README.lines().count();
-    // A short library-onboarding paragraph extends the original 200-line front page.
-    assert!(lines <= 215, "README grew to {lines} lines; keep details in docs/language-guide.md");
+    // Keep the front page concise while showing the new secure-password use case.
+    assert!(lines <= 226, "README grew to {lines} lines; keep details in docs/language-guide.md");
     for required in [
         "## 1. Install",
         "## 2. Your first program",
