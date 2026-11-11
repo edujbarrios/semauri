@@ -101,12 +101,14 @@ fn missing_dictionary_keys_are_reported_not_silently_defaulted() {
     let source = r#"let data be dictionary of ("present": 1).
 print entry "missing" of data.
 "#;
-    let checked = command("check", source);
-    assert_eq!(checked.status, 0, "{}", checked.stderr);
-    let run = command("run", source);
-    assert_eq!(run.status, 65, "{}", run.stderr);
-    assert!(run.stderr.contains("S421"), "{}", run.stderr);
-    assert!(run.stderr.contains("missing"), "{}", run.stderr);
+    // The compiler evaluates known immutable dictionaries while checking,
+    // so a missing literal key is rejected before the executable starts.
+    for verb in ["check", "run"] {
+        let result = command(verb, source);
+        assert_eq!(result.status, 65, "{}", result.stderr);
+        assert!(result.stderr.contains("S421"), "{}", result.stderr);
+        assert!(result.stderr.contains("missing"), "{}", result.stderr);
+    }
 }
 
 #[test]
