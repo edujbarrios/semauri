@@ -213,6 +213,30 @@ Rerun
 verification. This is a local project quality gate, not a dependency/package
 manager or a substitute for full integration and deployment tests.
 
+## External and complementary source libraries (unreleased)
+
+Projects can now declare third-party Semauri `.suri` libraries in
+`.semauri-libraries.json` and import them using a named library path:
+
+```text
+import "library:math_kit".
+print invoke square to 7.
+```
+
+The library's own `.semauri-library.json` provides a matching name,
+`MAJOR.MINOR.PATCH` version and relative entry file. The loader accepts
+explicitly declared local paths outside the application directory, but
+confines all nested imports to their respective canonical library roots.
+Imports still participate in compile-time type checking, effect analysis,
+source-located diagnostics and normal runtime permission checks.
+
+Use `semauri libraries PROJECT|FILE` to inspect and validate installed
+dependencies without executing them. This initial support is fully offline:
+it does not download packages, load native plugins or provide registry
+resolution or lockfile integrity. The full manifest schema, security
+restrictions and working example are in the
+[external libraries guide](external-libraries.md).
+
 ## Multi-file programs and imports
 
 Semauri projects can share statically typed functions and other definitions
