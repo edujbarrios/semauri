@@ -19,6 +19,7 @@ impl DomainRegistry {
         for domain in [
             config_domain(),
             ai_domain(),
+            random_domain(),
             web_domain(),
             structured_data_domain(),
             filesystem_domain(),
