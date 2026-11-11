@@ -93,12 +93,12 @@ let gate be boolean config "gate".
 let other be boolean config "other".
 let inverse be not gate.
 let exclusive be gate xor other.
-let equal be gate is equal to other.
+let agreement be gate is equal to other.
 let different be gate is not equal to other.
 let nested be not (gate xor other).
 print inverse.
 print exclusive.
-print equal.
+print agreement.
 print different.
 print nested.
 "#;
@@ -109,10 +109,10 @@ print nested.
 
     let plan = Compiler::new().runtime_plan(source).unwrap();
     let operations = plan.to_json()["operations"].as_array().unwrap().clone();
-    assert_eq!(operations.len(), 12);
+    assert_eq!(operations.len(), 13);
     let core = operations.iter().filter(|operation| operation["domain"] == "core")
         .collect::<Vec<_>>();
-    assert_eq!(core.len(), 5);
+    assert_eq!(core.len(), 6);
     for node in core {
         assert_eq!(node["return_type"], "boolean");
         assert_eq!(node["effects"], serde_json::json!([]));
