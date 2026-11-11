@@ -1,5 +1,13 @@
 ## Unreleased
 
+### External and complementary libraries (development)
+- Add optional project-level `.semauri-libraries.json` catalogs for up to 32 explicitly declared offline third-party `.suri` source libraries, including libraries installed outside the project root.
+- Match each dependency's canonical name and pinned `MAJOR.MINOR.PATCH` metadata to its `.semauri-library.json` descriptor, and resolve `import "library:NAME".` at compile time.
+- Scope nested local imports to each canonical library root; reject undeclared dependencies, identity mismatches, import cycles and symlink/path escapes (S417/S416), without granting runtime capabilities.
+- Include `semauri libraries PROJECT|FILE` validation and introspection, empty catalogs in new projects, Rust regression tests and a complete example.
+- This first stage does not include remote resolution, registry publication, cryptographic lockfiles or native plugin loading. No release or version change.
+
+
 ### Additional natural-language syntax (unreleased)
 - Add statically checked numeric comparisons `is not greater than`, `is not less than`, `is no greater than`, `is no less than`, and strict negations of inclusive greater/less comparisons. Reuse exact checked ordering operators, with no new effects.
 - Allow `range from A through B` as a contextual, inclusive alias for `range from A to B`, preserving existing range validation.
