@@ -133,7 +133,7 @@ print invoke display_age to person.
 #[test]
 fn nested_record_parameter_types_work_with_lists() {
     let source = r#"define function extract taking profile as record of ("address": record of ("city": string), "tags": list of string) to field "city" of field "address" of profile.
-let entry be record of ("tags": a list of "a", "b", "address": record of ("city": "Barcelona")).
+let entry be record of ("tags": (a list of "a", "b"), "address": record of ("city": "Barcelona")).
 print invoke extract to entry.
 "#;
     let result = command("run", source);
