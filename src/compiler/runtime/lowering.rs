@@ -1302,7 +1302,7 @@ impl<'a> Lowerer<'a> {
                     BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
                 }
             }
-            HirExpr::DictionaryContains { name, dictionary, span } => {
+            HirExpr::DictionaryContains { name, dictionary, span, .. } => {
                 match self.evaluate(dictionary)? {
                     BoundValue::Compile { data: ValueData::Dictionary(entries), .. } =>
                         Ok(BoundValue::Compile {
@@ -1314,7 +1314,7 @@ impl<'a> Lowerer<'a> {
                     BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
                 }
             }
-            HirExpr::DictionaryKeys { dictionary, span } => {
+            HirExpr::DictionaryKeys { dictionary, span, .. } => {
                 match self.evaluate(dictionary)? {
                     BoundValue::Compile { data: ValueData::Dictionary(entries), .. } =>
                         Ok(BoundValue::Compile {
