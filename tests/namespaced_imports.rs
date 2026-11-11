@@ -250,3 +250,24 @@ fn aliased_libraries_can_return_typed_records_with_colliding_function_names() {
     assert_eq!(result.stdout, "other\n");
     fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn aliased_libraries_can_return_typed_dictionaries() {
+    let (root, project) = fixture();
+    library(&root, "math_kit",
+        "define function settings taking n as number to dictionary of (\"primary\": n, \"double\": (n times 2)).\n");
+    library(&root, "other_kit",
+        "define function settings taking n as number to dictionary of (\"primary\": (n plus 3), \"double\": (n plus 4)).\n");
+    let app = put(&project, "main.suri",
+        "import \"library:math_kit\" as math.\n\
+         import \"library:other_kit\" as other.\n\
+         let left be invoke math.settings to 5.\n\
+         let right be invoke other.settings to 5.\n\
+         assert (entry \"primary\" of left) is equal to 5.\n\
+         assert (entry \"primary\" of right) is equal to 8.\n\
+         print json of left.\n");
+    let result = run(&app);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "{\"double\":10,\"primary\":5}\n");
+    fs::remove_dir_all(root).unwrap();
+}
