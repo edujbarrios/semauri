@@ -116,7 +116,11 @@ impl<'a> Parser<'a> {
 
     fn define_function_statement(&mut self, start: &Token) -> Result<Stmt> {
         self.consume_surface("function", "Expected 'function' after define", "S246")?;
-        let name = self.consume(TokenKind::Word, "Expected function name", "S246")?;
+        let name = if self.check(TokenKind::DomainAction) {
+            self.advance().clone()
+        } else {
+            self.consume(TokenKind::Word, "Expected function name", "S246")?
+        };
         self.consume_surface("taking", "Expected 'taking' after function name", "S246")?;
         let mut parameters = Vec::new();
         loop {
@@ -2740,10 +2744,15 @@ impl<'a> Parser<'a> {
                 })
             }
             TokenKind::Word if token.lexeme.eq_ignore_ascii_case("invoke")
-                && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Word)
+                && self.tokens.get(self.current + 1).is_some_and(|next|
+                    matches!(next.kind, TokenKind::Word | TokenKind::DomainAction))
                 && self.tokens.get(self.current + 2).is_some_and(|next| next.kind == TokenKind::To) => {
                 let start = self.advance().clone();
-                let name = self.consume(TokenKind::Word, "Expected a function name after invoke", "S247")?;
+                let name = if self.check(TokenKind::DomainAction) {
+                    self.advance().clone()
+                } else {
+                    self.consume(TokenKind::Word, "Expected a function name after invoke", "S247")?
+                };
                 self.consume(TokenKind::To, "Expected 'to' after function name", "S247")?;
                 // Parenthesized argument tuples support arity >1.
                 // A bare primary keeps all pre-0.26.0 single-argument syntax.
