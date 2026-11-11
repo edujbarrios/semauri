@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "name": "math_kit",
+  "version": "1.2.3",
+  "entry": "src/lib.suri"
+}
