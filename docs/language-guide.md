@@ -35,14 +35,14 @@ cargo run -- check examples/hello.suri
 
 ## Semauri in Jupyter Notebook / JupyterLab
 
-This repository includes an official, experimental
+This repository includes a native Rust, experimental
 [Semauri Jupyter kernel](../integrations/jupyter/README.md).
+The host Jupyter application is external; the Semauri kernel requires ZeroMQ development libraries.
 After installing the Rust `semauri` executable on your `PATH`:
 
 ```sh
-python3 -m pip install -e ./integrations/jupyter
-semauri-jupyter-install --user
-python3 -m pip install jupyterlab
+cargo build --release --manifest-path integrations/jupyter/Cargo.toml
+./integrations/jupyter/target/release/semauri-jupyter install --user
 jupyter lab
 ```
 
