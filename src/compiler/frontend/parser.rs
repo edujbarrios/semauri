@@ -392,6 +392,13 @@ impl<'a> Parser<'a> {
         // programs may still use them as immutable variable names.
         let name = if self.matches(&[TokenKind::First, TokenKind::Last]) {
             self.previous().clone()
+        } else if self.check(TokenKind::DomainAction)
+            && matches!(self.peek().lexeme.to_ascii_lowercase().as_str(),
+                "password" | "secure" | "draw" | "pick")
+        {
+            // Random operations are contextual: 'let password be ...' must
+            // remain a valid variable declaration after adding this domain.
+            self.advance().clone()
         } else {
             self.consume(
                 TokenKind::Word,
@@ -2905,6 +2912,25 @@ impl<'a> Parser<'a> {
                 })
             }
             TokenKind::DomainAction => {
+                // The random vocabulary is contextual, not reserved: a bare
+                // 'password' in an expression refers to a variable, whereas
+                // 'password of N characters' invokes the registered operation.
+                let random_verb = token.lexeme.to_ascii_lowercase();
+                if matches!(random_verb.as_str(), "password" | "secure" | "draw" | "pick") {
+                    let invoked = self.tokens.get(self.current + 1).is_some_and(|next|
+                        if random_verb == "password" {
+                            next.kind == TokenKind::Of
+                        } else {
+                            next.lexeme.eq_ignore_ascii_case("random")
+                        });
+                    if !invoked {
+                        self.advance();
+                        return Ok(Expr::Variable {
+                            name: random_verb,
+                            span: token.span,
+                        });
+                    }
+                }
                 let start = self.advance().clone();
                 let expression = self.parse_registered_domain_operation(&start)?;
                 let operation = match &expression {
