@@ -172,6 +172,20 @@ fn ai_domain() -> DomainSpec {
                 &["network", "model_inference"],
             ),
             op(
+                "validate_json_response",
+                &["validate"],
+                vec![
+                    lit("ai"),
+                    lit("json"),
+                    slot("document", Type::String),
+                    lit("against"),
+                    lit("schema"),
+                    slot("schema", Type::String),
+                ],
+                Type::Boolean,
+                &[],
+            ),
+            op(
                 "typed_tool",
                 &["declare"],
                 vec![
