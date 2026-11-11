@@ -1,0 +1,182 @@
+// Checked, bounded validation of JSON output shapes for AI workflows.
+// This is a strict subset, not an implementation of the JSON Schema specification.
+const AI_JSON_DOCUMENT_MAX_BYTES: usize = 1024 * 1024;
+const AI_JSON_SCHEMA_MAX_BYTES: usize = 64 * 1024;
+const AI_JSON_SCHEMA_MAX_DEPTH: usize = 16;
+const AI_JSON_SCHEMA_MAX_NODES: usize = 4096;
+const AI_JSON_SCHEMA_MAX_FIELDS: usize = 128;
+const AI_JSON_SIZE_CONSTRAINT_MAX: u64 = 1024 * 1024;
+
+fn validate_ai_json_response(
+    document: &str,
+    schema_text: &str,
+) -> std::result::Result<bool, &'static str> {
+    if schema_text.len() > AI_JSON_SCHEMA_MAX_BYTES {
+        return Err("AI JSON schema exceeds the 64 KiB limit");
+    }
+    let schema: JsonValue = serde_json::from_str(schema_text)
+        .map_err(|_| "AI JSON schema is not valid JSON")?;
+    let mut nodes = 0usize;
+    check_ai_json_schema(&schema, 1, &mut nodes)?;
+    if document.len() > AI_JSON_DOCUMENT_MAX_BYTES {
+        return Ok(false);
+    }
+    let Ok(value) = serde_json::from_str::<JsonValue>(document) else {
+        return Ok(false);
+    };
+    Ok(matches_ai_json_schema(&value, &schema))
+}
+
+fn ai_json_length_constraint(
+    schema: &JsonMap<String, JsonValue>,
+    name: &str,
+) -> std::result::Result<Option<u64>, &'static str> {
+    match schema.get(name) {
+        None => Ok(None),
+        Some(value) => match value.as_u64() {
+            Some(n) if n <= AI_JSON_SIZE_CONSTRAINT_MAX => Ok(Some(n)),
+            _ => Err("AI JSON schema length constraints must be nonnegative bounded integers"),
+        },
+    }
+}
+
+fn check_ai_json_schema(
+    schema: &JsonValue,
+    depth: usize,
+    nodes: &mut usize,
+) -> std::result::Result<(), &'static str> {
+    *nodes += 1;
+    if depth > AI_JSON_SCHEMA_MAX_DEPTH || *nodes > AI_JSON_SCHEMA_MAX_NODES {
+        return Err("AI JSON schema exceeds nesting or node limits");
+    }
+    let object = schema.as_object().ok_or("AI JSON schema nodes must be objects")?;
+    let kind = object.get("type")
+        .and_then(JsonValue::as_str)
+        .ok_or("AI JSON schema must declare a string type")?;
+    if !matches!(kind, "object" | "array" | "string" | "number" | "integer" | "boolean" | "null") {
+        return Err("AI JSON schema uses an unsupported type");
+    }
+
+    for name in object.keys() {
+        let supported = match name.as_str() {
+            "type" => true,
+            "required" | "properties" | "additionalProperties" => kind == "object",
+            "items" | "minItems" | "maxItems" => kind == "array",
+            "minLength" | "maxLength" => kind == "string",
+            _ => false,
+        };
+        if !supported {
+            return Err("AI JSON schema contains an unsupported keyword for its type");
+        }
+    }
+
+    if kind == "object" {
+        let properties = object.get("properties").map(|v| v.as_object()
+            .ok_or("AI JSON schema properties must be an object")).transpose()?;
+        if let Some(properties) = properties {
+            if properties.len() > AI_JSON_SCHEMA_MAX_FIELDS {
+                return Err("AI JSON schema has too many properties");
+            }
+            for nested in properties.values() {
+                check_ai_json_schema(nested, depth + 1, nodes)?;
+            }
+        }
+        if let Some(required) = object.get("required") {
+            let fields = required.as_array()
+                .ok_or("AI JSON schema required must be a string array")?;
+            if fields.len() > AI_JSON_SCHEMA_MAX_FIELDS {
+                return Err("AI JSON schema has too many required fields");
+            }
+            let mut names = BTreeSet::new();
+            for field in fields {
+                let key = field.as_str()
+                    .ok_or("AI JSON schema required must contain only strings")?;
+                if !names.insert(key) {
+                    return Err("AI JSON schema required fields must be unique");
+                }
+            }
+        }
+        if object.get("additionalProperties").is_some_and(|v| !v.is_boolean()) {
+            return Err("AI JSON schema additionalProperties must be boolean");
+        }
+    } else if kind == "array" {
+        if let Some(items) = object.get("items") {
+            check_ai_json_schema(items, depth + 1, nodes)?;
+        }
+        let min = ai_json_length_constraint(object, "minItems")?;
+        let max = ai_json_length_constraint(object, "maxItems")?;
+        if min.zip(max).is_some_and(|(a, b)| a > b) {
+            return Err("AI JSON schema minimum cannot exceed maximum");
+        }
+    } else if kind == "string" {
+        let min = ai_json_length_constraint(object, "minLength")?;
+        let max = ai_json_length_constraint(object, "maxLength")?;
+        if min.zip(max).is_some_and(|(a, b)| a > b) {
+            return Err("AI JSON schema minimum cannot exceed maximum");
+        }
+    }
+    Ok(())
+}
+
+fn matches_ai_json_schema(value: &JsonValue, schema: &JsonValue) -> bool {
+    let object = schema.as_object().expect("validated JSON schema object");
+    match object["type"].as_str().expect("validated JSON schema type") {
+        "object" => {
+            let Some(record) = value.as_object() else { return false };
+            let properties = object.get("properties").and_then(JsonValue::as_object);
+            if let Some(required) = object.get("required").and_then(JsonValue::as_array) {
+                if required.iter().any(|key| !record.contains_key(
+                    key.as_str().expect("validated required name")
+                )) {
+                    return false;
+                }
+            }
+            if object.get("additionalProperties").and_then(JsonValue::as_bool) == Some(false)
+                && record.keys().any(|key| !properties.is_some_and(|p| p.contains_key(key))) {
+                return false;
+            }
+            if let Some(properties) = properties {
+                if properties.iter().any(|(name, expected)|
+                    record.get(name).is_some_and(|found| !matches_ai_json_schema(found, expected))) {
+                    return false;
+                }
+            }
+            true
+        }
+        "array" => {
+            let Some(values) = value.as_array() else { return false };
+            if !ai_json_size_matches(object, "minItems", "maxItems", values.len() as u64) {
+                return false;
+            }
+            match object.get("items") {
+                Some(items) => values.iter().all(|item| matches_ai_json_schema(item, items)),
+                None => true,
+            }
+        }
+        "string" => {
+            let Some(text) = value.as_str() else { return false };
+            ai_json_size_matches(object, "minLength", "maxLength", text.chars().count() as u64)
+        }
+        "number" => value.is_number(),
+        "integer" => value.as_i64().is_some() || value.as_u64().is_some()
+            || value.as_f64().is_some_and(|n| n.is_finite() && n.fract() == 0.0),
+        "boolean" => value.is_boolean(),
+        "null" => value.is_null(),
+        _ => unreachable!("schema kind was validated"),
+    }
+}
+
+fn ai_json_size_matches(
+    schema: &JsonMap<String, JsonValue>,
+    min_name: &str,
+    max_name: &str,
+    length: u64,
+) -> bool {
+    if schema.get(min_name).is_some_and(|n| length < n.as_u64().unwrap()) {
+        return false;
+    }
+    if schema.get(max_name).is_some_and(|n| length > n.as_u64().unwrap()) {
+        return false;
+    }
+    true
+}
