@@ -148,38 +148,17 @@ The [complete example](examples/linear_regression.suri) implements ordinary leas
 semauri run --allow console_write examples/linear_regression.suri
 ```
 
-**Level 7 — Generate a secure password**
-
-Semauri can generate passwords directly using your operating system's
-cryptographically secure random source:
+**Level 7 — Secure passwords (v0.75.0)**
 
 ```text
 let generated_password be password of 20 characters.
+let token be secure random string of 32 characters from "abcdef0123456789".
 print generated_password.
 ```
 
-For a custom alphabet (for example, a hexadecimal API token):
-
-```text
-let token be secure random string of 32 characters from "abcdef0123456789".
-print token.
-```
-
-Save the program to `password.suri` and run it with explicit permissions:
-
-```sh
-semauri run password.suri --allow secure_random --allow console_write
-```
-
-Each execution generates new random values. The secure generator selects
-characters without modulo bias. A default password uses upper- and lowercase
-letters, digits and symbols; custom alphabets must have distinct characters.
-Lengths are limited to **1–4096 Unicode characters**. Avoid printing real
-passwords into logs, and prefer 20+ characters for account passwords.
-
-You can also write `draw random integer from 1 to 6` or
-`pick random character from "ABCDEF"` with the same permission.
-[Try the complete example](examples/secure_password.suri).
+Run the [complete example](examples/secure_password.suri):
+`semauri run examples/secure_password.suri --allow secure_random --allow console_write`.
+The OS-backed CSPRNG uses unbiased sampling. Don't log real passwords.
 
 ## Create your own Semauri-compatible library to extend Semauri's power
 
