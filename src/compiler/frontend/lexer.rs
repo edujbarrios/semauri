@@ -212,7 +212,9 @@ pub struct Lexer<'a> {
 impl<'a> Lexer<'a> {
     pub fn new(source: &str, domains: &'a DomainRegistry) -> Self {
         Self {
-            chars: source.chars().collect(),
+            // A UTF-8 BOM is a file signature, not a source token. Ignore it
+            // only at byte zero so subsequent BOM characters remain errors.
+            chars: source.strip_prefix('\u{feff}').unwrap_or(source).chars().collect(),
             index: 0,
             line: 1,
             column: 1,
