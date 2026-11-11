@@ -2293,3 +2293,30 @@ these still require proper control-flow lowering. The `local/*` AI
 simulation and other domains are unaffected.
 
 [Executable Boolean example](../examples/boolean_logic.suri).
+
+
+## Dynamic numeric expressions (v0.74.0)
+
+Previously, Semauri could evaluate numeric expressions only when their values
+were known at compilation time. Now **checked subtraction, unary minus, and
+numeric comparisons** also work with runtime values, such as declared
+`number config` parameters:
+
+```text
+let measured be number config "measured".
+let threshold be number config "threshold".
+let distance be measured minus threshold.
+let reverse_distance be minus distance.
+let above be measured is greater than threshold.
+assert above is equal to (distance is greater than 0).
+```
+
+These expressions lower to pure, typed `core` nodes in the runtime SSA plan.
+Signed integer comparisons remain exact beyond 2^53, and subtraction or
+unary negation rejects signed 64-bit overflows with S470/S358. The source
+config-read operation still needs explicit `--allow config_read`. Arithmetic
+and comparison nodes themselves grant no new effects. Short-circuit
+`and`/`or` and dynamic branches remain unchanged and must not be made
+eager by optimization. Dynamic addition, multiplication and other expressions
+are outside this increment; the compiler continues to report their existing
+limitation rather than pretending they execute.

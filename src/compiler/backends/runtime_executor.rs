@@ -137,6 +137,48 @@ fn execute_runtime_plan(plan: &RuntimePlan, config: &crate::ProgramConfig) -> Re
                 let same = argument("left")? == argument("right")?;
                 Some(ValueData::Boolean(if operation.name == "equal" { same } else { !same }))
             }
+            ("core", "negate") => match argument("value")? {
+                ValueData::Number(NumberValue::Int(value)) => {
+                    let negated = value.checked_neg().ok_or_else(|| SemauriError::new(
+                        ErrorKind::Runtime, "S358",
+                        "Negating this integer exceeds the signed 64-bit range",
+                        Some(operation.source_span), None,
+                    ))?;
+                    Some(ValueData::Number(NumberValue::Int(negated)))
+                }
+                ValueData::Number(NumberValue::Float(value)) if value.is_finite() =>
+                    Some(ValueData::Number(NumberValue::Float(-value))),
+                _ => return Err(runtime_error(operation, "runtime 'minus' requires a finite number")),
+            },
+            ("core", "subtract") => match (argument("left")?, argument("right")?) {
+                (ValueData::Number(a), ValueData::Number(b)) => {
+                    let difference = numeric_subtract(&a, &b).ok_or_else(|| SemauriError::new(
+                        ErrorKind::Runtime, "S470",
+                        "Subtraction overflows the signed integer range or produces a non-finite result",
+                        Some(operation.source_span), None,
+                    ))?;
+                    Some(ValueData::Number(difference))
+                }
+                _ => return Err(runtime_error(operation, "runtime subtraction requires numbers")),
+            },
+            ("core", kind @ ("greater_than" | "less_than"
+                | "greater_than_or_equal" | "less_than_or_equal")) => {
+                let (ValueData::Number(a), ValueData::Number(b)) =
+                    (argument("left")?, argument("right")?)
+                else {
+                    return Err(runtime_error(operation, "runtime numeric comparison requires numbers"));
+                };
+                let ordering = numeric_compare(&a, &b);
+                let yes = match kind {
+                    "greater_than" => ordering == Some(std::cmp::Ordering::Greater),
+                    "less_than" => ordering == Some(std::cmp::Ordering::Less),
+                    "greater_than_or_equal" => matches!(ordering,
+                        Some(std::cmp::Ordering::Greater | std::cmp::Ordering::Equal)),
+                    _ => matches!(ordering,
+                        Some(std::cmp::Ordering::Less | std::cmp::Ordering::Equal)),
+                };
+                Some(ValueData::Boolean(yes))
+            }
             ("console", "print") => {
                 output.push_str(&display_console_value(&argument("value")?));
                 output.push('\n');

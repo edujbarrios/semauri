@@ -524,7 +524,10 @@ pub fn run_cli(args: &[String]) -> CliResult {
                             // Pure SSA primitives are executable but do not
                             // grant arbitrary core or plugin operations.
                             "core" => matches!(operation.name.as_str(),
-                                "not" | "xor" | "equal" | "not_equal"),
+                                "not" | "xor" | "equal" | "not_equal"
+                                | "negate" | "subtract"
+                                | "greater_than" | "less_than"
+                                | "greater_than_or_equal" | "less_than_or_equal"),
                             _ => false,
                         });
                 if executable_runtime {

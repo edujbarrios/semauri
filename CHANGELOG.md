@@ -1,5 +1,10 @@
 ## Unreleased
 
+### Dynamic numeric expressions (core language)
+- Lower runtime-dependent unary numeric minus, exact integer subtraction, and numeric less-than/greater-than (including inclusive bounds) to pure typed SSA core operations.
+- Use exact signed 64-bit comparison and checked subtraction/negation, preserving S470/S358 overflow diagnostics; no numeric coercion or extra runtime permissions.
+- Add regression coverage for 2^53 precision, i64 boundaries, dataflow dependencies, effect gates, formatter and optimizer, without changing lazy Boolean branch semantics.
+
 ### Boolean logic and dynamic expression polish (core language)
 - Add the contextual `xor` operator with static boolean typing, clear precedence between `and` and `or`, constant folding, compatible formatting and regression tests. The word remains usable as a variable name.
 - Permit runtime-dependent `not`, `xor`, and typed equality/inequality through effect-free SSA `core` operations, instead of rejecting all such expressions with S335.
