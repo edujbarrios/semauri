@@ -386,6 +386,33 @@ Comments begin with `#`, `//`, or a nestable `/* ... */` block. Keywords are cas
 
 Semauri does not silently coerce unrelated types.
 
+### Immutable typed records (development, not yet released)
+
+Semauri now supports **structurally typed records** in the development branch.
+Records are immutable: field names and the type of each value are known to the
+compiler. A field lookup is checked *before execution*.
+
+```text
+let person be record of ("name": "Ada", "age": 37, "active": true).
+assert (field "age" of person) is equal to 37.
+print field "name" of person.
+```
+
+Add the optional article (`a record of (...)`), nest records, or include them
+in lists. Field names are **quoted, case-sensitive strings** of 1–64 UTF-8
+bytes; at most 32 fields are allowed, and duplicate names are rejected.
+An empty record is `record of ()`. Access a value with
+`field "FIELD_NAME" of RECORD` or use parentheses for nested lookups.
+The record's structural type is inferred (for example,
+`record<age: number, name: string>`), with S418 for malformed
+declarations and S419 for missing fields, non-record access or unit fields.
+
+Records can contain core values and work with pure functions. In this first
+step, *building records from runtime-dependent model/API results is not yet
+supported*. They do not enable network access, file I/O or implicit effects.
+The public language version is still **0.72.0** and these features remain
+in the draft development PR.
+
 ### Expressions
 
 Supported expression families include arithmetic, comparisons, Boolean operators, string concatenation, list indexing and concatenation, `length of`, `contains`, `uppercase of`, `lowercase of`, `reverse of`, numeric reductions, extrema, median, sorting, distinct values, bounded list operations, ranges, map/filter/count/reduce, pairwise zip, partition, flatten, repetition, conditional expressions, and pure function calls.

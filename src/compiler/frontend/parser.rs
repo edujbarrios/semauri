@@ -1771,9 +1771,45 @@ impl<'a> Parser<'a> {
                     span: token.span,
                 })
             }
+            TokenKind::Article
+                if self.tokens.get(self.current + 1).is_some_and(|next|
+                    next.lexeme.eq_ignore_ascii_case("record"))
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.kind == TokenKind::Of) =>
+            {
+                let start = self.advance().clone();
+                self.record_literal(&start, false)
+            }
             TokenKind::Article => {
                 let start = self.advance().clone();
                 self.list_literal(&start, false)
+            }
+            TokenKind::Word if token.lexeme.eq_ignore_ascii_case("record")
+                && self.tokens.get(self.current + 1).is_some_and(|next|
+                    next.kind == TokenKind::Of) =>
+            {
+                let start = self.advance().clone();
+                self.record_literal(&start, true)
+            }
+            kind if matches!(kind, TokenKind::Word | TokenKind::DomainElement)
+                && token.lexeme.eq_ignore_ascii_case("field")
+                && self.tokens.get(self.current + 1).is_some_and(|next|
+                    next.kind == TokenKind::String)
+                && self.tokens.get(self.current + 2).is_some_and(|next|
+                    next.kind == TokenKind::Of) =>
+            {
+                let start = self.advance().clone();
+                let key = self.consume(TokenKind::String,
+                    "Expected quoted record field name", "S418")?;
+                self.consume(TokenKind::Of,
+                    "Expected 'of' after record field name", "S418")?;
+                let record = self.primary()?;
+                let span = span_between_spans(start.span, record.span());
+                Ok(Expr::RecordField {
+                    name: token_string_literal(&key),
+                    record: Box::new(record),
+                    span,
+                })
             }
             TokenKind::List => {
                 let start = self.advance().clone();
@@ -2739,6 +2775,49 @@ impl<'a> Parser<'a> {
                 None,
             )),
         }
+    }
+
+    // Immutable, structurally typed records use quoted JSON-compatible keys.
+    // Parentheses delimit their fields so a record can be nested in any expression.
+    fn record_literal(&mut self, start: &Token, record_consumed: bool) -> Result<Expr> {
+        if !record_consumed {
+            self.consume_surface("record",
+                "Expected 'record' after article", "S418")?;
+        }
+        self.consume(TokenKind::Of, "Expected 'of' after record", "S418")?;
+        self.consume(TokenKind::LParen,
+            "Expected '(' before record fields", "S418")?;
+        let mut fields = Vec::new();
+        while !self.check(TokenKind::RParen) {
+            let name = self.consume(TokenKind::String,
+                "Record field names must be quoted strings", "S418")?;
+            let key = token_string_literal(&name);
+            if key.is_empty() || key.len() > 64 {
+                return Err(self.parse_error(&name,
+                    "Record field name must have 1-64 UTF-8 bytes", "S418", None));
+            }
+            if fields.iter().any(|(existing, _): &(String, Expr)| existing == &key) {
+                return Err(self.parse_error(&name,
+                    format!("Duplicate record field '{key}'"), "S418", None));
+            }
+            self.consume(TokenKind::Colon,
+                "Expected ':' after record field name", "S418")?;
+            let value = self.expression()?;
+            fields.push((key, value));
+            if fields.len() > 32 {
+                return Err(self.parse_error(&name,
+                    "Records support at most 32 fields", "S418", None));
+            }
+            if !self.matches(&[TokenKind::Comma]) { break; }
+            // Optional trailing comma.
+            if self.check(TokenKind::RParen) { break; }
+        }
+        let end = self.consume(TokenKind::RParen,
+            "Expected ')' after record fields", "S418")?;
+        Ok(Expr::Record {
+            fields,
+            span: span_between_spans(start.span, end.span),
+        })
     }
 
     fn list_literal(&mut self, start: &Token, list_consumed: bool) -> Result<Expr> {

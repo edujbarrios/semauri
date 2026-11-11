@@ -31,6 +31,17 @@ pub enum HirExpr {
         items: Vec<HirExpr>,
         span: SourceSpan,
     },
+    Record {
+        ty: Type,
+        fields: BTreeMap<String, HirExpr>,
+        span: SourceSpan,
+    },
+    RecordField {
+        ty: Type,
+        name: String,
+        record: Box<HirExpr>,
+        span: SourceSpan,
+    },
     SymbolRef {
         ty: Type,
         symbol_id: u64,
@@ -119,6 +130,8 @@ impl HirExpr {
         match self {
             HirExpr::Literal { ty, .. }
             | HirExpr::List { ty, .. }
+            | HirExpr::Record { ty, .. }
+            | HirExpr::RecordField { ty, .. }
             | HirExpr::SymbolRef { ty, .. }
             | HirExpr::FunctionCall { ty, .. }
             | HirExpr::Conditional { ty, .. }
@@ -137,6 +150,8 @@ impl HirExpr {
         match self {
             HirExpr::Literal { span, .. }
             | HirExpr::List { span, .. }
+            | HirExpr::Record { span, .. }
+            | HirExpr::RecordField { span, .. }
             | HirExpr::SymbolRef { span, .. }
             | HirExpr::FunctionCall { span, .. }
             | HirExpr::Conditional { span, .. }
@@ -155,6 +170,8 @@ impl HirExpr {
         match self {
             HirExpr::Literal { .. } => "literal",
             HirExpr::List { .. } => "list",
+            HirExpr::Record { .. } => "record",
+            HirExpr::RecordField { .. } => "record_field",
             HirExpr::SymbolRef { .. } => "symbol_ref",
             HirExpr::FunctionCall { .. } => "function_call",
             HirExpr::Conditional { .. } => "conditional_expression",
@@ -180,6 +197,15 @@ impl HirExpr {
                     "items".into(),
                     JsonValue::Array(items.iter().map(HirExpr::to_json).collect()),
                 );
+            }
+            HirExpr::Record { fields: values, .. } => {
+                fields.insert("fields".into(), json!(values.iter()
+                    .map(|(name, value)| (name.clone(), value.to_json()))
+                    .collect::<BTreeMap<_, _>>()));
+            }
+            HirExpr::RecordField { name, record, .. } => {
+                fields.insert("name".into(), json!(name));
+                fields.insert("record".into(), record.to_json());
             }
             HirExpr::SymbolRef {
                 symbol_id,

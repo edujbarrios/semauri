@@ -326,6 +326,40 @@ impl<'a> HirBuilder<'a> {
                     span: *span,
                 })
             }
+            Expr::Record { fields, span } => {
+                let mut types = BTreeMap::new();
+                let mut built = BTreeMap::new();
+                for (name, expression) in fields {
+                    let value = self.build_expr(expression)?;
+                    if value.ty() == Type::Unit {
+                        return Err(SemauriError::semantic(
+                            "S419", format!("Record field '{name}' cannot have type unit"),
+                            Some(expression.span()), None));
+                    }
+                    types.insert(name.clone(), value.ty());
+                    built.insert(name.clone(), value);
+                }
+                Ok(HirExpr::Record {
+                    ty: Type::Record(types),
+                    fields: built,
+                    span: *span,
+                })
+            }
+            Expr::RecordField { name, record, span } => {
+                let record = self.build_expr(record)?;
+                let ty = match record.ty() {
+                    Type::Record(fields) => fields.get(name).cloned().ok_or_else(||
+                        SemauriError::semantic(
+                            "S419", format!("Record has no field '{name}'"),
+                            Some(*span), None))?,
+                    other => return Err(SemauriError::semantic(
+                        "S419", format!("Field access requires a record, received {other}"),
+                        Some(record.span()), None)),
+                };
+                Ok(HirExpr::RecordField {
+                    ty, name: name.clone(), record: Box::new(record), span: *span,
+                })
+            }
             Expr::Variable { name, span } => {
                 let symbol = self.resolve_symbol(name, *span)?;
                 Ok(HirExpr::SymbolRef {
@@ -1668,6 +1702,8 @@ fn pure_function_expression(expr: &HirExpr) -> bool {
         HirExpr::DomainOperation { .. } => false,
         HirExpr::Literal { .. } | HirExpr::SymbolRef { .. } => true,
         HirExpr::List { items, .. } => items.iter().all(pure_function_expression),
+        HirExpr::Record { fields, .. } => fields.values().all(pure_function_expression),
+        HirExpr::RecordField { record, .. } => pure_function_expression(record),
         HirExpr::Unary { operand, .. } | HirExpr::Promote { value: operand, .. } =>
             pure_function_expression(operand),
         HirExpr::Binary { left, right, .. } =>

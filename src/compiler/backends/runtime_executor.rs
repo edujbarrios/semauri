@@ -173,6 +173,7 @@ fn display_console_value(value: &ValueData) -> String {
                 .collect::<Vec<_>>()
                 .join(", ")
         ),
+        ValueData::Record(fields) => ValueData::Record(fields.clone()).to_json().to_string(),
         ValueData::Unit => "unit".to_string(),
     }
 }

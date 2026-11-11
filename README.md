@@ -169,6 +169,8 @@ Library code is type-checked and respects explicit permissions; this supports
 
 **In development (not released):** add `as math` to a library import, then call
 `invoke math.square to 7` to avoid function-name collisions between libraries.
+Also in development: immutable typed records using `record of (...)` and
+`field "name" of person`. See the [language guide](docs/language-guide.md).
 
 ## 4. Command reference
 

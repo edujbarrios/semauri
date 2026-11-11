@@ -132,6 +132,10 @@ fn collect_effects_expr(expr: &HirExpr, uses: &mut Vec<EffectUse>) {
                 collect_effects_expr(item, uses);
             }
         }
+        HirExpr::Record { fields, .. } => {
+            for value in fields.values() { collect_effects_expr(value, uses); }
+        }
+        HirExpr::RecordField { record, .. } => collect_effects_expr(record, uses),
         HirExpr::Binary { left, right, .. } => {
             collect_effects_expr(left, uses);
             collect_effects_expr(right, uses);

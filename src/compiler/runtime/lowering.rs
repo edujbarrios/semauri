@@ -957,6 +957,14 @@ impl<'a> Lowerer<'a> {
                 }
                 false
             }
+            HirExpr::Record { fields, .. } => {
+                let mut dependent = false;
+                for value in fields.values() {
+                    if self.runtime_dependent(value)? { dependent = true; }
+                }
+                dependent
+            }
+            HirExpr::RecordField { record, .. } => self.runtime_dependent(record)?,
             HirExpr::Repeat { count, value, .. } =>
                 self.runtime_dependent(count)? || self.runtime_dependent(value)?,
             HirExpr::Conditional { condition, consequence, alternative, .. } => {
@@ -1249,6 +1257,33 @@ impl<'a> Lowerer<'a> {
                     ty: ty.clone(),
                     data: ValueData::List(values),
                 })
+            }
+            HirExpr::Record { ty, fields, .. } => {
+                let mut values = BTreeMap::new();
+                for (name, value) in fields {
+                    match self.evaluate(value)? {
+                        BoundValue::Compile { data, .. } => { values.insert(name.clone(), data); }
+                        BoundValue::Runtime(_) => return Err(self.runtime_value_error(value.span())),
+                    }
+                }
+                Ok(BoundValue::Compile {
+                    ty: ty.clone(),
+                    data: ValueData::Record(values),
+                })
+            }
+            HirExpr::RecordField { ty, name, record, span } => {
+                match self.evaluate(record)? {
+                    BoundValue::Compile { data: ValueData::Record(fields), .. } => {
+                        let data = fields.get(name).cloned().ok_or_else(||
+                            SemauriError::semantic(
+                                "S419", format!("Record has no field '{name}'"),
+                                Some(*span), None))?;
+                        Ok(BoundValue::Compile { ty: ty.clone(), data })
+                    }
+                    BoundValue::Compile { .. } => Err(SemauriError::semantic(
+                        "S419", "Field access requires a record", Some(*span), None)),
+                    BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
+                }
             }
             HirExpr::SymbolRef {
                 symbol_id,

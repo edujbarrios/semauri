@@ -1,0 +1,7 @@
+# Immutable structurally typed records; names and types are checked at compile time.
+let person be record of ("name": "Ada", "age": 37, "active": true).
+let address be a record of ("city": "London", "postal": "SW1A").
+let profile be record of ("person": person, "address": address).
+assert (field "age" of person) is equal to 37.
+assert (field "city" of field "address" of profile) is equal to "London".
+print field "name" of field "person" of profile.

@@ -298,6 +298,15 @@ pub enum Expr {
         items: Vec<Expr>,
         span: SourceSpan,
     },
+    Record {
+        fields: Vec<(String, Expr)>,
+        span: SourceSpan,
+    },
+    RecordField {
+        name: String,
+        record: Box<Expr>,
+        span: SourceSpan,
+    },
     Variable {
         name: String,
         span: SourceSpan,
@@ -365,6 +374,8 @@ impl Expr {
         match self {
             Expr::Literal { span, .. }
             | Expr::List { span, .. }
+            | Expr::Record { span, .. }
+            | Expr::RecordField { span, .. }
             | Expr::Variable { span, .. }
             | Expr::FunctionCall { span, .. }
             | Expr::Conditional { span, .. }
@@ -382,6 +393,8 @@ impl Expr {
         match self {
             Expr::Literal { ty, value, .. } => Expr::Literal { ty, value, span },
             Expr::List { items, .. } => Expr::List { items, span },
+            Expr::Record { fields, .. } => Expr::Record { fields, span },
+            Expr::RecordField { name, record, .. } => Expr::RecordField { name, record, span },
             Expr::Variable { name, .. } => Expr::Variable { name, span },
             Expr::FunctionCall { name, arguments, .. } => Expr::FunctionCall { name, arguments, span },
             Expr::Repeat { count, value, .. } => Expr::Repeat { count, value, span },
@@ -448,6 +461,17 @@ impl Expr {
                     "items".into(),
                     JsonValue::Array(items.iter().map(Expr::to_json).collect()),
                 );
+            }
+            Expr::Record { fields, .. } => {
+                base.insert("type".into(), json!("record_literal"));
+                base.insert("fields".into(), json!(fields.iter()
+                    .map(|(name, value)| json!({"name": name, "value": value.to_json()}))
+                    .collect::<Vec<_>>()));
+            }
+            Expr::RecordField { name, record, .. } => {
+                base.insert("type".into(), json!("record_field"));
+                base.insert("name".into(), json!(name));
+                base.insert("record".into(), record.to_json());
             }
             Expr::Repeat { count, value, .. } => {
                 base.insert("type".into(), json!("repeat_expression"));

@@ -1,5 +1,12 @@
 ## Unreleased
 
+### Immutable typed records (development; no version bump)
+- Introduce `record of ("field": EXPR, ...)` and `field "name" of record` with inferred structural field types, nesting, lists and pure function results.
+- Reject duplicate fields, missing field names, excessive records and invalid field access with S418/S419 diagnostics; retain explicit capability rules and source spans.
+- Add compiler, optimizer, formatter, CLI and regression coverage; record constructors currently require compile-time-evaluable values.
+- Keep Semauri at 0.72.0 on the draft development PR; do not publish or merge until requested.
+
+
 ### Namespaced imports (development; no version bump)
 - Add `import "library:NAME" as alias.` and local source aliases with checked `invoke alias.function to ...` calls, avoiding collisions between exported functions of multiple libraries.
 - Preserve nested unqualified calls within each alias scope; reject malformed, duplicate, reserved or unknown aliases (S416). Unaliased imports retain original semantics.

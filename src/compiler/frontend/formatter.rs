@@ -31,6 +31,12 @@ impl Compiler {
             let is_function = token.kind == TokenKind::Word
                 && token.lexeme.eq_ignore_ascii_case("function")
                 && index > 0 && tokens[index - 1].lexeme.eq_ignore_ascii_case("define");
+            let is_record = token.kind == TokenKind::Word
+                && token.lexeme.eq_ignore_ascii_case("record")
+                && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
+            let is_record_field = token.lexeme.eq_ignore_ascii_case("field")
+                && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::String)
+                && tokens.get(index + 2).is_some_and(|next| next.kind == TokenKind::Of);
             let is_import_as = token.kind == TokenKind::Word
                 && token.lexeme.eq_ignore_ascii_case("as")
                 && index >= 2
@@ -561,7 +567,7 @@ impl Compiler {
                         | TokenKind::Minus | TokenKind::LParen));
             // Map/filter are contextual words, not reserved identifiers or label text.
             if token.kind == TokenKind::Word
-                && !is_import && !is_import_as && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_rank_selection && !is_rank_unique && !is_rank_unique_modifier && !is_power && !is_statistics && !is_flatten && !is_absolute && !is_square_aggregate && !is_bias_aggregate && !is_magnitude_aggregate && !is_numeric_series && !is_difference_modifier && !is_difference && !is_difference_between && !is_sign && !is_numeric_rounding && !is_round && !is_truncate && !is_factorial && !is_prime && !is_cube && !is_square && !is_sqrt && !is_scientific_math && !is_python_alias && !is_sort_unique_alias && !is_cardinality && !is_count_distinct && !is_count_unique && !is_sort_direction && !is_sort_order_alias && !is_cbrt && !is_reciprocal && !is_digits && !is_radix_formatter && !is_parity && !is_product && !is_text_operation && !is_text_predicate && !is_text_negation && !is_inclusion_alias && !is_join_with && !is_joined_with && !is_different && !is_empty_or_blank && !is_numeric_predicate && !is_prime_predicate && !is_bound_comparison && !is_no_order && !is_range_through && !is_one_of && !is_divisibility && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field && !is_text_search && !is_last_position && !is_json_pointer && !is_character_from && !is_character_at && !is_remove_all
+                && !is_record && !is_record_field && !is_import && !is_import_as && !is_define && !is_function && !is_invoke && !is_then && !is_repeat && !is_rank_selection && !is_rank_unique && !is_rank_unique_modifier && !is_power && !is_statistics && !is_flatten && !is_absolute && !is_square_aggregate && !is_bias_aggregate && !is_magnitude_aggregate && !is_numeric_series && !is_difference_modifier && !is_difference && !is_difference_between && !is_sign && !is_numeric_rounding && !is_round && !is_truncate && !is_factorial && !is_prime && !is_cube && !is_square && !is_sqrt && !is_scientific_math && !is_python_alias && !is_sort_unique_alias && !is_cardinality && !is_count_distinct && !is_count_unique && !is_sort_direction && !is_sort_order_alias && !is_cbrt && !is_reciprocal && !is_digits && !is_radix_formatter && !is_parity && !is_product && !is_text_operation && !is_text_predicate && !is_text_negation && !is_inclusion_alias && !is_join_with && !is_joined_with && !is_different && !is_empty_or_blank && !is_numeric_predicate && !is_prime_predicate && !is_bound_comparison && !is_no_order && !is_range_through && !is_one_of && !is_divisibility && !is_parse_conversion && !is_json_decode && !is_json_object_operation && !is_json_field && !is_text_search && !is_last_position && !is_json_pointer && !is_character_from && !is_character_at && !is_remove_all
                 && !(matches!(token.lexeme.to_ascii_lowercase().as_str(), "map" | "filter" | "count" | "reduce" | "zip" | "partition")
                     && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Every))
                 && !(token.lexeme.eq_ignore_ascii_case("range")
