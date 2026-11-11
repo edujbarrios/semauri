@@ -279,7 +279,7 @@ fn rewrite_scoped_source(
     source: &str, namespace: &str, aliases: &HashMap<String, String>, file: &Path,
 ) -> Result<(String, Vec<Vec<NamespaceColumnEdit>>)> {
     if namespace.is_empty() && aliases.is_empty()
-        && !source.contains(PRIVATE_NAMESPACE_PREFIX)
+        && !source.to_ascii_lowercase().contains(PRIVATE_NAMESPACE_PREFIX)
     {
         return Ok((source.to_owned(), vec![Vec::new(); source.lines().count()]));
     }
