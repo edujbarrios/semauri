@@ -271,7 +271,7 @@ fn dispatch(request: &Request, iopub: &zmq::Socket, key: &str, counter: &mut u64
     let content = match kind {
         "kernel_info_request" => json!({
             "protocol_version":"5.3","implementation":"semauri","implementation_version":"0.11.0",
-            "language_info":{"name":"semauri","version":"0.74.0","mimetype":"text/x-semauri",
+            "language_info":{"name":"semauri","version":"0.75.0","mimetype":"text/x-semauri",
                 "file_extension":".suri","pygments_lexer":"text","codemirror_mode":"text"},
             "banner":"Semauri Jupyter kernel — standalone, capability-checked .suri cells",
             "status":"ok","help_links":[]
