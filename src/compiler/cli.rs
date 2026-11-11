@@ -519,7 +519,14 @@ pub fn run_cli(args: &[String]) -> CliResult {
                         .runtime_plan
                         .operations
                         .iter()
-                        .all(|operation| matches!(operation.domain.as_str(), "config" | "ai" | "console"));
+                        .all(|operation| match operation.domain.as_str() {
+                            "config" | "ai" | "console" => true,
+                            // Pure SSA primitives are executable but do not
+                            // grant arbitrary core or plugin operations.
+                            "core" => matches!(operation.name.as_str(),
+                                "not" | "xor" | "equal" | "not_equal"),
+                            _ => false,
+                        });
                 if executable_runtime {
                     if dry_run {
                         stdout.push_str(&pretty_json(&result.semantic.runtime_plan.to_json()));
