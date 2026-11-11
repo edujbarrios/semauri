@@ -2233,6 +2233,10 @@ La sintaxis admite **un subconjunto explícito** de JSON Schema: los tipos
 `maxLength` para cadenas (contando caracteres Unicode). No convierte tipos.
 Los esquemas de texto también admiten `enum` con 1 a 128 alternativas únicas.
 
+Una respuesta nominal `ai.response` también puede utilizarse como cadena
+inmutable en estas operaciones, manteniendo separados los tipos de modelo,
+agente y herramienta.
+
 `normalize ai json RESPONSE against schema SCHEMA` valida la respuesta y
 devuelve su representación JSON canónica, sin espacios superfluos y con las
 claves de objetos ordenadas. Si la respuesta no cumple el esquema, produce
