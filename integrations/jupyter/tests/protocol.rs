@@ -36,10 +36,11 @@ fn request(socket: &zmq::Socket, key: &str, typ: &str, msg_id: &str, content: Va
     frames.extend(parts);
     socket.send_multipart(frames, 0).unwrap();
 }
-fn received(socket: &zmq::Socket) -> (Value, Value) {
+fn received(socket: &zmq::Socket) -> (Value, Value, Value) {
     let frames = socket.recv_multipart(0).expect("Jupyter message timed out");
     let i = frames.iter().position(|f| f == b"<IDS|MSG>").unwrap();
     (serde_json::from_slice(&frames[i + 2]).unwrap(),
+     serde_json::from_slice(&frames[i + 3]).unwrap(),
      serde_json::from_slice(&frames[i + 5]).unwrap())
 }
 #[test]
@@ -81,7 +82,7 @@ fn native_kernel_handles_heartbeat_execution_and_shutdown() {
     assert_eq!(hb.recv_bytes(0).unwrap(), b"semauri-ping");
 
     request(&shell,key,"kernel_info_request","info",json!({}));
-    let (info_header, info) = received(&shell);
+    let (info_header, _, info) = received(&shell);
     assert_eq!(info_header["msg_type"],"kernel_info_reply");
     assert_eq!(info["language_info"]["name"],"semauri");
 
@@ -89,11 +90,13 @@ fn native_kernel_handles_heartbeat_execution_and_shutdown() {
         "code":"print \"Jupyter\".","silent":false,"store_history":true,
         "user_expressions":{},"allow_stdin":false,"stop_on_error":true
     }));
-    let (_, reply) = received(&shell);
+    let (_, _, reply) = received(&shell);
     assert_eq!(reply["status"],"ok","{reply}");
     let mut streams = String::new();
-    for _ in 0..8 {
-        let (head, content) = received(&iopub);
+    for _ in 0..12 {
+        let (head, parent, content) = received(&iopub);
+        // Kernel-info status messages can arrive after the next execute request.
+        if parent["msg_id"] != "execute" { continue; }
         if head["msg_type"] == "stream" {
             streams.push_str(content["text"].as_str().unwrap_or(""));
         }
@@ -102,7 +105,7 @@ fn native_kernel_handles_heartbeat_execution_and_shutdown() {
     assert_eq!(streams, "Jupyter\n");
 
     request(&shell,key,"shutdown_request","shutdown",json!({"restart":false}));
-    let (head, reply) = received(&shell);
+    let (head, _, reply) = received(&shell);
     assert_eq!(head["msg_type"],"shutdown_reply");
     assert_eq!(reply["status"],"ok");
     let _ = kernel.0.wait();
