@@ -215,3 +215,14 @@ fn normalized_json_is_canonical_and_fails_for_mismatched_responses() {
     assert_eq!(error.status, 70, "{}", error.stderr);
     assert!(error.stderr.contains("AI JSON response does not match"));
 }
+
+#[test]
+fn duplicate_json_keys_are_rejected_in_responses_and_contracts() {
+    let contract = r#"{"type":"object","required":["label"],"properties":{"label":{"type":"string"}}}"#;
+    assert!(!matches_json(r#"{"label":"cat","label":"dog"}"#, contract));
+    assert!(!matches_json(r#"{"label":"cat","nested":{"x":1,"x":2}}"#, contract));
+    let duplicate_schema = r#"{"type":"object","type":"string"}"#;
+    let invalid = run(&program("{}", duplicate_schema));
+    assert_eq!(invalid.status, 70, "{}", invalid.stderr);
+    assert!(invalid.stderr.contains("AI JSON schema is not valid JSON"));
+}
