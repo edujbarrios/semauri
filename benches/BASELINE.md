@@ -1,6 +1,6 @@
 # Performance baseline — Semauri 0.48.0
 
-This folder provides five paired end-to-end workloads and deterministic
+This folder provides five native Rust-driven end-to-end workloads and deterministic
 expected stdout. Before optimizing, build `cargo build --release` and run
 `bash scripts/bench.sh 50`. The harness performs 3 warmups and records
 50 wall-clock timings per workload and language (median and minimum).
