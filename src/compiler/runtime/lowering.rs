@@ -849,7 +849,8 @@ impl<'a> Lowerer<'a> {
                     }),
                 }
             }
-            HirExpr::Unary { operator: UnaryOperator::Not, operand, span, .. } => {
+            HirExpr::Unary { operator, operand, span, ty }
+                if matches!(operator, UnaryOperator::Not | UnaryOperator::Negate) => {
                 if !self.runtime_dependent(operand)? {
                     return self.evaluate(expression);
                 }
@@ -859,18 +860,16 @@ impl<'a> Lowerer<'a> {
                     BoundValue::Compile { data, .. } => RuntimeArgument::Value(data),
                     BoundValue::Runtime(reference) => RuntimeArgument::Ref(reference),
                 });
-                Ok(self.append_core_boolean_operation("not", args, *span))
+                Ok(self.append_core_expression_operation(operator.as_str(), ty.clone(), args, *span))
             }
-            HirExpr::Binary { operator: BinaryOperator::Xor | BinaryOperator::Equal
-                | BinaryOperator::NotEqual, left, right, span, .. } => {
+            HirExpr::Binary { operator, left, right, span, ty }
+                if matches!(operator, BinaryOperator::Xor | BinaryOperator::Equal
+                    | BinaryOperator::NotEqual | BinaryOperator::Subtract
+                    | BinaryOperator::GreaterThan | BinaryOperator::LessThan
+                    | BinaryOperator::GreaterThanOrEqual | BinaryOperator::LessThanOrEqual) => {
                 if !self.runtime_dependent(left)? && !self.runtime_dependent(right)? {
                     return self.evaluate(expression);
                 }
-                let op_name = match expression {
-                    HirExpr::Binary { operator: BinaryOperator::Xor, .. } => "xor",
-                    HirExpr::Binary { operator: BinaryOperator::Equal, .. } => "equal",
-                    _ => "not_equal",
-                };
                 let mut args = BTreeMap::new();
                 for (name, operand) in [("left", left.as_ref()), ("right", right.as_ref())] {
                     let value = self.lower_runtime_value(operand)?;
@@ -879,7 +878,9 @@ impl<'a> Lowerer<'a> {
                         BoundValue::Runtime(reference) => RuntimeArgument::Ref(reference),
                     });
                 }
-                Ok(self.append_core_boolean_operation(op_name, args, *span))
+                Ok(self.append_core_expression_operation(
+                    operator.as_str(), ty.clone(), args, *span,
+                ))
             }
             _ => self.evaluate(expression),
         }
@@ -888,15 +889,15 @@ impl<'a> Lowerer<'a> {
     // Eager, pure expressions may be lowered into SSA without a control-flow
     // graph. Short-circuit 'and'/'or' and runtime conditionals still require
     // proper CFG lowering, so they deliberately retain their existing guard.
-    fn append_core_boolean_operation(
-        &mut self, name: &str,
+    fn append_core_expression_operation(
+        &mut self, name: &str, result_type: Type,
         arguments: BTreeMap<String, RuntimeArgument>,
         span: SourceSpan,
     ) -> BoundValue {
         let id = self.runtime_plan.operations.len() + 1;
         let reference = RuntimeValueRef {
             id: format!("%{id}"),
-            ty: Type::Boolean,
+            ty: result_type.clone(),
             producer_id: id,
             source_span: span,
         };
@@ -905,7 +906,7 @@ impl<'a> Lowerer<'a> {
             domain: "core".to_string(),
             name: name.to_string(),
             arguments,
-            return_type: Type::Boolean,
+            return_type: result_type,
             result: Some(reference.clone()),
             effects: Vec::new(),
             source_span: span,
