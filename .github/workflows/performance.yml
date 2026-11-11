@@ -5,7 +5,7 @@ on:
     paths:
       - "src/compiler/**"
       - "benches/**"
-      - "scripts/bench*"
+      - "src/bin/semauri_bench.rs"
       - ".github/workflows/performance.yml"
   workflow_dispatch:
 
@@ -41,12 +41,12 @@ jobs:
           set -euo pipefail
           git worktree add --detach /tmp/semauri-pr-base "$BASE_SHA"
           cargo build --release --locked --manifest-path /tmp/semauri-pr-base/Cargo.toml --target-dir /tmp/semauri-pr-base-target
-          python3 scripts/benchmark_delta.py /tmp/semauri-pr-base-target/release/semauri target/release/semauri
-      - name: Compare paired output and timed medians (50 + 3 warmups)
+          target/release/semauri_bench delta /tmp/semauri-pr-base-target/release/semauri target/release/semauri
+      - name: Compare Semauri output and timed medians (50 + 3 warmups)
         run: |
           SEMAURI_BIN=/tmp/semauri-048-target/release/semauri BENCH_LABEL=baseline BENCH_RESULTS=/tmp/semauri-before.json bash scripts/bench.sh 50
           SEMAURI_BIN=target/release/semauri BENCH_LABEL=candidate BENCH_RESULTS=/tmp/semauri-after.json bash scripts/bench.sh 50
-          python3 scripts/compare_benches.py /tmp/semauri-before.json /tmp/semauri-after.json
+          target/release/semauri_bench compare /tmp/semauri-before.json /tmp/semauri-after.json
       - name: Benchmark distinct optimization phases on the same runner
         run: |
           set -euo pipefail
@@ -61,7 +61,7 @@ jobs:
             cargo build --release --manifest-path "/tmp/semauri-$label/Cargo.toml" --target-dir "/tmp/semauri-$label-target"
             SEMAURI_BIN="/tmp/semauri-$label-target/release/semauri" BENCH_LABEL="$label" BENCH_RESULTS="/tmp/$label.json" bash scripts/bench.sh 50
           done
-          python3 scripts/compare_phases.py /tmp/phase0.json /tmp/phase1.json /tmp/phase2.json /tmp/phase3.json
+          target/release/semauri_bench phases /tmp/phase0.json /tmp/phase1.json /tmp/phase2.json /tmp/phase3.json
       - name: Final callgrind profile (best effort, no semantic changes)
         continue-on-error: true
         run: |
