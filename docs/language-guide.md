@@ -2245,3 +2245,7 @@ límites de profundidad y número de propiedades. No se trata de un validador
 completo del estándar JSON Schema ni protege por sí solo de inyecciones
 de instrucciones. Consulta
 [el ejemplo ejecutable](../examples/ai_structured_json.suri).
+
+Si hay claves JSON duplicadas, incluso dentro de objetos anidados, la respuesta
+se rechaza; un esquema con claves duplicadas produce S503. Esto evita
+que se interpreten ambiguamente las salidas de agentes.
