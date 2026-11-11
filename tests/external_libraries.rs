@@ -282,3 +282,22 @@ fn init_creates_a_valid_empty_library_catalog() {
     assert_eq!(inspected.status, 0, "{}", inspected.stderr);
     fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn checked_in_complementary_library_example_verifies_and_runs() {
+    let project = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("examples").join("external_libraries").join("app");
+    let inspected = call("libraries", &project);
+    assert_eq!(inspected.status, 0, "{}", inspected.stderr);
+    let manifest: Value = serde_json::from_str(&inspected.stdout).unwrap();
+    assert_eq!(manifest["libraries"][0]["name"], "math_kit");
+    let verified = call("verify", &project);
+    assert_eq!(verified.status, 0, "{}", verified.stdout);
+    let entry = project.join("main.suri");
+    let executed = run_cli(&[
+        "run".into(), "--allow".into(), "console_write".into(),
+        entry.to_string_lossy().into_owned()
+    ]);
+    assert_eq!(executed.status, 0, "{}", executed.stderr);
+    assert_eq!(executed.stdout, "15\n");
+}
