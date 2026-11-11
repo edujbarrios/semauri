@@ -420,6 +420,24 @@ assert not (has entry "carol" in scores).
 print json of keys of scores.
 ```
 
+A missing entry can also be recovered with an explicit typed default:
+
+```text
+let scores be dictionary of ("ada": 7, "grace": 9).
+let score be entry "unknown" of scores with default 0.
+print score.
+```
+
+`entry "key" of DICTIONARY with default EXPR` returns the stored value if
+the key exists; otherwise, it evaluates `EXPR`. The fallback expression is
+**only evaluated if the key is missing**, and the compiler requires it to
+have precisely the dictionary's value type (S423 on mismatch or non-dictionary
+input). This is a narrowly scoped *recoverable lookup*, not a general error
+catching mechanism. The existing `entry "key" of DICTIONARY` still reports
+missing-key errors. The contextual words `with default` do not become
+reserved identifiers. Runtime/model-derived dictionaries are still subject
+to the existing runtime-value limitations.
+
 Both operations are checked against `dictionary of TYPE` by the compiler.
 Using a non-dictionary produces S422. Literal `entry "key" of` still
 raises S421 if a key is missing during evaluation; it does not silently

@@ -326,11 +326,10 @@ impl<'a> HirBuilder<'a> {
                     span: *span,
                 })
             }
-            Expr::Dictionary { value_type: annotation, entries, span } => {
-                // Entries must match their declared type when present; otherwise
-                // the first entry determines the homogeneous dictionary type.
+            Expr::Dictionary { entries, span } => {
+                // Every entry shares exactly one statically inferred type.
                 let mut built = BTreeMap::new();
-                let mut value_type = annotation.clone();
+                let mut value_type: Option<Type> = None;
                 for (name, expression) in entries {
                     let value = self.build_expr(expression)?;
                     let ty = value.ty();
@@ -370,6 +369,27 @@ impl<'a> HirBuilder<'a> {
                 };
                 Ok(HirExpr::DictionaryEntry {
                     ty, name: name.clone(), dictionary: Box::new(dictionary), span: *span,
+                })
+            }
+            Expr::DictionaryGetOr { name, dictionary, fallback, span } => {
+                let dictionary = self.build_expr(dictionary)?;
+                let ty = match dictionary.ty() {
+                    Type::Dictionary(element) => *element,
+                    other => return Err(SemauriError::semantic(
+                        "S423", format!("Defaulted entry lookup requires a dictionary, received {other}"),
+                        Some(dictionary.span()), None)),
+                };
+                let fallback = self.build_expr(fallback)?;
+                if fallback.ty() != ty {
+                    return Err(SemauriError::semantic(
+                        "S423", format!("Dictionary entry default must have type {ty}, received {}", fallback.ty()),
+                        Some(fallback.span()), None));
+                }
+                Ok(HirExpr::DictionaryGetOr {
+                    ty, name: name.clone(),
+                    dictionary: Box::new(dictionary),
+                    fallback: Box::new(fallback),
+                    span: *span,
                 })
             }
             Expr::DictionaryContains { name, dictionary, span } => {
@@ -1776,6 +1796,8 @@ fn pure_function_expression(expr: &HirExpr) -> bool {
         HirExpr::DictionaryEntry { dictionary, .. }
         | HirExpr::DictionaryContains { dictionary, .. }
         | HirExpr::DictionaryKeys { dictionary, .. } => pure_function_expression(dictionary),
+        HirExpr::DictionaryGetOr { dictionary, fallback, .. } =>
+            pure_function_expression(dictionary) && pure_function_expression(fallback),
         HirExpr::Record { fields, .. } => fields.values().all(pure_function_expression),
         HirExpr::RecordField { record, .. } => pure_function_expression(record),
         HirExpr::Unary { operand, .. } | HirExpr::Promote { value: operand, .. } =>

@@ -1861,6 +1861,26 @@ impl<'a> Parser<'a> {
                 self.consume(TokenKind::Of,
                     "Expected 'of' after dictionary key", "S420")?;
                 let dictionary = self.primary()?;
+                // Recover from a missing dictionary key by evaluating a
+                // statically type-checked default only when needed.
+                // "with default" is contextual to avoid reserving new words
+                // in other natural-language expressions.
+                if self.check(TokenKind::Word)
+                    && self.peek().lexeme.eq_ignore_ascii_case("with")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.kind == TokenKind::Word
+                            && next.lexeme.eq_ignore_ascii_case("default"))
+                {
+                    self.advance(); // with
+                    self.advance(); // default
+                    let fallback = self.expression()?;
+                    return Ok(Expr::DictionaryGetOr {
+                        name: token_string_literal(&key),
+                        span: span_between_spans(start.span, fallback.span()),
+                        dictionary: Box::new(dictionary),
+                        fallback: Box::new(fallback),
+                    });
+                }
                 let span = span_between_spans(start.span, dictionary.span());
                 Ok(Expr::DictionaryEntry {
                     name: token_string_literal(&key),
@@ -2912,13 +2932,6 @@ impl<'a> Parser<'a> {
                 "Expected 'dictionary' after article", "S420")?;
         }
         self.consume(TokenKind::Of, "Expected 'of' after dictionary", "S420")?;
-        // Without an annotation, non-empty entries determine the value type.
-        // Empty dictionaries require an explicit type to keep static checking.
-        let value_type = if self.check(TokenKind::LParen) {
-            None
-        } else {
-            Some(self.function_type()?)
-        };
         self.consume(TokenKind::LParen,
             "Expected '(' before dictionary entries", "S420")?;
         let mut entries = Vec::new();
@@ -2947,13 +2960,12 @@ impl<'a> Parser<'a> {
         }
         let end = self.consume(TokenKind::RParen,
             "Expected ')' after dictionary entries", "S420")?;
-        if entries.is_empty() && value_type.is_none() {
+        if entries.is_empty() {
             return Err(self.parse_error(&end,
-                "An empty dictionary requires an explicit value type, such as 'dictionary of number ()'",
+                "A dictionary needs at least one entry to infer its value type",
                 "S420", None));
         }
         Ok(Expr::Dictionary {
-            value_type,
             entries,
             span: span_between_spans(start.span, end.span),
         })

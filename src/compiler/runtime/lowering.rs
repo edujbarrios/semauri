@@ -968,6 +968,8 @@ impl<'a> Lowerer<'a> {
             | HirExpr::DictionaryContains { dictionary, .. }
             | HirExpr::DictionaryKeys { dictionary, .. } =>
                 self.runtime_dependent(dictionary)?,
+            HirExpr::DictionaryGetOr { dictionary, fallback, .. } =>
+                self.runtime_dependent(dictionary)? || self.runtime_dependent(fallback)?,
             HirExpr::Record { fields, .. } => {
                 let mut dependent = false;
                 for value in fields.values() {
@@ -1298,6 +1300,22 @@ impl<'a> Lowerer<'a> {
                     }
                     BoundValue::Compile { .. } => Err(SemauriError::semantic(
                         "S421", "Entry lookup requires a dictionary",
+                        Some(*span), None)),
+                    BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
+                }
+            }
+            HirExpr::DictionaryGetOr { ty, name, dictionary, fallback, span } => {
+                match self.evaluate(dictionary)? {
+                    BoundValue::Compile { data: ValueData::Dictionary(entries), .. } => {
+                        if let Some(data) = entries.get(name) {
+                            Ok(BoundValue::Compile { ty: ty.clone(), data: data.clone() })
+                        } else {
+                            // The fallback branch runs only if the key is absent.
+                            self.evaluate(fallback)
+                        }
+                    }
+                    BoundValue::Compile { .. } => Err(SemauriError::semantic(
+                        "S423", "Defaulted entry lookup requires a dictionary",
                         Some(*span), None)),
                     BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
                 }

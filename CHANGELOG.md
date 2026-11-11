@@ -1,6 +1,7 @@
 ## Unreleased
 
 ### Immutable typed dictionaries (development; no version bump)
+- Provide recoverable typed lookups with `entry "key" of DICTIONARY with default EXPR`; fallback is lazy, type-checked (S423), and ordinary missing-key lookups keep S421.
 - Permit explicitly typed empty and nonempty dictionary literals (`dictionary of number ()`, `dictionary of number ("score": 7)`), keeping unannotated empty dictionaries invalid and checking annotation mismatches statically.
 - Add safe `has entry "key" in DICTIONARY` and stable sorted `keys of DICTIONARY` with checked S422 errors, optimizer, formatter and effects integration.
 - Add homogeneous string-key `dictionary of ("key": EXPR, ...)` literals, optional article, `entry "key" of DICTIONARY` lookups and statically checked `dictionary of TYPE` function parameters.

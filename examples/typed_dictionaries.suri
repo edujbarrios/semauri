@@ -26,3 +26,8 @@ print json of keys of scores.
 let empty be dictionary of number ().
 assert not (has entry "missing" in empty).
 print json of empty.
+
+# Missing entries can now return a type-checked default.
+let fallback_score be entry "missing" of scores with default 0.
+assert fallback_score is equal to 0.
+assert (entry "bob" of scores with default 0) is equal to 10.

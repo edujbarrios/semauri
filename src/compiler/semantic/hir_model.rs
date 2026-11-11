@@ -42,6 +42,13 @@ pub enum HirExpr {
         dictionary: Box<HirExpr>,
         span: SourceSpan,
     },
+    DictionaryGetOr {
+        ty: Type,
+        name: String,
+        dictionary: Box<HirExpr>,
+        fallback: Box<HirExpr>,
+        span: SourceSpan,
+    },
     DictionaryContains {
         ty: Type,
         name: String,
@@ -154,6 +161,7 @@ impl HirExpr {
             | HirExpr::List { ty, .. }
             | HirExpr::Dictionary { ty, .. }
             | HirExpr::DictionaryEntry { ty, .. }
+            | HirExpr::DictionaryGetOr { ty, .. }
             | HirExpr::DictionaryContains { ty, .. }
             | HirExpr::DictionaryKeys { ty, .. }
             | HirExpr::Record { ty, .. }
@@ -178,6 +186,7 @@ impl HirExpr {
             | HirExpr::List { span, .. }
             | HirExpr::Dictionary { span, .. }
             | HirExpr::DictionaryEntry { span, .. }
+            | HirExpr::DictionaryGetOr { span, .. }
             | HirExpr::DictionaryContains { span, .. }
             | HirExpr::DictionaryKeys { span, .. }
             | HirExpr::Record { span, .. }
@@ -202,6 +211,7 @@ impl HirExpr {
             HirExpr::List { .. } => "list",
             HirExpr::Dictionary { .. } => "dictionary",
             HirExpr::DictionaryEntry { .. } => "dictionary_entry",
+            HirExpr::DictionaryGetOr { .. } => "dictionary_get_or",
             HirExpr::DictionaryContains { .. } => "dictionary_contains",
             HirExpr::DictionaryKeys { .. } => "dictionary_keys",
             HirExpr::Record { .. } => "record",
@@ -240,6 +250,11 @@ impl HirExpr {
             HirExpr::DictionaryEntry { name, dictionary, .. } => {
                 fields.insert("name".into(), json!(name));
                 fields.insert("dictionary".into(), dictionary.to_json());
+            }
+            HirExpr::DictionaryGetOr { name, dictionary, fallback, .. } => {
+                fields.insert("name".into(), json!(name));
+                fields.insert("dictionary".into(), dictionary.to_json());
+                fields.insert("fallback".into(), fallback.to_json());
             }
             HirExpr::DictionaryContains { name, dictionary, .. } => {
                 fields.insert("name".into(), json!(name));
