@@ -81,6 +81,13 @@ fn execute_runtime_plan(plan: &RuntimePlan, config: &crate::ProgramConfig) -> Re
                 let checksum = text.bytes().fold(0_u64, |sum, byte| sum.wrapping_mul(31).wrapping_add(u64::from(byte)));
                 Some(ValueData::String(format!("local-embedding:{checksum:016x}")))
             }
+            ("ai", "validate_json_response") => {
+                let document = expect_string(argument("document")?, operation, "document")?;
+                let schema = expect_string(argument("schema")?, operation, "schema")?;
+                let matches = validate_ai_json_response(&document, &schema)
+                    .map_err(|message| runtime_error(operation, message))?;
+                Some(ValueData::Boolean(matches))
+            }
             ("ai", "typed_tool") => Some(ValueData::String(expect_string(argument("name")?, operation, "name")?)),
             ("ai", "bounded_agent") => {
                 let model = expect_string(argument("model")?, operation, "model")?;
