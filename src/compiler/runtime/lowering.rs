@@ -849,8 +849,68 @@ impl<'a> Lowerer<'a> {
                     }),
                 }
             }
+            HirExpr::Unary { operator: UnaryOperator::Not, operand, span, .. } => {
+                if !self.runtime_dependent(operand)? {
+                    return self.evaluate(expression);
+                }
+                let operand = self.lower_runtime_value(operand)?;
+                let mut args = BTreeMap::new();
+                args.insert("value".to_string(), match operand {
+                    BoundValue::Compile { data, .. } => RuntimeArgument::Value(data),
+                    BoundValue::Runtime(reference) => RuntimeArgument::Ref(reference),
+                });
+                Ok(self.append_core_boolean_operation("not", args, *span))
+            }
+            HirExpr::Binary { operator: BinaryOperator::Xor | BinaryOperator::Equal
+                | BinaryOperator::NotEqual, left, right, span, .. } => {
+                if !self.runtime_dependent(left)? && !self.runtime_dependent(right)? {
+                    return self.evaluate(expression);
+                }
+                let op_name = match expression {
+                    HirExpr::Binary { operator: BinaryOperator::Xor, .. } => "xor",
+                    HirExpr::Binary { operator: BinaryOperator::Equal, .. } => "equal",
+                    _ => "not_equal",
+                };
+                let mut args = BTreeMap::new();
+                for (name, operand) in [("left", left.as_ref()), ("right", right.as_ref())] {
+                    let value = self.lower_runtime_value(operand)?;
+                    args.insert(name.to_string(), match value {
+                        BoundValue::Compile { data, .. } => RuntimeArgument::Value(data),
+                        BoundValue::Runtime(reference) => RuntimeArgument::Ref(reference),
+                    });
+                }
+                Ok(self.append_core_boolean_operation(op_name, args, *span))
+            }
             _ => self.evaluate(expression),
         }
+    }
+
+    // Eager, pure expressions may be lowered into SSA without a control-flow
+    // graph. Short-circuit 'and'/'or' and runtime conditionals still require
+    // proper CFG lowering, so they deliberately retain their existing guard.
+    fn append_core_boolean_operation(
+        &mut self, name: &str,
+        arguments: BTreeMap<String, RuntimeArgument>,
+        span: SourceSpan,
+    ) -> BoundValue {
+        let id = self.runtime_plan.operations.len() + 1;
+        let reference = RuntimeValueRef {
+            id: format!("%{id}"),
+            ty: Type::Boolean,
+            producer_id: id,
+            source_span: span,
+        };
+        self.runtime_plan.operations.push(RuntimeOperation {
+            id,
+            domain: "core".to_string(),
+            name: name.to_string(),
+            arguments,
+            return_type: Type::Boolean,
+            result: Some(reference.clone()),
+            effects: Vec::new(),
+            source_span: span,
+        });
+        BoundValue::Runtime(reference)
     }
 
     fn append_runtime_operation(&mut self, expression: &HirExpr) -> Result<BoundValue> {
@@ -2718,6 +2778,9 @@ impl<'a> Lowerer<'a> {
             }
             (BinaryOperator::And, ValueData::Boolean(a), ValueData::Boolean(b)) => {
                 ValueData::Boolean(a && b)
+            }
+            (BinaryOperator::Xor, ValueData::Boolean(a), ValueData::Boolean(b)) => {
+                ValueData::Boolean(a ^ b)
             }
             (BinaryOperator::Or, ValueData::Boolean(a), ValueData::Boolean(b)) => {
                 ValueData::Boolean(a || b)

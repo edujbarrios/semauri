@@ -216,6 +216,7 @@ pub enum BinaryOperator {
     Take,
     Drop,
     And,
+    Xor,
     Or,
 }
 
@@ -259,6 +260,7 @@ impl BinaryOperator {
             BinaryOperator::Take => "take",
             BinaryOperator::Drop => "drop",
             BinaryOperator::And => "and",
+            BinaryOperator::Xor => "xor",
             BinaryOperator::Or => "or",
         }
     }

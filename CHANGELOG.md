@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Boolean logic and dynamic expression polish (core language)
+- Add the contextual `xor` operator with static boolean typing, clear precedence between `and` and `or`, constant folding, compatible formatting and regression tests. The word remains usable as a variable name.
+- Permit runtime-dependent `not`, `xor`, and typed equality/inequality through effect-free SSA `core` operations, instead of rejecting all such expressions with S335.
+- Keep lazy `and` / `or` semantics unchanged pending control-flow lowering; no new dependencies or implicit permissions, and no version bump.
+
+
 ### Strict structured AI JSON validation (development; no release)
 - Safely allow nominal `ai.response` values to flow into ordinary string parameters (including JSON validation) without weakening nominal model/tool/agent type separation.
 - Reject duplicate JSON object keys at every depth in both input data and schema contracts, rather than silently taking the final value.

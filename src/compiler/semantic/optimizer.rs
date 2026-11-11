@@ -1081,6 +1081,9 @@ fn eval_constant_binary(
         (BinaryOperator::And, ValueData::Boolean(a), ValueData::Boolean(b)) => {
             Some(ValueData::Boolean(*a && *b))
         }
+        (BinaryOperator::Xor, ValueData::Boolean(a), ValueData::Boolean(b)) => {
+            Some(ValueData::Boolean(*a ^ *b))
+        }
         (BinaryOperator::Or, ValueData::Boolean(a), ValueData::Boolean(b)) => {
             Some(ValueData::Boolean(*a || *b))
         }

@@ -122,6 +122,21 @@ fn execute_runtime_plan(plan: &RuntimePlan, config: &crate::ProgramConfig) -> Re
                 ai.agent_turns += 1;
                 Some(answer)
             }
+            // Pure built-in boolean expressions evaluated after reading runtime
+            // configuration or other dynamic values. These never grant effects.
+            ("core", "not") => match argument("value")? {
+                ValueData::Boolean(value) => Some(ValueData::Boolean(!value)),
+                _ => return Err(runtime_error(operation, "runtime 'not' requires a boolean")),
+            },
+            ("core", "xor") => match (argument("left")?, argument("right")?) {
+                (ValueData::Boolean(a), ValueData::Boolean(b)) =>
+                    Some(ValueData::Boolean(a ^ b)),
+                _ => return Err(runtime_error(operation, "runtime 'xor' requires booleans")),
+            },
+            ("core", "equal" | "not_equal") => {
+                let same = argument("left")? == argument("right")?;
+                Some(ValueData::Boolean(if operation.name == "equal" { same } else { !same }))
+            }
             ("console", "print") => {
                 output.push_str(&display_console_value(&argument("value")?));
                 output.push('\n');

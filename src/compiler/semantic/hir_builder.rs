@@ -1513,7 +1513,7 @@ fn binary_type(
                 ))
             }
         }
-        BinaryOperator::And | BinaryOperator::Or => {
+        BinaryOperator::And | BinaryOperator::Xor | BinaryOperator::Or => {
             if left == &Type::Boolean && right == &Type::Boolean {
                 Ok(Type::Boolean)
             } else {
