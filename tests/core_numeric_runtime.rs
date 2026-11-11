@@ -35,13 +35,13 @@ let upper be number config "upper".
 let lower be number config "lower".
 let delta be upper minus lower.
 let inverted be minus delta.
-let greater be upper is greater than lower.
+let higher_result be upper is greater than lower.
 let smaller be lower is less than upper.
 let inclusive be upper is at least lower.
 let below_equal be lower is at most upper.
 print delta.
 print inverted.
-print greater.
+print higher_result.
 print smaller.
 print inclusive.
 print below_equal.
