@@ -27,6 +27,20 @@ fn validate_ai_json_response(
     Ok(matches_ai_json_schema(&value, &schema))
 }
 
+fn normalize_ai_json_response(
+    document: &str,
+    schema: &str,
+) -> std::result::Result<String, &'static str> {
+    if !validate_ai_json_response(document, schema)? {
+        return Err("AI JSON response does not match its declared schema");
+    }
+    // The first validation already bounded and parsed the input. JSON objects
+    // use the stable serde_json map ordering and no fields are synthesized.
+    let value: JsonValue = serde_json::from_str(document)
+        .map_err(|_| "AI JSON response is not valid JSON")?;
+    Ok(value.to_string())
+}
+
 fn ai_json_length_constraint(
     schema: &JsonMap<String, JsonValue>,
     name: &str,
@@ -62,7 +76,7 @@ fn check_ai_json_schema(
             "type" => true,
             "required" | "properties" | "additionalProperties" => kind == "object",
             "items" | "minItems" | "maxItems" => kind == "array",
-            "minLength" | "maxLength" => kind == "string",
+            "minLength" | "maxLength" | "enum" => kind == "string",
             _ => false,
         };
         if !supported {
@@ -109,6 +123,21 @@ fn check_ai_json_schema(
             return Err("AI JSON schema minimum cannot exceed maximum");
         }
     } else if kind == "string" {
+        if let Some(choices) = object.get("enum") {
+            let variants = choices.as_array()
+                .ok_or("AI JSON schema string enum must be an array")?;
+            if variants.is_empty() || variants.len() > AI_JSON_SCHEMA_MAX_FIELDS {
+                return Err("AI JSON schema string enum must have 1 to 128 values");
+            }
+            let mut distinct = BTreeSet::new();
+            for variant in variants {
+                let text = variant.as_str()
+                    .ok_or("AI JSON schema string enum must contain only strings")?;
+                if !distinct.insert(text) {
+                    return Err("AI JSON schema string enum contains duplicate values");
+                }
+            }
+        }
         let min = ai_json_length_constraint(object, "minLength")?;
         let max = ai_json_length_constraint(object, "maxLength")?;
         if min.zip(max).is_some_and(|(a, b)| a > b) {
@@ -155,7 +184,11 @@ fn matches_ai_json_schema(value: &JsonValue, schema: &JsonValue) -> bool {
         }
         "string" => {
             let Some(text) = value.as_str() else { return false };
-            ai_json_size_matches(object, "minLength", "maxLength", text.chars().count() as u64)
+            if !ai_json_size_matches(object, "minLength", "maxLength", text.chars().count() as u64) {
+                return false;
+            }
+            object.get("enum").is_none_or(|values| values.as_array()
+                .expect("validated enum").iter().any(|v| v.as_str() == Some(text)))
         }
         "number" => value.is_number(),
         "integer" => value.as_i64().is_some() || value.as_u64().is_some()
