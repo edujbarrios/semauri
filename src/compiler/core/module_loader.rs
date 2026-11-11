@@ -197,6 +197,7 @@ const PRIVATE_NAMESPACE_PREFIX: &str = "semauri_ns_";
 
 fn valid_import_alias(alias: &str) -> bool {
     !alias.is_empty() && alias.len() <= 64
+        && keyword_kind(alias).is_none() && !is_color(alias)
         && alias.bytes().next().is_some_and(|ch| ch.is_ascii_lowercase())
         && alias.bytes().all(|ch| ch.is_ascii_lowercase()
             || ch.is_ascii_digit() || ch == b'_')
@@ -248,7 +249,9 @@ fn parse_module_import(raw: &str, file: &Path, line: usize)
 fn rewrite_scoped_source(
     source: &str, namespace: &str, aliases: &HashMap<String, String>, file: &Path,
 ) -> Result<String> {
-    if namespace.is_empty() && aliases.is_empty() {
+    if namespace.is_empty() && aliases.is_empty()
+        && !source.contains(PRIVATE_NAMESPACE_PREFIX)
+    {
         return Ok(source.to_owned());
     }
     let tokens = Lexer::new(source, &DomainRegistry::builtins()).tokens()
