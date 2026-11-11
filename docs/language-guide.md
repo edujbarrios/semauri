@@ -2162,3 +2162,94 @@ print usage.
   inference and console effects still require explicit `--allow` flags.
 
 See [examples/ai_governance.suri](../examples/ai_governance.suri).
+
+
+## AI execution hardening (Unreleased, after v0.73.0)
+
+The local AI runtime now enforces agent turn budgets and allows explicit
+resource bounds and cache controls:
+
+```text
+cap ai requests to 4.
+bound ai prompts to 500 characters.
+restrict ai outputs to 200 characters.
+memoize ai response cache.
+constrain ai cache to 2 entries.
+let model be connect language model "local/test".
+let assistant be compose agent using model system "Be concise." max 2 turns.
+let first be ask assistant with "Hola".
+let second be ask assistant with "Hello".
+let metrics be report ai usage.
+print metrics.
+reset ai response cache.
+```
+
+- `compose agent using MODEL system TEXT max N turns` validates a
+  nonnegative integer `N`. Each successful `ask AGENT with TEXT` (including
+  cache hits) consumes one agent turn. An additional attempt fails with S503
+  before spending the global request budget. Unsuccessful attempts do not
+  consume a turn. Separate agent instances have separate turn counters.
+- The system message is **kept separate** from the user prompt and used to
+  distinguish cache entries. The current `local/*` backend is only a
+  deterministic simulator, **not** a real language model that follows system
+  instructions; provider adapters are still required for real inference.
+  Prompt bounds cover the system message plus the user's prompt.
+- `constrain ai cache to N entries.` sets a nonnegative integer limit on
+  memoized responses. The oldest inserted entry is evicted first (FIFO);
+  cache hits do not refresh order. Lowering the limit immediately evicts
+  excess entries. Zero disables storage without disabling model execution.
+  Without an explicit limit, existing unbounded-cache behavior remains.
+- `reset ai response cache.` clears cached text while retaining configured
+  limits, whether caching is enabled, and cumulative usage counters.
+- `restrict ai outputs to N characters.` sets a nonnegative integer
+  Unicode-scalar limit on generated text (including agent and vision text),
+  enforcing it for both new results and cache hits. Oversized fresh results
+  consume a request but are rejected before they can be returned or cached.
+  Embedding fingerprints are opaque data and are unaffected by this limit.
+- `report ai usage` additionally includes `cache_capacity`,
+  `cache_evictions`, `output_character_limit`, `agent_count`,
+  and `agent_turns` in its JSON string. No prompts, model identifiers or
+  system instructions appear in the report.
+
+These runtime constraints do not grant permissions or provide provider-side
+billing, token accounting, prompt-injection defenses, or true model inference.
+
+## Validación de JSON estructurado para agentes (en desarrollo)
+
+`validate ai json RESPONSE against schema SCHEMA` comprueba un documento JSON
+sin invocar modelos, red ni archivos. Ambos argumentos son cadenas y el
+resultado es un booleano. Por ejemplo:
+
+```text
+let contract be "{\"type\":\"object\",\"required\":[\"label\"],\"properties\":{\"label\":{\"type\":\"string\"}},\"additionalProperties\":false}".
+let reply be "{\"label\":\"cat\"}".
+assert validate ai json reply against schema contract.
+```
+
+La sintaxis admite **un subconjunto explícito** de JSON Schema: los tipos
+`object`, `array`, `string`, `number`, `integer`, `boolean` y `null`;
+`properties`, `required` y `additionalProperties` para objetos;
+`items`, `minItems` y `maxItems` para listas; y `minLength` y
+`maxLength` para cadenas (contando caracteres Unicode). No convierte tipos.
+Los esquemas de texto también admiten `enum` con 1 a 128 alternativas únicas.
+
+Una respuesta nominal `ai.response` también puede utilizarse como cadena
+inmutable en estas operaciones, manteniendo separados los tipos de modelo,
+agente y herramienta.
+
+`normalize ai json RESPONSE against schema SCHEMA` valida la respuesta y
+devuelve su representación JSON canónica, sin espacios superfluos y con las
+claves de objetos ordenadas. Si la respuesta no cumple el esquema, produce
+S503; **no repara ni transforma los datos**.
+
+Un esquema erróneo o con palabras no reconocidas produce un error S503
+explícito; un documento JSON inválido o incompatible produce `false`.
+El documento está limitado a 1 MiB y el esquema a 64 KiB; además existen
+límites de profundidad y número de propiedades. No se trata de un validador
+completo del estándar JSON Schema ni protege por sí solo de inyecciones
+de instrucciones. Consulta
+[el ejemplo ejecutable](../examples/ai_structured_json.suri).
+
+Si hay claves JSON duplicadas, incluso dentro de objetos anidados, la respuesta
+se rechaza; un esquema con claves duplicadas produce S503. Esto evita
+que se interpreten ambiguamente las salidas de agentes.
