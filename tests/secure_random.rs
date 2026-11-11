@@ -94,7 +94,7 @@ print constant.
 #[test]
 fn large_integer_ranges_preserve_signed_i64_precision() {
     let result = run_source(
-        r#"let number be draw random integer from 9007199254740993 to 9007199254740995. print number."#,
+        r#"let rolled_value be draw random integer from 9007199254740993 to 9007199254740995. print rolled_value."#,
         true, true,
     );
     assert_eq!(result.status, 0, "{}", result.stderr);
@@ -112,8 +112,8 @@ fn rejects_length_and_alphabet_errors_without_secret_echo() {
         r#"let token be secure random string of 8 characters from "". print token."#,
         r#"let token be secure random string of 8 characters from "abca". print token."#,
         r#"let token be pick random character from "aa". print token."#,
-        "let number be draw random integer from 20 to 10. print number.",
-        "let number be draw random integer from 1.5 to 2. print number.",
+        "let rolled_value be draw random integer from 20 to 10. print rolled_value.",
+        "let rolled_value be draw random integer from 1.5 to 2. print rolled_value.",
     ];
     for source in invalid {
         let outcome = run_source(source, true, true);
