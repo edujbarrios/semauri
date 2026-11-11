@@ -98,12 +98,12 @@ fn malformed_comma_sequences_and_argument_arity_still_fail() {
     let compiler = Compiler::new();
     for source in [
         "print a list of 1,, 2.",
-        "define function add taking x as number, y as number to (x plus y). print invoke add to (1,, 2).",
+        "define function combine taking x as number, y as number to (x plus y). print invoke combine to (1,, 2).",
     ] {
         assert!(compiler.parse(source).is_err(), "{source}");
     }
     let error = compiler.hir(
-        "define function add taking x as number, y as number to (x plus y). print invoke add to (1,)."
+        "define function combine taking x as number, y as number to (x plus y). print invoke combine to (1,)."
     ).unwrap_err();
     assert_eq!(error.code, "S374");
 }
