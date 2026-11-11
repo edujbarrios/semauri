@@ -2932,6 +2932,12 @@ impl<'a> Parser<'a> {
                 "Expected 'dictionary' after article", "S420")?;
         }
         self.consume(TokenKind::Of, "Expected 'of' after dictionary", "S420")?;
+        // Explicit value types make even empty dictionaries statically typed.
+        let value_type = if self.check(TokenKind::LParen) {
+            None
+        } else {
+            Some(self.function_type()?)
+        };
         self.consume(TokenKind::LParen,
             "Expected '(' before dictionary entries", "S420")?;
         let mut entries = Vec::new();
@@ -2960,12 +2966,13 @@ impl<'a> Parser<'a> {
         }
         let end = self.consume(TokenKind::RParen,
             "Expected ')' after dictionary entries", "S420")?;
-        if entries.is_empty() {
+        if entries.is_empty() && value_type.is_none() {
             return Err(self.parse_error(&end,
-                "A dictionary needs at least one entry to infer its value type",
+                "An empty dictionary requires an explicit value type, such as 'dictionary of number ()'",
                 "S420", None));
         }
         Ok(Expr::Dictionary {
+            value_type,
             entries,
             span: span_between_spans(start.span, end.span),
         })

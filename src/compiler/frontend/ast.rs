@@ -299,6 +299,7 @@ pub enum Expr {
         span: SourceSpan,
     },
     Dictionary {
+        value_type: Option<Type>,
         entries: Vec<(String, Expr)>,
         span: SourceSpan,
     },
@@ -422,7 +423,8 @@ impl Expr {
         match self {
             Expr::Literal { ty, value, .. } => Expr::Literal { ty, value, span },
             Expr::List { items, .. } => Expr::List { items, span },
-            Expr::Dictionary { entries, .. } => Expr::Dictionary { entries, span },
+            Expr::Dictionary { value_type, entries, .. } =>
+                Expr::Dictionary { value_type, entries, span },
             Expr::DictionaryEntry { name, dictionary, .. } =>
                 Expr::DictionaryEntry { name, dictionary, span },
             Expr::DictionaryGetOr { name, dictionary, fallback, .. } =>
@@ -500,8 +502,10 @@ impl Expr {
                     JsonValue::Array(items.iter().map(Expr::to_json).collect()),
                 );
             }
-            Expr::Dictionary { entries, .. } => {
+            Expr::Dictionary { value_type, entries, .. } => {
                 base.insert("type".into(), json!("dictionary_literal"));
+                base.insert("declared_value_type".into(),
+                    json!(value_type.as_ref().map(Type::to_json)));
                 base.insert("entries".into(), json!(entries.iter()
                     .map(|(name, value)| json!({"key": name, "value": value.to_json()}))
                     .collect::<Vec<_>>()));
