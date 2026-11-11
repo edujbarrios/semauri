@@ -193,7 +193,7 @@ fn import_line(line: &str) -> Option<&str> {
 // Qualified imports remain ordinary Semauri source: the loader rewrites only
 // declaration/call identifier tokens, never strings, comments or other code.
 // The reserved generated prefix keeps scoped names separate from user symbols.
-const PRIVATE_NAMESPACE_PREFIX: &str = "__semauri_ns_";
+const PRIVATE_NAMESPACE_PREFIX: &str = "semauri_ns_";
 
 fn valid_import_alias(alias: &str) -> bool {
     !alias.is_empty() && alias.len() <= 64
@@ -278,7 +278,7 @@ fn rewrite_scoped_source(
             && token.lexeme.to_ascii_lowercase().starts_with(PRIVATE_NAMESPACE_PREFIX)
         {
             return Err(module_error(file, token.span.line(),
-                "The __semauri_ns_ prefix is reserved for compiler-generated namespace symbols"));
+                "The semauri_ns_ prefix is reserved for compiler-generated namespace symbols"));
         }
         // Preserve names of functions inside a namespaced import, including
         // nested local imports. Non-namespaced source remains unchanged.
