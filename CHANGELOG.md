@@ -1,6 +1,7 @@
 ## Unreleased
 
 ### Strict structured AI JSON validation (development; no release)
+- Safely allow nominal `ai.response` values to flow into ordinary string parameters (including JSON validation) without weakening nominal model/tool/agent type separation.
 - Reject duplicate JSON object keys at every depth in both input data and schema contracts, rather than silently taking the final value.
 - Add pure `validate ai json RESPONSE against schema SCHEMA`, a typed Boolean expression for structurally validating AI JSON before use.
 - Support strict JSON Schema-like primitive, object and array types, required and nested properties, unknown-field rejection and Unicode-aware size constraints. Unsupported schema keywords raise S503 instead of being ignored; malformed response data returns false.
