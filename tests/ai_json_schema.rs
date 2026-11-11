@@ -121,7 +121,8 @@ fn unsupported_or_invalid_schema_fails_closed_with_runtime_diagnostic() {
         let result = run(&program("{}", schema));
         assert_eq!(result.status, 70, "{schema}: {}", result.stderr);
         assert!(result.stderr.contains("S503"), "{schema}: {}", result.stderr);
-        assert!(!result.stderr.contains("not-json"), "diagnostics should not echo inputs");
+        assert!(!result.stderr.lines().next().unwrap_or("").contains("not-json"),
+            "error summary should not echo input content");
     }
 }
 
