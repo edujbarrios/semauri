@@ -22,6 +22,7 @@ include!("core/text_search.rs");
 include!("core/unicode_scalars.rs");
 include!("core/json_decode.rs");
 include!("core/ai_json_schema.rs");
+include!("core/secure_random.rs");
 include!("core/module_loader.rs");
 
 include!("domains/model.rs");
@@ -29,6 +30,7 @@ include!("domains/registry.rs");
 include!("domains/builtins/common.rs");
 include!("domains/builtins/config.rs");
 include!("domains/builtins/ai.rs");
+include!("domains/builtins/random.rs");
 include!("domains/builtins/web.rs");
 include!("domains/builtins/structured_data.rs");
 include!("domains/builtins/filesystem.rs");
