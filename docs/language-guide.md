@@ -2214,7 +2214,7 @@ reset ai response cache.
 These runtime constraints do not grant permissions or provide provider-side
 billing, token accounting, prompt-injection defenses, or true model inference.
 
-## Validación de JSON estructurado para agentes (en desarrollo)
+## Validación de JSON estructurado para agentes (v0.74.0)
 
 `validate ai json RESPONSE against schema SCHEMA` comprueba un documento JSON
 sin invocar modelos, red ni archivos. Ambos argumentos son cadenas y el
@@ -2254,7 +2254,7 @@ Si hay claves JSON duplicadas, incluso dentro de objetos anidados, la respuesta
 se rechaza; un esquema con claves duplicadas produce S503. Esto evita
 que se interpreten ambiguamente las salidas de agentes.
 
-## Boolean exclusivity and runtime expressions (Unreleased)
+## Boolean exclusivity and runtime expressions (v0.74.0)
 
 Semauri now accepts the **contextual** operator `xor` for exclusive-or of
 booleans. It is statically checked and uses the precedence

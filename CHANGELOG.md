@@ -1,5 +1,7 @@
 ## Unreleased
 
+## 0.74.0 — 2026-11-11
+
 ### Dynamic numeric expressions (core language)
 - Lower runtime-dependent unary numeric minus, exact integer subtraction, and numeric less-than/greater-than (including inclusive bounds) to pure typed SSA core operations.
 - Use exact signed 64-bit comparison and checked subtraction/negation, preserving S470/S358 overflow diagnostics; no numeric coercion or extra runtime permissions.
@@ -8,10 +10,10 @@
 ### Boolean logic and dynamic expression polish (core language)
 - Add the contextual `xor` operator with static boolean typing, clear precedence between `and` and `or`, constant folding, compatible formatting and regression tests. The word remains usable as a variable name.
 - Permit runtime-dependent `not`, `xor`, and typed equality/inequality through effect-free SSA `core` operations, instead of rejecting all such expressions with S335.
-- Keep lazy `and` / `or` semantics unchanged pending control-flow lowering; no new dependencies or implicit permissions, and no version bump.
+- Keep lazy `and` / `or` semantics unchanged pending control-flow lowering; no new dependencies or implicit permissions, and no additional runtime permissions.
 
 
-### Strict structured AI JSON validation (development; no release)
+### Strict structured AI JSON validation
 - Safely allow nominal `ai.response` values to flow into ordinary string parameters (including JSON validation) without weakening nominal model/tool/agent type separation.
 - Reject duplicate JSON object keys at every depth in both input data and schema contracts, rather than silently taking the final value.
 - Add pure `validate ai json RESPONSE against schema SCHEMA`, a typed Boolean expression for structurally validating AI JSON before use.
@@ -20,11 +22,11 @@
 - Support bounded string enumerations and `normalize ai json RESPONSE against schema SCHEMA` for deterministic JSON serialization after strict validation; mismatches raise S503 without silent data repair.
 
 
-### AI runtime correctness and resource safety (development; no release)
+### AI runtime correctness and resource safety
 - Enforce configured per-agent maximum turns, retain distinct system contexts for cache isolation, and reject invalid turn counts instead of silently ignoring them. The local model remains a deterministic simulator, not an instruction-following provider.
 - Add explicit FIFO cache limits (`constrain ai cache to N entries.`) and cache reset (`reset ai response cache.`); report evictions and capacity without revealing prompts.
 - Add runtime output guards (`restrict ai outputs to N characters.`) for generated and cached text, plus expanded AI usage metrics and regression tests.
-- Preserve existing effects, default cache behavior and v0.73.0 package metadata; work remains unpublished on a development PR.
+- Preserve existing effects, default cache behavior and runtime capability gates; now included in v0.74.0.
 
 
 ## 0.73.0 — 2026-11-11
