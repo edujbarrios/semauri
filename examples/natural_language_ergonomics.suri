@@ -1,0 +1,21 @@
+# Unreleased Semauri syntax: natural comparisons, inclusive through ranges,
+# and trailing commas in list literals and parenthesized function calls.
+define function add taking left as number, right as number to (left plus right).
+
+let scores be a list of 5, 10, 15,.
+let indices be range from 1 through 3.
+
+assert length of scores is equal to 3.
+assert indices is equal to (range from 1 to 3).
+assert invoke add to (10, 5,) is equal to 15.
+
+assert 10 is not greater than 10.
+assert 10 is not less than 10.
+assert 9 is no greater than 10.
+assert 11 is no less than 10.
+assert 9 is not greater than or equal to 10.
+assert 11 is not less than or equal to 10.
+
+print scores.
+print indices.
+print "Natural syntax OK".
