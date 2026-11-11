@@ -167,7 +167,7 @@
     },
     "ai": {
       "name": "support.function.ai.semauri",
-      "match": "\\b(?:cap|reattempt|memoize|connect|activate|prompt|inspect|embed|compose|ask)\\b"
+      "match": "\\b(?:cap|reattempt|memoize|connect|activate|prompt|inspect|embed|compose|ask|bound|report|constrain|reset|restrict|validate|normalize)\\b"
     },
     "collections": {
       "name": "support.function.collection.semauri",
