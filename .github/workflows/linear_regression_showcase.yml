@@ -5,14 +5,14 @@ on:
     paths:
       - "examples/linear_regression.suri"
       - "tests/linear_regression_showcase.rs"
-      - "scripts/benchmark_linear_regression.py"
+      - "src/bin/semauri_bench.rs"
       - ".github/workflows/linear_regression_showcase.yml"
   push:
     branches: [main]
     paths:
       - "examples/linear_regression.suri"
       - "tests/linear_regression_showcase.rs"
-      - "scripts/benchmark_linear_regression.py"
+      - "src/bin/semauri_bench.rs"
       - ".github/workflows/linear_regression_showcase.yml"
   workflow_dispatch:
 
@@ -29,4 +29,4 @@ jobs:
       - name: Compile release-mode Semauri
         run: cargo build --release --locked
       - name: Verify output and time 101 CLI executions
-        run: python3 scripts/benchmark_linear_regression.py --samples 101
+        run: python3 src/bin/semauri_bench.rs --samples 101
