@@ -165,7 +165,8 @@ struct LoadedSource {
 
 struct ModuleLoader {
     libraries: HashMap<String, ExternalLibrary>,
-    visited: HashSet<PathBuf>,
+    visited: HashSet<(PathBuf, String)>,
+    next_namespace: usize,
     visiting: Vec<PathBuf>,
     bytes: usize,
     loaded: LoadedSource,
@@ -186,6 +187,158 @@ fn import_line(line: &str) -> Option<&str> {
         None => Some(""),
         _ => None,
     }
+}
+
+
+// Qualified imports remain ordinary Semauri source: the loader rewrites only
+// declaration/call identifier tokens, never strings, comments or other code.
+// The reserved generated prefix keeps scoped names separate from user symbols.
+const PRIVATE_NAMESPACE_PREFIX: &str = "__semauri_ns_";
+
+fn valid_import_alias(alias: &str) -> bool {
+    !alias.is_empty() && alias.len() <= 64
+        && alias.bytes().next().is_some_and(|ch| ch.is_ascii_lowercase())
+        && alias.bytes().all(|ch| ch.is_ascii_lowercase()
+            || ch.is_ascii_digit() || ch == b'_')
+}
+
+// Parse the complete, single-line import, including an optional "as ALIAS".
+// Find the end of the JSON string without confusing escaped quotes with its
+// closing quote. All other trailing tokens are rejected rather than ignored.
+fn parse_module_import(raw: &str, file: &Path, line: usize)
+    -> Result<(String, Option<String>)>
+{
+    let statement = raw.strip_suffix('.').ok_or_else(||
+        module_error(file, line, "Expected import \"relative/file.suri\" [as alias]."))?.trim();
+    if !statement.starts_with('"') {
+        return Err(module_error(file, line, "Import path must be a quoted string"));
+    }
+    let mut escaped = false;
+    let mut closing = None;
+    for (index, byte) in statement.bytes().enumerate().skip(1) {
+        if escaped {
+            escaped = false;
+        } else if byte == b'\\' {
+            escaped = true;
+        } else if byte == b'"' {
+            closing = Some(index + 1);
+            break;
+        }
+    }
+    let closing = closing.ok_or_else(||
+        module_error(file, line, "Unclosed import string"))?;
+    let path: String = serde_json::from_str(&statement[..closing]).map_err(|_|
+        module_error(file, line, "Import path must be a JSON quoted string"))?;
+    let remainder = statement[closing..].trim();
+    let alias = if remainder.is_empty() {
+        None
+    } else {
+        let parts = remainder.split_whitespace().collect::<Vec<_>>();
+        if parts.len() != 2 || !parts[0].eq_ignore_ascii_case("as")
+            || !valid_import_alias(&parts[1].to_ascii_lowercase())
+        {
+            return Err(module_error(file, line,
+                "Expected 'as alias' with a lowercase ASCII identifier (letters, digits, underscore)"));
+        }
+        Some(parts[1].to_ascii_lowercase())
+    };
+    Ok((path, alias))
+}
+
+fn rewrite_scoped_source(
+    source: &str, namespace: &str, aliases: &HashMap<String, String>, file: &Path,
+) -> Result<String> {
+    if namespace.is_empty() && aliases.is_empty() {
+        return Ok(source.to_owned());
+    }
+    let tokens = Lexer::new(source, &DomainRegistry::builtins()).tokens()
+        .map_err(|error| module_error(file,
+            error.span.map_or(1, |span| span.line()),
+            format!("Cannot parse scoped import source: {}", error.message)))?;
+    let lines = source.split('\n').collect::<Vec<_>>();
+    let mut line_offsets = Vec::with_capacity(lines.len());
+    let mut offset = 0;
+    for line in &lines {
+        line_offsets.push(offset);
+        offset += line.len() + 1;
+    }
+    let position = |line: usize, column: usize| -> usize {
+        let text = lines[line - 1];
+        let local = text.char_indices().nth(column.saturating_sub(1))
+            .map_or(text.len(), |(index, _)| index);
+        line_offsets[line - 1] + local
+    };
+    let start = |token: &Token| position(token.span.line(), token.span.column());
+    let end = |token: &Token| position(token.span.end_line(), token.span.end_column());
+    let mut edits = Vec::<(usize, usize, String)>::new();
+    let mut index = 0;
+    while index < tokens.len() {
+        let token = &tokens[index];
+        if token.kind == TokenKind::Word
+            && token.lexeme.to_ascii_lowercase().starts_with(PRIVATE_NAMESPACE_PREFIX)
+        {
+            return Err(module_error(file, token.span.line(),
+                "The __semauri_ns_ prefix is reserved for compiler-generated namespace symbols"));
+        }
+        // Preserve names of functions inside a namespaced import, including
+        // nested local imports. Non-namespaced source remains unchanged.
+        if !namespace.is_empty()
+            && token.lexeme.eq_ignore_ascii_case("define")
+            && tokens.get(index + 1).is_some_and(|next|
+                next.lexeme.eq_ignore_ascii_case("function"))
+            && tokens.get(index + 2).is_some_and(|next| next.kind == TokenKind::Word)
+        {
+            let name = &tokens[index + 2];
+            edits.push((start(name), end(name),
+                format!("{namespace}{}", name.lexeme.to_lowercase())));
+            index += 3;
+            continue;
+        }
+        if token.kind == TokenKind::Word && token.lexeme.eq_ignore_ascii_case("invoke") {
+            let next = tokens.get(index + 1);
+            // invoke ALIAS.FUNCTION to VALUE.
+            if let (Some(alias), Some(dot), Some(function), Some(to)) = (
+                next, tokens.get(index + 2), tokens.get(index + 3), tokens.get(index + 4),
+            ) {
+                if alias.kind == TokenKind::Word && dot.kind == TokenKind::Dot
+                    && function.kind == TokenKind::Word && to.kind == TokenKind::To
+                {
+                    let scope = aliases.get(&alias.lexeme.to_ascii_lowercase())
+                        .ok_or_else(|| module_error(file, alias.span.line(),
+                            format!("Unknown import namespace '{}'", alias.lexeme)))?;
+                    edits.push((start(alias), end(function),
+                        format!("{scope}{}", function.lexeme.to_lowercase())));
+                    index += 5;
+                    continue;
+                }
+            }
+            if !namespace.is_empty() {
+                if let (Some(name), Some(to)) = (next, tokens.get(index + 2)) {
+                    if name.kind == TokenKind::Word && to.kind == TokenKind::To {
+                        edits.push((start(name), end(name),
+                            format!("{namespace}{}", name.lexeme.to_lowercase())));
+                        index += 3;
+                        continue;
+                    }
+                }
+            }
+        }
+        index += 1;
+    }
+    if edits.is_empty() {
+        return Ok(source.to_owned());
+    }
+    // Rebuild from original offsets; replacements may change character count,
+    // but do not add/remove lines, preserving the original file/line map.
+    let mut output = String::with_capacity(source.len() + edits.len() * 20);
+    let mut cursor = 0;
+    for (begin, finish, replacement) in edits {
+        output.push_str(&source[cursor..begin]);
+        output.push_str(&replacement);
+        cursor = finish;
+    }
+    output.push_str(&source[cursor..]);
+    Ok(output)
 }
 
 // The nearest real .semauri-root file defines the project boundary.
@@ -217,6 +370,7 @@ fn load_module_source(entry: &Path) -> Result<LoadedSource> {
     let mut loader = ModuleLoader {
         libraries,
         visited: HashSet::new(),
+        next_namespace: 0,
         visiting: Vec::new(),
         bytes: 0,
         loaded: LoadedSource {
@@ -225,12 +379,12 @@ fn load_module_source(entry: &Path) -> Result<LoadedSource> {
             files: HashMap::new(),
         },
     };
-    loader.visit(&entry, 0, &root)?;
+    loader.visit(&entry, 0, &root, "")?;
     Ok(loader.loaded)
 }
 
 impl ModuleLoader {
-    fn visit(&mut self, file: &Path, depth: usize, boundary: &Path) -> Result<()> {
+    fn visit(&mut self, file: &Path, depth: usize, boundary: &Path, namespace: &str) -> Result<()> {
         if self.visiting.iter().any(|item| item == file) {
             let mut chain = self.visiting.clone();
             chain.push(file.to_path_buf());
@@ -238,7 +392,7 @@ impl ModuleLoader {
                 .collect::<Vec<_>>().join(" -> ");
             return Err(module_error(file, 1, format!("Circular import: {names}")));
         }
-        if self.visited.contains(file) { return Ok(()); }
+        if self.visited.contains(&(file.to_path_buf(), namespace.to_owned())) { return Ok(()); }
         if depth > MAX_MODULE_DEPTH || self.visited.len() >= MAX_MODULE_FILES {
             return Err(module_error(file, 1, "Import exceeds 32 levels or 64 files"));
         }
@@ -255,10 +409,11 @@ impl ModuleLoader {
         let content = content.strip_prefix('\u{feff}').unwrap_or(&content).to_owned();
         self.bytes += content.len();
         self.loaded.files.insert(file.to_path_buf(), content.clone());
-        self.visited.insert(file.to_path_buf());
+        self.visited.insert((file.to_path_buf(), namespace.to_owned()));
         self.visiting.push(file.to_path_buf());
 
         let mut imports = Vec::new();
+        let mut aliases = HashMap::new();
         let mut body = Vec::new();
         let mut has_executable = false;
         let mut in_comment_block = false;
@@ -279,12 +434,19 @@ impl ModuleLoader {
                 if has_executable {
                     return Err(module_error(file, number, "Import must precede executable statements"));
                 }
-                let quoted = raw.strip_suffix('.')
-                    .ok_or_else(|| module_error(file, number,
-                        "Expected import \"relative/file.suri\"."))?.trim();
-                let relative: String = serde_json::from_str(quoted)
-                    .map_err(|_| module_error(file, number,
-                        "Import path must be a quoted string followed by a period"))?;
+                let (relative, alias) = parse_module_import(raw, file, number)?;
+                let alias_scope = if let Some(alias) = alias {
+                    if aliases.contains_key(&alias) {
+                        return Err(module_error(file, number,
+                            format!("Duplicate import namespace '{alias}'")));
+                    }
+                    self.next_namespace += 1;
+                    let scope = format!("{PRIVATE_NAMESPACE_PREFIX}{}__", self.next_namespace);
+                    aliases.insert(alias, scope.clone());
+                    Some(scope)
+                } else {
+                    None
+                };
                 if relative.is_empty() || Path::new(&relative).is_absolute() {
                     return Err(module_error(file, number, "Import path must be nonempty and relative"));
                 }
@@ -297,7 +459,7 @@ impl ModuleLoader {
                     return Err(module_error(file, number,
                         "Only .suri files or library:NAME aliases can be imported"));
                 }
-                imports.push((relative, number));
+                imports.push((relative, number, alias_scope));
             } else {
                 if !trimmed.is_empty() && !trimmed.starts_with('#')
                     && !trimmed.starts_with("//") {
@@ -306,11 +468,12 @@ impl ModuleLoader {
                 body.push((line, number));
             }
         }
-        for (relative, number) in imports {
+        for (relative, number, alias_scope) in imports {
+            let child_namespace = alias_scope.as_deref().unwrap_or(namespace);
             if let Some(name) = relative.strip_prefix("library:") {
                 let external = self.libraries.get(name).ok_or_else(|| library_error(file,
                     format!("Undeclared external library '{name}' at line {number}")))?.clone();
-                self.visit(&external.entry, depth + 1, &external.root)?;
+                self.visit(&external.entry, depth + 1, &external.root, child_namespace)?;
                 continue;
             }
             let base = file.parent().expect("canonical source has a parent");
@@ -325,10 +488,13 @@ impl ModuleLoader {
             if !resolved.is_file() {
                 return Err(module_error(file, number, "Import target must be a file"));
             }
-            self.visit(&resolved, depth + 1, boundary)?;
+            self.visit(&resolved, depth + 1, boundary, child_namespace)?;
         }
-        for (line, original_line) in body {
-            self.loaded.source.push_str(line);
+        let transformed = rewrite_scoped_source(&content, namespace, &aliases, file)?;
+        let transformed_lines = transformed.lines().collect::<Vec<_>>();
+        for (_, original_line) in body {
+            self.loaded.source.push_str(transformed_lines.get(original_line - 1)
+                .copied().unwrap_or(""));
             self.loaded.source.push('\n');
             self.loaded.origins.push((file.to_path_buf(), original_line));
         }
