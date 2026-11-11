@@ -88,6 +88,13 @@ fn execute_runtime_plan(plan: &RuntimePlan, config: &crate::ProgramConfig) -> Re
                     .map_err(|message| runtime_error(operation, message))?;
                 Some(ValueData::Boolean(matches))
             }
+            ("ai", "normalize_json_response") => {
+                let document = expect_string(argument("document")?, operation, "document")?;
+                let schema = expect_string(argument("schema")?, operation, "schema")?;
+                let canonical = normalize_ai_json_response(&document, &schema)
+                    .map_err(|message| runtime_error(operation, message))?;
+                Some(ValueData::String(canonical))
+            }
             ("ai", "typed_tool") => Some(ValueData::String(expect_string(argument("name")?, operation, "name")?)),
             ("ai", "bounded_agent") => {
                 let model = expect_string(argument("model")?, operation, "model")?;
