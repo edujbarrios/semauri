@@ -215,6 +215,13 @@ manager or a substitute for full integration and deployment tests.
 
 ## External and complementary source libraries (v0.72.0)
 
+**In development (unreleased):** use `import "library:NAME" as alias.` or
+`import "relative/file.suri" as alias.` and invoke a function with
+`invoke alias.function to VALUE`. Aliases isolate imported **function names**,
+not top-level variables or side effects. Existing unaliased imports still work.
+See [namespaced imports](external-libraries.md#namespaced-imports-development-unreleased).
+
+
 Projects can now declare third-party Semauri `.suri` libraries in
 `.semauri-libraries.json` and import them using a named library path:
 
