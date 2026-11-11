@@ -180,3 +180,50 @@ fn unaliased_imports_keep_their_original_meaning() {
     assert_eq!(result.stdout,"10\n");
     fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn formatter_understands_import_aliases_and_qualified_calls() {
+    let (root,project) = fixture();
+    let app = put(&project,"main.suri",
+        "IMPORT \"library:math_kit\" AS math.\nPRINT INVOKE math.shared TO 5.\n");
+    let formatted = call("fmt",&app);
+    assert_eq!(formatted.status,0,"{}",formatted.stderr);
+    assert!(formatted.stdout.contains("import \"library:math_kit\" as math."),
+        "{}",formatted.stdout);
+    assert!(formatted.stdout.contains("print invoke math.shared to 5."),
+        "{}",formatted.stdout);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn semantic_errors_in_aliased_files_keep_original_locations() {
+    let (root,project) = fixture();
+    let invalid = "define function shared taking n as number to (n plus \"bad\").\n";
+    library(&root,"math_kit",invalid);
+    let app = put(&project,"main.suri",
+        "import \"library:math_kit\" as math.\nassert true.\n");
+    let result = run_cli(&["check".into(),"--json".into(),
+        app.to_string_lossy().into_owned()]);
+    assert_eq!(result.status,65,"{}",result.stdout);
+    let value: serde_json::Value = serde_json::from_str(&result.stdout).unwrap();
+    let diagnostic = &value["diagnostics"][0];
+    assert!(diagnostic["file"].as_str().unwrap().ends_with("lib.suri"),
+        "{value}");
+    assert_eq!(diagnostic["span"]["start"]["line"],1,"{value}");
+    let column = diagnostic["span"]["start"]["column"].as_u64().unwrap();
+    assert!(column > 0 && column <= invalid.trim_end().chars().count() as u64,
+        "Column must refer to the original source, not the generated identifier: {value}");
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn generated_namespace_prefix_is_reserved_in_source_files() {
+    let (root,project) = fixture();
+    let app = put(&project,"main.suri",
+        "define function semauri_ns_1__shared taking n as number to n.\n\
+         print invoke semauri_ns_1__shared to 2.\n");
+    let result = call("check",&app);
+    assert_eq!(result.status,65,"{}",result.stderr);
+    assert!(result.stderr.contains("S416"),"{}",result.stderr);
+    fs::remove_dir_all(root).unwrap();
+}
