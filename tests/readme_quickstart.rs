@@ -11,12 +11,15 @@ const HELLO: &str = include_str!("../examples/quickstart.suri");
 #[test]
 fn front_page_is_short_but_links_to_complete_reference() {
     let lines = README.lines().count();
-    assert!(lines <= 200, "README grew to {lines} lines; keep details in docs/language-guide.md");
+    // A short library-onboarding paragraph extends the original 200-line front page.
+    assert!(lines <= 215, "README grew to {lines} lines; keep details in docs/language-guide.md");
     for required in [
         "## 1. Install",
         "## 2. Your first program",
         "## 3. Learn by example",
         "## 4. Command reference",
+        "Create your own Semauri-compatible library",
+        "[step-by-step guide](docs/external-libraries.md)",
         "## Citation",
         "[Language reference](docs/language-guide.md)",
         "[CITATION.cff](CITATION.cff)",

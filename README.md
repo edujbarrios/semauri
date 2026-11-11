@@ -148,59 +148,26 @@ The [complete example](examples/linear_regression.suri) implements ordinary leas
 semauri run --allow console_write examples/linear_regression.suri
 ```
 
-## 4. Create your own Semauri-compatible library to extend Semauri's power
+## Create your own Semauri-compatible library to extend Semauri's power
 
-**Write reusable `.suri` functions and share them with other Semauri projects.**
-No Python or plugin SDK is needed: a library is simply Semauri source code plus
-a small JSON descriptor.
-
-1. **Write your library** in `my-app/libraries/math_boost/lib.suri`:
-
-   ```text
-   define function triple taking n as number to (n times 3).
-   ```
-
-2. **Identify your library** with `my-app/libraries/math_boost/.semauri-library.json`:
-
-   ```json
-   {"schema": 1, "name": "math_boost", "version": "1.0.0", "entry": "lib.suri"}
-   ```
-
-3. **Enable it** in your project's `my-app/.semauri-libraries.json`:
-
-   ```json
-   {
-     "schema": 1,
-     "libraries": [
-       {"name": "math_boost", "version": "1.0.0", "path": "libraries/math_boost"}
-     ]
-   }
-   ```
-
-Now import and use it from `my-app/main.suri`:
+Write a reusable `.suri` function such as
+`define function triple taking n as number to (n times 3).`.
+Give your library a `.semauri-library.json` descriptor (name, version and
+entry file), then declare its local path/version in the project's
+`.semauri-libraries.json`. Import it with:
 
 ```text
 import "library:math_boost".
 print invoke triple to 7.
 ```
 
-```sh
-semauri libraries my-app
-semauri check my-app/main.suri
-semauri run --allow console_write my-app/main.suri
-```
+Start with `semauri init my-app` and validate with `semauri libraries my-app`.
+Library code is type-checked and respects explicit permissions; this supports
+**local `.suri` sources** (not automatic downloads or native plugins).
+[Copy the working example](examples/external_libraries/) or follow the
+[step-by-step guide](docs/external-libraries.md).
 
-Output: `21`. Start with `semauri init my-app` to create the project
-structure. You can also keep libraries **outside** the app folder and reference
-them by relative path. Library code is type-checked, and effects still require
-explicit permissions. External libraries are currently **local `.suri` sources**,
-not automatically downloaded packages or native plugins.
-
-See the [complete working example](examples/external_libraries/) and the
-[external library guide](docs/external-libraries.md) for nested imports,
-versions, security boundaries and complementary libraries.
-
-## 5. Command reference
+## 4. Command reference
 
 | Command | What it does |
 | --- | --- |
@@ -229,7 +196,7 @@ versions, security boundaries and complementary libraries.
 
 Run `semauri` for CLI help. Supported commands also offer `--json` for machine-readable output. Other side effects require their own explicit permissions; see [the language guide](docs/language-guide.md).
 
-## 6. Go further
+## 5. Go further
 
 [Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.72.0.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
 
