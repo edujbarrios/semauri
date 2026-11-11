@@ -7,4 +7,5 @@ assert validate ai json accepted against schema contract.
 let canonical be normalize ai json accepted against schema contract.
 let matches_contract be validate ai json rejected against schema contract.
 print matches_contract.
+print canonical.
 print "Structured AI response validated.".
