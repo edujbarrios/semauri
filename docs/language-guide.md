@@ -311,10 +311,10 @@ terminator, and a parenthesized function call can end with one immediately
 before its closing parenthesis. Neither adds an empty element or argument.
 
 ```text
-define function add taking a as number, b as number to (a plus b).
+define function combine taking left as number, right as number to (left plus right).
 let xs be a list of 1, 2, 3,.
 assert length of xs is equal to 3.
-assert invoke add to (2, 3,) is equal to 5.
+assert invoke combine to (2, 3,) is equal to 5.
 ```
 
 Extra commas in the middle remain syntax errors, and normal function
