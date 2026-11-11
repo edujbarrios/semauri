@@ -148,6 +148,39 @@ The [complete example](examples/linear_regression.suri) implements ordinary leas
 semauri run --allow console_write examples/linear_regression.suri
 ```
 
+**Level 7 — Generate a secure password**
+
+Semauri can generate passwords directly using your operating system's
+cryptographically secure random source:
+
+```text
+let generated_password be password of 20 characters.
+print generated_password.
+```
+
+For a custom alphabet (for example, a hexadecimal API token):
+
+```text
+let token be secure random string of 32 characters from "abcdef0123456789".
+print token.
+```
+
+Save the program to `password.suri` and run it with explicit permissions:
+
+```sh
+semauri run password.suri --allow secure_random --allow console_write
+```
+
+Each execution generates new random values. The secure generator selects
+characters without modulo bias. A default password uses upper- and lowercase
+letters, digits and symbols; custom alphabets must have distinct characters.
+Lengths are limited to **1–4096 Unicode characters**. Avoid printing real
+passwords into logs, and prefer 20+ characters for account passwords.
+
+You can also write `draw random integer from 1 to 6` or
+`pick random character from "ABCDEF"` with the same permission.
+[Try the complete example](examples/secure_password.suri).
+
 ## Create your own Semauri-compatible library to extend Semauri's power
 
 Write a reusable `.suri` function such as
@@ -167,9 +200,9 @@ Library code is type-checked and respects explicit permissions; this supports
 [Copy the working example](examples/external_libraries/) or follow the
 [step-by-step guide](docs/external-libraries.md).
 
-**New in 0.74.0:** typed `xor`, runtime numeric and Boolean expressions,
-bounded AI agents, strict JSON shape checks and canonical JSON validation.
-All changes in PRs #342–#344 are included ([guide](docs/language-guide.md)).
+**New in 0.75.0:** cryptographically secure password and token generation,
+random integer ranges and Unicode character selection. The improvements from
+v0.74.0 remain available ([guide](docs/language-guide.md)).
 Previous releases keep their existing syntax and permission rules.
 
 ## 4. Command reference
