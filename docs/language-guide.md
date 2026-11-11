@@ -2162,3 +2162,44 @@ print usage.
   inference and console effects still require explicit `--allow` flags.
 
 See [examples/ai_governance.suri](../examples/ai_governance.suri).
+
+
+## Boolean exclusivity and runtime expressions (Unreleased)
+
+Semauri now accepts the **contextual** operator `xor` for exclusive-or of
+booleans. It is statically checked and uses the precedence
+`not` > comparisons > `and` > `xor` > `or`, associating to the left.
+The word `xor` remains a normal identifier outside operator position.
+
+```text
+let exclusive be true xor false.
+assert exclusive.
+assert (true xor true) is equal to false.
+assert true xor (true and false).
+let XOR be true.
+assert XOR xor false.
+```
+
+Constant expressions are folded by the optimizer; `xor` evaluates both
+boolean inputs (unlike the short-circuit `and` and `or`). The compiler
+rejects non-boolean operands with S319. Formatting normalizes operators
+without altering variable names and code remains effect-free.
+
+In addition, **runtime-dependent** unary `not`, `xor` and typed equality
+(`is equal to` / `is not equal to`) can operate on dynamic values such as
+`boolean config` instead of failing during compilation. They lower to
+pure `core` operations in the typed SSA execution plan, preserving explicit
+permissions for their inputs and source spans for runtime errors.
+
+```text
+let gate be boolean config "gate".
+let checked be not gate.
+assert checked is not equal to gate.
+```
+
+The compiler deliberately **does not** evaluate runtime-dependent
+short-circuit `and` / `or` or conditional branches as eager operations;
+these still require proper control-flow lowering. The `local/*` AI
+simulation and other domains are unaffected.
+
+[Executable Boolean example](../examples/boolean_logic.suri).
