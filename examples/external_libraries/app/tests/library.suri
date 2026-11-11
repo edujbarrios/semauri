@@ -1,4 +1,4 @@
 # Third-party functions remain statically checked.
-import "library:math_kit".
-assert invoke square to 6 is equal to 36.
-assert invoke triple to 4 is equal to 12.
+import "library:math_kit" as math.
+assert invoke math.square to 6 is equal to 36.
+assert invoke math.triple to 4 is equal to 12.
