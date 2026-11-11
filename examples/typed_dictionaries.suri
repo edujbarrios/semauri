@@ -1,0 +1,16 @@
+# Immutable homogeneous typed dictionaries. Unreleased language feature.
+let scores be dictionary of ("alice": 8, "bob": 10).
+assert (entry "alice" of scores) is equal to 8.
+
+define function read_score taking scores as dictionary of number to entry "bob" of scores.
+let selected be invoke read_score to scores.
+assert selected is equal to 10.
+
+let locations be dictionary of (
+  "north": dictionary of ("city": "Bilbao"),
+  "south": dictionary of ("city": "Las Palmas")
+).
+assert (entry "city" of entry "south" of locations) is equal to "Las Palmas".
+
+print selected.
+print json of scores.

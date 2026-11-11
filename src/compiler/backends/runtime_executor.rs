@@ -174,6 +174,8 @@ fn display_console_value(value: &ValueData) -> String {
                 .join(", ")
         ),
         ValueData::Record(fields) => ValueData::Record(fields.clone()).to_json().to_string(),
+        ValueData::Dictionary(entries) =>
+            ValueData::Dictionary(entries.clone()).to_json().to_string(),
         ValueData::Unit => "unit".to_string(),
     }
 }

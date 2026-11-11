@@ -386,6 +386,38 @@ Comments begin with `#`, `//`, or a nestable `/* ... */` block. Keywords are cas
 
 Semauri does not silently coerce unrelated types.
 
+### Immutable typed dictionaries (development, not yet released)
+
+Dictionaries are immutable **string-keyed maps of one statically inferred value
+type**, unlike records whose fields may each have different types.
+
+```text
+let scores be dictionary of ("alice": 8, "bob": 10).
+assert (entry "alice" of scores) is equal to 8.
+print json of scores.
+```
+
+Use `dictionary of ("key": EXPR, ...)` or `a dictionary of (...)`.
+Access values with `entry "key" of DICTIONARY`; keys are quoted
+case-sensitive strings of 1–64 UTF-8 bytes. Dictionary literals require at
+least one entry so the element type can be inferred. Each entry's value must
+have exactly the same type. Duplicate keys, malformed syntax or more than 64
+entries produce S420. Mixing incompatible value types, accessing a non-
+dictionary or reading a missing key produces S421 (the latter when evaluated).
+
+Dictionary types can be nested, used in lists, and declared as function
+parameter types: `taking scores as dictionary of number`. A mismatched
+argument type fails with S370. The existing `json of` expression
+serializes dictionaries, including nested values, to JSON strings. Enclose
+comma-separated list values in parentheses, e.g.,
+`dictionary of ("a": (a list of 1, 2), "b": (a list of 3, 4))`.
+
+These dictionaries are **immutable** and use literal string keys; dynamic
+key expressions, insert/remove operations, and runtime-derived compound
+values are not yet supported. The feature requires no new permissions,
+dependencies or online registry. Semauri **0.72.0** remains the current
+published version while development continues on an unmerged draft PR.
+
 ### Immutable typed records (development, not yet released)
 
 Semauri now supports **structurally typed records** in the development branch.

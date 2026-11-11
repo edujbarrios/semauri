@@ -31,6 +31,17 @@ pub enum HirExpr {
         items: Vec<HirExpr>,
         span: SourceSpan,
     },
+    Dictionary {
+        ty: Type,
+        entries: BTreeMap<String, HirExpr>,
+        span: SourceSpan,
+    },
+    DictionaryEntry {
+        ty: Type,
+        name: String,
+        dictionary: Box<HirExpr>,
+        span: SourceSpan,
+    },
     Record {
         ty: Type,
         fields: BTreeMap<String, HirExpr>,
@@ -130,6 +141,8 @@ impl HirExpr {
         match self {
             HirExpr::Literal { ty, .. }
             | HirExpr::List { ty, .. }
+            | HirExpr::Dictionary { ty, .. }
+            | HirExpr::DictionaryEntry { ty, .. }
             | HirExpr::Record { ty, .. }
             | HirExpr::RecordField { ty, .. }
             | HirExpr::SymbolRef { ty, .. }
@@ -150,6 +163,8 @@ impl HirExpr {
         match self {
             HirExpr::Literal { span, .. }
             | HirExpr::List { span, .. }
+            | HirExpr::Dictionary { span, .. }
+            | HirExpr::DictionaryEntry { span, .. }
             | HirExpr::Record { span, .. }
             | HirExpr::RecordField { span, .. }
             | HirExpr::SymbolRef { span, .. }
@@ -170,6 +185,8 @@ impl HirExpr {
         match self {
             HirExpr::Literal { .. } => "literal",
             HirExpr::List { .. } => "list",
+            HirExpr::Dictionary { .. } => "dictionary",
+            HirExpr::DictionaryEntry { .. } => "dictionary_entry",
             HirExpr::Record { .. } => "record",
             HirExpr::RecordField { .. } => "record_field",
             HirExpr::SymbolRef { .. } => "symbol_ref",
@@ -197,6 +214,15 @@ impl HirExpr {
                     "items".into(),
                     JsonValue::Array(items.iter().map(HirExpr::to_json).collect()),
                 );
+            }
+            HirExpr::Dictionary { entries, .. } => {
+                fields.insert("entries".into(), json!(entries.iter()
+                    .map(|(name, value)| (name.clone(), value.to_json()))
+                    .collect::<BTreeMap<_, _>>()));
+            }
+            HirExpr::DictionaryEntry { name, dictionary, .. } => {
+                fields.insert("name".into(), json!(name));
+                fields.insert("dictionary".into(), dictionary.to_json());
             }
             HirExpr::Record { fields: values, .. } => {
                 fields.insert("fields".into(), json!(values.iter()

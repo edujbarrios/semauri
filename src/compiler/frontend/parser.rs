@@ -148,6 +148,15 @@ impl<'a> Parser<'a> {
             self.consume(TokenKind::Of, "Expected 'of' after list type", "S246")?;
             return Ok(Type::List(Box::new(self.function_type()?)));
         }
+        // Uniform string-key dictionary types can be used in function parameters.
+        if self.check(TokenKind::Word)
+            && self.peek().lexeme.eq_ignore_ascii_case("dictionary")
+        {
+            self.advance();
+            self.consume(TokenKind::Of,
+                "Expected 'of' after dictionary type", "S420")?;
+            return Ok(Type::Dictionary(Box::new(self.function_type()?)));
+        }
         // A record schema is a first-class structural parameter type:
         // "record of (\"name\": string, \"age\": number)".
         // Use the same field-name limits and exact casing as record literals.
@@ -194,7 +203,7 @@ impl<'a> Parser<'a> {
             "boolean" => Type::Boolean,
             "color" => Type::Color,
             _ => return Err(self.parse_error(&token,
-                "Expected parameter type number, string, boolean, color, list of TYPE or record of (...)", "S246", None)),
+                "Expected parameter type number, string, boolean, color, list of TYPE, dictionary of TYPE or record of (...)", "S246", None)),
         };
         self.advance();
         Ok(ty)
@@ -1812,6 +1821,15 @@ impl<'a> Parser<'a> {
             }
             TokenKind::Article
                 if self.tokens.get(self.current + 1).is_some_and(|next|
+                    next.lexeme.eq_ignore_ascii_case("dictionary"))
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.kind == TokenKind::Of) =>
+            {
+                let start = self.advance().clone();
+                self.dictionary_literal(&start, false)
+            }
+            TokenKind::Article
+                if self.tokens.get(self.current + 1).is_some_and(|next|
                     next.lexeme.eq_ignore_ascii_case("record"))
                     && self.tokens.get(self.current + 2).is_some_and(|next|
                         next.kind == TokenKind::Of) =>
@@ -1822,6 +1840,33 @@ impl<'a> Parser<'a> {
             TokenKind::Article => {
                 let start = self.advance().clone();
                 self.list_literal(&start, false)
+            }
+            TokenKind::Word if token.lexeme.eq_ignore_ascii_case("dictionary")
+                && self.tokens.get(self.current + 1).is_some_and(|next|
+                    next.kind == TokenKind::Of) =>
+            {
+                let start = self.advance().clone();
+                self.dictionary_literal(&start, true)
+            }
+            kind if matches!(kind, TokenKind::Word | TokenKind::DomainElement)
+                && token.lexeme.eq_ignore_ascii_case("entry")
+                && self.tokens.get(self.current + 1).is_some_and(|next|
+                    next.kind == TokenKind::String)
+                && self.tokens.get(self.current + 2).is_some_and(|next|
+                    next.kind == TokenKind::Of) =>
+            {
+                let start = self.advance().clone();
+                let key = self.consume(TokenKind::String,
+                    "Expected a quoted dictionary key", "S420")?;
+                self.consume(TokenKind::Of,
+                    "Expected 'of' after dictionary key", "S420")?;
+                let dictionary = self.primary()?;
+                let span = span_between_spans(start.span, dictionary.span());
+                Ok(Expr::DictionaryEntry {
+                    name: token_string_literal(&key),
+                    dictionary: Box::new(dictionary),
+                    span,
+                })
             }
             TokenKind::Word if token.lexeme.eq_ignore_ascii_case("record")
                 && self.tokens.get(self.current + 1).is_some_and(|next|
@@ -2814,6 +2859,53 @@ impl<'a> Parser<'a> {
                 None,
             )),
         }
+    }
+
+    // Immutable, homogeneous string-key dictionaries are distinct from
+    // structurally typed records. Their entry values all have one inferred type.
+    fn dictionary_literal(&mut self, start: &Token, consumed: bool) -> Result<Expr> {
+        if !consumed {
+            self.consume_surface("dictionary",
+                "Expected 'dictionary' after article", "S420")?;
+        }
+        self.consume(TokenKind::Of, "Expected 'of' after dictionary", "S420")?;
+        self.consume(TokenKind::LParen,
+            "Expected '(' before dictionary entries", "S420")?;
+        let mut entries = Vec::new();
+        while !self.check(TokenKind::RParen) {
+            let key = self.consume(TokenKind::String,
+                "Dictionary keys must be quoted strings", "S420")?;
+            let name = token_string_literal(&key);
+            if name.is_empty() || name.len() > 64 {
+                return Err(self.parse_error(&key,
+                    "Dictionary keys must contain 1-64 UTF-8 bytes", "S420", None));
+            }
+            if entries.iter().any(|(existing, _): &(String, Expr)| existing == &name) {
+                return Err(self.parse_error(&key,
+                    format!("Duplicate dictionary key '{name}'"), "S420", None));
+            }
+            self.consume(TokenKind::Colon,
+                "Expected ':' after dictionary key", "S420")?;
+            let value = self.expression()?;
+            entries.push((name, value));
+            if entries.len() > 64 {
+                return Err(self.parse_error(&key,
+                    "Dictionaries support at most 64 entries", "S420", None));
+            }
+            if !self.matches(&[TokenKind::Comma]) { break; }
+            if self.check(TokenKind::RParen) { break; }
+        }
+        let end = self.consume(TokenKind::RParen,
+            "Expected ')' after dictionary entries", "S420")?;
+        if entries.is_empty() {
+            return Err(self.parse_error(&end,
+                "A dictionary needs at least one entry to infer its value type",
+                "S420", None));
+        }
+        Ok(Expr::Dictionary {
+            entries,
+            span: span_between_spans(start.span, end.span),
+        })
     }
 
     // Immutable, structurally typed records use quoted JSON-compatible keys.

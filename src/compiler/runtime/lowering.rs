@@ -957,6 +957,15 @@ impl<'a> Lowerer<'a> {
                 }
                 false
             }
+            HirExpr::Dictionary { entries, .. } => {
+                let mut dependent = false;
+                for value in entries.values() {
+                    if self.runtime_dependent(value)? { dependent = true; }
+                }
+                dependent
+            }
+            HirExpr::DictionaryEntry { dictionary, .. } =>
+                self.runtime_dependent(dictionary)?,
             HirExpr::Record { fields, .. } => {
                 let mut dependent = false;
                 for value in fields.values() {
@@ -1257,6 +1266,39 @@ impl<'a> Lowerer<'a> {
                     ty: ty.clone(),
                     data: ValueData::List(values),
                 })
+            }
+            HirExpr::Dictionary { ty, entries, .. } => {
+                let mut values = BTreeMap::new();
+                for (name, expression) in entries {
+                    match self.evaluate(expression)? {
+                        BoundValue::Compile { data, .. } => {
+                            values.insert(name.clone(), data);
+                        }
+                        BoundValue::Runtime(_) =>
+                            return Err(self.runtime_value_error(expression.span())),
+                    }
+                }
+                Ok(BoundValue::Compile {
+                    ty: ty.clone(),
+                    data: ValueData::Dictionary(values),
+                })
+            }
+            HirExpr::DictionaryEntry { ty, name, dictionary, span } => {
+                match self.evaluate(dictionary)? {
+                    BoundValue::Compile {
+                        data: ValueData::Dictionary(entries), ..
+                    } => {
+                        let data = entries.get(name).cloned().ok_or_else(||
+                            SemauriError::semantic(
+                                "S421", format!("Dictionary has no entry '{name}'"),
+                                Some(*span), None))?;
+                        Ok(BoundValue::Compile { ty: ty.clone(), data })
+                    }
+                    BoundValue::Compile { .. } => Err(SemauriError::semantic(
+                        "S421", "Entry lookup requires a dictionary",
+                        Some(*span), None)),
+                    BoundValue::Runtime(_) => Err(self.runtime_value_error(*span)),
+                }
             }
             HirExpr::Record { ty, fields, .. } => {
                 let mut values = BTreeMap::new();
@@ -2755,6 +2797,14 @@ fn distinct_fingerprint(value: &ValueData) -> u64 {
                     hash_value(value, hasher);
                 }
             },
+            ValueData::Dictionary(entries) => {
+                8u8.hash(hasher);
+                entries.len().hash(hasher);
+                for (name, value) in entries {
+                    name.hash(hasher);
+                    hash_value(value, hasher);
+                }
+            },
         }
     }
 
@@ -2794,6 +2844,8 @@ fn inspect_value(value: &ValueData) -> String {
         ValueData::Unit => "nil".to_string(),
         ValueData::Record(fields) =>
             ValueData::Record(fields.clone()).to_json().to_string(),
+        ValueData::Dictionary(entries) =>
+            ValueData::Dictionary(entries.clone()).to_json().to_string(),
     }
 }
 

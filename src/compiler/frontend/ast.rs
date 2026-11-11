@@ -298,6 +298,15 @@ pub enum Expr {
         items: Vec<Expr>,
         span: SourceSpan,
     },
+    Dictionary {
+        entries: Vec<(String, Expr)>,
+        span: SourceSpan,
+    },
+    DictionaryEntry {
+        name: String,
+        dictionary: Box<Expr>,
+        span: SourceSpan,
+    },
     Record {
         fields: Vec<(String, Expr)>,
         span: SourceSpan,
@@ -374,6 +383,8 @@ impl Expr {
         match self {
             Expr::Literal { span, .. }
             | Expr::List { span, .. }
+            | Expr::Dictionary { span, .. }
+            | Expr::DictionaryEntry { span, .. }
             | Expr::Record { span, .. }
             | Expr::RecordField { span, .. }
             | Expr::Variable { span, .. }
@@ -393,6 +404,9 @@ impl Expr {
         match self {
             Expr::Literal { ty, value, .. } => Expr::Literal { ty, value, span },
             Expr::List { items, .. } => Expr::List { items, span },
+            Expr::Dictionary { entries, .. } => Expr::Dictionary { entries, span },
+            Expr::DictionaryEntry { name, dictionary, .. } =>
+                Expr::DictionaryEntry { name, dictionary, span },
             Expr::Record { fields, .. } => Expr::Record { fields, span },
             Expr::RecordField { name, record, .. } => Expr::RecordField { name, record, span },
             Expr::Variable { name, .. } => Expr::Variable { name, span },
@@ -461,6 +475,17 @@ impl Expr {
                     "items".into(),
                     JsonValue::Array(items.iter().map(Expr::to_json).collect()),
                 );
+            }
+            Expr::Dictionary { entries, .. } => {
+                base.insert("type".into(), json!("dictionary_literal"));
+                base.insert("entries".into(), json!(entries.iter()
+                    .map(|(name, value)| json!({"key": name, "value": value.to_json()}))
+                    .collect::<Vec<_>>()));
+            }
+            Expr::DictionaryEntry { name, dictionary, .. } => {
+                base.insert("type".into(), json!("dictionary_entry"));
+                base.insert("name".into(), json!(name));
+                base.insert("dictionary".into(), dictionary.to_json());
             }
             Expr::Record { fields, .. } => {
                 base.insert("type".into(), json!("record_literal"));

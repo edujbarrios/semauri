@@ -519,6 +519,7 @@ pub enum Type {
     EntityRef,
     Opaque,
     List(Box<Type>),
+    Dictionary(Box<Type>),
     Record(BTreeMap<String, Type>),
     Nominal(NominalType),
 }
@@ -536,6 +537,10 @@ impl Type {
             Type::List(element) => json!({
                 "kind": "list",
                 "element_type": element.to_json()
+            }),
+            Type::Dictionary(element) => json!({
+                "kind": "dictionary",
+                "value_type": element.to_json()
             }),
             Type::Record(fields) => json!({
                 "kind": "record",
@@ -570,6 +575,7 @@ impl fmt::Display for Type {
             Type::EntityRef => write!(f, "entity_ref"),
             Type::Opaque => write!(f, "opaque"),
             Type::List(element) => write!(f, "list<{element}>"),
+            Type::Dictionary(element) => write!(f, "dictionary<{element}>"),
             Type::Record(fields) => write!(f, "record<{}>",
                 fields.iter().map(|(name, ty)| format!("{name}: {ty}"))
                     .collect::<Vec<_>>().join(", ")),
@@ -609,6 +615,7 @@ pub enum ValueData {
     String(String),
     Color(String),
     List(Vec<ValueData>),
+    Dictionary(BTreeMap<String, ValueData>),
     Record(BTreeMap<String, ValueData>),
     Unit,
 }
@@ -620,7 +627,8 @@ impl ValueData {
             ValueData::Boolean(value) => json!(value),
             ValueData::String(value) | ValueData::Color(value) => json!(value),
             ValueData::List(values) => JsonValue::Array(values.iter().map(ValueData::to_json).collect()),
-            ValueData::Record(fields) => JsonValue::Object(fields.iter().map(|(name, value)|
+            ValueData::Dictionary(fields) | ValueData::Record(fields) =>
+                JsonValue::Object(fields.iter().map(|(name, value)|
                 (name.clone(), value.to_json())).collect()),
             ValueData::Unit => JsonValue::Null,
         }
@@ -634,6 +642,7 @@ impl ValueData {
                 format!("{ty} {:?}", value)
             }
             ValueData::List(values) => format!("{ty} {:?}", values.iter().map(ValueData::to_json).collect::<Vec<_>>()),
+            ValueData::Dictionary(fields) => format!("{ty} {}", ValueData::Dictionary(fields.clone()).to_json()),
             ValueData::Record(fields) => format!("{ty} {}", ValueData::Record(fields.clone()).to_json()),
             ValueData::Unit => "unit nil".to_string(),
         }

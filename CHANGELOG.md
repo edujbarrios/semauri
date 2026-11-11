@@ -1,5 +1,12 @@
 ## Unreleased
 
+### Immutable typed dictionaries (development; no version bump)
+- Add homogeneous string-key `dictionary of ("key": EXPR, ...)` literals, optional article, `entry "key" of DICTIONARY` lookups and statically checked `dictionary of TYPE` function parameters.
+- Add nested dictionaries, exact value-type inference, stable JSON serialization through `json of`, and compiler/runtime diagnostics S420/S421 for malformed or invalid entries, missing keys, and type mismatches.
+- Support the AST, HIR, optimizer, effect analysis, formatter and evaluation pipeline in Rust with regression tests and a runnable example.
+- Preserve immutable semantics, explicit capabilities and 0.72.0 release; changes stay on the unmerged draft PR.
+
+
 ### Immutable typed records (development; no version bump)
 - Introduce `record of ("field": EXPR, ...)` and `field "name" of record` with inferred structural field types, nesting, lists and pure function results.
 - Reject duplicate fields, missing field names, excessive records and invalid field access with S418/S419 diagnostics; retain explicit capability rules and source spans.
