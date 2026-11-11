@@ -230,3 +230,23 @@ fn generated_namespace_prefix_is_reserved_in_source_files() {
     }
     fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn aliased_libraries_can_return_typed_records_with_colliding_function_names() {
+    let (root, project) = fixture();
+    library(&root, "math_kit",
+        "define function profile taking n as number to record of (\"score\": n, \"label\": \"math\").\n");
+    library(&root, "other_kit",
+        "define function profile taking n as number to record of (\"score\": (n plus 10), \"label\": \"other\").\n");
+    let app = put(&project, "main.suri",
+        "import \"library:math_kit\" as math.\n\
+         import \"library:other_kit\" as other.\n\
+         let math_result be invoke math.profile to 5.\n\
+         let other_result be invoke other.profile to 5.\n\
+         assert (field \"score\" of math_result) is equal to 5.\n\
+         print field \"label\" of other_result.\n");
+    let result = run(&app);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout, "other\n");
+    fs::remove_dir_all(root).unwrap();
+}

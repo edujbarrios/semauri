@@ -414,6 +414,11 @@ records and `list of TYPE` fields are supported; mismatched structures
 report S370 before execution. In this first
 step, *building records from runtime-dependent model/API results is not yet
 supported*. They do not enable network access, file I/O or implicit effects.
+For a field whose value is a comma-separated list, enclose the list
+in parentheses so record field separators remain unambiguous:
+`record of ("tags": (a list of "alpha", "beta"), "score": 5)`.
+Record-valued functions also work across namespaced Semauri libraries.
+
 The public language version is still **0.72.0** and these features remain
 in the draft development PR.
 
