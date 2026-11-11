@@ -170,3 +170,34 @@ fn formatter_and_checked_example_stay_valid() {
     assert!((100000..=999999).contains(&lines[2].parse::<i64>().unwrap()));
     assert!(["A", "B", "C", "D"].contains(&lines[3]));
 }
+
+#[test]
+fn random_verbs_remain_valid_contextual_identifiers() {
+    let source = r#"
+let password be "previous value".
+let pick be 5.
+let draw be 6.
+let secure be 7.
+print password.
+print pick.
+print draw.
+print secure.
+let generated_password be password of 8 characters.
+print generated_password.
+"#;
+    let output = run_source(source, true, true);
+    assert_eq!(output.status, 0, "{}", output.stderr);
+    let lines = output.stdout.lines().collect::<Vec<_>>();
+    assert_eq!(&lines[..4], &["previous value", "5", "6", "7"]);
+    assert_eq!(lines[4].chars().count(), 8);
+
+    // Existing functions called pick must still parse and type-check.
+    let source = r#"
+define function pick taking xs as list of number to (first of xs).
+let values be a list of 3, 5.
+print invoke pick to values.
+"#;
+    let output = run_source(source, false, true);
+    assert_eq!(output.status, 0, "{}", output.stderr);
+    assert_eq!(output.stdout, "3\n");
+}
