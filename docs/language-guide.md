@@ -2174,7 +2174,7 @@ cap ai requests to 4.
 bound ai prompts to 500 characters.
 restrict ai outputs to 200 characters.
 memoize ai response cache.
-limit ai cache to 2 entries.
+constrain ai cache to 2 entries.
 let model be connect language model "local/test".
 let assistant be compose agent using model system "Be concise." max 2 turns.
 let first be ask assistant with "Hola".
@@ -2194,7 +2194,7 @@ reset ai response cache.
   deterministic simulator, **not** a real language model that follows system
   instructions; provider adapters are still required for real inference.
   Prompt bounds cover the system message plus the user's prompt.
-- `limit ai cache to N entries.` sets a nonnegative integer limit on
+- `constrain ai cache to N entries.` sets a nonnegative integer limit on
   memoized responses. The oldest inserted entry is evicted first (FIFO);
   cache hits do not refresh order. Lowering the limit immediately evicts
   excess entries. Zero disables storage without disabling model execution.

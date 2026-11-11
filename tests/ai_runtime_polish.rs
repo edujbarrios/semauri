@@ -37,7 +37,7 @@ fn bounded_fifo_cache_evicts_oldest_and_reports_counts() {
     let usage = report(r#"
 cap ai requests to 3.
 memoize ai response cache.
-limit ai cache to 1 entries.
+constrain ai cache to 1 entries.
 let model be connect language model "local/test".
 let first_result be prompt model with "a".
 let second_result be prompt model with "b".
@@ -55,7 +55,7 @@ print report ai usage.
 fn cache_hit_does_not_refresh_fifo_order() {
     let usage = report(r#"
 memoize ai response cache.
-limit ai cache to 2 entries.
+constrain ai cache to 2 entries.
 let model be connect language model "local/test".
 let first_result be prompt model with "a".
 let second_result be prompt model with "b".
@@ -77,7 +77,7 @@ memoize ai response cache.
 let model be connect language model "local/test".
 let first_result be prompt model with "a".
 let second_result be prompt model with "b".
-limit ai cache to 1 entries.
+constrain ai cache to 1 entries.
 reset ai response cache.
 print report ai usage.
 "#);
@@ -91,7 +91,7 @@ print report ai usage.
 fn zero_capacity_prevents_caching_but_not_inference() {
     let usage = report(r#"
 memoize ai response cache.
-limit ai cache to 0 entries.
+constrain ai cache to 0 entries.
 let model be connect language model "local/test".
 let first_result be prompt model with "a".
 let again be prompt model with "a".
@@ -170,8 +170,8 @@ print answer.
 #[test]
 fn counts_are_validated_and_pure_controls_are_typed() {
     for expression in [
-        "limit ai cache to minus 1 entries.",
-        "limit ai cache to 1.5 entries.",
+        "constrain ai cache to minus 1 entries.",
+        "constrain ai cache to 1.5 entries.",
         "restrict ai outputs to minus 1 characters.",
         "restrict ai outputs to 1.5 characters.",
         "let model be connect language model \"local/test\". let agent be compose agent using model system \"x\" max 1.5 turns.",
@@ -182,12 +182,12 @@ fn counts_are_validated_and_pure_controls_are_typed() {
     }
 
     let compiler = Compiler::new();
-    let source = "limit ai cache to 2 entries. restrict ai outputs to 16 characters. reset ai response cache. let metrics be report ai usage.";
+    let source = "constrain ai cache to 2 entries. restrict ai outputs to 16 characters. reset ai response cache. let metrics be report ai usage.";
     compiler.hir(source).unwrap();
     assert!(compiler.effect_analysis(source).unwrap().effects().is_empty());
 
-    let formatted = compiler.format_source("LIMIT AI CACHE TO 2 ENTRIES. RESTRICT AI OUTPUTS TO 16 CHARACTERS. RESET AI RESPONSE CACHE.").unwrap();
-    assert!(formatted.contains("limit"));
+    let formatted = compiler.format_source("CONSTRAIN AI CACHE TO 2 ENTRIES. RESTRICT AI OUTPUTS TO 16 CHARACTERS. RESET AI RESPONSE CACHE.").unwrap();
+    assert!(formatted.contains("constrain"));
     assert!(formatted.contains("restrict"));
     assert!(formatted.contains("reset"));
     assert_eq!(compiler.format_source(&formatted).unwrap(), formatted);

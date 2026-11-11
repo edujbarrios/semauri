@@ -56,7 +56,7 @@ fn ai_domain() -> DomainSpec {
             ),
             op(
                 "cache_capacity",
-                &["limit"],
+                &["constrain"],
                 vec![
                     lit("ai"),
                     lit("cache"),
