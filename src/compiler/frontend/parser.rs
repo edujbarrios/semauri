@@ -2756,9 +2756,10 @@ impl<'a> Parser<'a> {
         )?;
         let mut items = vec![self.expression()?];
         while self.matches(&[TokenKind::Comma]) {
-            // The final comma may precede the statement terminator.
+            // The final comma may precede the statement terminator
+            // or a closing parenthesis around the list expression.
             // Reject missing elements in the middle of a list as before.
-            if self.check(TokenKind::Dot) { break; }
+            if self.check(TokenKind::Dot) || self.check(TokenKind::RParen) { break; }
             items.push(self.expression()?);
         }
         let span = span_between_spans(start.span, items.last().unwrap().span());
