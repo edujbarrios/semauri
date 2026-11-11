@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Rust-only internals and development tools
+- Replace the Python Jupyter adapter and installer with a native Rust ZeroMQ kernel, including HMAC-authenticated messages, independent cell execution, capability controls, read-only directives, completions, and Rust unit/protocol tests.
+- Replace Python benchmark and report scripts with `semauri_bench`, migrate GitHub Actions workflows, and remove all repository-owned Python source files.
+- Accept a leading UTF-8 BOM in direct source and imported modules, while keeping embedded BOM characters invalid, with Rust regression tests.
+- No release, tag, or package version change accompanies these development changes.
+
 ## 0.71.0 — 2026-11-10
 
 ### Numerical sequences: cumulative and adjacent operations
