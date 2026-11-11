@@ -32,6 +32,14 @@ fn bom_is_supported_on_imported_modules_and_first_line_imports() {
 }
 
 #[test]
+fn formatter_normalizes_initial_bom_without_corrupting_source_spans() {
+    let formatted = Compiler::new()
+        .format_source("\u{feff}LET answer BE 42.\nPRINT answer.")
+        .expect("BOM-prefixed source can be formatted");
+    assert_eq!(formatted, "let answer be 42.\nprint answer.");
+}
+
+#[test]
 fn embedded_bom_remains_a_lexical_error() {
     let error = Compiler::new()
         .tokenize("print 1.\u{feff}print 2.")
