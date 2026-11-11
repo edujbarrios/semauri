@@ -201,3 +201,28 @@ print invoke pick to values.
     assert_eq!(output.status, 0, "{}", output.stderr);
     assert_eq!(output.stdout, "3\n");
 }
+
+#[test]
+fn random_verbs_can_still_be_used_as_variable_names() {
+    let source = r#"
+let password be password of 20 characters.
+let pick be pick random character from "Z".
+let secure be secure random string of 4 characters from "ab".
+let draw be draw random integer from 7 to 7.
+print password.
+print pick.
+print secure.
+print draw.
+"#;
+    let compiler = Compiler::new();
+    compiler.hir(source).unwrap();
+    let result = run_source(source, true, true);
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    let values = result.stdout.lines().collect::<Vec<_>>();
+    assert_eq!(values.len(), 4);
+    assert_eq!(values[0].chars().count(), 20);
+    assert_eq!(values[1], "Z");
+    assert_eq!(values[2].chars().count(), 4);
+    assert!(values[2].chars().all(|ch| "ab".contains(ch)));
+    assert_eq!(values[3], "7");
+}
