@@ -97,6 +97,9 @@ impl ModuleLoader {
         }
         let content = fs::read_to_string(file).map_err(|error|
             module_error(file, 1, format!("Cannot read UTF-8 module: {error}")))?;
+        // Normalize a single leading UTF-8 BOM before scanning imports;
+        // otherwise an import on line 1 looks like an executable statement.
+        let content = content.strip_prefix('\u{feff}').unwrap_or(&content).to_owned();
         self.bytes += content.len();
         self.loaded.files.insert(file.to_path_buf(), content.clone());
         self.visited.insert(file.to_path_buf());
