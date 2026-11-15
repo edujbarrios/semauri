@@ -108,7 +108,7 @@ fn format_source_directory(
 }
 
 fn verification_usage() -> String {
-    "Usage: semauri verify PROJECT [--json] [--allow-console]".to_string()
+    "Usage: semauri verify PROJECT [--json] [--deny-console]".to_string()
 }
 
 fn verify_response(
@@ -154,12 +154,13 @@ fn verify_response(
 
 fn run_verify_cli(args: &[String]) -> CliResult {
     let mut json_mode = false;
-    let mut allow_console = false;
+    let mut deny_console = false;
     let mut path: Option<&str> = None;
     for arg in args {
         match arg.as_str() {
             "--json" => json_mode = true,
-            "--allow-console" => allow_console = true,
+            "--allow-console" => {}, // Deprecated; output is now allowed by default.
+            "--deny-console" => deny_console = true,
             option if option.starts_with('-') => {
                 return CliResult {
                     status: 64, stdout: String::new(),
@@ -275,7 +276,7 @@ fn run_verify_cli(args: &[String]) -> CliResult {
     let mut test_report = String::new();
     if syntax_ok {
         let mut test_args = vec![tests_dir.to_string_lossy().into_owned()];
-        if allow_console { test_args.push("--allow-console".to_string()); }
+        if deny_console { test_args.push("--deny-console".to_string()); }
         let tests = run_test_cli(&test_args);
         test_report = tests.stdout;
         if tests.status != 0 {
