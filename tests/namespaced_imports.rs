@@ -162,7 +162,11 @@ fn imported_top_level_effects_remain_permission_checked() {
          define function shared taking n as number to (n plus 1).\n");
     let app = put(&project,"main.suri",
         "import \"library:math_kit\" as math.\nassert true.\n");
-    let denied = call("run",&app);
+    let default = call("run",&app);
+    assert_eq!(default.status,0,"{}",default.stderr);
+    assert_eq!(default.stdout,"external effect\n");
+    let denied = run_cli(&["run".into(),"--deny-console".into(),
+        app.to_string_lossy().into_owned()]);
     assert_eq!(denied.status,65,"{}",denied.stderr);
     assert!(denied.stderr.contains("S334"),"{}",denied.stderr);
     let result = run(&app);
