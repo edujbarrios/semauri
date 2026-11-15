@@ -67,15 +67,18 @@ fn failed_assertions_remain_failures_in_json_mode() {
 }
 
 #[test]
-fn json_mode_preserves_explicit_console_permissions() {
+fn json_mode_runs_printing_tests_by_default_with_strict_opt_out() {
     let directory = suite();
     fs::write(directory.join("prints.suri"), "assert true. print \"ok\".").unwrap();
-    let (denied_status, denied, _) = json_test(&directory, &[]);
-    assert_eq!(denied_status, 1);
-    assert!(denied["tests"][0]["error"].as_str().unwrap().contains("S334"));
-    let (allowed_status, allowed, _) = json_test(&directory, &["--allow-console"]);
-    assert_eq!(allowed_status, 0);
-    assert_eq!(allowed["passed"], 1);
+    let (status, report, _) = json_test(&directory, &[]);
+    assert_eq!(status, 0);
+    assert_eq!(report["passed"], 1);
+    let (strict_status, strict, _) = json_test(&directory, &["--deny-console"]);
+    assert_eq!(strict_status, 1);
+    assert!(strict["tests"][0]["error"].as_str().unwrap().contains("S334"));
+    let (old_status, old, _) = json_test(&directory, &["--allow-console"]);
+    assert_eq!(old_status, 0);
+    assert_eq!(old["passed"], 1);
     fs::remove_dir_all(directory).unwrap();
 }
 
