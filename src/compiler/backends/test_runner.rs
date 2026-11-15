@@ -64,7 +64,7 @@ fn test_usage_error(json_mode: bool, message: String) -> CliResult {
 }
 
 fn run_test_cli(args: &[String]) -> CliResult {
-    let mut allow_console = false;
+    let mut deny_console = false;
     // Pre-detect JSON output so even argument errors are structured regardless
     // of whether --json appears before or after the invalid argument.
     let json_mode = args.iter().any(|arg| arg == "--json");
@@ -74,7 +74,8 @@ fn run_test_cli(args: &[String]) -> CliResult {
 
     while index < args.len() {
         match args[index].as_str() {
-            "--allow-console" => allow_console = true,
+            "--allow-console" => {}, // Legacy compatibility: console is allowed by default.
+            "--deny-console" => deny_console = true,
             "--json" => {},
             "--filter" => {
                 let value = args.get(index + 1).map(String::as_str)
@@ -83,7 +84,7 @@ fn run_test_cli(args: &[String]) -> CliResult {
                 let value = match value {
                     Ok(value) => value,
                     Err(message) => return test_usage_error(json_mode,
-                        format!("{message}\nUsage: semauri test PATH [--allow-console] [--json] [--filter TEXT]\n")),
+                        format!("{message}\nUsage: semauri test PATH [--json] [--filter TEXT] [--deny-console]\n")),
                 };
                 if filter.replace(value).is_some() {
                     return test_usage_error(json_mode,
@@ -93,12 +94,12 @@ fn run_test_cli(args: &[String]) -> CliResult {
             }
             value if value.starts_with('-') => {
                 return test_usage_error(json_mode,
-                    format!("Unknown test option: {value}\nUsage: semauri test PATH [--allow-console] [--json] [--filter TEXT]\n"));
+                    format!("Unknown test option: {value}\nUsage: semauri test PATH [--json] [--filter TEXT] [--deny-console]\n"));
             }
             value if path.is_none() => path = Some(value),
             value => {
                 return test_usage_error(json_mode,
-                    format!("Unexpected test argument: {value}\nUsage: semauri test PATH [--allow-console] [--json] [--filter TEXT]\n"));
+                    format!("Unexpected test argument: {value}\nUsage: semauri test PATH [--json] [--filter TEXT] [--deny-console]\n"));
             }
         }
         index += 1;
@@ -106,7 +107,7 @@ fn run_test_cli(args: &[String]) -> CliResult {
 
     let Some(path) = path else {
         return test_usage_error(json_mode,
-            "Usage: semauri test PATH [--allow-console] [--json] [--filter TEXT]\n".to_string());
+            "Usage: semauri test PATH [--json] [--filter TEXT] [--deny-console]\n".to_string());
     };
     let target = Path::new(path);
     let mut files = Vec::new();
@@ -170,8 +171,8 @@ fn run_test_cli(args: &[String]) -> CliResult {
 
             // Reuse the public run path: it enforces all authorization checks.
             let mut arguments = vec!["run".to_string()];
-            if allow_console {
-                arguments.extend(["--allow".to_string(), "console_write".to_string()]);
+            if deny_console {
+                arguments.push("--deny-console".to_string());
             }
             arguments.push(file.to_string_lossy().into_owned());
             let result = run_cli(&arguments);
