@@ -160,6 +160,20 @@ Run the [complete example](examples/secure_password.suri):
 `semauri run examples/secure_password.suri --allow secure_random --allow console_write`.
 The OS-backed CSPRNG uses unbiased sampling. Don't log real passwords.
 
+**Level 8 — Count list items and Unicode characters (v0.76.0)**
+
+```text
+let tasks be a list of "design", "check", "ship".
+let task_count be count of tasks.
+let letter_count be count of "ñ🌍".
+assert task_count is equal to 3.
+assert letter_count is equal to 2.
+```
+
+`count of` is a readable alias of `length of` for lists and strings; it
+does not replace `count every ... if ...` for conditional counting.
+It is statically checked and requires no new capabilities.
+
 ## Create your own Semauri-compatible library to extend Semauri's power
 
 Write a reusable `.suri` function such as
@@ -179,8 +193,9 @@ Library code is type-checked and respects explicit permissions; this supports
 [Copy the working example](examples/external_libraries/) or follow the
 [step-by-step guide](docs/external-libraries.md).
 
-**New in 0.75.1:** secure passwords, tokens and uniform random choices,
-including contextual variable names such as `password` and `pick`.
+**New in 0.76.0:** the contextual `count of` operator and machine-readable
+`semauri version --json`. Secure random generation and contextual identifiers
+from v0.75.1 remain available.
 See the [guide](docs/language-guide.md) for details.
 Previous releases keep their existing syntax and permission rules.
 
@@ -203,7 +218,7 @@ Previous releases keep their existing syntax and permission rules.
 | `semauri config [PATH]` | Inspect configuration |
 | `semauri domains` | List supported domains |
 | `semauri libraries PROJECT\|FILE` | Validate and list installed complementary libraries |
-| `semauri version` | Show the installed version |
+| `semauri version [--json]` | Show the installed version as text or JSON |
 | `semauri tokens FILE` | Inspect tokens |
 | `semauri ast FILE` | Inspect the syntax tree |
 | `semauri hir FILE` | Inspect typed intermediate representation |
@@ -215,7 +230,7 @@ Run `semauri` for CLI help. Supported commands also offer `--json` for machine-r
 
 ## 5. Go further
 
-[Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.75.1.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
+[Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.76.0.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
 
 ## Citation
 
