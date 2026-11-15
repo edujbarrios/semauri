@@ -100,7 +100,7 @@ fn external_libraries_work_with_project_tests_and_verification() {
 }
 
 #[test]
-fn imported_effects_always_require_explicit_permissions() {
+fn imported_console_effects_use_default_permission_but_respect_strict_mode() {
     let (root, project, external) = fixture();
     write(&external, "src/internal.suri",
         "print \"third-party effect\".\n\
@@ -110,15 +110,16 @@ fn imported_effects_always_require_explicit_permissions() {
     let effects = call("effects", &source);
     assert_eq!(effects.status, 0, "{}", effects.stderr);
     assert!(effects.stdout.contains("console_write"), "{}", effects.stdout);
-    let denied = call("run", &source);
-    assert_eq!(denied.status, 65, "{}", denied.stderr);
-    assert!(denied.stderr.contains("S334"), "{}", denied.stderr);
-    let allowed = run_cli(&[
-        "run".into(), "--allow".into(), "console_write".into(),
-        source.to_string_lossy().into_owned()
-    ]);
+    let allowed = call("run", &source);
     assert_eq!(allowed.status, 0, "{}", allowed.stderr);
     assert_eq!(allowed.stdout, "third-party effect\n");
+
+    let denied = run_cli(&[
+        "run".into(), "--deny-console".into(),
+        source.to_string_lossy().into_owned()
+    ]);
+    assert_eq!(denied.status, 65, "{}", denied.stderr);
+    assert!(denied.stderr.contains("S334"), "{}", denied.stderr);
     fs::remove_dir_all(root).unwrap();
 }
 
