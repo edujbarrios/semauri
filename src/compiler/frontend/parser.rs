@@ -1716,7 +1716,7 @@ impl<'a> Parser<'a> {
             // Python-friendly contextual functions; keep the strict existing HIR operators.
             TokenKind::Word
                 if matches!(token.lexeme.to_ascii_lowercase().as_str(),
-                    "len" | "abs" | "mean" | "min" | "max" | "strip" | "upper" | "lower"
+                    "len" | "count" | "abs" | "mean" | "min" | "max" | "strip" | "upper" | "lower"
                     | "avg" | "var" | "stddev" | "total" | "size" | "unique" | "head" | "final" | "med" | "prod"
                     | "rev" | "sort" | "flat")
                     && self.tokens.get(self.current + 1).is_some_and(|next| next.kind == TokenKind::Of) => {
@@ -1724,7 +1724,7 @@ impl<'a> Parser<'a> {
                 self.consume(TokenKind::Of, "Expected 'of' after function alias", "S242")?;
                 let operand = self.primary()?;
                 let operator = match start.lexeme.to_ascii_lowercase().as_str() {
-                    "len" => UnaryOperator::Length,
+                    "len" | "count" => UnaryOperator::Length,
                     "abs" => UnaryOperator::Absolute,
                     "mean" => UnaryOperator::Average,
                     "min" => UnaryOperator::Minimum,

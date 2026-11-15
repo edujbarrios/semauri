@@ -1,6 +1,6 @@
 # Semauri — language and tooling guide
 
-Full reference for the [short Quick Start](../README.md). Commands and examples cover Semauri v0.72.0; consult the current release notes for changes.
+Full reference for the [short Quick Start](../README.md). Commands and examples cover Semauri v0.76.0; consult the current release notes for changes.
 
 ## Agent quick start
 
@@ -215,7 +215,7 @@ manager or a substitute for full integration and deployment tests.
 
 ## External and complementary source libraries (v0.72.0)
 
-**In development (unreleased):** use `import "library:NAME" as alias.` or
+**Available since v0.73.0:** use `import "library:NAME" as alias.` or
 `import "relative/file.suri" as alias.` and invoke a function with
 `invoke alias.function to VALUE`. Aliases isolate imported **function names**,
 not top-level variables or side effects. Existing unaliased imports still work.
@@ -375,6 +375,28 @@ assert doubled is equal to 42.
 
 Comments begin with `#`, `//`, or a nestable `/* ... */` block. Keywords are case-insensitive, but lowercase is canonical. Strings preserve their case.
 
+## Natural counting with `count of` (v0.76.0)
+
+`count of EXPR` is a pure alias for `length of EXPR`. It accepts a string
+(counting Unicode scalar values, not UTF-8 bytes) or a typed list (counting
+elements). It returns a number and preserves the same static type error S343
+for unsupported operands; it never converts a number or boolean implicitly.
+
+```text
+let count be 9.
+let items be a list of 10, 20, 30.
+assert (count of items) is equal to 3.
+assert (count of "ñ🌍") is equal to 2.
+assert count is equal to 9.
+```
+
+The word `count` remains a valid variable name unless followed by `of`,
+and `count every x in items if CONDITION` still counts matching items.
+The operator introduces no additional runtime permissions.
+
+`semauri version --json` reports `{"name":"semauri","version":"0.76.0"}`
+for automated tooling; plain `semauri version` remains unchanged.
+
 ### Types
 
 - `number`: checked signed integers and finite decimal values. Fractions may omit the leading zero (for example, `.5`, `.25e+2`); a standalone `.` still ends a statement. Integer literals also accept `0b` (binary), `0o` (octal), `0x` (hexadecimal), and `0z` (base 36) prefixes, in either case, with optional `_` separators between digits; e.g. `0b1010_0101`, `0o755`, `0xFF`, `0z1_z` (71). These literals must fit a signed 64-bit integer.
@@ -386,7 +408,7 @@ Comments begin with `#`, `//`, or a nestable `/* ... */` block. Keywords are cas
 
 Semauri does not silently coerce unrelated types.
 
-### Immutable typed dictionaries (development, not yet released)
+### Immutable typed dictionaries (v0.73.0)
 
 Dictionaries are immutable **string-keyed maps of one statically inferred value
 type**, unlike records whose fields may each have different types.
@@ -453,12 +475,11 @@ comma-separated list values in parentheses, e.g.,
 These dictionaries are **immutable** and use literal string keys; dynamic
 key expressions, insert/remove operations, and runtime-derived compound
 values are not yet supported. The feature requires no new permissions,
-dependencies or online registry. Semauri **0.72.0** remains the current
-published version while development continues on an unmerged draft PR.
+dependencies or online registry.
 
-### Immutable typed records (development, not yet released)
+### Immutable typed records (v0.73.0)
 
-Semauri now supports **structurally typed records** in the development branch.
+Semauri supports **structurally typed records**.
 Records are immutable: field names and the type of each value are known to the
 compiler. A field lookup is checked *before execution*.
 

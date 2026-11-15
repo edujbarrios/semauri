@@ -362,7 +362,7 @@ impl Compiler {
                     .is_some_and(|next| next.kind == TokenKind::Of);
             let is_python_alias = token.kind == TokenKind::Word
                 && matches!(token.lexeme.to_ascii_lowercase().as_str(),
-                    "len" | "abs" | "mean" | "min" | "max" | "strip" | "upper" | "lower"
+                    "len" | "count" | "abs" | "mean" | "min" | "max" | "strip" | "upper" | "lower"
                     | "avg" | "var" | "stddev" | "total" | "size" | "unique" | "head" | "final" | "med" | "prod"
                     | "rev" | "sort" | "flat")
                 && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of);
