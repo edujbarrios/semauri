@@ -90,7 +90,17 @@ pub fn run_cli(args: &[String]) -> CliResult {
                 Ok(0)
             }
             Some("version") | Some("--version") | Some("-v") => {
-                stdout.push_str(&format!("Semauri {VERSION}\n"));
+                if args.len() > 2 || (args.len() == 2 && args[1] != "--json") {
+                    return Err(usage_error("Usage: semauri version [--json]"));
+                }
+                if args.len() == 2 {
+                    stdout.push_str(&pretty_json(&json!({
+                        "name": "semauri",
+                        "version": VERSION,
+                    })));
+                } else {
+                    stdout.push_str(&format!("Semauri {VERSION}\n"));
+                }
                 Ok(0)
             }
             Some("libraries") => {
@@ -754,7 +764,7 @@ fn usage_error(message: impl Into<String>) -> SemauriError {
 }
 
 pub fn usage() -> String {
-    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  init PROJECT             Create a multi-file Semauri project without overwriting files\n  verify PROJECT [--json]   Check source, formatting and tests without running the app\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  libraries PROJECT|FILE   Validate and list declared external .suri libraries\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE [--json]    Explain semantic decisions as text or JSON\n  fmt FILE|DIR [--check|--write] [--json] Format source files or a directory\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] [--json] [--filter TEXT] Run all or selected assertion suites\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version                  Print version\n"
+    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  init PROJECT             Create a multi-file Semauri project without overwriting files\n  verify PROJECT [--json]   Check source, formatting and tests without running the app\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  libraries PROJECT|FILE   Validate and list declared external .suri libraries\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE [--json]    Explain semantic decisions as text or JSON\n  fmt FILE|DIR [--check|--write] [--json] Format source files or a directory\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] [--json] [--filter TEXT] Run all or selected assertion suites\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version [--json]         Print version as text or JSON\n"
         .to_string()
 }
 
