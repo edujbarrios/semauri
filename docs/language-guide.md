@@ -1,6 +1,6 @@
 # Semauri — language and tooling guide
 
-Full reference for the [short Quick Start](../README.md). Commands and examples cover Semauri v0.76.0; consult the current release notes for changes.
+Full reference for the [short Quick Start](../README.md). Commands and examples cover Semauri v0.77.0; consult the current release notes for changes.
 
 ## Agent quick start
 
@@ -79,8 +79,8 @@ Create a ready-to-run project with reusable typed functions and tests:
 semauri init my-project
 cd my-project
 semauri check main.suri
-semauri run --allow console_write main.suri
-semauri test tests --allow-console
+semauri run main.suri
+semauri test tests
 ```
 
 The initializer creates `main.suri`, `lib/math.suri`,
@@ -179,14 +179,15 @@ It requires a normal `.semauri-root` marker, `main.suri`, and a
 ```sh
 semauri verify .                  # check formatting, compile all sources and run assertions
 semauri verify . --json           # machine-readable CI report
-semauri verify . --allow-console  # explicitly allow test prints
+semauri verify . --deny-console   # optional: reject prints inside tests
 ```
 
 Verification checks **all** project `.suri` files for canonical formatting
 and type/compile errors (including imported files), inspects the entry-point
 effect list, and runs the existing assertion-only test runner. The application
 itself is **never executed**. Tests cannot require filesystem, network, or
-other non-console effects; console output in tests needs `--allow-console`.
+other non-console effects; console output in tests is allowed by default.
+Use `--deny-console` to explicitly disallow printing in tests.
 The command returns `0` on success, `1` on verification failures, and `64`
 on incorrect usage or invalid project layouts. The `--json` output contains
 a success flag, file count, effect list, test results, and diagnosed issues.
@@ -260,7 +261,7 @@ assert invoke square to 7 is equal to 49.
 
 File-based CLI compilation resolves imports recursively with each path
 relative to the **importing file**: `semauri check main.suri`,
-`semauri run main.suri --allow console_write`, `semauri test main.suri`,
+`semauri run main.suri`, `semauri test main.suri`,
 and inspection commands such as `hir`, `effects`, and `plan`.
 `fmt` formats only the original file and preserves import strings.
 
@@ -296,7 +297,7 @@ Then check and run it:
 
 ```sh
 semauri check hello.suri
-semauri run --allow console_write hello.suri
+semauri run hello.suri
 ```
 
 ## Language ergonomics (v0.72.0)
@@ -1438,12 +1439,20 @@ semauri plan program.suri
 semauri graph program.suri
 ```
 
-Execution requires named grants:
+Console printing is available by default; other effects still require named grants:
 
 ```sh
-semauri run --allow console_write program.suri
+semauri run program.suri
+semauri program.suri
 semauri run --allow filesystem_read --allow filesystem_write program.suri
 ```
+
+The first-argument `.suri` shorthand follows the same type-checking and
+permission rules as `semauri run`. Existing `--allow console_write`
+flags remain accepted for compatibility, but are not required. Use
+`semauri run --deny-console FILE.suri` for a strict no-output sandbox;
+this explicit denial wins over `--allow console_write`. This new default
+does not authorize filesystem, network, model or secure-random effects.
 
 Use `--dry-run` when you need the output plan without performing effects.
 
@@ -1487,7 +1496,7 @@ assert result is equal to 42.
 
 ```sh
 semauri test examples/test_suite
-semauri test path/to/tests --allow-console
+semauri test path/to/tests --deny-console  # optional strict mode
 semauri test path/to/tests --json
 semauri test path/to/tests --filter module/math
 ```
@@ -2348,7 +2357,8 @@ limitation rather than pretending they execute.
 Semauri provides OS-backed cryptographic random operations via the `random`
 domain. These are **runtime operations**, never compiler-time constants.
 Every random operation requires explicit `--allow secure_random`; showing
-a generated secret on the console also requires `--allow console_write`.
+a generated secret on the console does not need an additional permission
+flag. Avoid printing real secrets into logs.
 
 ```text
 let generated_password be password of 20 characters.
@@ -2382,5 +2392,5 @@ external logs can expose them, so avoid logging production credentials.
 Run the complete example:
 
 ```sh
-semauri run examples/secure_password.suri --allow secure_random --allow console_write
+semauri run examples/secure_password.suri --allow secure_random
 ```
