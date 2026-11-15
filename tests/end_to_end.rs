@@ -297,30 +297,34 @@ fn cli_run_requires_authorization_and_dry_run_is_safe() {
 }
 
 #[test]
-fn console_programs_print_typed_values_with_explicit_authorization() {
+fn console_programs_print_typed_values_without_a_permission_flag() {
     let path = temp_file(
         "Let answer be 6 times 7. Let values be a list of 1, 2, 3. Print \"Hello from Semauri\". Print answer. Print true. Print values.",
     );
 
-    let denied = run_cli(&["run".into(), path.display().to_string()]);
-    assert_eq!(denied.status, 65);
-    assert!(denied.stderr.contains("S334"), "{}", denied.stderr);
-    assert!(denied.stderr.contains("console_write"));
+    let executed = run_cli(&["run".into(), path.display().to_string()]);
+    assert_eq!(executed.status, 0, "{}", executed.stderr);
+    assert_eq!(executed.stdout, "Hello from Semauri\n42\ntrue\n[1, 2, 3]\n");
+
+    let shorthand = run_cli(&[path.display().to_string()]);
+    assert_eq!(shorthand.status, 0, "{}", shorthand.stderr);
+    assert_eq!(shorthand.stdout, executed.stdout);
 
     let dry = run_cli(&["run".into(), "--dry-run".into(), path.display().to_string()]);
     assert_eq!(dry.status, 0);
     assert!(dry.stdout.contains("\"domain\": \"console\""));
     assert!(dry.stdout.contains("\"name\": \"print\""));
 
-    let executed = run_cli(&[
-        "run".into(),
-        "--allow".into(),
-        "console_write".into(),
-        path.display().to_string(),
-    ]);
-    assert_eq!(executed.status, 0);
-    assert_eq!(executed.stdout, "Hello from Semauri\n42\ntrue\n[1, 2, 3]\n");
+    let strict = run_cli(&["run".into(), "--deny-console".into(),
+        path.display().to_string()]);
+    assert_eq!(strict.status, 65);
+    assert!(strict.stderr.contains("S334"), "{}", strict.stderr);
+    assert!(strict.stderr.contains("console_write"));
 
+    // Legacy flags still work for existing scripts.
+    let legacy = run_cli(&["run".into(), "--allow".into(), "console_write".into(),
+        path.display().to_string()]);
+    assert_eq!(legacy.status, 0, "{}", legacy.stderr);
     fs::remove_file(path).unwrap();
 }
 
