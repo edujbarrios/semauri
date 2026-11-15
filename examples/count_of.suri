@@ -1,0 +1,9 @@
+# Pure, statically checked counts for strings and typed lists.
+let count be 9.
+let tasks be a list of "draft", "review", "ship".
+let task_count be count of tasks.
+let character_count be count of "ñ🌍".
+assert task_count is equal to 3.
+assert character_count is equal to 2.
+assert count is equal to 9.
+print "Count operators OK".
