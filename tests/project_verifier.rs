@@ -85,10 +85,13 @@ fn detects_failing_assertions_and_refuses_unsafe_test_effects() {
     assert_eq!(fail.status, 1, "{}", fail.stdout);
     assert!(fail.stdout.contains("Test suite failed"), "{}", fail.stdout);
     fs::write(&test_path, "print \"hello\".\nassert true.\n").unwrap();
-    let denied = verify(&root, &[]);
-    assert_eq!(denied.status, 1, "{}", denied.stdout);
-    let allowed = verify(&root, &["--allow-console"]);
+    let allowed = verify(&root, &[]);
     assert_eq!(allowed.status, 0, "{}", allowed.stdout);
+    let strict = verify(&root, &["--deny-console"]);
+    assert_eq!(strict.status, 1, "{}", strict.stdout);
+    assert!(strict.stdout.contains("S334"), "{}", strict.stdout);
+    let legacy = verify(&root, &["--allow-console"]);
+    assert_eq!(legacy.status, 0, "{}", legacy.stdout);
     fs::remove_dir_all(parent).unwrap();
 }
 
