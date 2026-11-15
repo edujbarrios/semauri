@@ -1,5 +1,19 @@
 ## Unreleased
 
+## 0.77.0 — 2026-11-15
+
+### Run Semauri without console permission flags
+- Grant only `console_write` implicitly for `semauri run FILE.suri`. All other effects, including filesystem, configuration, AI, network and secure random generation, continue to require explicit `--allow` grants.
+- Support `semauri FILE.suri` as a direct run shortcut that uses the same compiler and effect checks.
+- Add `--deny-console` for strict no-console runs; explicit denial takes precedence over any legacy `--allow console_write` flag.
+- Allow printing in `semauri test` and `semauri verify` by default; preserve `--allow-console` as a backward-compatible no-op and support `--deny-console`.
+- Update generated project instructions, tests and guides for the new defaults.
+
+### Concise, composition-first documentation
+- Rewrite the README around installation, runnable syntax, immutable values, typed functions, control flow, key features, simple commands and capability boundaries.
+- Move detailed workflows to existing guides; keep quickstart executable and cover user-facing behavior with integration tests.
+- Synchronize Cargo, Jupyter and citation metadata; no new Rust dependencies.
+
 ## 0.76.0 — 2026-11-15
 
 ### Contextual counting and machine-readable version
