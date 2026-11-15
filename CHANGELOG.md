@@ -1,5 +1,13 @@
 ## Unreleased
 
+## 0.76.0 — 2026-11-15
+
+### Contextual counting and machine-readable version
+- Add `count of STRING_OR_LIST` as a natural, statically typed alias for `length of`, preserving Unicode scalar counting, list item counting, runtime lowering and pure effects.
+- Keep `count` available as an ordinary variable name, and keep conditional `count every ... if ...` unchanged. Add end-to-end, parser, optimizer and formatter regressions.
+- Add `semauri version --json` for scripts and AI agents, with stable name/version fields; reject unexpected version-command arguments.
+- Update release metadata, language guide, examples and README. No new dependencies or permissions.
+
 ## 0.75.1 — 2026-11-11
 
 ### Contextual secure-random vocabulary compatibility
