@@ -160,19 +160,7 @@ Run the [complete example](examples/secure_password.suri):
 `semauri run examples/secure_password.suri --allow secure_random --allow console_write`.
 The OS-backed CSPRNG uses unbiased sampling. Don't log real passwords.
 
-**Level 8 — Count list items and Unicode characters (v0.76.0)**
-
-```text
-let tasks be a list of "design", "check", "ship".
-let task_count be count of tasks.
-let letter_count be count of "ñ🌍".
-assert task_count is equal to 3.
-assert letter_count is equal to 2.
-```
-
-`count of` is a readable alias of `length of` for lists and strings; it
-does not replace `count every ... if ...` for conditional counting.
-It is statically checked and requires no new capabilities.
+**Level 8 — Counting (v0.76.0):** `count of tasks` (lists), `count of "ñ🌍"` (Unicode).
 
 ## Create your own Semauri-compatible library to extend Semauri's power
 
@@ -193,9 +181,7 @@ Library code is type-checked and respects explicit permissions; this supports
 [Copy the working example](examples/external_libraries/) or follow the
 [step-by-step guide](docs/external-libraries.md).
 
-**New in 0.76.0:** the contextual `count of` operator and machine-readable
-`semauri version --json`. Secure random generation and contextual identifiers
-from v0.75.1 remain available.
+**New in 0.76.0:** `count of` and `semauri version --json`; v0.75.1 features remain.
 See the [guide](docs/language-guide.md) for details.
 Previous releases keep their existing syntax and permission rules.
 
