@@ -48,10 +48,10 @@ print last line of rows."#;
 
 #[test]
 fn normalize_whitespace_collapses_unicode_spaces_without_data_loss() {
-    let source = "let input be \" \\t Hello\\n  ñ\\t🌍 \".\nassert normalize whitespace of input is equal to \"Hello ñ🌍\".\nassert normalize whitespace of \"  \" is equal to \"\".\nassert word count of (normalize whitespace of input) is equal to 2.\nprint normalize whitespace of input.";
+    let source = "let input be \" \\t Hello\\n  ñ\\t🌍 \".\nassert normalize whitespace of input is equal to \"Hello ñ 🌍\".\nassert normalize whitespace of \"  \" is equal to \"\".\nassert word count of (normalize whitespace of input) is equal to 3.\nprint normalize whitespace of input.";
     let output = run(source);
     assert_eq!(output.status, 0, "{}", output.stderr);
-    assert_eq!(output.stdout, "Hello ñ🌍\n");
+    assert_eq!(output.stdout, "Hello ñ 🌍\n");
 }
 
 #[test]
