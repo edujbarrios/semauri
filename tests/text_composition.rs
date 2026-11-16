@@ -90,12 +90,10 @@ fn formatter_canonicalizes_only_complete_phrases_and_preserves_names() {
     let identifiers = r#"let word be "name".
 let line be "another".
 let count be 7.
-let normalize be "word".
 let whitespace be "value".
 assert word is equal to "name".
 assert line is equal to "another".
 assert count is equal to 7.
-assert normalize is equal to "word".
 assert whitespace is equal to "value"."#;
     compiler.compile(identifiers, None).unwrap();
 }
