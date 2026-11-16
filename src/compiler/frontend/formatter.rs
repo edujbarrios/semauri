@@ -476,7 +476,7 @@ impl Compiler {
                         && tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::From)));
             // Only canonicalize contextual text-composition words as part
             // of complete recognized phrases; identifiers keep their case.
-            let is_text_composition = token.kind == TokenKind::Word
+            let is_text_composition = matches!(token.kind, TokenKind::Word | TokenKind::DomainAction)
                 && ((matches!(token.lexeme.to_ascii_lowercase().as_str(), "word" | "line")
                     && ((index > 0
                         && matches!(tokens[index - 1].kind, TokenKind::First | TokenKind::Last)
