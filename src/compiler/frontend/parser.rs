@@ -1380,8 +1380,8 @@ impl<'a> Parser<'a> {
             // Collapse runs of Unicode whitespace into single ASCII spaces,
             // with leading and trailing whitespace removed. Compose Words
             // and Join; the input is evaluated only once.
-            TokenKind::Word
-                if token.lexeme.eq_ignore_ascii_case("normalize")
+            kind if matches!(kind, TokenKind::Word | TokenKind::DomainAction)
+                && token.lexeme.eq_ignore_ascii_case("normalize")
                     && self.tokens.get(self.current + 1).is_some_and(|next|
                         next.kind == TokenKind::Word
                         && next.lexeme.eq_ignore_ascii_case("whitespace"))
