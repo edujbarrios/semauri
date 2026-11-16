@@ -638,9 +638,13 @@ impl Compiler {
                 continue;
             }
             // Contextual first/last preserve free-form labels and identifiers:
-            // only a following 'of' makes them operators to canonicalize.
+            // recognize 'of' as well as 'first/last word/line of'.
             if matches!(token.kind, TokenKind::First | TokenKind::Last)
                 && !tokens.get(index + 1).is_some_and(|next| next.kind == TokenKind::Of)
+                && !(tokens.get(index + 1).is_some_and(|next|
+                    next.kind == TokenKind::Word
+                    && matches!(next.lexeme.to_ascii_lowercase().as_str(), "word" | "line"))
+                    && tokens.get(index + 2).is_some_and(|next| next.kind == TokenKind::Of))
                 && !(token.kind == TokenKind::Last
                     && tokens.get(index + 1).is_some_and(|next| next.lexeme.eq_ignore_ascii_case("position"))
                     && tokens.get(index + 2).is_some_and(|next| next.kind == TokenKind::Of))
