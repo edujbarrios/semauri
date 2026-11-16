@@ -62,14 +62,14 @@ fn assertions_accept_only_boolean_expressions() {
 }
 
 #[test]
-fn assertions_and_prints_keep_order_and_effect_gates() {
+fn assertions_and_prints_keep_order_without_extra_grants() {
     let source = "Assert true. Print \"verified\". Assert 2 is greater than 1.";
-    let denied = run(source, false);
-    assert_eq!(denied.status, 65);
-    assert!(denied.stderr.contains("S334"));
-    let allowed = run(source, true);
+    let allowed = run(source, false);
     assert_eq!(allowed.status, 0, "{}", allowed.stderr);
     assert_eq!(allowed.stdout, "verified\n");
+    let legacy = run(source, true);
+    assert_eq!(legacy.status, 0, "{}", legacy.stderr);
+    assert_eq!(legacy.stdout, allowed.stdout);
 }
 
 #[test]

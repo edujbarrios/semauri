@@ -29,17 +29,15 @@ fn init_creates_checked_and_runnable_multi_file_project() {
     let check = cli("check", &root.join("main.suri"));
     assert_eq!(check.status, 0, "{}", check.stderr);
 
-    let denied = cli("run", &root.join("main.suri"));
-    assert_eq!(denied.status, 65, "{}", denied.stderr);
-    assert!(denied.stderr.contains("S334"), "{}", denied.stderr);
-
-    let output = run_cli(&["run".into(), "--allow".into(), "console_write".into(),
-        root.join("main.suri").to_string_lossy().into_owned()]);
+    let output = cli("run", &root.join("main.suri"));
     assert_eq!(output.status, 0, "{}", output.stderr);
     assert_eq!(output.stdout, "49\n");
 
-    let test = run_cli(&["test".into(), root.join("tests").to_string_lossy().into_owned(),
-        "--allow-console".into()]);
+    let shorthand = run_cli(&[root.join("main.suri").to_string_lossy().into_owned()]);
+    assert_eq!(shorthand.status, 0, "{}", shorthand.stderr);
+    assert_eq!(shorthand.stdout, "49\n");
+
+    let test = run_cli(&["test".into(), root.join("tests").to_string_lossy().into_owned()]);
     assert_eq!(test.status, 0, "{}", test.stdout);
     assert!(test.stdout.contains("1 passed; 0 failed"), "{}", test.stdout);
 

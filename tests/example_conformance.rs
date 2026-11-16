@@ -82,18 +82,19 @@ fn schema_example_produces_parseable_json_schema() {
 }
 
 #[test]
-fn console_example_runs_only_with_explicit_approval() {
+fn console_example_runs_without_extra_grants() {
     let path = example("hello_console.suri");
     let source = path.to_string_lossy().to_string();
-    let denied = run_cli(&["run".into(), source.clone()]);
+
+    for args in [vec!["run".to_string(), source.clone()], vec![source.clone()]] {
+        let result = run_cli(&args);
+        assert_eq!(result.status, 0, "{args:?}: {}", result.stderr);
+        assert_eq!(result.stdout, "Hello from Semauri\nSemauri\n42\n");
+    }
+
+    let denied = run_cli(&["run".into(), "--deny-console".into(), source]);
     assert_eq!(denied.status, 65);
     assert!(denied.stderr.contains("S334"));
-
-    let allowed = run_cli(&[
-        "run".into(), "--allow".into(), "console_write".into(), source,
-    ]);
-    assert_eq!(allowed.status, 0, "{}", allowed.stderr);
-    assert_eq!(allowed.stdout, "Hello from Semauri\nSemauri\n42\n");
 }
 
 #[test]

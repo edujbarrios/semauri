@@ -42,8 +42,8 @@ fn initialize_project(directory: &Path) -> Result<()> {
         fs::write(directory.join("README.md"),
             "# Semauri project\n\n\
              Run semauri check main.suri to type-check.\n\
-             Run semauri run --allow console_write main.suri to print 49.\n\
-             Run semauri test tests --allow-console to execute tests.\nRun semauri verify . to check source, formatting and tests together.\n\n\
+             Run semauri run main.suri (or semauri main.suri) to print 49.\n\
+             Run semauri test tests to execute tests.\nRun semauri verify . to check source, formatting and tests together.\n\n\
              The .semauri-root file defines the boundary for local imports.\n\
              Declare optional external source libraries in .semauri-libraries.json.\n\
              Inspect them with semauri libraries main.suri.\n")?;
@@ -55,6 +55,15 @@ fn initialize_project(directory: &Path) -> Result<()> {
 }
 
 pub fn run_cli(args: &[String]) -> CliResult {
+    // A .suri file as the first argument is shorthand for 'run FILE'.
+    // Reuse the full run path, including capability checks and error reporting.
+    if args.first().is_some_and(|first| Path::new(first)
+        .extension().is_some_and(|extension| extension == "suri"))
+    {
+        let mut forwarded = vec!["run".to_owned()];
+        forwarded.extend_from_slice(args);
+        return run_cli(&forwarded);
+    }
     if args.first().map(String::as_str) == Some("config") {
         return run_config_cli(&args[1..]);
     }
@@ -461,7 +470,11 @@ pub fn run_cli(args: &[String]) -> CliResult {
                 Ok(0)
             }
             Some("run") => {
-                let mut allowed = Vec::new();
+                // Printing to the caller's terminal is a safe baseline capability.
+                // Filesystem, network, AI, configuration and randomness still require
+                // explicit --allow grants. --deny-console enables strict sandboxes.
+                let mut allowed = vec!["console_write".to_owned()];
+                let mut deny_console = false;
                 let mut cwd: Option<PathBuf> = None;
                 let mut dry_run = false;
                 let mut config_path: Option<PathBuf> = None;
@@ -477,6 +490,10 @@ pub fn run_cli(args: &[String]) -> CliResult {
                                     .clone(),
                             );
                             index += 2;
+                        }
+                        "--deny-console" => {
+                            deny_console = true;
+                            index += 1;
                         }
                         "--cwd" => {
                             cwd = Some(PathBuf::from(
@@ -520,6 +537,10 @@ pub fn run_cli(args: &[String]) -> CliResult {
                     }
                 }
                 let path = path.ok_or_else(|| usage_error(usage()))?;
+                if deny_console {
+                    // Explicit denial wins even if --allow console_write is present.
+                    allowed.retain(|effect| effect != "console_write");
+                }
                 let source = load_cli_program(Path::new(&path),
                     &mut current_source, &mut current_loaded)?;
                 let result = compiler.compile(&source, None)?;
@@ -764,7 +785,7 @@ fn usage_error(message: impl Into<String>) -> SemauriError {
 }
 
 pub fn usage() -> String {
-    "Usage: semauri <command> [options] [FILE]\n\nCommands:\n  init PROJECT             Create a multi-file Semauri project without overwriting files\n  verify PROJECT [--json]   Check source, formatting and tests without running the app\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  libraries PROJECT|FILE   Validate and list declared external .suri libraries\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE [--json]    Explain semantic decisions as text or JSON\n  fmt FILE|DIR [--check|--write] [--json] Format source files or a directory\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--allow-console] [--json] [--filter TEXT] Run all or selected assertion suites\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE --allow EFFECT  Execute console or filesystem effects after authorization\n  version [--json]         Print version as text or JSON\n"
+    "Usage: semauri <command> [options] [FILE]\n       semauri FILE.suri [run options]\n\nCommands:\n  init PROJECT             Create a multi-file Semauri project without overwriting files\n  verify PROJECT [--json]   Check source, formatting and tests without running the app\n  config [PATH]            Validate .config.suri parameters and environment bindings\n  domains                  Print registered semantic domains as JSON\n  libraries PROJECT|FILE   Validate and list declared external .suri libraries\n  tokens FILE              Print lexer tokens as JSON\n  ast FILE                 Print the parsed syntax AST as JSON\n  hir FILE                 Print typed HIR before optimization\n  optimize FILE            Print optimized HIR and pass statistics\n  symbols FILE             Print semantic symbols as JSON\n  effects FILE             Print statically required effects/capabilities\n  plan FILE                Print the lowered runtime operation plan as JSON\n  graph FILE               Print validated SSA runtime dependencies as JSON\n  audit FILE [--strict]     Report ML provenance/seed risks; strict mode fails CI\n  explain FILE [--json]    Explain semantic decisions as text or JSON\n  fmt FILE|DIR [--check|--write] [--json] Format source files or a directory\n  check FILE [--allow ...] [--json] Validate source with optional JSON diagnostics\n  test PATH [--json] [--filter TEXT] Run assertion suites (console enabled)\n  build FILE [-o PATH]     Compile one or more build-time domain outputs\n  run FILE [--allow EFFECT] [--deny-console] Execute .suri code; console enabled by default\n  version [--json]         Print version as text or JSON\n"
         .to_string()
 }
 

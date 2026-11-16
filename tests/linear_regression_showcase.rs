@@ -27,11 +27,12 @@ fn showcase_is_compilable_and_emits_the_documented_prediction() {
 }
 
 #[test]
-fn showcase_requires_explicit_console_effects() {
-    let denied = run_cli(&[
-        "run".into(),
-        concat!(env!("CARGO_MANIFEST_DIR"), "/examples/linear_regression.suri").into(),
-    ]);
-    assert_ne!(denied.status, 0);
+fn showcase_prints_by_default_and_supports_strict_denial() {
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/linear_regression.suri");
+    let allowed = run_cli(&["run".into(), path.into()]);
+    assert_eq!(allowed.status, 0, "{}", allowed.stderr);
+    assert_eq!(allowed.stdout, EXPECTED_OUTPUT);
+    let denied = run_cli(&["run".into(), "--deny-console".into(), path.into()]);
+    assert_eq!(denied.status, 65);
     assert!(denied.stderr.contains("S334"), "{}", denied.stderr);
 }

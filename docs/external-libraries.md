@@ -132,7 +132,7 @@ name collisions, or a stable binary plugin ABI.
 semauri libraries app/main.suri
 semauri check app/main.suri
 semauri effects app/main.suri
-semauri run --allow console_write app/main.suri
+semauri run app/main.suri
 semauri test app/tests
 semauri verify app
 ```

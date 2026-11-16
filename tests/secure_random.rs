@@ -19,7 +19,11 @@ fn run_source(source: &str, allow_random: bool, allow_console: bool) -> semauri:
         args.extend(["--allow".into(), "secure_random".into()]);
     }
     if allow_console {
+        // Legacy explicit grant remains supported.
         args.extend(["--allow".into(), "console_write".into()]);
+    } else {
+        // Test the explicit strict mode now that console is allowed by default.
+        args.push("--deny-console".into());
     }
     let result = run_cli(&args);
     fs::remove_file(&path).unwrap();

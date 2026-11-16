@@ -1,104 +1,41 @@
 # Semauri
 
 <p align="center">
-  <img src="assets/semauri_banner_dot.svg" alt="Semauri. — turquoise symbol and white wordmark ending with a period on a black background" width="850">
+  <img src="assets/semauri_banner_dot.svg" alt="Semauri — natural-language-inspired programming" width="850">
 </p>
 
-**Bringing human language closer to programming.**
+**Readable like language. Precise like code.**
 
-Semauri is a programming language inspired by natural language, built for **humans and AI agents**. Write readable `.suri` code, catch mistakes with static type checking, and run it with explicit permissions.
+Semauri is a statically typed programming language for humans and AI agents. Write
+plain-English-inspired statements in `.suri` files, check them before execution,
+and build programs without complicated syntax.
 
-[![Status: Active Development](https://img.shields.io/badge/status-active%20development-008080?labelColor=004d4d)](https://github.com/edujbarrios/semauri/commits/main)
-[![Latest release](https://img.shields.io/github/v/release/edujbarrios/semauri?label=release&color=006666&labelColor=004d4d)](https://github.com/edujbarrios/semauri/releases/latest)
-[![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-004d4d?labelColor=006666)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/edujbarrios/semauri?label=release)](https://github.com/edujbarrios/semauri/releases/latest)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-**Readable like language. Precise like code.** Start in minutes—no Rust installation needed when using a prebuilt binary.
+## Install
 
-## 1. Install
-
-**No Rust toolchain is required** when using the prebuilt binaries. Choose your OS; each installer downloads the latest release and checks its SHA-256 checksum.
-
-### Windows (PowerShell)
+**Windows (PowerShell):**
 
 ```powershell
 irm https://raw.githubusercontent.com/edujbarrios/semauri/main/install.ps1 | iex
-semauri version
 ```
 
-If `semauri` is not found, **open a new PowerShell window** and try again.
-
-### macOS (Terminal)
+**macOS / Linux:**
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
-semauri version
 ```
 
-### Linux (Terminal)
+Installers download a platform-specific release and verify its SHA-256 checksum.
+Review downloaded scripts before executing them. You can also
+[download binaries manually](https://github.com/edujbarrios/semauri/releases/latest)
+or [build from Rust source](docs/language-guide.md#install-and-verify).
 
-```sh
-curl -fsSL https://raw.githubusercontent.com/edujbarrios/semauri/main/install.sh | sh
-export PATH="$HOME/.local/bin:$PATH"
-semauri version
-```
+## Your first Semauri program
 
-On macOS/Linux, the `export` updates `PATH` for this terminal session; add it to your shell profile to make it permanent. Requires `curl`, `tar`, and a SHA-256 utility (`shasum` or `sha256sum`).
-
-**Alternatives:** [download a release manually](https://github.com/edujbarrios/semauri/releases/latest) or [build from source](docs/language-guide.md#install-and-verify) with Rust. Review [the install scripts](install.sh) ([Windows](install.ps1)) before executing downloaded code.
-
-## 2. Your first program
-
-Create a file called `hello.suri`:
-
-```text
-print "Hello, world!".
-```
-
-In the same folder, run:
-
-```sh
-semauri check hello.suri
-semauri run --allow console_write hello.suri
-```
-
-Output: `Hello, world!`
-
-**For humans and AI agents:** use lowercase keywords and `.suri` files; end statements with `.`; declare immutable values before use; follow documented syntax (do not guess). Run `semauri fmt FILE --check` and `semauri check FILE` before `run`. Inspect `semauri effects FILE` and grant **only** required permissions (printing needs `--allow console_write`). Use `--json` where supported for tool-friendly results. See the [language guide](docs/language-guide.md) for the grammar.
-
-## 3. Learn by example
-
-Start small and build up. Save any example as a `.suri` file, then run it with the same `check` and `run` commands above.
-
-**Level 1 — Variables and arithmetic**
-
-```text
-let price be 10.
-let quantity be 3.
-print price times quantity.
-```
-
-**Level 2 — Conditions**
-
-```text
-let age be 20.
-if age is greater than 17:
-  print "Adult".
-otherwise:
-  print "Minor".
-end.
-```
-
-**Level 3 — Typed functions**
-
-```text
-define function square taking n as number to (n times n).
-let result be invoke square to 7.
-assert result is equal to 49.
-print result.
-```
-
-**Level 4 — Lists and transformations**
+Save as `hello.suri`:
 
 ```text
 let numbers be a list of 1, 2, 3.
@@ -107,120 +44,108 @@ assert sum of doubled is equal to 12.
 print doubled.
 ```
 
-Output: `[2, 4, 6]`. Also see [the quickstart file](examples/quickstart.suri).
-
-**Level 5 — Prediction error metrics**
-
-This [executable example](examples/prediction_errors.suri) computes a signed residual, an absolute error, and a squared error:
-
-```text
-let actual be 12.
-let predicted be 9.
-
-let residual be difference between actual and predicted.
-let error be absolute difference between actual and predicted.
-let loss be squared difference between actual and predicted.
-
-assert residual is equal to 3.
-assert error is equal to 3.
-assert loss is equal to 9.
-
-print residual.
-print error.
-print loss.
-```
-
-Run `semauri run --allow console_write examples/prediction_errors.suri`.
-
-Output (residual, absolute error, squared error):
-
-```text
-3
-3
-9
-```
-
-**Level 6 — Real machine learning: linear regression**
-
-The [complete example](examples/linear_regression.suri) implements ordinary least squares in Semauri, without a training service. For points following `y = 2x + 1`, it learns the slope and intercept, then predicts `13` for `x = 6`.
+Run it **without permission flags**:
 
 ```sh
-semauri run --allow console_write examples/linear_regression.suri
+semauri hello.suri
+# Equivalent: semauri run hello.suri
 ```
 
-**Level 7 — Secure passwords (v0.75.1)**
+Output:
+
+```text
+[2, 4, 6]
+```
+
+## Language essentials
+
+```text
+# Immutable values and arithmetic
+let price be 10.
+let quantity be 3.
+let total be price times quantity.
+
+# Statically typed functions
+define function square taking n as number to (n times n).
+let result be invoke square to 7.
+
+# Conditions
+if total is greater than 20:
+  print "Ready".
+otherwise:
+  print "Not ready".
+end.
+
+assert result is equal to 49.
+```
+
+**Composition rules:** end statements with `.`, use `:` to begin blocks and
+`end.` to close them. Keywords are case-insensitive (lowercase is canonical).
+Variables are immutable. Function parameters and expressions are statically
+type-checked; unsupported combinations fail before execution.
+
+## Main features
+
+- **Types and data:** numbers, strings, booleans, typed lists, records,
+  dictionaries, JSON and Unicode-aware text tools.
+- **Collections and math:** `map every`, `filter every`, `count of`,
+  `count every`, sorting, statistics and numeric functions.
+- **Functions and flow:** reusable typed functions, `if`/`otherwise`,
+  loops, assertions and local modules/libraries.
+- **Tooling:** source formatter, static checker, built-in test runner,
+  explanations, effect inspection and machine-readable JSON reports.
+- **AI workflows:** typed AI/model primitives with inspectable plans and
+  explicit capabilities; provider integration remains in development.
+
+### Clear terminal output, safe additional effects
+
+`print` works immediately with `semauri run FILE.suri` or
+`semauri FILE.suri`. `test` and `verify` likewise allow prints in tests
+by default. No `--allow-console` or `--allow console_write` is needed.
+
+Other effects **still require permission**. For example, generating a secure
+random password needs:
 
 ```text
 let password be password of 20 characters.
-let token be secure random string of 32 characters from "abcdef0123456789".
-print password.
+assert count of password is equal to 20.
 ```
 
-Run the [complete example](examples/secure_password.suri):
-`semauri run examples/secure_password.suri --allow secure_random --allow console_write`.
-The OS-backed CSPRNG uses unbiased sampling. Don't log real passwords.
-
-**Level 8 — Counting (v0.76.0):** `count of tasks` (lists), `count of "ñ🌍"` (Unicode).
-
-## Create your own Semauri-compatible library to extend Semauri's power
-
-Write a reusable `.suri` function such as
-`define function triple taking n as number to (n times 3).`.
-Give your library a `.semauri-library.json` descriptor (name, version and
-entry file), then declare its local path/version in the project's
-`.semauri-libraries.json`. Import it with:
-
-```text
-import "library:math_boost".
-print invoke triple to 7.
+```sh
+semauri run examples/secure_password.suri --allow secure_random
 ```
 
-Start with `semauri init my-app` and validate with `semauri libraries my-app`.
-Library code is type-checked and respects explicit permissions; this supports
-**local `.suri` sources** (not automatic downloads or native plugins).
-[Copy the working example](examples/external_libraries/) or follow the
-[step-by-step guide](docs/external-libraries.md).
+Use `semauri effects FILE.suri` to inspect required capabilities.
+Use `--deny-console` when running or testing programs in a restricted
+environment; printing is then disallowed. Avoid printing real secrets.
 
-**New in 0.76.0:** `count of` and `semauri version --json`; v0.75.1 features remain.
-See the [guide](docs/language-guide.md) for details.
-Previous releases keep their existing syntax and permission rules.
+## Commands
 
-## 4. Command reference
-
-| Command | What it does |
+| Command | Purpose |
 | --- | --- |
-| `semauri init PROJECT` | Create a project with starter files and tests |
-| `semauri check FILE` | Check syntax and types without executing |
-| `semauri fmt FILE --check [--json]` | Check formatting; optionally emit structured results |
-| `semauri fmt FILE --write` | Format the file |
-| `semauri run --allow console_write FILE` | Run a program with permission to print |
-| `semauri test PATH [--allow-console]` | Run assertion-based tests |
-| `semauri verify PROJECT` | Check project formatting, types, and tests |
-| `semauri explain FILE` | Explain compiler decisions |
-| `semauri effects FILE` | Show required effects and permissions |
-| `semauri plan FILE` | Inspect planned execution |
-| `semauri graph FILE` | Visualize the execution plan |
-| `semauri build FILE [-o PATH]` | Generate build artifacts |
-| `semauri config [PATH]` | Inspect configuration |
-| `semauri domains` | List supported domains |
-| `semauri libraries PROJECT\|FILE` | Validate and list installed complementary libraries |
-| `semauri version [--json]` | Show the installed version as text or JSON |
-| `semauri tokens FILE` | Inspect tokens |
-| `semauri ast FILE` | Inspect the syntax tree |
-| `semauri hir FILE` | Inspect typed intermediate representation |
-| `semauri optimize FILE` | Inspect optimization |
-| `semauri symbols FILE` | Inspect symbols |
-| `semauri audit FILE` | Inspect the program audit |
+| `semauri FILE.suri` / `semauri run FILE.suri` | Execute; console output enabled |
+| `semauri check FILE.suri` | Validate syntax and types |
+| `semauri fmt FILE.suri --write` | Format code |
+| `semauri test PATH` | Run assertion tests |
+| `semauri init PROJECT` | Create a starter project |
+| `semauri verify PROJECT` | Check formatting, types and tests |
+| `semauri effects FILE.suri` | Inspect required permissions |
+| `semauri explain FILE.suri` / `semauri plan FILE.suri` | Inspect compilation and execution |
+| `semauri version --json` | Machine-readable version |
 
-Run `semauri` for CLI help. Supported commands also offer `--json` for machine-readable output. Other side effects require their own explicit permissions; see [the language guide](docs/language-guide.md).
+For additional CLI and language syntax, see the
+[language reference](docs/language-guide.md).
 
-## 5. Go further
+## Learn and extend
 
-[Language reference](docs/language-guide.md) · [More examples](examples/) · [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) · [Jupyter](integrations/jupyter/README.md) · [VS Code](editors/vscode/) · [Release notes](docs/releases/0.76.0.md) · [Benchmarks](https://github.com/edujbarrios/semauri/actions/runs/41132112869) · [Contributing](CONTRIBUTING.md)
+[Examples](examples/) · [Full language guide](docs/language-guide.md) ·
+[Local libraries](docs/external-libraries.md) ·
+[English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) ·
+[VS Code](editors/vscode/) · [Jupyter](integrations/jupyter/README.md) ·
+[Release notes](docs/releases/0.77.0.md) · [Benchmarks](benches/BASELINE.md) ·
+[Contributing](CONTRIBUTING.md)
 
-## Citation
+## Citation and license
 
-To cite Semauri, use GitHub's **Cite this repository** option or the
-[CITATION.cff](CITATION.cff) citation metadata.
-
-Semauri is licensed under Apache-2.0 ([LICENSE](LICENSE)).
+Use GitHub's **Cite this repository** feature or [CITATION.cff](CITATION.cff).
+Apache-2.0 license ([LICENSE](LICENSE)).

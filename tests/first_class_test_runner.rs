@@ -68,17 +68,22 @@ fn requires_assertions_and_rejects_effectful_filesystem_programs() {
 }
 
 #[test]
-fn printing_requires_an_explicit_optional_console_grant() {
+fn printing_works_by_default_and_can_be_explicitly_denied() {
     let dir = temp_dir();
     fs::write(dir.join("visible.suri"), "Assert true. Print \"ok\".").unwrap();
 
-    let denied = test_run(&dir, false);
-    assert_eq!(denied.status, 1);
-    assert!(denied.stdout.contains("S334"));
+    let default = test_run(&dir, false);
+    assert_eq!(default.status, 0, "{}", default.stdout);
+    assert!(default.stdout.contains("1 passed; 0 failed"));
 
-    let allowed = test_run(&dir, true);
-    assert_eq!(allowed.status, 0, "{}", allowed.stdout);
-    assert!(allowed.stdout.contains("1 passed; 0 failed"));
+    // Keep old scripts working without requiring their legacy flag.
+    let legacy = test_run(&dir, true);
+    assert_eq!(legacy.status, 0, "{}", legacy.stdout);
+
+    let strict = run_cli(&["test".into(), dir.to_string_lossy().into_owned(),
+        "--deny-console".into()]);
+    assert_eq!(strict.status, 1);
+    assert!(strict.stdout.contains("S334"));
     fs::remove_dir_all(&dir).unwrap();
 }
 

@@ -133,18 +133,18 @@ fn imported_errors_report_the_original_file_and_line() {
 }
 
 #[test]
-fn import_code_must_obey_normal_capability_policy() {
+fn import_code_respects_default_console_and_explicit_strict_policy() {
     let root = project();
     put(&root, "lib.suri", "print \"This import requires console authorization\".\n");
     let main = put(&root, "main.suri",
         "import \"lib.suri\".\nassert true.\n");
-    let denied = cli("run", &main);
-    assert_eq!(denied.status, 65, "{}", denied.stderr);
-    assert!(denied.stderr.contains("S334"), "{}", denied.stderr);
-    let allowed = run_cli(&["run".into(), "--allow".into(), "console_write".into(),
-        main.to_string_lossy().into_owned()]);
+    let allowed = cli("run", &main);
     assert_eq!(allowed.status, 0, "{}", allowed.stderr);
     assert!(allowed.stdout.contains("requires console authorization"), "{}", allowed.stdout);
+    let strict = run_cli(&["run".into(), "--deny-console".into(),
+        main.to_string_lossy().into_owned()]);
+    assert_eq!(strict.status, 65, "{}", strict.stderr);
+    assert!(strict.stderr.contains("S334"), "{}", strict.stderr);
     fs::remove_dir_all(root).unwrap();
 }
 
