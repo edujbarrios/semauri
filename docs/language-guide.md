@@ -78,8 +78,8 @@ Create a ready-to-run project with reusable typed functions and tests:
 ```sh
 semauri init my-project
 cd my-project
-semauri check main.suri
-semauri run main.suri
+semauri check .
+semauri run .
 semauri test tests
 ```
 
@@ -395,8 +395,61 @@ The word `count` remains a valid variable name unless followed by `of`,
 and `count every x in items if CONDITION` still counts matching items.
 The operator introduces no additional runtime permissions.
 
-`semauri version --json` reports `{"name":"semauri","version":"0.76.0"}`
-for automated tooling; plain `semauri version` remains unchanged.
+`semauri version --json` reports a structured name/version pair for
+automated tooling; the version matches the installed package. Plain
+`semauri version` remains unchanged.
+
+## Text composition and directory entrypoints (v0.78.0)
+
+Semauri can now express everyday Unicode text processing directly:
+
+```text
+let message be "  Hello   ñ 🌍  ".
+assert first word of message is equal to "Hello".
+assert last word of message is equal to "🌍".
+assert word count of message is equal to 3.
+assert normalize whitespace of message is equal to "Hello ñ 🌍".
+let rows be "alpha\\nbeta".
+assert first line of rows is equal to "alpha".
+assert last line of rows is equal to "beta".
+assert line count of rows is equal to 2.
+```
+
+- `first word of TEXT` and `last word of TEXT` split on Unicode whitespace
+  and select an item. The same empty-input errors as existing `first of`
+  and `last of` apply.
+- `first line of TEXT` and `last line of TEXT` use the existing `lines of`
+  behavior: split on LF/CRLF, preserve interior blank lines, omit a final
+  trailing empty field. Selection of an empty result retains existing errors.
+- `word count of TEXT` and `line count of TEXT` use the corresponding
+  splitting operations followed by `length of`. Empty text has zero words
+  and zero lines.
+- `normalize whitespace of TEXT` splits into words then joins with a
+  single ASCII space, removing leading/trailing whitespace and collapsing
+  each Unicode whitespace run. It is **not** NFC Unicode normalization,
+  case folding, or punctuation removal.
+
+All expressions preserve string-only static typing and evaluate their source
+once. They are pure and require no new capabilities. The words `word`, `line`, `count`, and `whitespace` remain legal
+identifiers outside complete operator phrases. `normalize` remains an
+existing AI-domain action in other contexts.
+
+Project commands now accept a directory containing `main.suri`:
+
+```sh
+semauri init demo
+semauri check demo
+semauri run demo
+# Inside demo/:
+semauri check .
+semauri run .
+semauri .
+```
+
+Only `main.suri` is selected; the compiler enforces the usual import
+boundary, type checking and capability policy. Missing `main.suri` returns
+a usage error rather than guessing another entry file. Runtime configuration
+discovery uses the resolved `main.suri` path, just like direct file execution.
 
 ### Types
 

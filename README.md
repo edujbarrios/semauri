@@ -97,6 +97,12 @@ type-checked; unsupported combinations fail before execution.
 - **AI workflows:** typed AI/model primitives with inspectable plans and
   explicit capabilities; provider integration remains in development.
 
+### Text processing (v0.78.0)
+
+`first word of text`, `last line of text`, `word count of text`,
+`line count of text` and `normalize whitespace of text` make
+Unicode-aware text processing easier. [Example](examples/text_composition.suri).
+
 ### Clear terminal output, safe additional effects
 
 `print` works immediately with `semauri run FILE.suri` or
@@ -124,6 +130,7 @@ environment; printing is then disallowed. Avoid printing real secrets.
 | Command | Purpose |
 | --- | --- |
 | `semauri FILE.suri` / `semauri run FILE.suri` | Execute; console output enabled |
+| `semauri run .` / `semauri check .` | Run or check the project's `main.suri` |
 | `semauri check FILE.suri` | Validate syntax and types |
 | `semauri fmt FILE.suri --write` | Format code |
 | `semauri test PATH` | Run assertion tests |
@@ -142,7 +149,7 @@ For additional CLI and language syntax, see the
 [Local libraries](docs/external-libraries.md) ·
 [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) ·
 [VS Code](editors/vscode/) · [Jupyter](integrations/jupyter/README.md) ·
-[Release notes](docs/releases/0.77.0.md) · [Benchmarks](benches/BASELINE.md) ·
+[Release notes](docs/releases/0.78.0.md) · [Benchmarks](benches/BASELINE.md) ·
 [Contributing](CONTRIBUTING.md)
 
 ## Citation and license

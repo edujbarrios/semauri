@@ -1315,6 +1315,100 @@ impl<'a> Parser<'a> {
     fn primary(&mut self) -> Result<Expr> {
         let token = self.peek().clone();
         match token.kind {
+            // Compose existing typed string splitting and list selection:
+            // first word of TEXT / last line of TEXT. Source is evaluated once.
+            kind if matches!(kind, TokenKind::First | TokenKind::Last)
+                && self.tokens.get(self.current + 1).is_some_and(|next|
+                    next.kind == TokenKind::Word
+                    && matches!(next.lexeme.to_ascii_lowercase().as_str(), "word" | "line"))
+                && self.tokens.get(self.current + 2).is_some_and(|next|
+                    next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                let segment = self.advance().clone();
+                self.consume(TokenKind::Of,
+                    "Expected 'of' after first/last word/line", "S242")?;
+                let operand = self.primary()?;
+                let span = span_between_spans(start.span, operand.span());
+                let parts = Expr::Unary {
+                    operator: if segment.lexeme.eq_ignore_ascii_case("word") {
+                        UnaryOperator::Words
+                    } else {
+                        UnaryOperator::Lines
+                    },
+                    operand: Box::new(operand),
+                    span,
+                };
+                Ok(Expr::Unary {
+                    operator: if start.kind == TokenKind::First {
+                        UnaryOperator::First
+                    } else {
+                        UnaryOperator::Last
+                    },
+                    operand: Box::new(parts),
+                    span,
+                })
+            }
+            // Word/line counts are Unicode-aware and pure. Do not reserve
+            // identifiers called word, line or count.
+            TokenKind::Word
+                if matches!(token.lexeme.to_ascii_lowercase().as_str(), "word" | "line")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.kind == TokenKind::Word
+                        && next.lexeme.eq_ignore_ascii_case("count"))
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.advance(); // contextual count
+                self.consume(TokenKind::Of, "Expected 'of' after word/line count", "S242")?;
+                let operand = self.primary()?;
+                let span = span_between_spans(start.span, operand.span());
+                let parts = Expr::Unary {
+                    operator: if start.lexeme.eq_ignore_ascii_case("word") {
+                        UnaryOperator::Words
+                    } else {
+                        UnaryOperator::Lines
+                    },
+                    operand: Box::new(operand),
+                    span,
+                };
+                Ok(Expr::Unary {
+                    operator: UnaryOperator::Length,
+                    operand: Box::new(parts),
+                    span,
+                })
+            }
+            // Collapse runs of Unicode whitespace into single ASCII spaces,
+            // with leading and trailing whitespace removed. Compose Words
+            // and Join; the input is evaluated only once.
+            kind if matches!(kind, TokenKind::Word | TokenKind::DomainAction)
+                && token.lexeme.eq_ignore_ascii_case("normalize")
+                    && self.tokens.get(self.current + 1).is_some_and(|next|
+                        next.kind == TokenKind::Word
+                        && next.lexeme.eq_ignore_ascii_case("whitespace"))
+                    && self.tokens.get(self.current + 2).is_some_and(|next|
+                        next.kind == TokenKind::Of) => {
+                let start = self.advance().clone();
+                self.advance(); // whitespace
+                self.consume(TokenKind::Of,
+                    "Expected 'of' after normalize whitespace", "S242")?;
+                let operand = self.primary()?;
+                let span = span_between_spans(start.span, operand.span());
+                let parts = Expr::Unary {
+                    operator: UnaryOperator::Words,
+                    operand: Box::new(operand),
+                    span,
+                };
+                Ok(Expr::Binary {
+                    operator: BinaryOperator::Join,
+                    left: Box::new(parts),
+                    right: Box::new(Expr::Literal {
+                        ty: Type::String,
+                        value: LiteralValue::String(" ".to_owned()),
+                        span,
+                    }),
+                    span,
+                })
+            }
             // Deduplicate and sort a typed list in one expression. Composing
             // existing operators retains storage-aware distinct semantics,
             // exact numeric ordering and one-time evaluation of the source.
