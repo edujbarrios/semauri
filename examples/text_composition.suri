@@ -1,0 +1,11 @@
+# Pure text processing. No additional runtime permissions needed.
+let raw be "  Hello,    Semauri!  ".
+let cleaned be normalize whitespace of raw.
+assert cleaned is equal to "Hello, Semauri!".
+assert word count of raw is equal to 2.
+assert first word of cleaned is equal to "Hello,".
+assert last word of cleaned is equal to "Semauri!".
+let rows be "red\nblue".
+assert line count of rows is equal to 2.
+assert last line of rows is equal to "blue".
+print cleaned.
