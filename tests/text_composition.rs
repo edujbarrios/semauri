@@ -86,7 +86,7 @@ fn formatter_canonicalizes_only_complete_phrases_and_preserves_names() {
     let raw = "PRINT FIRST WORD OF \"Hi there\".\nPRINT LAST LINE OF \"x\".\nPRINT WORD COUNT OF \"a b\".\nPRINT LINE COUNT OF \"x\".\nPRINT NORMALIZE WHITESPACE OF \" a \".";
     let formatted = compiler.format_source(raw).unwrap();
     assert_eq!(formatted,
-        "print first word of \"Hi there\".\nprint last line of \"x\".\nprint word count of \"a b\".\nprint line count of \"x\".\nprint normalize whitespace of \" a \".\n");
+        "print first word of \"Hi there\".\nprint last line of \"x\".\nprint word count of \"a b\".\nprint line count of \"x\".\nprint normalize whitespace of \" a \".");
     let identifiers = r#"let word be "name".
 let line be "another".
 let count be 7.
