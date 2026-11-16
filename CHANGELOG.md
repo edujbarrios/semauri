@@ -1,5 +1,18 @@
 ## Unreleased
 
+## 0.78.0 — 2026-11-16
+
+### Unicode-aware text composition
+- Add `first word of TEXT`, `last word of TEXT`, `first line of TEXT`, and `last line of TEXT` by composing the existing typed words/lines and first/last operators.
+- Add `word count of TEXT` and `line count of TEXT` with Unicode-aware splitting and exact number results.
+- Add `normalize whitespace of TEXT` to collapse Unicode whitespace runs, trim leading/trailing whitespace, and join words with a single space.
+- Preserve contextual identifiers, compiler/formatter support, optimization and strict string typing without new runtime capabilities or dependencies.
+
+### Project entrypoint convenience
+- Allow `semauri run PROJECT_DIR` and `semauri check PROJECT_DIR` to resolve the directory's `main.suri`, including `semauri run .` and shorthand `semauri .`.
+- Preserve exact import/security boundaries and runtime configuration discovery from the actual source file; reject missing `main.suri` with a clear usage error.
+- Add runnable examples, integration and negative tests, README and language-guide updates, and version metadata for v0.78.0.
+
 ## 0.77.0 — 2026-11-15
 
 ### Run Semauri without console permission flags
