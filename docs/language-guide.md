@@ -430,9 +430,9 @@ assert line count of rows is equal to 2.
   case folding, or punctuation removal.
 
 All expressions preserve string-only static typing and evaluate their source
-once. They are pure and require no new capabilities. The words `word`,
-`line`, `count`, `normalize`, and `whitespace` remain legal identifiers
-outside complete operator phrases.
+once. They are pure and require no new capabilities. The words `word`, `line`, `count`, and `whitespace` remain legal
+identifiers outside complete operator phrases. `normalize` remains an
+existing AI-domain action in other contexts.
 
 Project commands now accept a directory containing `main.suri`:
 
