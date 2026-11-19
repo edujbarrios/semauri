@@ -1,5 +1,13 @@
 ## Unreleased
 
+## 0.79.0 — 2026-11-19
+
+### Exact word and line membership
+- Add `TEXT has word VALUE` and `TEXT has line VALUE`, plus `does not have` negative forms, for exact Unicode-aware membership rather than substring matching.
+- Reuse the existing typed words/lines splitting and list membership operators; evaluate each operand once, retain strict string types and pure effect behavior, and leave normal `contains` semantics unchanged.
+- Preserve contextual identifiers and canonical lowercase formatting, add end-to-end and negative regression coverage, a runnable example, and documentation.
+- Synchronize Cargo, Jupyter and citation versions; no new Rust dependencies or runtime capabilities.
+
 ## 0.78.0 — 2026-11-16
 
 ### Unicode-aware text composition

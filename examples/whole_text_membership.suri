@@ -1,0 +1,7 @@
+# Exact membership is different from substring matching.
+let message be "Ada Lovelace\nGrace Hopper\nAda".
+assert message has word "Ada".
+assert message does not have word "Lov".
+assert message has line "Grace Hopper".
+assert message does not have line "Hopper".
+print "Whole-text matching OK".

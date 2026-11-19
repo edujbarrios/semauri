@@ -399,6 +399,29 @@ The operator introduces no additional runtime permissions.
 automated tooling; the version matches the installed package. Plain
 `semauri version` remains unchanged.
 
+## Whole-word and whole-line predicates (v0.79.0)
+
+Use `TEXT has word VALUE` and `TEXT has line VALUE` for exact membership, with
+`TEXT does not have word VALUE` and `TEXT does not have line VALUE` as negative forms:
+
+```text
+let message be "Ada Lovelace\nGrace Hopper\nAda".
+assert message has word "Ada".
+assert message does not have word "Lov".
+assert message has line "Grace Hopper".
+assert message does not have line "Hopper".
+```
+
+These expressions first apply the existing `words of` (Unicode whitespace)
+or `lines of` (LF/CRLF) operation, then use typed list membership.
+A word includes adjacent punctuation, so `"hello!" has word "hello"` is false.
+Line matching retains interior empty lines and omits the trailing empty
+field. Both operands must be strings. Matching is exact and case-sensitive,
+not a regular expression, substring search, or locale-dependent comparison.
+Empty input contains no words or lines. Each operand is evaluated once, and
+no new runtime permissions or dependencies are introduced. The words `has`,
+`have`, `word` and `line` remain valid identifiers outside complete phrases.
+
 ## Text composition and directory entrypoints (v0.78.0)
 
 Semauri can now express everyday Unicode text processing directly:
@@ -569,8 +592,7 @@ in parentheses so record field separators remain unambiguous:
 `record of ("tags": (a list of "alpha", "beta"), "score": 5)`.
 Record-valued functions also work across namespaced Semauri libraries.
 
-The public language version is still **0.72.0** and these features remain
-in the draft development PR.
+These features are included in the released Semauri language.
 
 ### Expressions
 

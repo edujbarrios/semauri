@@ -664,6 +664,58 @@ impl<'a> Parser<'a> {
 
     fn comparison(&mut self) -> Result<Expr> {
         let left = self.concatenative()?;
+        // Whole-word/whole-line membership is different from substring
+        // 'contains'. Reuse typed Words/Lines and list Contains; neither
+        // operand is evaluated more than once, and no new effects are needed.
+        // 'has', 'does', 'have', 'word' and 'line' remain contextual words.
+        let negated_whole_text = self.check(TokenKind::Word)
+            && self.peek().lexeme.eq_ignore_ascii_case("does")
+            && self.tokens.get(self.current + 1)
+                .is_some_and(|next| next.kind == TokenKind::Not)
+            && self.tokens.get(self.current + 2).is_some_and(|next|
+                next.kind == TokenKind::Word && next.lexeme.eq_ignore_ascii_case("have"))
+            && self.tokens.get(self.current + 3).is_some_and(|next|
+                next.kind == TokenKind::Word
+                    && matches!(next.lexeme.to_ascii_lowercase().as_str(), "word" | "line"));
+        let positive_whole_text = self.check(TokenKind::Word)
+            && self.peek().lexeme.eq_ignore_ascii_case("has")
+            && self.tokens.get(self.current + 1).is_some_and(|next|
+                next.kind == TokenKind::Word
+                    && matches!(next.lexeme.to_ascii_lowercase().as_str(), "word" | "line"));
+        if positive_whole_text || negated_whole_text {
+            if negated_whole_text {
+                self.advance(); // does
+                self.advance(); // not
+            }
+            self.advance(); // has / have
+            let segment = self.advance().lexeme.to_ascii_lowercase(); // word / line
+            let right = self.concatenative()?;
+            let span = span_between_spans(left.span(), right.span());
+            let parts = Expr::Unary {
+                operator: if segment == "word" {
+                    UnaryOperator::Words
+                } else {
+                    UnaryOperator::Lines
+                },
+                operand: Box::new(left),
+                span,
+            };
+            let matched = Expr::Binary {
+                left: Box::new(parts),
+                operator: BinaryOperator::Contains,
+                right: Box::new(right),
+                span,
+            };
+            return Ok(if negated_whole_text {
+                Expr::Unary {
+                    operator: UnaryOperator::Not,
+                    operand: Box::new(matched),
+                    span,
+                }
+            } else {
+                matched
+            });
+        }
         // Conversational negation: 'does not start/end with' for text and
         // 'does not contain/include' for strings or typed lists. Reuse the
         // existing typed binary operators and boolean Not, without re-running
