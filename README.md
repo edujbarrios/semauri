@@ -97,18 +97,13 @@ type-checked; unsupported combinations fail before execution.
 - **AI workflows:** typed AI/model primitives with inspectable plans and
   explicit capabilities; provider integration remains in development.
 
-### Whole-word and whole-line matching (v0.79.0)
+### Text processing (v0.79.0)
 
-Use `TEXT has word VALUE` or `TEXT has line VALUE` to match whole
-Unicode-aware words and exact lines; use `does not have` for the opposite.
-These are distinct from substring `contains`. See the
-[example](examples/whole_text_membership.suri).
-
-### Text processing (v0.78.0)
-
-`first word of text`, `last line of text`, `word count of text`,
-`line count of text` and `normalize whitespace of text` make
-Unicode-aware text processing easier. [Example](examples/text_composition.suri).
+Use `first word`, `last line`, `word count`, `line count`, and
+`normalize whitespace` for Unicode-aware text. Exact predicates
+`text has word "value"` and `text has line "value"` (or
+`does not have`) differ from substring `contains`.
+[Examples](examples/whole_text_membership.suri) · [Text composition](examples/text_composition.suri).
 
 ### Clear terminal output, safe additional effects
 
