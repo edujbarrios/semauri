@@ -502,7 +502,7 @@ impl Compiler {
                             || (tokens[index - 1].lexeme.eq_ignore_ascii_case("have")
                                 && index >= 3
                                 && tokens[index - 2].kind == TokenKind::Not
-                                && tokens[index - 3].lexeme.eq_ignore_ascii_case("does"))));
+                                && tokens[index - 3].lexeme.eq_ignore_ascii_case("does")))));
             // Only canonicalize contextual text-composition words as part
             // of complete recognized phrases; identifiers keep their case.
             let is_text_composition = matches!(token.kind, TokenKind::Word | TokenKind::DomainAction)
