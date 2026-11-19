@@ -97,6 +97,13 @@ type-checked; unsupported combinations fail before execution.
 - **AI workflows:** typed AI/model primitives with inspectable plans and
   explicit capabilities; provider integration remains in development.
 
+### Whole-word and whole-line matching (v0.79.0)
+
+Use `TEXT has word VALUE` or `TEXT has line VALUE` to match whole
+Unicode-aware words and exact lines; use `does not have` for the opposite.
+These are distinct from substring `contains`. See the
+[example](examples/whole_text_membership.suri).
+
 ### Text processing (v0.78.0)
 
 `first word of text`, `last line of text`, `word count of text`,
@@ -149,7 +156,7 @@ For additional CLI and language syntax, see the
 [Local libraries](docs/external-libraries.md) ·
 [English course](learn_to_code/en/) · [Curso en español](learn_to_code/es/) ·
 [VS Code](editors/vscode/) · [Jupyter](integrations/jupyter/README.md) ·
-[Release notes](docs/releases/0.78.0.md) · [Benchmarks](benches/BASELINE.md) ·
+[Release notes](docs/releases/0.79.0.md) · [Benchmarks](benches/BASELINE.md) ·
 [Contributing](CONTRIBUTING.md)
 
 ## Citation and license
